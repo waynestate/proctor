@@ -1,0 +1,7 @@
+{
+    "require": {
+        "php": "^8.4",
+        "vendor/dev": "dev-master",
+        "vendor/any": "*"
+    }
+}

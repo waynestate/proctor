@@ -1,0 +1,156 @@
+#!/usr/bin/env php
+<?php
+
+use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
+use Waynestate\Proctor\Check\CheckRunner;
+use Waynestate\Proctor\Check\ComposerAuditCheck;
+use Waynestate\Proctor\Check\Finding;
+use Waynestate\Proctor\Check\LockCommittedCheck;
+use Waynestate\Proctor\Check\OverridesCheck;
+use Waynestate\Proctor\Check\PhpFloorCheck;
+use Waynestate\Proctor\Check\UnboundedConstraintsCheck;
+use Waynestate\Proctor\Override\OverrideFile;
+use Waynestate\Proctor\Policy\JsonFilePolicySource;
+use Waynestate\Proctor\Policy\PolicyException;
+use Waynestate\Proctor\Report\CodeQualityWriter;
+use Waynestate\Proctor\Report\JsonWriter;
+use Waynestate\Proctor\Report\Report;
+use Waynestate\Proctor\Report\ReportWriter;
+use Waynestate\Proctor\Report\TextWriter;
+use Waynestate\Proctor\ToolError;
+
+$autoload = __DIR__ . '/../vendor/autoload.php';
+if (!is_file($autoload)) {
+    fwrite(STDERR, "vendor/autoload.php not found. Run `composer install` first.\n");
+    exit(2);
+}
+
+require $autoload;
+
+$application = new class (Report::TOOL, Report::VERSION) extends Application {
+    public function doRun(InputInterface $input, OutputInterface $output): int
+    {
+        $name = $this->getCommandName($input);
+        if (null !== $name && '' !== $name && !$this->has($name)) {
+            $output->getErrorOutput()->writeln(sprintf('Command "%s" is not defined.', $name));
+            return 2;
+        }
+
+        return parent::doRun($input, $output);
+    }
+};
+
+$application->add(new class () extends Command {
+    protected function configure(): void
+    {
+        $this
+            ->setName('check')
+            ->setDescription('Measure a PHP app against the version policy.')
+            ->addOption('path', null, InputOption::VALUE_REQUIRED, 'Path to the application to check.', '.')
+            ->addOption('format', null, InputOption::VALUE_REQUIRED, 'Output format (text, json, codequality).', 'text')
+            ->addOption('policy', null, InputOption::VALUE_REQUIRED, 'Path to the policy file.')
+            ->addOption('today', null, InputOption::VALUE_REQUIRED, "Override today's date (YYYY-MM-DD).");
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        $format = (string) $input->getOption('format');
+        if (!in_array($format, ['text', 'json', 'codequality'], true)) {
+            $output->getErrorOutput()->writeln(sprintf(
+                'Invalid format "%s". Allowed values: text, json, codequality.',
+                $format
+            ));
+            return 2;
+        }
+
+        $policyFile = $input->getOption('policy');
+        if (null === $policyFile || '' === $policyFile) {
+            $output->getErrorOutput()->writeln('Missing required option --policy=<file>.');
+            return 2;
+        }
+
+        try {
+            $policy = new JsonFilePolicySource((string) $policyFile);
+        } catch (PolicyException $e) {
+            $output->getErrorOutput()->writeln($e->getMessage());
+            return 2;
+        }
+
+        $todayOption = $input->getOption('today');
+        if (null === $todayOption) {
+            $today = new \DateTimeImmutable('today');
+        } else {
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $todayOption)
+                || null === \DateTimeImmutable::createFromFormat('!Y-m-d', $todayOption)) {
+                $output->getErrorOutput()->writeln(sprintf(
+                    'Invalid --today value "%s". Expected format: YYYY-MM-DD.',
+                    $todayOption
+                ));
+                return 2;
+            }
+            $today = \DateTimeImmutable::createFromFormat('!Y-m-d', $todayOption);
+        }
+
+        $appPath = (string) $input->getOption('path');
+
+        try {
+            $overrides = OverrideFile::load($appPath);
+            $runner = new CheckRunner(
+                $appPath,
+                $policy,
+                $today,
+                [
+                    new PhpFloorCheck(),
+                    new UnboundedConstraintsCheck(),
+                    new LockCommittedCheck(),
+                    new ComposerAuditCheck(),
+                    new OverridesCheck(),
+                ],
+                $overrides
+            );
+            $findings = $runner->run();
+        } catch (ToolError $e) {
+            $output->getErrorOutput()->writeln($e->getMessage());
+            return 2;
+        }
+
+        $hasFail = false;
+        foreach ($findings as $finding) {
+            if (Finding::STATUS_FAIL === $finding->status) {
+                $hasFail = true;
+            }
+        }
+
+        $report = new Report(
+            $appPath,
+            $today,
+            $findings,
+            $overrides,
+            $hasFail ? Report::EXIT_FAIL : Report::EXIT_PASS
+        );
+
+        try {
+            $output->writeln($this->writerFor($format)->write($report));
+        } catch (ToolError $e) {
+            $output->getErrorOutput()->writeln($e->getMessage());
+            return 2;
+        }
+
+        return $report->exitCode;
+    }
+
+    private function writerFor(string $format): ReportWriter
+    {
+        return match ($format) {
+            'text' => new TextWriter(),
+            'json' => new JsonWriter(),
+            'codequality' => new CodeQualityWriter(),
+        };
+    }
+});
+
+exit($application->run());
