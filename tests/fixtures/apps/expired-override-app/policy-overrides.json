@@ -1,0 +1,8 @@
+[
+    {
+        "check": "lock-committed",
+        "reason": "fixture: expired",
+        "expires": "2026-01-01",
+        "approved_by": "tester"
+    }
+]
