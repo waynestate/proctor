@@ -5,27 +5,34 @@ declare(strict_types=1);
 namespace Waynestate\Proctor\Check;
 
 use DateTimeImmutable;
+use Waynestate\Proctor\Override\Override;
 use Waynestate\Proctor\Policy\PolicySource;
 use Waynestate\Proctor\ToolError;
 
 /**
  * Validates the app under test and runs the checks in the given order.
+ *
+ * After all checks have run, active overrides are applied to the findings
+ * (fail -> warning), except for fails whose state is eol_grace_expired.
  */
 final class CheckRunner
 {
     /**
-     * @param list<CheckInterface> $checks the checks to run, in output order
+     * @param list<CheckInterface> $checks    the checks to run, in output order
+     * @param list<Override>       $overrides the app's policy-overrides.json entries
      */
     public function __construct(
         private readonly string $appPath,
         private readonly PolicySource $policy,
         private readonly DateTimeImmutable $today,
         private readonly array $checks,
+        private readonly array $overrides = [],
     ) {
     }
 
     /**
-     * Runs all checks and returns their findings in check order.
+     * Runs all checks, applies the overrides, and returns the findings in
+     * check order.
      *
      * @return list<Finding>
      *
@@ -35,7 +42,7 @@ final class CheckRunner
     {
         $this->validateApp();
 
-        $context = new CheckContext($this->appPath, $this->policy, $this->today);
+        $context = new CheckContext($this->appPath, $this->policy, $this->today, $this->overrides);
         $findings = [];
         foreach ($this->checks as $check) {
             foreach ($check->run($context) as $finding) {
@@ -43,7 +50,7 @@ final class CheckRunner
             }
         }
 
-        return $findings;
+        return (new OverrideApplier($this->overrides, $this->today))->apply($findings);
     }
 
     /**

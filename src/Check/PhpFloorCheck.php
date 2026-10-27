@@ -58,19 +58,25 @@ final class PhpFloorCheck implements CheckInterface
                 $this->id(),
                 Finding::STATUS_PASS,
                 sprintf('php floor %s is active', $floor),
-                'composer.json'
+                'composer.json',
+                1,
+                $state
             )],
             State::SECURITY => [new Finding(
                 $this->id(),
                 Finding::STATUS_WARNING,
                 sprintf('php floor %s is in security-only support', $floor),
-                'composer.json'
+                'composer.json',
+                1,
+                $state
             )],
             default => [new Finding(
                 $this->id(),
                 Finding::STATUS_FAIL,
                 sprintf('php floor %s is %s', $floor, $state),
-                'composer.json'
+                'composer.json',
+                1,
+                $state
             )],
         };
     }

@@ -7,9 +7,13 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Waynestate\Proctor\Check\CheckRunner;
+use Waynestate\Proctor\Check\ComposerAuditCheck;
 use Waynestate\Proctor\Check\Finding;
 use Waynestate\Proctor\Check\LockCommittedCheck;
+use Waynestate\Proctor\Check\OverridesCheck;
 use Waynestate\Proctor\Check\PhpFloorCheck;
+use Waynestate\Proctor\Check\UnboundedConstraintsCheck;
+use Waynestate\Proctor\Override\OverrideFile;
 use Waynestate\Proctor\Policy\JsonFilePolicySource;
 use Waynestate\Proctor\Policy\PolicyException;
 use Waynestate\Proctor\ToolError;
@@ -59,7 +63,7 @@ $application->add(new class () extends Command {
         }
         if ('text' !== $format) {
             $output->getErrorOutput()->writeln(sprintf(
-                'Format "%s" is not implemented in step 2.',
+                'Format "%s" is not implemented in step 3.',
                 $format
             ));
             return 2;
@@ -93,12 +97,22 @@ $application->add(new class () extends Command {
             $today = \DateTimeImmutable::createFromFormat('!Y-m-d', $todayOption);
         }
 
+        $appPath = (string) $input->getOption('path');
+
         try {
+            $overrides = OverrideFile::load($appPath);
             $runner = new CheckRunner(
-                (string) $input->getOption('path'),
+                $appPath,
                 $policy,
                 $today,
-                [new PhpFloorCheck(), new LockCommittedCheck()]
+                [
+                    new PhpFloorCheck(),
+                    new UnboundedConstraintsCheck(),
+                    new LockCommittedCheck(),
+                    new ComposerAuditCheck(),
+                    new OverridesCheck(),
+                ],
+                $overrides
             );
             $findings = $runner->run();
         } catch (ToolError $e) {
@@ -116,6 +130,16 @@ $application->add(new class () extends Command {
                 $this->statusLabel($finding->status),
                 $finding->checkId,
                 $finding->message
+            ));
+        }
+
+        foreach ($overrides as $override) {
+            $output->writeln(sprintf(
+                'OVERRIDE %s: %s (expires %s, approved by %s)',
+                $override->check,
+                $override->reason,
+                $override->displayDate(),
+                $override->approvedBy
             ));
         }
 
