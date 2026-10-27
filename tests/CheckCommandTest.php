@@ -55,6 +55,27 @@ final class CheckCommandTest extends ProctorTestCase
         self::assertStringContainsString('vendor/any constraint "*" is unbounded', $result['stdout']);
     }
 
+    public function testOpenBoundAppFailsOpenUpperBoundAndDevFlagAndWarnsForRepositories(): void
+    {
+        $result = $this->runProctor($this->app('open-bound-app'));
+
+        self::assertSame(1, $result['exit']);
+        self::assertSame(
+            ['unbounded-constraints', 'unbounded-constraints'],
+            $this->failCheckIds($result['stdout'])
+        );
+        self::assertStringContainsString('vendor/open constraint ">=1.0" is unbounded', $result['stdout']);
+        self::assertStringContainsString('vendor/devflag constraint "1.0@dev" is unbounded', $result['stdout']);
+        self::assertMatchesRegularExpression(
+            '/^WARN unbounded-constraints: repository of type "path" is not a stable source$/m',
+            $result['stdout']
+        );
+        self::assertMatchesRegularExpression(
+            '/^WARN unbounded-constraints: repository of type "vcs" is not a stable source$/m',
+            $result['stdout']
+        );
+    }
+
     public function testExpiredOverrideAppFailsOverridesAndPrintsTheOverrideLine(): void
     {
         $result = $this->runProctor($this->app('expired-override-app'));
