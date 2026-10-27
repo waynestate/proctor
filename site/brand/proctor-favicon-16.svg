@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" role="img" aria-label="PROCTOR">
+<title>PROCTOR</title>
+<!-- Hand-hinted for 16 px: one unit is one pixel. -->
+<rect width="16" height="16" rx="3.5" fill="#0C5449"/>
+<g shape-rendering="crispEdges">
+<rect x="5" y="3" width="6" height="1" fill="#FFFFFF"/>
+<rect x="3" y="4" width="10" height="1" fill="#FFFFFF"/>
+<rect x="2" y="5" width="3" height="1" fill="#FFFFFF"/>
+<rect x="11" y="5" width="3" height="1" fill="#FFFFFF"/>
+<rect x="6" y="6" width="4" height="1" fill="#FFCC33"/>
+<rect x="6" y="7" width="4" height="1" fill="#FFCC33"/>
+<rect x="6" y="8" width="4" height="1" fill="#FFCC33"/>
+<rect x="6" y="9" width="4" height="1" fill="#FFCC33"/>
+<rect x="2" y="10" width="3" height="1" fill="#FFFFFF"/>
+<rect x="11" y="10" width="3" height="1" fill="#FFFFFF"/>
+<rect x="3" y="11" width="10" height="1" fill="#FFFFFF"/>
+<rect x="5" y="12" width="6" height="1" fill="#FFFFFF"/>
+</g>
+</svg>
