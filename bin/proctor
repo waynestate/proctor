@@ -6,6 +6,13 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Waynestate\Proctor\Check\CheckRunner;
+use Waynestate\Proctor\Check\Finding;
+use Waynestate\Proctor\Check\LockCommittedCheck;
+use Waynestate\Proctor\Check\PhpFloorCheck;
+use Waynestate\Proctor\Policy\JsonFilePolicySource;
+use Waynestate\Proctor\Policy\PolicyException;
+use Waynestate\Proctor\ToolError;
 
 $autoload = __DIR__ . '/../vendor/autoload.php';
 if (!is_file($autoload)) {
@@ -50,17 +57,79 @@ $application->add(new class () extends Command {
             ));
             return 2;
         }
-
-        $today = $input->getOption('today');
-        if (null !== $today && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $today)) {
+        if ('text' !== $format) {
             $output->getErrorOutput()->writeln(sprintf(
-                'Invalid --today value "%s". Expected format: YYYY-MM-DD.',
-                $today
+                'Format "%s" is not implemented in step 2.',
+                $format
             ));
             return 2;
         }
 
-        return 0;
+        $policyFile = $input->getOption('policy');
+        if (null === $policyFile || '' === $policyFile) {
+            $output->getErrorOutput()->writeln('Missing required option --policy=<file>.');
+            return 2;
+        }
+
+        try {
+            $policy = new JsonFilePolicySource((string) $policyFile);
+        } catch (PolicyException $e) {
+            $output->getErrorOutput()->writeln($e->getMessage());
+            return 2;
+        }
+
+        $todayOption = $input->getOption('today');
+        if (null === $todayOption) {
+            $today = new \DateTimeImmutable('today');
+        } else {
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $todayOption)
+                || null === \DateTimeImmutable::createFromFormat('!Y-m-d', $todayOption)) {
+                $output->getErrorOutput()->writeln(sprintf(
+                    'Invalid --today value "%s". Expected format: YYYY-MM-DD.',
+                    $todayOption
+                ));
+                return 2;
+            }
+            $today = \DateTimeImmutable::createFromFormat('!Y-m-d', $todayOption);
+        }
+
+        try {
+            $runner = new CheckRunner(
+                (string) $input->getOption('path'),
+                $policy,
+                $today,
+                [new PhpFloorCheck(), new LockCommittedCheck()]
+            );
+            $findings = $runner->run();
+        } catch (ToolError $e) {
+            $output->getErrorOutput()->writeln($e->getMessage());
+            return 2;
+        }
+
+        $hasFail = false;
+        foreach ($findings as $finding) {
+            if (Finding::STATUS_FAIL === $finding->status) {
+                $hasFail = true;
+            }
+            $output->writeln(sprintf(
+                '%s %s: %s',
+                $this->statusLabel($finding->status),
+                $finding->checkId,
+                $finding->message
+            ));
+        }
+
+        return $hasFail ? 1 : 0;
+    }
+
+    private function statusLabel(string $status): string
+    {
+        return match ($status) {
+            Finding::STATUS_PASS => 'PASS',
+            Finding::STATUS_INFO => 'INFO',
+            Finding::STATUS_WARNING => 'WARN',
+            Finding::STATUS_FAIL => 'FAIL',
+        };
     }
 });
 
