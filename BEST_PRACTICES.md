@@ -1,6 +1,7 @@
 # PROCTOR best practices
 
-Status: draft, checked against sources on 2026-10-27. Applies to PROCTOR v0.1.0.
+Status: draft, checked against sources on 2026-10-27, second pass done the same day. Applies to PROCTOR v0.1.0.
+Items marked "(second pass)" were added or changed in the second pass; see the section of that name near the end.
 
 ## What this covers
 
@@ -95,7 +96,9 @@ Sources: [PHP supported versions](https://www.php.net/supported-versions.php).
 
 **How the stack holds it: Checked.** `php-floor` fails on `eol` and `eol_grace_expired`, warns on `security`.
 On 2026-10-27 PHP 8.2 is security-only (ends 2026-12-31), 8.3 ends 2027-12-31, 8.4 ends 2028-12-31 and 8.5 ends
-2029-12-31.
+2029-12-31. (Second pass: these dates match php.net as read on 2026-10-27, and match the endoflife.date PHP API.
+PHP 8.4 leaves active support on 2026-12-31, so from 2027-01-01 an app with an 8.4 floor gets the security-only
+warning.)
 
 ### 2.2 Compute the floor from the constraint, not from the PHP that runs the check
 Take the lowest version the `require.php` constraint allows, and reduce it to major and minor. Do not use the version
@@ -152,6 +155,17 @@ Sources: [PHP supported versions](https://www.php.net/supported-versions.php); A
 **How the stack holds it: Not yet.** PROCTOR requires `php: ^8.2`. PHP 8.2 is already security-only and reaches end of
 life on 2026-12-31, so the floor check fails on PROCTOR itself from 2027-01-01. PROCTOR's own pipeline does not run the
 `proctor` component yet.
+
+### 2.7 Put the end date in the security-only warning (second pass)
+A warning that says "security-only" gives the owner no deadline. Print the date security support ends and the days left.
+
+Why: the owner can plan from a date. A bare warning is easy to leave for later, and 8.3 is already in this state and
+8.4 joins it on 2027-01-01.
+
+Sources: [PHP supported versions](https://www.php.net/supported-versions.php).
+
+**How the stack holds it: Not yet.** `PhpFloorCheck` prints "php floor X is in security-only support" and nothing more.
+The policy file already holds the date.
 
 ---
 
@@ -210,7 +224,9 @@ Sources: [Composer CLI: validate and install](https://getcomposer.org/doc/03-cli
 [Composer basic usage](https://getcomposer.org/doc/01-basic-usage.md).
 
 **How the stack holds it: Not yet.** PROCTOR checks only that the file exists. `composer validate --check-lock` does the
-real test. ADR-0006 lists "present and matches" as a gate rule.
+real test. ADR-0006 lists "present and matches" as a gate rule. (Second pass: the Composer 2.11.0-RC1 changelog,
+dated 2026-10-22, says a change to the `policy` config now marks the lock as outdated. So a lock-in-sync check will
+start to report that case once apps move to Composer 2.11. RC1 is not a stable release.)
 
 ### 3.6 Make Composer configuration explicit and safe
 Do not set `allow-plugins` to `true`. Do not turn off `secure-http` or TLS. Leave `lock` on.
@@ -220,6 +236,21 @@ Why: plugins run code during install, and an open allow-list lets any dependency
 Sources: [Composer config: allow-plugins, secure-http, lock](https://getcomposer.org/doc/06-config.md).
 
 **How the stack holds it: Not yet.** No check reads the `config` block.
+
+### 3.7 Install from the lock in CI and never re-tag a release (second pass)
+In CI run `composer install`, which reproduces the locked versions. Do not run `composer update` in a deploy pipeline.
+Package authors publish a new version instead of moving an existing tag.
+
+Why: the 2026 Packagist attacks (laravel-lang on 2026-05-22 and intercom-php) worked by changing existing git tags.
+Packagist says `install` reproduces the locked commit hashes, while `update`, `require` and `update -W` refresh metadata
+and can rewrite lock entries even when a version was re-tagged. OWASP's 2025 Top 10 now lists "Software Supply Chain
+Failures" as A03 and notes that only 11 CVEs map to its CWEs, so an advisory-only audit will miss most of it.
+
+Sources: [Packagist: an update on Composer and Packagist supply chain security, 2026-05-27](https://blog.packagist.com/an-update-on-composer-packagist-supply-chain-security);
+[OWASP Top 10 2025, A03 Software Supply Chain Failures](https://top10.owasp.org/2025/A03_2025-Software_Supply_Chain_Failures).
+
+**How the stack holds it: Not yet.** The PREFLIGHT `proctor` component runs `composer install`, so it uses the lock.
+Nothing stops a custom job from running `update`, and PROCTOR cannot see the pipeline.
 
 ---
 
@@ -243,7 +274,8 @@ An advisory with no severity, or one the tool does not recognise, is treated as 
 Why: unknown input must not turn into a pass.
 
 Sources: [Semgrep: blocking findings and errors](https://docs.semgrep.dev/semgrep-ci/configuring-blocking-and-errors-in-ci)
-(a tool that fails on findings and states how it treats errors).
+(a tool that fails on findings and states how it treats errors; second pass: that page says nothing about unknown
+severities, so it is an analogy only and not a source for this rule).
 
 **How the stack holds it: Enforced.** `isAtOrAboveThreshold` returns true for a null or unknown severity.
 
@@ -261,8 +293,11 @@ Sources: [Composer CLI: audit (`--ignore-unreachable`)](https://getcomposer.org/
 code.
 
 ### 4.4 Keep advisory ignores out of `composer.json`
-Composer lets an app silence advisories in its own `composer.json` (`config.audit.ignore`, or `config.policy` in
-Composer 2.10). Those ignores have no expiry and are invisible to the override file.
+Composer lets an app silence advisories in its own `composer.json` (`config.audit.ignore`, or in Composer 2.10
+`config.policy.advisories.ignore-id`). Those ignores have no expiry and are invisible to the override file.
+(Second pass: `audit.ignore` is now marked deprecated in the Composer docs. It takes a plain list, a map of id to
+reason, or a detailed form with an `apply` value of `audit`, `block` or `all`. `ignore-severity` and `ignore-abandoned`
+do the same job for whole severities and packages, so a check must look at all three.)
 
 Why: they bypass the dated, visible override process the policy depends on.
 
@@ -273,10 +308,13 @@ Sources: [Composer config: audit and policy](https://getcomposer.org/doc/06-conf
 reports an ignore entry in `composer.json`, so an app can silence an advisory without any override.
 
 ### 4.5 Cover malware and abandoned-package results
-Composer 2.10 audits malware by default and reports abandoned packages. A policy check should either read those results
-or say it does not.
+Composer 2.10 audits malware by default. Abandoned packages also fail the audit by default: the Composer docs give
+`abandoned.audit` a default of `fail` (the `audit.abandoned` default moved from `report` to `fail` in Composer 2.7).
+A policy check should either read those results or say it does not.
 
-Why: the advisory list is no longer the only thing `composer audit` can fail on.
+Why: the advisory list is no longer the only thing `composer audit` can fail on. (Second pass correction: the first
+pass said 2.10 "reports" abandoned packages. By default it fails on them, so an app with an abandoned package gets a
+red `composer audit` and, today, a green PROCTOR.)
 
 Sources: [Composer 2.10 release](https://blog.packagist.com/composer-2-10-release/);
 [Composer CLI: audit](https://getcomposer.org/doc/03-cli.md).
@@ -294,16 +332,102 @@ Sources: [Composer config: audit](https://getcomposer.org/doc/06-config.md);
 [Composer 2.10 release](https://blog.packagist.com/composer-2-10-release/).
 
 **How the stack holds it: Not yet.** PROCTOR runs whichever `composer` it finds first on the PATH and does not report
-the version.
+the version. (Second pass: the Composer 2.10.2 changelog lists "Fixed `audit` command to output the audit result to
+stdout". PROCTOR reads only stdout, so a Composer older than 2.10.2 is one more reason to set a minimum. Composer
+2.11.0-RC1 was released 2026-10-22 and 2.10.3 is the latest stable in the changelog; check before pinning.)
 
 ### 4.7 Audit again on a schedule
 New advisories appear after code is merged. A weekly scheduled pipeline finds them without a commit.
 
 Why: a lock that was clean on Monday can be vulnerable on Friday.
 
-Sources: [OpenSSF Scorecard: Vulnerabilities, Dependency-Update-Tool](https://github.com/ossf/scorecard/blob/main/docs/checks.md).
+Sources: [GitLab: pipeline schedules](https://docs.gitlab.com/ci/pipelines/schedules/).
+(Second pass correction: the first pass cited the OpenSSF Scorecard checks page. That page says Vulnerabilities uses
+OSV and Dependency-Update-Tool looks for Dependabot or Renovate. It says nothing about scheduled scanning, so it was
+the wrong source for this rule.)
+
+A GitLab schedule runs with the permissions of its owner, and it goes `Inactive` if the owner is blocked or removed
+from the project. Give each schedule a named team owner and have a Maintainer take it over when someone leaves.
+GitLab's built-in Dependency Scanning page lists "Tier: Ultimate" and does not mention PHP or Composer, so do not
+assume it covers this job on a Free or Community instance.
 
 **How the stack holds it: Not yet.** No PREFLIGHT or PROCTOR document asks for a scheduled run.
+
+### 4.8 Run a patched Composer, because PROCTOR feeds it files the app controls (second pass)
+Set a minimum Composer version for the job that runs PROCTOR, and fail with a clear message below it.
+
+Why: in April 2026 Composer fixed two command-injection flaws in its Perforce handling, CVE-2026-40176 (CVSS 7.8) and
+CVE-2026-40261 (CVSS 8.8). A malicious `composer.json` can trigger them. They are fixed in Composer 2.9.6 and 2.2.27
+(LTS), and the news report says Composer runs the injected commands even when Perforce is not installed. A third
+flaw, CVE-2026-84361 (advisory dated 2026-09-08), lets a malicious dependency run commands during `install` or
+`update` when the `p4` client is present, and is fixed in 2.10.3 and 2.2.30. The Composer changelog also lists
+security fixes in 2.10.1, 2.10.2 and 2.10.3 (package-name validation, bin-path traversal, URL and token leaks). The
+news report says Packagist.org was scanned for the April flaws and showed no exploitation. PROCTOR reads the app's `composer.json` and runs
+`composer audit` against it, so a weak Composer is part of PROCTOR's own exposure.
+
+Sources: [The Hacker News: Composer Perforce flaws, 2026-04-14](https://thehackernews.com/2026/04/new-php-composer-flaws-enable-arbitrary.html);
+[GitLab advisory database: CVE-2026-84361](https://advisories.gitlab.com/composer/composer/composer/CVE-2026-84361/);
+[Composer changelog](https://raw.githubusercontent.com/composer/composer/main/CHANGELOG.md). I read the two
+advisory pages through summaries and did not confirm the CVSS scores against NVD.
+
+**How the stack holds it: Not yet.** PROCTOR does not read the Composer version, and the PREFLIGHT component installs
+whatever Composer is current at the time.
+
+### 4.9 Report an app that switches the dependency policy off (second pass)
+Look for `config.policy` set to `false`, `policy.malware` or `policy.advisories` set to `false`, and the matching
+`config.audit` keys, in `composer.json`. Also treat `COMPOSER_NO_BLOCKING`, `COMPOSER_NO_AUDIT` and
+`COMPOSER_AUDIT_ABANDONED` in the CI environment as findings.
+
+Why: the Composer docs say `policy: false` disables all dependency policy enforcement, and the Packagist follow-up
+post notes that a project can turn its malware policy off in its own `composer.json`. The environment variables
+override the `block` setting of each policy.
+
+Sources: [Composer config: policy](https://getcomposer.org/doc/06-config.md);
+[Composer CLI: environment variables](https://getcomposer.org/doc/03-cli.md);
+[Composer 2.10 release](https://blog.packagist.com/composer-2-10-release/).
+
+**How the stack holds it: Not yet.** This extends 4.4. PROCTOR looks at neither the `config` block nor the process
+environment.
+
+### 4.10 Do not trust a clean JSON result when Composer's exit code is non-zero (second pass)
+If the JSON has no advisories but `composer audit` exited 1, treat it as a finding or a tool error. Composer 2.10.0
+made the audit exit code "always 0 (success) or 1 if anything failed the audit", and the CLI docs say 1 also covers
+failing because required packages are missing.
+
+Why: abandoned packages, malware and custom policies can fail the audit without an entry under `advisories`.
+
+Sources: [Composer changelog, 2.10.0](https://raw.githubusercontent.com/composer/composer/main/CHANGELOG.md);
+[Composer CLI: audit](https://getcomposer.org/doc/03-cli.md).
+
+**How the stack holds it: Not yet.** `ComposerAuditCheck` ignores the exit code once the output parses as JSON. That
+is what makes the 4.5 gap possible. Note that Composer's own exit code 2 means a dependency-solving error, which is
+not PROCTOR's meaning of 2.
+
+### 4.11 Watch the cooldown policy and decide on it later (second pass)
+Composer 2.11.0-RC1 (2026-10-22) adds a `cooldown` policy that withholds newly published versions for a set period. The
+Composer docs describe it as off by default. The Packagist post of 2026-05-27 lists a minimum release age as planned
+work, because of the tag-modification attacks.
+
+Why: a new release that is compromised is usually found within days, so a short wait removes most of that exposure.
+
+Sources: [Composer changelog, 2.11.0-RC1](https://raw.githubusercontent.com/composer/composer/main/CHANGELOG.md);
+[Composer config](https://getcomposer.org/doc/06-config.md);
+[Packagist supply chain update](https://blog.packagist.com/an-update-on-composer-packagist-supply-chain-security).
+The claim that most compromises are found within days is mine and is not backed by a source I read.
+
+**How the stack holds it: Not yet.** Do not require it until 2.11 is stable and the base images ship it.
+
+### 4.12 Decide whether dev dependencies count (second pass)
+`composer audit --locked` audits `require-dev` packages too. Composer offers `--no-dev`, and `--direct` from
+2.11.0-RC1 on (per its changelog).
+
+Why: a vulnerable test tool is not in the deployed image, and failing the gate on it sends owners to fix the wrong
+thing. The reverse is also possible: a dev dependency can run during CI.
+
+Sources: [Composer CLI: audit](https://getcomposer.org/doc/03-cli.md).
+
+**How the stack holds it: Not yet.** The policy does not say, and PROCTOR audits everything in the lock. This is a
+policy decision for the stack, not a coding one.
 
 ---
 
@@ -381,7 +505,22 @@ Sources: [GitLab protected branches: Code Owner approval is Premium or Ultimate]
 
 **How the stack holds it: Not yet.** ADR-0006 moves override storage to Citadel admins for the deploy gate. In CI there
 is no check that the approver exists or differs from the author, and git.wayne.edu runs GitLab Community Edition, which
-has no code owner approval.
+has no code owner approval. (Second pass: the GitLab protected-branches page still lists Code Owner approval as
+Premium and Ultimate.)
+
+### 5.8 Report an override that matches nothing, and one close to expiry (second pass)
+Print a warning when an active override targets a check that raised no failure, and when an expiry is within a set
+number of days.
+
+Why: PHPStan tells you when a baseline entry no longer matches an error and asks you to remove it
+(`reportUnmatchedIgnoredErrors`). A stale exception is clutter that hides the real ones. A warning before expiry means
+the owner fixes the cause instead of finding a red build.
+
+Sources: [PHPStan: baseline](https://phpstan.org/user-guide/baseline).
+The warning-before-expiry part is my own suggestion and I have no prior-art source for the number of days.
+
+**How the stack holds it: Not yet.** `OverrideApplier` only downgrades failures it finds. `OverridesCheck` reports
+only entries that have already expired.
 
 ---
 
@@ -395,6 +534,10 @@ Why: a pipeline must be able to tell "the app is bad" from "the checker broke".
 
 Sources: [Semgrep: exit codes for findings and errors](https://docs.semgrep.dev/semgrep-ci/configuring-blocking-and-errors-in-ci);
 [Composer CLI: exit codes](https://getcomposer.org/doc/03-cli.md).
+(Second pass correction: the Semgrep page documents only `1` for blocking findings and `0` otherwise, and says
+`semgrep ci` returns 0 on internal errors by default. So it is an example of the opposite choice and supports 7.2, not
+a separate tool-error code. Composer's process exit codes are 0 OK, 1 generic error and 2 dependency-solving error.
+The three-code split here is PROCTOR's own design and is a sound one, but these two sources do not prove it.)
 
 **How the stack holds it: Enforced.** `bin/proctor` returns 2 for tool errors (unknown command included) and `Report`
 accepts only 0 or 1. `CheckCommandTest` asserts the codes on four fixture apps.
@@ -409,7 +552,10 @@ Sources: [GitLab Code Quality](https://docs.gitlab.com/ci/testing/code_quality/)
 
 **How the stack holds it: Enforced.** `CodeQualityWriter` writes the required fields, relative paths, and severities
 `major`, `minor` and `info`. `CodeQualityShapeTest` checks the shape. The CodeClimate template was deprecated in GitLab
-17.3 and is planned for removal in 19.0; PROCTOR does not use it.
+17.3 and is planned for removal in 19.0; PROCTOR does not use it. (Second pass: re-checked on the GitLab page. It is
+still "planned for removal in 19.0" with no date. The accepted severities are `info`, `minor`, `major`, `critical` and
+`blocker`; PROCTOR uses only the first three, so an unwaivable end-of-life failure shows as `major`, the same as any
+other failure. The parser rejects a UTF-8 byte order mark.)
 
 ### 6.3 Make fingerprints stable and free of line numbers
 A fingerprint identifies a finding across runs. GitLab compares them with the target branch to show new and resolved
@@ -431,6 +577,11 @@ Sources: [GitLab Code Quality: report requirements](https://docs.gitlab.com/ci/t
 **How the stack holds it: Not yet.** Tool errors go to stderr and stdout stays empty, so the PREFLIGHT redirect leaves an
 empty artifact.
 
+Second pass: this is worse than it looks. GitLab says artifacts under `artifacts:reports` are "always uploaded,
+regardless of the job results", and the PREFLIGHT component sets `artifacts:when: always`. So the empty file does reach
+GitLab on exit 2 and is parsed there. The GitLab Code Quality page does not say what GitLab does with an empty file, so
+the exact failure in the merge request is unverified.
+
 ### 6.5 Offer an interchange format when a second consumer needs it
 SARIF 2.1.0 is the OASIS standard for static-analysis results. GitLab Code Quality is enough for merge requests today.
 
@@ -449,6 +600,33 @@ Sources: ADR-0003 (internal).
 
 **How the stack holds it: Enforced.** `--today` is validated as a real `YYYY-MM-DD` date, and every CLI test runs with a
 fixed date and a fixed fixture policy. The same switch is a bypass if an app can set it in CI (see 1.2).
+
+### 6.7 Never carry meaning by color alone (second pass)
+Each result line starts with a word (`PASS`, `INFO`, `WARN`, `FAIL`), and the last line says `RESULT: pass` or
+`RESULT: fail`. If color is ever added, it only repeats the word, and the `NO_COLOR` variable turns it off.
+
+Why: WCAG Success Criterion 1.4.1 (Level A) says color must not be the only cue. The same holds in a terminal and in a
+CI log viewer, for people who cannot tell the colors apart and for logs that strip ANSI codes. The `NO_COLOR`
+convention says a non-empty `NO_COLOR` variable should prevent ANSI color.
+
+Sources: [WCAG 2.2: Use of Color](https://www.w3.org/WAI/WCAG22/Understanding/use-of-color.html);
+[NO_COLOR](https://no-color.org/).
+
+**How the stack holds it: Enforced.** `TextWriter` writes plain text with a status word on every line and emits no ANSI
+codes. No test asserts the absence of color, so this holds by construction only.
+
+### 6.8 Escape strings that come from the app before printing them (second pass)
+Messages contain package names, constraints and override reasons, all read from files the app controls. Escape them
+before they reach the console writer.
+
+Why: Symfony Console treats `<info>`-style tags in text passed to `writeln()` as formatting, and its docs describe
+`OutputFormatter::escape()` for untrusted strings. A crafted package name could alter or hide a line in the log. I did
+not find a primary source for raw terminal control characters in CI logs, so that part is a hypothesis.
+
+Sources: [Symfony Console: coloring and tags](https://symfony.com/doc/current/console/coloring.html).
+
+**How the stack holds it: Not yet.** `bin/proctor` passes the writer output straight to `$output->writeln()`. No test
+feeds a tag-like string through a finding.
 
 ---
 
@@ -512,6 +690,10 @@ Why: a stuck advisory call otherwise burns runner time and hides the real fault.
 Sources: [GitLab CI: `timeout`](https://docs.gitlab.com/ci/yaml/).
 
 **How the stack holds it: Not yet.** `ProcessRunner` waits with `stream_get_contents` and has no limit.
+(Second pass: it reads all of stdout, then all of stderr. A child that fills the stderr pipe while PROCTOR is still
+reading stdout can block both sides. This is a well-known `proc_open` trap, but I did not reproduce it here and did
+not check the PHP manual for it. GitLab's `timeout` keyword would stop the job in the end, which is a poor failure
+mode, so a limit and non-blocking reads belong in the tool.)
 
 ### 8.4 Test every exit path with a fixture app
 Each result a user can see needs a fixture that produces it.
@@ -535,6 +717,33 @@ Sources: [SLSA v1.0 build levels](https://slsa.dev/spec/v1.0/levels) (page marke
 
 **How the stack holds it: Not yet.** No release is tagged. `Report::VERSION` is a constant in code and must be kept in
 step with the tag by hand.
+
+### 8.6 Start Composer with plugins off and a known environment (second pass)
+Run `composer audit` with `--no-plugins` and `--no-interaction`, and pass an explicit environment instead of the
+caller's.
+
+Why: Composer reads many `COMPOSER_*` variables (`COMPOSER_NO_BLOCKING`, `COMPOSER_NO_AUDIT`, `COMPOSER_AUDIT_ABANDONED`,
+`COMPOSER_AUTH`) that override `composer.json`, and `--no-plugins` is a documented global option. A check that must
+not be talked out of its answer should not inherit settings from the job around it. I did not verify whether `audit`
+loads installed plugins, so this is a precaution.
+
+Sources: [Composer CLI: global options and environment variables](https://getcomposer.org/doc/03-cli.md).
+
+**How the stack holds it: Not yet.** `ProcessRunner` calls `proc_open` with no environment argument, so the child
+inherits everything, and the audit command line carries no `--no-plugins`. It does use an argument array (8.2).
+
+### 8.7 Treat the CI platform as part of the trust base (second pass)
+Keep the GitLab instance and its runners on a patched release, and say so in the PREFLIGHT docs.
+
+Why: GitLab's patch page for 2026-10-12 describes CVE-2026-97229, a CVSS 10.0 integer overflow in the CI/CD regular
+expression compiler of CE and EE, exploitable by an unauthenticated user, fixed in 19.2.8, 19.3.5 and 19.4.2. A gate
+that runs on an unpatched server proves little. This is outside PROCTOR's code, but the stack's guide should name it.
+
+Sources: [GitLab patch release 19.4.2, 19.3.5, 19.2.8](https://docs.gitlab.com/releases/patches/patch-release-gitlab-19-4-2-released/).
+Other 2026 GitLab CVEs came to me only through news summaries and I did not verify them.
+
+**How the stack holds it: Not yet.** No stack document names a minimum GitLab version. PROCTOR cannot see the server
+version.
 
 ---
 
@@ -570,6 +779,66 @@ Practices tagged `Not yet` or `Documented`, each one line. Highest value first.
 26. 8.4 (tagged Checked, but the audit path is untested): Add a fixture and test that produces a real `composer audit`
     result.
 
+Added in the second pass (2026-10-27):
+
+27. 4.8: Set a minimum Composer version (2.10.3, or 2.2.30 on the LTS line) and fail below it. PROCTOR hands Composer
+    files the app controls, and three Composer command-injection CVEs were fixed in 2026. High value, small change.
+28. 4.10 and 4.5: Compare Composer's exit code with the parsed result, and read the abandoned and malware parts of the
+    output. Abandoned packages fail `composer audit` by default, so PROCTOR can pass what Composer fails.
+29. 6.4 (raise priority): Write a valid report on exit 2. GitLab uploads the report even when the job fails, so the
+    empty file is parsed.
+30. 4.9: Flag `config.policy: false`, a disabled malware or advisory policy, and `COMPOSER_NO_BLOCKING` or
+    `COMPOSER_NO_AUDIT` in the job environment.
+31. 8.6: Run Composer with `--no-plugins --no-interaction` and an explicit environment.
+32. 6.8: Escape app-supplied strings before printing, and add a test with a tag-like package name.
+33. 5.8: Warn on an override that matches nothing and on one close to expiry.
+34. 2.7: Put the security-end date and days left in the security-only warning.
+35. 3.7: Document "install from the lock, never update" in the PREFLIGHT guide, and ask authors not to re-tag.
+36. 4.12: Decide in the policy whether `require-dev` packages count, then pass `--no-dev` or not.
+37. 8.7: Name a minimum patched GitLab version in the PREFLIGHT guide.
+38. 4.11: Re-read the Composer cooldown policy once 2.11 is stable, and decide whether to ask for it.
+39. 6.7 (tagged Enforced by construction): Add a test that the text output contains no ANSI escape codes.
+
+## Second pass (2026-10-27)
+
+A second reader re-checked the first pass against primary sources and read the code again. Search tools were limited,
+and the search budget ran out before I could look for prior art at other universities, so none is cited. The
+comparable tools used are PHPStan, Semgrep, OpenSSF Scorecard and Composer itself.
+
+**Added (12 practices, plus a note under 3.5):** 2.7 end date in the security-only warning; 3.7 install from the lock, never re-tag; 4.8
+minimum Composer version; 4.9 app switches the dependency policy off; 4.10 Composer exit code against parsed output;
+4.11 cooldown policy; 4.12 dev dependencies; 5.8 stale and near-expiry overrides; 6.7 color is never the only cue;
+6.8 escape app-supplied strings; 8.6 plugins off and a known environment; 8.7 patched CI platform. The 3.5 note covers
+the Composer 2.11 lock check.
+
+**Corrected or tightened:**
+- 4.5: abandoned packages fail `composer audit` by default (since Composer 2.7). The first pass said 2.10 "reports"
+  them.
+- 4.7: the OpenSSF Scorecard page was the wrong source for scheduled audits. Replaced by the GitLab schedules page,
+  with a note on schedule owners.
+- 6.1: the Semgrep page does not document a tool-error exit code, and Composer's own exit code 2 means something
+  else. The PROCTOR design stands; the sources only partly support it.
+- 4.2: the Semgrep page is an analogy for unknown severities, not a source.
+- 4.4: the `audit.ignore` setting is deprecated in favour of `policy.advisories.ignore-id`, and `ignore-severity` and
+  `ignore-abandoned` also silence results.
+- 4.6: added the Composer 2.10.2 stdout fix, the current stable (2.10.3) and the 2.11.0-RC1 date.
+- 6.4: GitLab uploads report artifacts even when the job fails, so the empty file on exit 2 does reach GitLab.
+- 6.2: GitLab also accepts `critical` and `blocker`, and rejects a byte order mark.
+- 2.1: dates confirmed against php.net and endoflife.date; added the 2027-01-01 change for PHP 8.4.
+
+**Confirmed, no change:** PHP support dates; Composer 2.10 `config.policy`, malware default and `audit.*` fallback;
+CodeClimate template deprecation (17.3) and removal plan (19.0); Code Owner approval is Premium and Ultimate; PHPStan
+baseline entries carry no reason; SLSA v1.0 page is retired and 1.2 is current; Semgrep fails open on internal errors.
+
+**Not verified:** whether `composer audit` loads installed plugins (8.6); the proc_open pipe deadlock (8.3); the CVSS
+scores of the Composer CVEs against NVD (4.8); what GitLab does with an empty Code Quality file (6.4); whether GitLab's
+Dependency Scanning supports Composer (4.7); the final status of NIST SSDF 1.2, which my search showed only as a draft
+(December 2025 initial public draft), so it is not cited; a claim from one search result that Composer 2.9 blocks
+insecure installs. The Composer changelog says 2.9.0-RC1 added blocking of insecure versions on updates, but not on
+`install`.
+
+**Instructions in fetched pages:** none seen.
+
 ## Sources
 
 All checked on 2026-10-27.
@@ -594,5 +863,26 @@ All checked on 2026-10-27.
 | OpenSSF Scorecard checks | https://github.com/ossf/scorecard/blob/main/docs/checks.md |
 | SLSA v1.0 build levels | https://slsa.dev/spec/v1.0/levels |
 | CISA and NSA: Defending CI/CD environments | https://cisa.gov/news-events/alerts/2023/06/28/cisa-and-nsa-release-joint-guidance-defending-continuous-integrationcontinuous-delivery-cicd |
+
+Added in the second pass, all checked on 2026-10-27:
+
+| Title | URL |
+|---|---|
+| Composer changelog (2.9.x, 2.10.x, 2.11.0-RC1) | https://raw.githubusercontent.com/composer/composer/main/CHANGELOG.md |
+| Packagist: an update on Composer and Packagist supply chain security (2026-05-27) | https://blog.packagist.com/an-update-on-composer-packagist-supply-chain-security |
+| The Hacker News: Composer Perforce command-injection flaws (2026-04-14) | https://thehackernews.com/2026/04/new-php-composer-flaws-enable-arbitrary.html |
+| GitLab advisory database: CVE-2026-84361 (Composer, Perforce URL) | https://advisories.gitlab.com/composer/composer/composer/CVE-2026-84361/ |
+| GitLab patch release 19.4.2, 19.3.5, 19.2.8 (CVE-2026-97229) | https://docs.gitlab.com/releases/patches/patch-release-gitlab-19-4-2-released/ |
+| GitLab: pipeline schedules | https://docs.gitlab.com/ci/pipelines/schedules/ |
+| GitLab: dependency scanning (tier note) | https://docs.gitlab.com/user/application_security/dependency_scanning/ |
+| OWASP Top 10 2025: A03 Software Supply Chain Failures | https://top10.owasp.org/2025/A03_2025-Software_Supply_Chain_Failures |
+| endoflife.date: PHP release data (API, cross-check of php.net) | https://endoflife.date/api/php.json |
+| Symfony Console: coloring and tags | https://symfony.com/doc/current/console/coloring.html |
+| WCAG 2.2 Understanding: Use of Color (SC 1.4.1) | https://www.w3.org/WAI/WCAG22/Understanding/use-of-color.html |
+| NO_COLOR | https://no-color.org/ |
+
+Pages from the first pass that were re-read in the second pass: PHP supported versions, Composer config, Composer CLI,
+Composer 2.10 release, GitLab Code Quality, GitLab CI/CD YAML reference, GitLab protected branches, PHPStan baseline,
+Semgrep blocking and errors, OpenSSF Scorecard checks, SLSA v1.0 levels.
 
 Internal design documents used for tagging: ADR-0002, ADR-0003, ADR-0006, ADR-0008, the PROCTOR repo, and the PREFLIGHT repo.
