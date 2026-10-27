@@ -11,7 +11,7 @@ use Waynestate\Proctor\ToolError;
  * its output. Built on proc_open from PHP core so PROCTOR gains no runtime
  * dependency for it.
  */
-final class ProcessRunner
+final class ProcessRunner implements ProcessRunnerInterface
 {
     /**
      * @param list<string> $command executable path followed by its arguments
