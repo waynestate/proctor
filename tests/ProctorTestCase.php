@@ -43,7 +43,17 @@ abstract class ProctorTestCase extends TestCase
             '--today=' . self::TODAY,
         ];
 
-        $process = proc_open($cmd, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+        // The CLI tests must not depend on whether composer is installed (the CI runner has it, the php:*-cli
+        // images do not), so bin/proctor runs with a PATH that finds no tools.
+        $env = getenv();
+        foreach (array_keys($env) as $key) {
+            if (strcasecmp((string) $key, 'PATH') === 0) {
+                unset($env[$key]);
+            }
+        }
+        $env['PATH'] = __DIR__ . '/fixtures/no-tools';
+
+        $process = proc_open($cmd, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, null, $env);
         if (!is_resource($process)) {
             self::fail('could not start bin/proctor');
         }
