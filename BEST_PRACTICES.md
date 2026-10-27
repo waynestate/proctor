@@ -131,7 +131,7 @@ requirements at deploy time because the setting weakens dependency checks.
 
 Sources: [Composer config: platform](https://getcomposer.org/doc/06-config.md).
 
-**How the stack holds it: Not yet.** PROCTOR's own `composer.json` sets `platform.php` to `8.2.0`, but no check asks
+**How the stack holds it: Not yet.** PROCTOR's own `composer.json` sets `platform.php` to `8.3.0`, but no check asks
 other apps to do the same.
 
 ### 2.5 Check the PHP that will serve the app, not only what composer.json declares
@@ -152,7 +152,7 @@ Why: a tool that cannot meet its own rule has no standing to enforce it.
 
 Sources: [PHP supported versions](https://www.php.net/supported-versions.php); ADR-0003 (internal).
 
-**How the stack holds it: Not yet.** PROCTOR requires `php: ^8.2`. PHP 8.2 is already security-only and reaches end of
+**How the stack holds it: Not yet.** PROCTOR requires `php: ^8.3`. PHP 8.2 is already security-only and reaches end of
 life on 2026-12-31, so the floor check fails on PROCTOR itself from 2027-01-01. PROCTOR's own pipeline does not run the
 `proctor` component yet.
 
