@@ -87,4 +87,16 @@ final class CheckCommandTest extends ProctorTestCase
             $result['stdout']
         );
     }
+
+    public function testExpiredOverrideStillFailsWhenAnActiveOverrideNamesTheOverridesCheck(): void
+    {
+        $result = $this->runProctor($this->app('override-loophole-app'));
+
+        self::assertSame(1, $result['exit']);
+        self::assertSame(['overrides'], $this->failCheckIds($result['stdout']));
+        self::assertMatchesRegularExpression(
+            '/^FAIL overrides: override for "lock-committed" expired on 2026-01-01$/m',
+            $result['stdout']
+        );
+    }
 }
