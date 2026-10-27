@@ -127,6 +127,9 @@ $application->add(new class () extends Command {
             $findings = $runner->run();
         } catch (ToolError $e) {
             $output->getErrorOutput()->writeln($e->getMessage());
+            if ('codequality' === $format) {
+                $output->writeln((new CodeQualityWriter())->writeToolError($e->getMessage()));
+            }
             return 2;
         }
 

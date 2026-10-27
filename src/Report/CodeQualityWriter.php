@@ -26,20 +26,59 @@ final class CodeQualityWriter implements ReportWriter
                 continue;
             }
 
-            $items[] = [
-                'description' => $finding->message,
-                'check_name' => $finding->checkId,
-                'fingerprint' => Fingerprint::of($finding->checkId, $finding->path, $finding->message),
-                'severity' => $this->severity($finding->status),
-                'location' => [
-                    'path' => $finding->path ?? self::DEFAULT_PATH,
-                    'lines' => [
-                        'begin' => $finding->line,
-                    ],
-                ],
-            ];
+            $items[] = $this->item(
+                $finding->message,
+                $finding->checkId,
+                $finding->path,
+                $finding->line,
+                $this->severity($finding->status)
+            );
         }
 
+        return $this->encode($items);
+    }
+
+    /**
+     * A single issue describing a tool error, so a run that cannot proceed
+     * still shows up in the merge request instead of an empty array.
+     */
+    public function writeToolError(string $message): string
+    {
+        return $this->encode([$this->item(
+            $message,
+            Report::TOOL,
+            null,
+            1,
+            'blocker'
+        )]);
+    }
+
+    /**
+     * One Code Quality item in the GitLab shape.
+     *
+     * @return array<string, mixed>
+     */
+    private function item(string $message, string $checkName, ?string $path, int $line, string $severity): array
+    {
+        return [
+            'description' => $message,
+            'check_name' => $checkName,
+            'fingerprint' => Fingerprint::of($checkName, $path, $message),
+            'severity' => $severity,
+            'location' => [
+                'path' => $path ?? self::DEFAULT_PATH,
+                'lines' => [
+                    'begin' => $line,
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @param list<array<string, mixed>> $items
+     */
+    private function encode(array $items): string
+    {
         $json = json_encode(
             $items,
             JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
