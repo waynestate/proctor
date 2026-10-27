@@ -21,30 +21,30 @@ The command is then `vendor/bin/proctor`.
 vendor/bin/proctor check [--path=.] [--format=text|json|codequality] [--policy=<file>] [--today=YYYY-MM-DD]
 ```
 
-- `--path` — path to the application to check (default `.`).
-- `--format` — output format: `text` (default), `json`, or `codequality`.
-- `--policy` — path to the CREED-format policy file (required).
-- `--today` — override today's date (YYYY-MM-DD) so runs are deterministic.
+- `--path`: path to the application to check (default `.`).
+- `--format`: output format: `text` (default), `json`, or `codequality`.
+- `--policy`: path to the CREED-format policy file (required).
+- `--today`: override today's date (YYYY-MM-DD) so runs are deterministic.
 
 ## Checks
 
-- `php-floor` — fails when the lowest PHP version allowed by `require.php` is past security support plus the grace window, or when composer.json has no usable php constraint.
-- `unbounded-constraints` — fails for every runtime constraint that is `*` or names a dev- branch.
-- `lock-committed` — fails when composer.lock is missing from the app path.
-- `composer-audit` — fails for advisories at or above the policy's `audit_severity_threshold`, warns for lower ones, and reports info when composer or the lock file is absent.
-- `overrides` — fails for every expired entry in policy-overrides.json.
+- `php-floor`: fails when the lowest PHP version allowed by `require.php` is past security support plus the grace window, or when composer.json has no usable php constraint.
+- `unbounded-constraints`: fails for every runtime constraint that is `*` or names a dev- branch.
+- `lock-committed`: fails when composer.lock is missing from the app path.
+- `composer-audit`: fails for advisories at or above the policy's `audit_severity_threshold`, warns for lower ones, and reports info when composer or the lock file is absent.
+- `overrides`: fails for every expired entry in policy-overrides.json.
 
 ## Exit codes
 
-- `0` — pass (warnings allowed)
-- `1` — one or more failures
-- `2` — tool error (bad options, unreadable policy, malformed composer.json or overrides file)
+- `0`: pass (warnings allowed)
+- `1`: one or more failures
+- `2`: tool error (bad options, unreadable policy, malformed composer.json or overrides file)
 
 ## Formats
 
-- `text` — one line per finding, then one line per override, then a RESULT line.
-- `json` — one machine-readable object with tool, version, path, today, result, exit, findings and overrides.
-- `codequality` — GitLab's Code Quality JSON: a single array of findings, so a merge request shows them.
+- `text`: one line per finding, then one line per override, then a RESULT line.
+- `json`: one machine-readable object with tool, version, path, today, result, exit, findings and overrides.
+- `codequality`: GitLab's Code Quality JSON: a single array of findings, so a merge request shows them.
 
 ## Overrides
 
