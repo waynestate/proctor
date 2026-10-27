@@ -1,0 +1,38 @@
+{
+    "name": "waynestate/proctor",
+    "description": "A framework-free PHP CLI that measures a PHP app against the version policy.",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Wayne State University, Enterprise Applications"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "symfony/console": "^7.1",
+        "composer/semver": "^3.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.5"
+    },
+    "config": {
+        "platform": {
+            "php": "8.2.0"
+        }
+    },
+    "bin": [
+        "bin/proctor"
+    ],
+    "autoload": {
+        "psr-4": {
+            "Waynestate\\Proctor\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Waynestate\\Proctor\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable"
+}

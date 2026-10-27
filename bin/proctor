@@ -1,0 +1,67 @@
+#!/usr/bin/env php
+<?php
+
+use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
+
+$autoload = __DIR__ . '/../vendor/autoload.php';
+if (!is_file($autoload)) {
+    fwrite(STDERR, "vendor/autoload.php not found. Run `composer install` first.\n");
+    exit(2);
+}
+
+require $autoload;
+
+$application = new class ('proctor', '0.1.0') extends Application {
+    public function doRun(InputInterface $input, OutputInterface $output): int
+    {
+        $name = $this->getCommandName($input);
+        if (null !== $name && '' !== $name && !$this->has($name)) {
+            $output->getErrorOutput()->writeln(sprintf('Command "%s" is not defined.', $name));
+            return 2;
+        }
+
+        return parent::doRun($input, $output);
+    }
+};
+
+$application->add(new class () extends Command {
+    protected function configure(): void
+    {
+        $this
+            ->setName('check')
+            ->setDescription('Measure a PHP app against the version policy.')
+            ->addOption('path', null, InputOption::VALUE_REQUIRED, 'Path to the application to check.', '.')
+            ->addOption('format', null, InputOption::VALUE_REQUIRED, 'Output format (text, json, codequality).', 'text')
+            ->addOption('policy', null, InputOption::VALUE_REQUIRED, 'Path to the policy file.')
+            ->addOption('today', null, InputOption::VALUE_REQUIRED, "Override today's date (YYYY-MM-DD).");
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        $format = (string) $input->getOption('format');
+        if (!in_array($format, ['text', 'json', 'codequality'], true)) {
+            $output->getErrorOutput()->writeln(sprintf(
+                'Invalid format "%s". Allowed values: text, json, codequality.',
+                $format
+            ));
+            return 2;
+        }
+
+        $today = $input->getOption('today');
+        if (null !== $today && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $today)) {
+            $output->getErrorOutput()->writeln(sprintf(
+                'Invalid --today value "%s". Expected format: YYYY-MM-DD.',
+                $today
+            ));
+            return 2;
+        }
+
+        return 0;
+    }
+});
+
+exit($application->run());
