@@ -53,7 +53,8 @@ final class ComposerAuditCheck implements CheckInterface
 
         $result = $this->process->run(
             [$composer, 'audit', '--format=json', '--locked'],
-            $context->appPath
+            $context->appPath,
+            $context->timeout
         );
 
         $decoded = json_decode($result->stdout, true);

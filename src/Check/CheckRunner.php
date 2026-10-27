@@ -20,6 +20,8 @@ final class CheckRunner
     /**
      * @param list<CheckInterface> $checks    the checks to run, in output order
      * @param list<Override>       $overrides the app's policy-overrides.json entries
+     * @param int                  $timeout   maximum seconds for an external process
+     *                                        (composer audit) before it is killed
      */
     public function __construct(
         private readonly string $appPath,
@@ -27,6 +29,7 @@ final class CheckRunner
         private readonly DateTimeImmutable $today,
         private readonly array $checks,
         private readonly array $overrides = [],
+        private readonly int $timeout = 300,
     ) {
     }
 
@@ -42,7 +45,7 @@ final class CheckRunner
     {
         $this->validateApp();
 
-        $context = new CheckContext($this->appPath, $this->policy, $this->today, $this->overrides);
+        $context = new CheckContext($this->appPath, $this->policy, $this->today, $this->overrides, $this->timeout);
         $findings = [];
         foreach ($this->checks as $check) {
             foreach ($check->run($context) as $finding) {

@@ -17,8 +17,9 @@ interface ProcessRunnerInterface
     /**
      * @param list<string> $command executable path followed by its arguments
      * @param string       $cwd     working directory of the process
+     * @param int          $timeout maximum seconds to wait before killing the process
      *
-     * @throws ToolError if the process cannot be started
+     * @throws ToolError if the process cannot be started or times out
      */
-    public function run(array $command, string $cwd): ProcessResult;
+    public function run(array $command, string $cwd, int $timeout = 300): ProcessResult;
 }

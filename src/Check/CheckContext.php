@@ -17,6 +17,8 @@ final class CheckContext
     /**
      * @param list<Override> $overrides the app's policy-overrides.json entries,
      *                                  empty when the file is absent
+     * @param int            $timeout   maximum seconds for an external process
+     *                                  (composer audit) before it is killed
      */
     public function __construct(
         /** The application path (--path). */
@@ -25,6 +27,7 @@ final class CheckContext
         /** The date for every state decision (--today, or the current date). */
         public readonly DateTimeImmutable $today,
         public readonly array $overrides = [],
+        public readonly int $timeout = 300,
     ) {
     }
 }

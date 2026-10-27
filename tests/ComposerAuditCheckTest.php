@@ -67,7 +67,7 @@ final class ComposerAuditCheckTest extends TestCase
             {
             }
 
-            public function run(array $command, string $cwd): ProcessResult
+            public function run(array $command, string $cwd, int $timeout = 300): ProcessResult
             {
                 return new ProcessResult(1, $this->json, '');
             }
