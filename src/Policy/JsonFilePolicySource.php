@@ -84,13 +84,9 @@ final class JsonFilePolicySource implements PolicySource
             ));
         }
 
-        if (($data['schema_version'] ?? null) !== 1) {
-            throw new PolicyException(sprintf(
-                'Policy file "%s" has unsupported schema_version %s; expected 1.',
-                $file,
-                var_export($data['schema_version'] ?? null, true)
-            ));
-        }
+        // The schema_version is never refused: an older Check must still read
+        // a newer policy file, so any value is accepted and keys this reader
+        // does not know are ignored.
 
         $versions = $data['components']['php']['versions'] ?? null;
         if (!is_array($versions) || $versions === []) {

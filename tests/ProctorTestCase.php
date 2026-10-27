@@ -29,9 +29,13 @@ abstract class ProctorTestCase extends TestCase
      * Runs bin/proctor check on the given app and returns the exit code,
      * stdout and stderr.
      *
+     * @param string      $app    a fixture app name
+     * @param string      $format the report format
+     * @param string|null $policy an optional policy file; defaults to the fixture policy
+     *
      * @return array{exit: int, stdout: string, stderr: string}
      */
-    protected function runProctor(string $app, string $format = 'text'): array
+    protected function runProctor(string $app, string $format = 'text', ?string $policy = null): array
     {
         $cmd = [
             PHP_BINARY,
@@ -39,7 +43,7 @@ abstract class ProctorTestCase extends TestCase
             'check',
             '--path=' . $app,
             '--format=' . $format,
-            '--policy=' . __DIR__ . '/fixtures/policy.json',
+            '--policy=' . ($policy ?? __DIR__ . '/fixtures/policy.json'),
             '--today=' . self::TODAY,
         ];
 

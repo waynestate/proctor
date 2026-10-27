@@ -1,0 +1,17 @@
+{
+    "require": {
+        "php": "^8.4",
+        "vendor/open": ">=1.0",
+        "vendor/devflag": "1.0@dev"
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../local-package"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/example/repo.git"
+        }
+    ]
+}

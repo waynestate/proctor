@@ -15,9 +15,11 @@ use Waynestate\Proctor\Override\OverrideFile;
  */
 final class OverridesCheck implements CheckInterface
 {
+    public const ID = 'overrides';
+
     public function id(): string
     {
-        return 'overrides';
+        return self::ID;
     }
 
     public function run(CheckContext $context): array

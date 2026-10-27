@@ -60,12 +60,15 @@ final class OverrideApplier
     }
 
     /**
-     * The EOL exception: a fail in the eol_grace_expired state is never
-     * overridable, whatever overrides the app carries.
+     * A fail is never overridable when its state is eol_grace_expired (the
+     * EOL exception, ADR-0003: "EOL + 90 days: fail; no override") or when
+     * it comes from the overrides check itself: an expired override must
+     * always fail, even if another active override names the overrides check.
      */
     private function isOverridable(Finding $finding): bool
     {
-        return $finding->state !== State::EOL_GRACE_EXPIRED;
+        return $finding->state !== State::EOL_GRACE_EXPIRED
+            && $finding->checkId !== OverridesCheck::ID;
     }
 
     /**

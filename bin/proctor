@@ -53,7 +53,8 @@ $application->add(new class () extends Command {
             ->addOption('path', null, InputOption::VALUE_REQUIRED, 'Path to the application to check.', '.')
             ->addOption('format', null, InputOption::VALUE_REQUIRED, 'Output format (text, json, codequality).', 'text')
             ->addOption('policy', null, InputOption::VALUE_REQUIRED, 'Path to the policy file.')
-            ->addOption('today', null, InputOption::VALUE_REQUIRED, "Override today's date (YYYY-MM-DD).");
+            ->addOption('today', null, InputOption::VALUE_REQUIRED, "Override today's date (YYYY-MM-DD).")
+            ->addOption('timeout', null, InputOption::VALUE_REQUIRED, 'Maximum seconds for composer audit before it is killed.', '300');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -97,6 +98,16 @@ $application->add(new class () extends Command {
 
         $appPath = (string) $input->getOption('path');
 
+        $timeoutOption = (string) $input->getOption('timeout');
+        if (!preg_match('/^\d+$/', $timeoutOption) || (int) $timeoutOption < 1) {
+            $output->getErrorOutput()->writeln(sprintf(
+                'Invalid --timeout value "%s". Expected a positive integer number of seconds.',
+                $timeoutOption
+            ));
+            return 2;
+        }
+        $timeout = (int) $timeoutOption;
+
         try {
             $overrides = OverrideFile::load($appPath);
             $runner = new CheckRunner(
@@ -110,11 +121,15 @@ $application->add(new class () extends Command {
                     new ComposerAuditCheck(),
                     new OverridesCheck(),
                 ],
-                $overrides
+                $overrides,
+                $timeout
             );
             $findings = $runner->run();
         } catch (ToolError $e) {
             $output->getErrorOutput()->writeln($e->getMessage());
+            if ('codequality' === $format) {
+                $output->writeln((new CodeQualityWriter())->writeToolError($e->getMessage()));
+            }
             return 2;
         }
 
