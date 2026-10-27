@@ -152,9 +152,9 @@ Why: a tool that cannot meet its own rule has no standing to enforce it.
 
 Sources: [PHP supported versions](https://www.php.net/supported-versions.php); ADR-0003 (internal).
 
-**How the stack holds it: Not yet.** PROCTOR requires `php: ^8.3`. PHP 8.2 is already security-only and reaches end of
-life on 2026-12-31, so the floor check fails on PROCTOR itself from 2027-01-01. PROCTOR's own pipeline does not run the
-`proctor` component yet.
+**How the stack holds it: Not yet.** PROCTOR requires `php: ^8.3`, and its pipeline tests 8.3, 8.4 and 8.5. PHP 8.3
+is security-only and reaches end of life on 2027-12-31, so the floor must move to `^8.4` before then or the floor
+check fails on PROCTOR itself. PROCTOR's own pipeline does not run the `proctor` component yet.
 
 ### 2.7 Put the end date in the security-only warning (second pass)
 A warning that says "security-only" gives the owner no deadline. Print the date security support ends and the days left.
@@ -702,7 +702,7 @@ Why: a checker that is wrong in silence is dangerous.
 
 Sources: [GitLab: test with a sample project that exercises the tool](https://docs.gitlab.com/ci/components/).
 
-**How the stack holds it: Checked.** PROCTOR's pipeline runs PHPUnit on PHP 8.2 to 8.5 through the PREFLIGHT
+**How the stack holds it: Checked.** PROCTOR's pipeline runs PHPUnit on PHP 8.3 to 8.5 through the PREFLIGHT
 `php-test` component, with fixtures for pass, end of life, unbounded and expired override. The audit parsing path
 has no test: the CLI tests remove `composer` from the PATH, so no fixture produces a real advisory.
 
