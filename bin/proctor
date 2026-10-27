@@ -16,6 +16,11 @@ use Waynestate\Proctor\Check\UnboundedConstraintsCheck;
 use Waynestate\Proctor\Override\OverrideFile;
 use Waynestate\Proctor\Policy\JsonFilePolicySource;
 use Waynestate\Proctor\Policy\PolicyException;
+use Waynestate\Proctor\Report\CodeQualityWriter;
+use Waynestate\Proctor\Report\JsonWriter;
+use Waynestate\Proctor\Report\Report;
+use Waynestate\Proctor\Report\ReportWriter;
+use Waynestate\Proctor\Report\TextWriter;
 use Waynestate\Proctor\ToolError;
 
 $autoload = __DIR__ . '/../vendor/autoload.php';
@@ -26,7 +31,7 @@ if (!is_file($autoload)) {
 
 require $autoload;
 
-$application = new class ('proctor', '0.1.0') extends Application {
+$application = new class (Report::TOOL, Report::VERSION) extends Application {
     public function doRun(InputInterface $input, OutputInterface $output): int
     {
         $name = $this->getCommandName($input);
@@ -57,13 +62,6 @@ $application->add(new class () extends Command {
         if (!in_array($format, ['text', 'json', 'codequality'], true)) {
             $output->getErrorOutput()->writeln(sprintf(
                 'Invalid format "%s". Allowed values: text, json, codequality.',
-                $format
-            ));
-            return 2;
-        }
-        if ('text' !== $format) {
-            $output->getErrorOutput()->writeln(sprintf(
-                'Format "%s" is not implemented in step 3.',
                 $format
             ));
             return 2;
@@ -125,34 +123,32 @@ $application->add(new class () extends Command {
             if (Finding::STATUS_FAIL === $finding->status) {
                 $hasFail = true;
             }
-            $output->writeln(sprintf(
-                '%s %s: %s',
-                $this->statusLabel($finding->status),
-                $finding->checkId,
-                $finding->message
-            ));
         }
 
-        foreach ($overrides as $override) {
-            $output->writeln(sprintf(
-                'OVERRIDE %s: %s (expires %s, approved by %s)',
-                $override->check,
-                $override->reason,
-                $override->displayDate(),
-                $override->approvedBy
-            ));
+        $report = new Report(
+            $appPath,
+            $today,
+            $findings,
+            $overrides,
+            $hasFail ? Report::EXIT_FAIL : Report::EXIT_PASS
+        );
+
+        try {
+            $output->writeln($this->writerFor($format)->write($report));
+        } catch (ToolError $e) {
+            $output->getErrorOutput()->writeln($e->getMessage());
+            return 2;
         }
 
-        return $hasFail ? 1 : 0;
+        return $report->exitCode;
     }
 
-    private function statusLabel(string $status): string
+    private function writerFor(string $format): ReportWriter
     {
-        return match ($status) {
-            Finding::STATUS_PASS => 'PASS',
-            Finding::STATUS_INFO => 'INFO',
-            Finding::STATUS_WARNING => 'WARN',
-            Finding::STATUS_FAIL => 'FAIL',
+        return match ($format) {
+            'text' => new TextWriter(),
+            'json' => new JsonWriter(),
+            'codequality' => new CodeQualityWriter(),
         };
     }
 });
