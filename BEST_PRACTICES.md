@@ -142,7 +142,8 @@ Why: declared and actual versions drift.
 Sources: [PHP supported versions](https://www.php.net/supported-versions.php); ADR-0006 (internal).
 
 **How the stack holds it: Documented.** ADR-0006 proposes `proctor gate` against the target image tag. The command does
-not exist yet, and the Citadel hook it needs is not agreed.
+not exist yet. The gate is platform-neutral: on Citadel it runs from SQUIRE's `citadel` target, whose hook is not
+agreed yet, and other hosts run the same gate as a CI job.
 
 ### 2.6 A tool must pass its own check
 The stack's own repos use the same policy as apps. A floor that PROCTOR would fail must be raised in a new major
@@ -483,7 +484,7 @@ Why: a far-future date is a permanent override with extra steps.
 
 Sources: ADR-0006 (internal).
 
-**How the stack holds it: Documented.** ADR-0006 states the rule for the Citadel gate. `OverrideFile` accepts any
+**How the stack holds it: Documented.** ADR-0006 states the rule for the deploy gate. `OverrideFile` accepts any
 valid date.
 
 ### 5.6 Do not let an override waive the override check, and reject unknown check names
@@ -503,7 +504,8 @@ Why: an approval that nobody checks is a note.
 
 Sources: [GitLab protected branches: Code Owner approval is Premium or Ultimate](https://docs.gitlab.com/user/project/repository/branches/protected/).
 
-**How the stack holds it: Not yet.** ADR-0006 moves override storage to Citadel admins for the deploy gate. In CI there
+**How the stack holds it: Not yet.** ADR-0006 moves override storage to the platform admins for the deploy gate
+(Citadel's admins today, through SQUIRE's `citadel` target). In CI there
 is no check that the approver exists or differs from the author, and git.wayne.edu runs GitLab Community Edition, which
 has no code owner approval. (Second pass: the GitLab protected-branches page still lists Code Owner approval as
 Premium and Ultimate.)
@@ -886,3 +888,12 @@ Composer 2.10 release, GitLab Code Quality, GitLab CI/CD YAML reference, GitLab 
 Semgrep blocking and errors, OpenSSF Scorecard checks, SLSA v1.0 levels.
 
 Internal design documents used for tagging: ADR-0002, ADR-0003, ADR-0006, ADR-0008, the PROCTOR repo, and the PREFLIGHT repo.
+
+## Platform assumptions
+
+### The portability check
+An app must run on Citadel, OpenShift, Coolify or raw Docker, so platform facts belong in env or config, not in code.
+
+**How the stack holds it: Checked.** The `portability` check warns on absolute host paths, hard-coded proxy
+addresses, sessions on local disk, and `php_value` or `php_flag` lines in `.htaccess` (they do nothing under
+php-fpm). It reports warnings, not failures, while the stack stages the rule.
