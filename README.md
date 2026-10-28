@@ -31,6 +31,7 @@ vendor/bin/proctor check [--path=.] [--format=text|json|codequality] [--policy=<
 - `php-floor`: fails when the lowest PHP version allowed by `require.php` is past security support plus the grace window, or when composer.json has no usable php constraint.
 - `unbounded-constraints`: fails for every runtime constraint that is `*` or names a dev- branch.
 - `lock-committed`: fails when composer.lock is missing from the app path.
+- `portability`: warns when code hard-codes a platform fact: an absolute host path, a hard-coded proxy address, a local-disk session store, or a php_value/php_flag line in .htaccess.
 - `composer-audit`: fails for advisories at or above the policy's `audit_severity_threshold`, warns for lower ones, and reports info when composer or the lock file is absent.
 - `overrides`: fails for every expired entry in policy-overrides.json.
 
