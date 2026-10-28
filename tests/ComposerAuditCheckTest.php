@@ -62,10 +62,8 @@ final class ComposerAuditCheckTest extends TestCase
             ],
         ]);
 
-        $check = new ComposerAuditCheck(new class($json) implements ProcessRunnerInterface {
-            public function __construct(private readonly string $json)
-            {
-            }
+        $check = new ComposerAuditCheck(new class ($json) implements ProcessRunnerInterface {
+            public function __construct(private readonly string $json) {}
 
             public function run(array $command, string $cwd, int $timeout = 300): ProcessResult
             {
@@ -76,7 +74,7 @@ final class ComposerAuditCheckTest extends TestCase
         $context = new CheckContext(
             __DIR__ . '/fixtures/apps/audit-app',
             new JsonFilePolicySource(__DIR__ . '/fixtures/policy.json'),
-            new DateTimeImmutable('2026-10-27')
+            new DateTimeImmutable('2026-10-27'),
         );
 
         $findings = $check->run($context);

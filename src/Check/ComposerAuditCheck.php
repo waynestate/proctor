@@ -24,8 +24,7 @@ final class ComposerAuditCheck implements CheckInterface
 
     public function __construct(
         private readonly ProcessRunnerInterface $process = new ProcessRunner(),
-    ) {
-    }
+    ) {}
 
     public function id(): string
     {
@@ -39,7 +38,7 @@ final class ComposerAuditCheck implements CheckInterface
             return [new Finding(
                 $this->id(),
                 Finding::STATUS_INFO,
-                'composer executable not found on PATH; composer audit skipped'
+                'composer executable not found on PATH; composer audit skipped',
             )];
         }
 
@@ -47,14 +46,14 @@ final class ComposerAuditCheck implements CheckInterface
             return [new Finding(
                 $this->id(),
                 Finding::STATUS_INFO,
-                'no composer.lock in the app path; composer audit skipped'
+                'no composer.lock in the app path; composer audit skipped',
             )];
         }
 
         $result = $this->process->run(
             [$composer, 'audit', '--format=json', '--locked'],
             $context->appPath,
-            $context->timeout
+            $context->timeout,
         );
 
         $decoded = json_decode($result->stdout, true);
@@ -64,7 +63,7 @@ final class ComposerAuditCheck implements CheckInterface
                 $this->id(),
                 Finding::STATUS_WARNING,
                 'composer audit could not run: ' . ($firstLine !== '' ? $firstLine : 'no error output'),
-                'composer.lock'
+                'composer.lock',
             )];
         }
 
@@ -91,9 +90,9 @@ final class ComposerAuditCheck implements CheckInterface
                             '%s %s (%s)',
                             (string) $package,
                             $this->advisoryId($entry),
-                            is_string($severity) ? $severity : 'unknown'
+                            is_string($severity) ? $severity : 'unknown',
                         ),
-                        'composer.lock'
+                        'composer.lock',
                     );
                 }
             }
@@ -108,7 +107,7 @@ final class ComposerAuditCheck implements CheckInterface
                     is_string($replacement) && $replacement !== ''
                         ? sprintf('%s is abandoned (use %s instead)', (string) $package, $replacement)
                         : sprintf('%s is abandoned', (string) $package),
-                    'composer.lock'
+                    'composer.lock',
                 );
             }
         }
@@ -118,7 +117,7 @@ final class ComposerAuditCheck implements CheckInterface
                 $this->id(),
                 Finding::STATUS_PASS,
                 'no advisories found',
-                'composer.lock'
+                'composer.lock',
             )];
         }
 
@@ -137,7 +136,7 @@ final class ComposerAuditCheck implements CheckInterface
             throw new ToolError(sprintf(
                 'Policy rules.audit_severity_threshold must be one of %s; got %s.',
                 implode(', ', self::SEVERITIES),
-                var_export($threshold, true)
+                var_export($threshold, true),
             ));
         }
 
@@ -216,7 +215,7 @@ final class ComposerAuditCheck implements CheckInterface
 
         return array_values(array_filter(
             $ignore,
-            static fn (mixed $id): bool => is_string($id) && $id !== ''
+            static fn(mixed $id): bool => is_string($id) && $id !== '',
         ));
     }
 

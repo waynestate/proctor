@@ -1,0 +1,4 @@
+# Commits to ignore when running `git blame` (see `git config blame.ignoreRevsFile`).
+# The Pint reformat touched every file at once; ignoring it keeps blame pointing at
+# the person who actually wrote each line.
+60a9d14ec1869900009092e00afdcf49bcf7368f

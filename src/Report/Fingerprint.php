@@ -9,9 +9,7 @@ namespace Waynestate\Proctor\Report;
  */
 final class Fingerprint
 {
-    private function __construct()
-    {
-    }
+    private function __construct() {}
 
     /**
      * Lower-case hex SHA-256 of check_id + "\n" + path ("" when null)

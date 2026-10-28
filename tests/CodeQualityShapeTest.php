@@ -28,11 +28,11 @@ final class CodeQualityShapeTest extends ProctorTestCase
         foreach ($items as $item) {
             self::assertSame(
                 ['description', 'check_name', 'fingerprint', 'severity', 'location'],
-                array_keys($item)
+                array_keys($item),
             );
             self::assertContains(
                 $item['severity'],
-                ['info', 'minor', 'major', 'critical', 'blocker']
+                ['info', 'minor', 'major', 'critical', 'blocker'],
             );
             self::assertMatchesRegularExpression('/^[0-9a-f]{64}$/', $item['fingerprint']);
             self::assertIsString($item['location']['path']);
@@ -58,7 +58,7 @@ final class CodeQualityShapeTest extends ProctorTestCase
         $item = $items[0];
         self::assertSame(
             ['description', 'check_name', 'fingerprint', 'severity', 'location'],
-            array_keys($item)
+            array_keys($item),
         );
         self::assertSame('proctor', $item['check_name']);
         self::assertSame('blocker', $item['severity']);

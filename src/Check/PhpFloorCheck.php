@@ -33,7 +33,7 @@ final class PhpFloorCheck implements CheckInterface
                 $this->id(),
                 Finding::STATUS_FAIL,
                 'composer.json has no require.php constraint',
-                'composer.json'
+                'composer.json',
             )];
         }
 
@@ -43,7 +43,7 @@ final class PhpFloorCheck implements CheckInterface
                 $this->id(),
                 Finding::STATUS_FAIL,
                 sprintf('php constraint "%s" allows no stable version', $constraint),
-                'composer.json'
+                'composer.json',
             )];
         }
 
@@ -60,7 +60,7 @@ final class PhpFloorCheck implements CheckInterface
                 sprintf('php floor %s is active', $floor),
                 'composer.json',
                 1,
-                $state
+                $state,
             )],
             State::SECURITY => [new Finding(
                 $this->id(),
@@ -68,7 +68,7 @@ final class PhpFloorCheck implements CheckInterface
                 sprintf('php floor %s is in security-only support', $floor),
                 'composer.json',
                 1,
-                $state
+                $state,
             )],
             default => [new Finding(
                 $this->id(),
@@ -76,7 +76,7 @@ final class PhpFloorCheck implements CheckInterface
                 sprintf('php floor %s is %s', $floor, $state),
                 'composer.json',
                 1,
-                $state
+                $state,
             )],
         };
     }
@@ -120,7 +120,7 @@ final class PhpFloorCheck implements CheckInterface
             throw new ToolError(sprintf(
                 'php constraint "%s" is not a valid version constraint: %s',
                 $constraint,
-                $e->getMessage()
+                $e->getMessage(),
             ));
         }
 

@@ -28,7 +28,7 @@ final class PortabilityCheckTest extends TestCase
         return new CheckContext(
             $appPath,
             new JsonFilePolicySource(__DIR__ . '/fixtures/policy.json'),
-            new DateTimeImmutable(self::TODAY)
+            new DateTimeImmutable(self::TODAY),
         );
     }
 
@@ -42,19 +42,19 @@ final class PortabilityCheckTest extends TestCase
     private function triples(array $findings): array
     {
         return array_map(
-            static fn (Finding $finding): array => [
+            static fn(Finding $finding): array => [
                 explode(':', $finding->message, 2)[0],
                 (string) $finding->path,
                 $finding->line,
             ],
-            $findings
+            $findings,
         );
     }
 
     public function testPortabilityAppGivesExactlyFourWarnings(): void
     {
         $findings = (new PortabilityCheck())->run(
-            $this->contextFor(__DIR__ . '/fixtures/apps/portability-app')
+            $this->contextFor(__DIR__ . '/fixtures/apps/portability-app'),
         );
 
         self::assertCount(4, $findings);
@@ -73,14 +73,14 @@ final class PortabilityCheckTest extends TestCase
                 ['htaccess-php-setting', 'public/.htaccess', 1],
                 ['host-path', 'src/Paths.php', 5],
             ],
-            $this->triples($findings)
+            $this->triples($findings),
         );
     }
 
     public function testPassAppGivesExactlyOnePassFinding(): void
     {
         $findings = (new PortabilityCheck())->run(
-            $this->contextFor(__DIR__ . '/fixtures/apps/pass-app')
+            $this->contextFor(__DIR__ . '/fixtures/apps/pass-app'),
         );
 
         self::assertCount(1, $findings);
@@ -103,7 +103,7 @@ final class PortabilityCheckTest extends TestCase
                 [
                     ['host-path', 'win.php', 3],
                 ],
-                $this->triples($findings)
+                $this->triples($findings),
             );
         } finally {
             unlink($appPath . '/win.php');

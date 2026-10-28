@@ -32,7 +32,7 @@ final class ProcessRunner implements ProcessRunnerInterface
         if (!is_resource($process)) {
             throw new ToolError(sprintf(
                 'Could not start process "%s".',
-                implode(' ', $command)
+                implode(' ', $command),
             ));
         }
 
@@ -78,7 +78,7 @@ final class ProcessRunner implements ProcessRunnerInterface
         return new ProcessResult(
             $exitCode,
             $stdout,
-            $stderr
+            $stderr,
         );
     }
 
@@ -101,7 +101,7 @@ final class ProcessRunner implements ProcessRunnerInterface
         throw new ToolError(sprintf(
             'Process "%s" timed out after %d seconds.',
             implode(' ', $command),
-            $timeout
+            $timeout,
         ));
     }
 }

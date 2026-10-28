@@ -15,8 +15,7 @@ final class ProcessResult
         public readonly int $exitCode,
         public readonly string $stdout,
         public readonly string $stderr,
-    ) {
-    }
+    ) {}
 
     /**
      * The first line of stderr, trimmed, or '' when stderr is empty.

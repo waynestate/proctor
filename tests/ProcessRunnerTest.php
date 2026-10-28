@@ -22,7 +22,7 @@ final class ProcessRunnerTest extends TestCase
         $result = $runner->run(
             [PHP_BINARY, '-r', 'fwrite(STDOUT, "out"); fwrite(STDERR, "err"); exit(3);'],
             __DIR__,
-            300
+            300,
         );
 
         self::assertSame(3, $result->exitCode);
@@ -47,7 +47,7 @@ final class ProcessRunnerTest extends TestCase
         self::assertLessThan(
             4.0,
             $elapsed,
-            'The process should be killed well before its sleep(5) finishes.'
+            'The process should be killed well before its sleep(5) finishes.',
         );
     }
 }

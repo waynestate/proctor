@@ -32,7 +32,7 @@ final class PolicyVersionTest extends ProctorTestCase
         // A known component/version still resolves to the right state.
         self::assertSame(
             State::ACTIVE,
-            $policy->stateOf('php', '8.4', new DateTimeImmutable(self::TODAY))
+            $policy->stateOf('php', '8.4', new DateTimeImmutable(self::TODAY)),
         );
     }
 

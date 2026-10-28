@@ -28,7 +28,7 @@ final class Mysql56CheckTest extends TestCase
         return new CheckContext(
             $appPath,
             new JsonFilePolicySource(__DIR__ . '/fixtures/policy.json'),
-            new DateTimeImmutable(self::TODAY)
+            new DateTimeImmutable(self::TODAY),
         );
     }
 
@@ -42,19 +42,19 @@ final class Mysql56CheckTest extends TestCase
     private function triples(array $findings): array
     {
         return array_map(
-            static fn (Finding $finding): array => [
+            static fn(Finding $finding): array => [
                 explode(':', $finding->message, 2)[0],
                 (string) $finding->path,
                 $finding->line,
             ],
-            $findings
+            $findings,
         );
     }
 
     public function testMysql56AppGivesExactlyTwelveWarnings(): void
     {
         $findings = (new Mysql56Check())->run(
-            $this->contextFor(__DIR__ . '/fixtures/apps/mysql56-app')
+            $this->contextFor(__DIR__ . '/fixtures/apps/mysql56-app'),
         );
 
         self::assertCount(12, $findings);
@@ -76,8 +76,8 @@ final class Mysql56CheckTest extends TestCase
                 1,
                 array_filter(
                     $findings,
-                    static fn (Finding $finding): bool => str_starts_with($finding->message, $ruleId . ':')
-                )
+                    static fn(Finding $finding): bool => str_starts_with($finding->message, $ruleId . ':'),
+                ),
             );
         }
 
@@ -98,14 +98,14 @@ final class Mysql56CheckTest extends TestCase
                 ['mysql56-raw-sql', 'database/migrations/2026_01_01_000000_create_things_table.php', 26],
                 ['mysql56-command', 'routes/console.php', 11],
             ],
-            $this->triples($findings)
+            $this->triples($findings),
         );
     }
 
     public function testCleanAppGivesExactlyOnePassFinding(): void
     {
         $findings = (new Mysql56Check())->run(
-            $this->contextFor(__DIR__ . '/fixtures/apps/mysql56-clean-app')
+            $this->contextFor(__DIR__ . '/fixtures/apps/mysql56-clean-app'),
         );
 
         self::assertCount(1, $findings);
@@ -117,7 +117,7 @@ final class Mysql56CheckTest extends TestCase
     {
         // portability-app has no database/ folder at all.
         $findings = (new Mysql56Check())->run(
-            $this->contextFor(__DIR__ . '/fixtures/apps/portability-app')
+            $this->contextFor(__DIR__ . '/fixtures/apps/portability-app'),
         );
 
         self::assertCount(1, $findings);

@@ -21,7 +21,7 @@ final class LockCommittedCheck implements CheckInterface
                 $this->id(),
                 Finding::STATUS_PASS,
                 'composer.lock is present',
-                'composer.lock'
+                'composer.lock',
             )];
         }
 
@@ -29,7 +29,7 @@ final class LockCommittedCheck implements CheckInterface
             $this->id(),
             Finding::STATUS_FAIL,
             'composer.lock is missing',
-            'composer.lock'
+            'composer.lock',
         )];
     }
 }

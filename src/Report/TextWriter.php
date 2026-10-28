@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Waynestate\Proctor\Report;
 
 use Waynestate\Proctor\Check\Finding;
+use Waynestate\Proctor\ToolError;
 
 /**
  * The default human-readable format.
@@ -27,7 +28,7 @@ final class TextWriter implements ReportWriter
                 '%s %s: %s',
                 $this->statusLabel($finding->status),
                 $finding->checkId,
-                $finding->message
+                $finding->message,
             );
         }
 
@@ -37,7 +38,7 @@ final class TextWriter implements ReportWriter
                 $override->check,
                 $override->reason,
                 $override->displayDate(),
-                $override->approvedBy
+                $override->approvedBy,
             );
         }
 
@@ -55,7 +56,7 @@ final class TextWriter implements ReportWriter
         return sprintf(
             'RESULT: fail (%d failures, %d warnings)',
             $report->countByStatus(Finding::STATUS_FAIL),
-            $report->countByStatus(Finding::STATUS_WARNING)
+            $report->countByStatus(Finding::STATUS_WARNING),
         );
     }
 
@@ -66,6 +67,7 @@ final class TextWriter implements ReportWriter
             Finding::STATUS_INFO => 'INFO',
             Finding::STATUS_WARNING => 'WARN',
             Finding::STATUS_FAIL => 'FAIL',
+            default => throw new ToolError(sprintf('Unknown finding status "%s".', $status)),
         };
     }
 }

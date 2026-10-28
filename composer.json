@@ -14,12 +14,19 @@
         "composer/semver": "^3.4"
     },
     "require-dev": {
-        "phpunit/phpunit": "^11.5"
+        "phpunit/phpunit": "^11.5",
+        "laravel/pint": "^1.32",
+        "phpstan/phpstan": "^2.1"
     },
     "config": {
         "platform": {
             "php": "8.3.0"
         }
+    },
+    "scripts": {
+        "lint": "pint --test",
+        "fix": "pint",
+        "analyse": "phpstan analyse --memory-limit=1G"
     },
     "bin": [
         "bin/proctor"
