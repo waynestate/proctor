@@ -41,7 +41,7 @@ holds no dates. A PHP version missing from the policy is a failure, not a pass.
 
 Why: one file changes when a version's dates change, and every tool agrees.
 
-Sources: [PHP supported versions](https://www.php.net/supported-versions.php); ADR-0003 (internal).
+Sources: [PHP supported versions](https://www.php.net/supported-versions.php); the stack's version-policy decision.
 
 **How the stack holds it: Enforced.** `JsonFilePolicySource` derives the state of each version from the file.
 `PolicyStateTest` pins the boundary days. An unknown version raises "version X not in policy", which the php-floor
@@ -66,7 +66,7 @@ Rejecting any other version breaks every pinned older checker on the day the pol
 
 Why: ADR-0003 says older checkers must still read newer policy files.
 
-Sources: ADR-0003 (internal); [GitLab Code Quality format: only the listed fields are processed](https://docs.gitlab.com/ci/testing/code_quality/)
+Sources: the stack's version-policy decision; [GitLab Code Quality format: only the listed fields are processed](https://docs.gitlab.com/ci/testing/code_quality/)
 (an example of a reader that ignores extras).
 
 **How the stack holds it: Not yet.** `JsonFilePolicySource` fails with "unsupported schema_version" unless the value is
@@ -77,7 +77,7 @@ The policy has `rules.banned_constraints`. The check must use it, so a change to
 
 Why: otherwise the policy file says one thing and the tool does another.
 
-Sources: ADR-0003 (internal).
+Sources: the stack's version-policy decision.
 
 **How the stack holds it: Not yet.** `UnboundedConstraintsCheck` hard-codes `*` and `dev-` in code. The policy list is
 validated nowhere and read nowhere.
@@ -117,7 +117,7 @@ that the failure stands.
 
 Why: it gives owners a bounded, visible path to upgrade, and it ends.
 
-Sources: [PHP supported versions](https://www.php.net/supported-versions.php); ADR-0003 (internal).
+Sources: [PHP supported versions](https://www.php.net/supported-versions.php); the stack's version-policy decision.
 
 **How the stack holds it: Enforced.** `rules.eol_grace_days` sets the window. `OverrideApplier` never downgrades a
 failure in the `eol_grace_expired` state, whatever overrides the app carries.
@@ -139,7 +139,7 @@ The deploy image is the real floor. A declared `^8.4` on an app that deploys on 
 
 Why: declared and actual versions drift.
 
-Sources: [PHP supported versions](https://www.php.net/supported-versions.php); ADR-0006 (internal).
+Sources: [PHP supported versions](https://www.php.net/supported-versions.php); the stack's deploy-gate decision.
 
 **How the stack holds it: Documented.** ADR-0006 proposes `proctor gate` against the target image tag. The command does
 not exist yet. The gate is platform-neutral: on Citadel it runs from SQUIRE's `citadel` target, whose hook is not
@@ -151,7 +151,7 @@ before the date.
 
 Why: a tool that cannot meet its own rule has no standing to enforce it.
 
-Sources: [PHP supported versions](https://www.php.net/supported-versions.php); ADR-0003 (internal).
+Sources: [PHP supported versions](https://www.php.net/supported-versions.php); the stack's version-policy decision.
 
 **How the stack holds it: Not yet.** PROCTOR requires `php: ^8.3`, and its pipeline tests 8.3, 8.4 and 8.5. PHP 8.3
 is security-only and reaches end of life on 2027-12-31, so the floor must move to `^8.4` before then or the floor
@@ -201,7 +201,7 @@ tampered with in transit.
 
 Why: both make the lock file unreproducible or unsafe.
 
-Sources: [Composer config: secure-http](https://getcomposer.org/doc/06-config.md); ADR-0008 (internal).
+Sources: [Composer config: secure-http](https://getcomposer.org/doc/06-config.md); the stack's one-repo-per-project decision.
 
 **How the stack holds it: Not yet.** ADR-0008 says Check flags committed `path` repositories. No such check exists.
 
@@ -440,7 +440,7 @@ invalid field stops the run.
 
 Why: an exception without an end date becomes the permanent state.
 
-Sources: ADR-0003 (internal); [PHPStan baseline: entries cannot carry reasons](https://phpstan.org/user-guide/baseline)
+Sources: the stack's version-policy decision; [PHPStan baseline: entries cannot carry reasons](https://phpstan.org/user-guide/baseline)
 (the weakness that dated overrides avoid).
 
 **How the stack holds it: Enforced.** `OverrideFile` rejects the file (exit 2) for a missing field or a date that does
@@ -451,7 +451,7 @@ The output lists each override, active or expired, with its reason and approver.
 
 Why: an exception nobody sees cannot be questioned.
 
-Sources: ADR-0003 (internal).
+Sources: the stack's version-policy decision.
 
 **How the stack holds it: Enforced.** Text and JSON output include every override entry, and tests assert the
 `OVERRIDE` line.
@@ -482,7 +482,7 @@ The expiry should not be later than the related forced-upgrade deadline.
 
 Why: a far-future date is a permanent override with extra steps.
 
-Sources: ADR-0006 (internal).
+Sources: the stack's deploy-gate decision.
 
 **How the stack holds it: Documented.** ADR-0006 states the rule for the deploy gate. `OverrideFile` accepts any
 valid date.
@@ -598,7 +598,7 @@ The date is injectable so a test gives the same answer on any day.
 
 Why: policy results depend on dates, and tests must not drift.
 
-Sources: ADR-0003 (internal).
+Sources: the stack's version-policy decision.
 
 **How the stack holds it: Enforced.** `--today` is validated as a real `YYYY-MM-DD` date, and every CLI test runs with a
 fixed date and a fixed fixture policy. The same switch is a bypass if an app can set it in CI (see 1.2).
@@ -653,7 +653,7 @@ does not stop a deploy.
 Why: a gate that can take down deploys on its own bug will be switched off.
 
 Sources: [Semgrep: internal errors do not block](https://docs.semgrep.dev/semgrep-ci/configuring-blocking-and-errors-in-ci);
-ADR-0002 and ADR-0006 (internal).
+the stack's enforcement-points and deploy-gate decisions.
 
 **How the stack holds it: Documented.** `proctor gate` does not exist. The current `composer-audit` check needs the
 network and sets no timeout.
@@ -669,7 +669,7 @@ Why: installing an app runs its plugins and scripts, and an app on an old PHP ca
 check never runs.
 
 Sources: [OWASP CICD-SEC-4 Poisoned Pipeline Execution](https://owasp.org/www-project-top-10-ci-cd-security-risks/);
-[Composer CLI: `--no-plugins`, `--no-scripts`](https://getcomposer.org/doc/03-cli.md); ADR-0006 (internal).
+[Composer CLI: `--no-plugins`, `--no-scripts`](https://getcomposer.org/doc/03-cli.md); the stack's deploy-gate decision.
 
 **How the stack holds it: Not yet.** The README tells apps to `composer require waynestate/proctor --dev`, and the
 `proctor` component runs `composer install` on the app first. That also adds `symfony/console` and `composer/semver`
