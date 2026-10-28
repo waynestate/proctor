@@ -897,3 +897,15 @@ An app must run on Citadel, OpenShift, Coolify or raw Docker, so platform facts 
 **How the stack holds it: Checked.** The `portability` check warns on absolute host paths, hard-coded proxy
 addresses, sessions on local disk, and `php_value` or `php_flag` lines in `.htaccess` (they do nothing under
 php-fpm). It reports warnings, not failures, while the stack stages the rule.
+
+## CI pipelines
+
+### The ci-pipelines check
+Every stack repo runs `composer ci` on both GitLab and GitHub (ADR-0012, decision 6), so the two pipeline files are
+part of the contract, and a reusable workflow must be pinned to a commit SHA so the contract cannot move out from
+under the pipeline.
+
+**How the stack holds it: Enforced.** The `ci-pipelines` check fails when `.gitlab-ci.yml` or
+`.github/workflows/ci.yml` is missing, unparseable, or runs no `composer ci`, and warns when a GitHub `uses:` ref
+is not a 40-hex commit SHA. `CiPipelinesCheckTest` pins the fixture outcomes, and `CheckCommandTest` runs the good
+app through the whole CLI.
