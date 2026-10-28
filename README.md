@@ -1,6 +1,6 @@
 # PROCTOR
 
-[![GitLab pipeline](https://gitlab.example/enterprise-apps/proctor/badges/main/pipeline.svg)](https://gitlab.example/enterprise-apps/proctor/-/pipelines) [![GitHub CI](https://github.com/waynestate/proctor/actions/workflows/ci.yml/badge.svg)](https://github.com/waynestate/proctor/actions/workflows/ci.yml)
+[![GitHub CI](https://github.com/waynestate/proctor/actions/workflows/ci.yml/badge.svg)](https://github.com/waynestate/proctor/actions/workflows/ci.yml)
 
 Checks: `composer ci` (the same command runs on GitLab and GitHub).
 
