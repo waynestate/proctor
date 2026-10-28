@@ -24,6 +24,24 @@ composer require waynestate/proctor --dev
 
 The command is then `vendor/bin/proctor`.
 
+## Single-file download
+
+PROCTOR can also be built as a single-file PHAR, so PREFLIGHT and apps without
+Composer access can run it as one file. Build it with the script for your OS
+(both need Docker, and no PHP or Composer on the host):
+
+Windows (PowerShell):
+
+    .\scripts\build-phar.ps1
+
+Linux / macOS:
+
+    scripts/build-phar.sh
+
+Each script writes `build/proctor.phar` and verifies it by printing PROCTOR's
+version. The phar is not published yet — there is no release step — so build it
+from a checkout rather than downloading it.
+
 ## Usage
 
 ```
