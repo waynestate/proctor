@@ -102,6 +102,7 @@ final class CodeQualityWriter implements ReportWriter
             Finding::STATUS_FAIL => 'major',
             Finding::STATUS_WARNING => 'minor',
             Finding::STATUS_INFO => 'info',
+            default => throw new ToolError(sprintf('Unknown finding status "%s".', $status)),
         };
     }
 }

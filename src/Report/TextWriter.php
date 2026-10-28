@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Waynestate\Proctor\Report;
 
 use Waynestate\Proctor\Check\Finding;
+use Waynestate\Proctor\ToolError;
 
 /**
  * The default human-readable format.
@@ -66,6 +67,7 @@ final class TextWriter implements ReportWriter
             Finding::STATUS_INFO => 'INFO',
             Finding::STATUS_WARNING => 'WARN',
             Finding::STATUS_FAIL => 'FAIL',
+            default => throw new ToolError(sprintf('Unknown finding status "%s".', $status)),
         };
     }
 }

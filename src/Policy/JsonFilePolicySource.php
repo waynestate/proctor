@@ -38,6 +38,9 @@ final class JsonFilePolicySource implements PolicySource
         }
 
         $securityUntil = self::parseDate($entry['security_until']);
+        if ($securityUntil === null) {
+            throw new PolicyException(sprintf('version %s has no valid security_until date', $version));
+        }
         if ($date <= $securityUntil) {
             return State::SECURITY;
         }
@@ -135,6 +138,8 @@ final class JsonFilePolicySource implements PolicySource
      */
     private static function parseDate(string $value): ?DateTimeImmutable
     {
-        return DateTimeImmutable::createFromFormat('!Y-m-d', $value);
+        $date = DateTimeImmutable::createFromFormat('!Y-m-d', $value);
+
+        return $date === false ? null : $date;
     }
 }
