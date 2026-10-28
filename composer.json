@@ -1,6 +1,10 @@
 {
     "name": "waynestate/proctor",
     "description": "A framework-free PHP CLI that measures a PHP app against the version policy.",
+    "homepage": "https://proctor.apps.wayne.edu/",
+    "support": {
+        "source": "https://github.com/waynestate/proctor"
+    },
     "type": "library",
     "license": "MIT",
     "authors": [
