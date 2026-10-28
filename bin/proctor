@@ -10,6 +10,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Waynestate\Proctor\Check\CheckRunner;
 use Waynestate\Proctor\Check\CiPipelinesCheck;
 use Waynestate\Proctor\Check\ComposerAuditCheck;
+use Waynestate\Proctor\Check\ComposerVersionCheck;
 use Waynestate\Proctor\Check\Finding;
 use Waynestate\Proctor\Check\LockCommittedCheck;
 use Waynestate\Proctor\Check\Mysql56Check;
@@ -132,6 +133,7 @@ $application->add(new class () extends Command {
 
         try {
             $overrides = OverrideFile::load($appPath);
+            $composerVersionCheck = new ComposerVersionCheck();
             $runner = new CheckRunner(
                 $appPath,
                 $policy,
@@ -145,6 +147,7 @@ $application->add(new class () extends Command {
                     new Mysql56Check(),
                     new CiPipelinesCheck(),
                     new ComposerAuditCheck(),
+                    $composerVersionCheck,
                     new OverridesCheck(),
                 ],
                 $overrides,
@@ -172,7 +175,8 @@ $application->add(new class () extends Command {
             $today,
             $findings,
             $overrides,
-            $hasFail ? Report::EXIT_FAIL : Report::EXIT_PASS
+            $hasFail ? Report::EXIT_FAIL : Report::EXIT_PASS,
+            ['composer' => $composerVersionCheck->composerVersion]
         );
 
         try {

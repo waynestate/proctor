@@ -254,8 +254,11 @@ final class ComposerAuditCheck implements CheckInterface
 
     /**
      * Finds the composer executable on PATH, or returns null.
+     *
+     * Shared with ComposerVersionCheck, which must find composer the same
+     * way.
      */
-    private static function findComposer(): ?string
+    public static function findComposer(): ?string
     {
         $pathEnv = getenv('PATH');
         if ($pathEnv === false || $pathEnv === '') {

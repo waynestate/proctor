@@ -19,8 +19,11 @@ final class JsonShapeTest extends ProctorTestCase
         $data = json_decode($result['stdout'], true);
         self::assertIsArray($data, 'json output must be valid JSON');
         self::assertSame(
-            ['tool', 'version', 'path', 'today', 'result', 'exit', 'findings', 'overrides'],
+            ['tool', 'version', 'path', 'today', 'result', 'exit', 'tools', 'findings', 'overrides'],
             array_keys($data),
         );
+        // The CLI tests run with a PATH that finds no composer, so the
+        // composer version is null, not a string.
+        self::assertSame(['composer' => null], $data['tools']);
     }
 }

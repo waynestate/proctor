@@ -22,6 +22,7 @@ final class JsonWriter implements ReportWriter
             'today' => $report->today->format('Y-m-d'),
             'result' => $report->result(),
             'exit' => $report->exitCode,
+            'tools' => $report->tools,
             'findings' => array_map(
                 static fn(Finding $finding): array => [
                     'check_id' => $finding->checkId,
