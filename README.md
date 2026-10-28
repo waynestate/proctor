@@ -27,8 +27,6 @@ Checks: `composer ci` (the same command runs on GitLab and GitHub). Front page: 
 > This repository is published from Wayne State University's internal GitLab and mirrored here. Changes land there
 > first; Wayne State developers open issues and merge requests on the internal project.
 
-<p><img src="docs/readme/rule.png" width="100%" alt=""></p>
-
 ## Install
 
 ```
@@ -93,7 +91,7 @@ vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--po
 - `2`: tool error (bad options, unreadable policy, malformed composer.json or overrides file)
 
 ```mermaid
-%%{init: {'theme':'base','themeVariables':{'fontFamily':'ui-monospace, Consolas, Menlo, monospace','primaryColor':'#F4F1EA','primaryTextColor':'#1f2a33','primaryBorderColor':'#0C5449','lineColor':'#0C5449'}}}%%
+%%{init: {'theme':'base','themeVariables':{'fontFamily':'Helvetica, Arial, sans-serif','primaryColor':'#F4F1EA','primaryTextColor':'#1f2a33','primaryBorderColor':'#0C5449','lineColor':'#8A9A94'}}}%%
 flowchart LR
   run["proctor check"] --> ok{"options and policy readable?"}
   ok -- no --> two["exit 2: the proctor tripped"]
@@ -198,8 +196,6 @@ MIT, Wayne State University, Enterprise Applications.
 <br>
 <div align="center"><img src="docs/readme/board.jpg" width="100%" alt="PROCTOR's brand board: the eye mark on a green tile, horizontal and stacked lockups, the palette of Wayne State green, gold, cream and the red pen, and the type."></div>
 </details>
-
-<p><img src="docs/readme/rule.png" width="100%" alt=""></p>
 
 <div align="center"><b>Seated in the same hall</b><br><sub>WayneUI and the stack. Each one sits its own exam.</sub></div>
 
