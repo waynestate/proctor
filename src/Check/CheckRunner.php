@@ -18,10 +18,12 @@ use Waynestate\Proctor\ToolError;
 final class CheckRunner
 {
     /**
-     * @param list<CheckInterface> $checks    the checks to run, in output order
-     * @param list<Override>       $overrides the app's policy-overrides.json entries
-     * @param int                  $timeout   maximum seconds for an external process
-     *                                        (composer audit) before it is killed
+     * @param list<CheckInterface> $checks     the checks to run, in output order
+     * @param list<Override>       $overrides  the app's policy-overrides.json entries
+     * @param int                  $timeout    maximum seconds for an external process
+     *                                         (composer audit) before it is killed
+     * @param string|null          $phpRuntime the PHP version that will serve the app
+     *                                         (--php-runtime), or null when not given
      */
     public function __construct(
         private readonly string $appPath,
@@ -30,6 +32,7 @@ final class CheckRunner
         private readonly array $checks,
         private readonly array $overrides = [],
         private readonly int $timeout = 300,
+        private readonly ?string $phpRuntime = null,
     ) {}
 
     /**
@@ -44,7 +47,14 @@ final class CheckRunner
     {
         $this->validateApp();
 
-        $context = new CheckContext($this->appPath, $this->policy, $this->today, $this->overrides, $this->timeout);
+        $context = new CheckContext(
+            $this->appPath,
+            $this->policy,
+            $this->today,
+            $this->overrides,
+            $this->timeout,
+            $this->phpRuntime,
+        );
         $findings = [];
         foreach ($this->checks as $check) {
             foreach ($check->run($context) as $finding) {

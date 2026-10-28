@@ -1,0 +1,10 @@
+{
+    "packages": [
+        {
+            "name": "laravel/framework",
+            "version": "11.0.5"
+        }
+    ],
+    "packages-dev": [],
+    "content-hash": "fixture"
+}

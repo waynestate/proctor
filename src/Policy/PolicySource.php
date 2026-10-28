@@ -33,4 +33,16 @@ interface PolicySource
      * @return array<string, mixed>
      */
     public function rules(): array;
+
+    /**
+     * Returns the latest patch recorded for $version of $component, or null
+     * when the component, the version line or the latest_patch key is not in
+     * the policy.
+     *
+     * @param string $component a component name, e.g. "laravel"
+     * @param string $version   a version line as used in the policy, e.g. "12.1"
+     *
+     * @return array{latest_patch: string, latest_patch_checked: string|null}|null
+     */
+    public function latestPatchOf(string $component, string $version): ?array;
 }

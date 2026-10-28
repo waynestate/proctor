@@ -15,10 +15,12 @@ use Waynestate\Proctor\Policy\PolicySource;
 final class CheckContext
 {
     /**
-     * @param list<Override> $overrides the app's policy-overrides.json entries,
-     *                                  empty when the file is absent
-     * @param int            $timeout   maximum seconds for an external process
-     *                                  (composer audit) before it is killed
+     * @param list<Override> $overrides  the app's policy-overrides.json entries,
+     *                                   empty when the file is absent
+     * @param int            $timeout    maximum seconds for an external process
+     *                                   (composer audit) before it is killed
+     * @param string|null    $phpRuntime the PHP version that will serve the app
+     *                                   (--php-runtime), or null when not given
      */
     public function __construct(
         /** The application path (--path). */
@@ -28,5 +30,7 @@ final class CheckContext
         public readonly DateTimeImmutable $today,
         public readonly array $overrides = [],
         public readonly int $timeout = 300,
+        /** The PHP version that will serve the app (--php-runtime), or null. */
+        public readonly ?string $phpRuntime = null,
     ) {}
 }
