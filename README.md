@@ -79,7 +79,7 @@ jobs:
       - run: composer require waynestate/proctor --dev
       # policy.json is the CREED policy file
       - run: vendor/bin/proctor check --format=sarif --policy=policy.json > proctor.sarif
-      - uses: github/codeql-action/upload-sarif@166cc10f7e5fe6a7b6be6b258f62223eea08d69a
+      - uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         with:
           sarif_file: proctor.sarif
 ```
