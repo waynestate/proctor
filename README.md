@@ -27,11 +27,11 @@ The command is then `vendor/bin/proctor`.
 ## Usage
 
 ```
-vendor/bin/proctor check [--path=.] [--format=text|json|codequality] [--policy=<file>] [--today=YYYY-MM-DD]
+vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--policy=<file>] [--today=YYYY-MM-DD]
 ```
 
 - `--path`: path to the application to check (default `.`).
-- `--format`: output format: `text` (default), `json`, or `codequality`.
+- `--format`: output format: `text` (default), `json`, `codequality`, or `sarif`.
 - `--policy`: path to the CREED-format policy file (required).
 - `--today`: override today's date (YYYY-MM-DD) so runs are deterministic.
 
@@ -56,6 +56,36 @@ vendor/bin/proctor check [--path=.] [--format=text|json|codequality] [--policy=<
 - `text`: one line per finding, then one line per override, then a RESULT line.
 - `json`: one machine-readable object with tool, version, path, today, result, exit, findings and overrides.
 - `codequality`: GitLab's Code Quality JSON: a single array of findings, so a merge request shows them.
+- `sarif`: a SARIF 2.1.0 log: one run, one rule per check, one result per non-pass finding, so GitHub code scanning and other SARIF viewers show them.
+
+## GitHub code scanning
+
+The `sarif` format feeds GitHub code scanning on the GitHub mirror. Upload the
+log with the official action, pinned to a full commit SHA:
+
+```yaml
+name: proctor
+on: [push, pull_request]
+permissions:
+  security-events: write
+jobs:
+  proctor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+      - run: composer require waynestate/proctor --dev
+      # policy.json is the CREED policy file
+      - run: vendor/bin/proctor check --format=sarif --policy=policy.json > proctor.sarif
+      - uses: github/codeql-action/upload-sarif@166cc10f7e5fe6a7b6be6b258f62223eea08d69a
+        with:
+          sarif_file: proctor.sarif
+```
+
+PROCTOR now files the mark sheet in the format the head office already reads —
+no more translating the exam results by hand.
 
 ## Overrides
 

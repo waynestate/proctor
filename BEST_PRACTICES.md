@@ -591,7 +591,11 @@ Why: other platforms and editors read SARIF.
 
 Sources: [OASIS SARIF v2.1.0](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html).
 
-**How the stack holds it: Not yet.** Low priority. Add it only when a consumer asks.
+**How the stack holds it: Enforced.** `SarifWriter` writes a SARIF 2.1.0 log: one run, one rule per distinct check id,
+and one result per non-pass finding, with `fail` mapped to `error`, `warning` to `warning` and `info` to `note`.
+`SarifShapeTest` checks the shape. GitHub code scanning reads it through `github/codeql-action/upload-sarif`.
+PROCTOR now files the mark sheet in the format the head office already reads — no more translating the exam results
+by hand.
 
 ### 6.6 Make runs reproducible
 The date is injectable so a test gives the same answer on any day.
@@ -777,29 +781,28 @@ Practices tagged `Not yet` or `Documented`, each one line. Highest value first.
 22. 8.5: Tag, sign and publish provenance for releases.
 23. 7.1 and 7.2: Build `proctor gate` with the ratchet, stages and fail-open exit.
 24. 2.5: Check the target image tag once the gate exists.
-25. 6.5: Add SARIF output if another consumer needs it.
-26. 8.4 (tagged Checked, but the audit path is untested): Add a fixture and test that produces a real `composer audit`
+25. 8.4 (tagged Checked, but the audit path is untested): Add a fixture and test that produces a real `composer audit`
     result.
 
 Added in the second pass (2026-10-27):
 
-27. 4.8: Set a minimum Composer version (2.10.3, or 2.2.30 on the LTS line) and fail below it. PROCTOR hands Composer
+26. 4.8: Set a minimum Composer version (2.10.3, or 2.2.30 on the LTS line) and fail below it. PROCTOR hands Composer
     files the app controls, and three Composer command-injection CVEs were fixed in 2026. High value, small change.
-28. 4.10 and 4.5: Compare Composer's exit code with the parsed result, and read the abandoned and malware parts of the
+27. 4.10 and 4.5: Compare Composer's exit code with the parsed result, and read the abandoned and malware parts of the
     output. Abandoned packages fail `composer audit` by default, so PROCTOR can pass what Composer fails.
-29. 6.4 (raise priority): Write a valid report on exit 2. GitLab uploads the report even when the job fails, so the
+28. 6.4 (raise priority): Write a valid report on exit 2. GitLab uploads the report even when the job fails, so the
     empty file is parsed.
-30. 4.9: Flag `config.policy: false`, a disabled malware or advisory policy, and `COMPOSER_NO_BLOCKING` or
+29. 4.9: Flag `config.policy: false`, a disabled malware or advisory policy, and `COMPOSER_NO_BLOCKING` or
     `COMPOSER_NO_AUDIT` in the job environment.
-31. 8.6: Run Composer with `--no-plugins --no-interaction` and an explicit environment.
-32. 6.8: Escape app-supplied strings before printing, and add a test with a tag-like package name.
-33. 5.8: Warn on an override that matches nothing and on one close to expiry.
-34. 2.7: Put the security-end date and days left in the security-only warning.
-35. 3.7: Document "install from the lock, never update" in the PREFLIGHT guide, and ask authors not to re-tag.
-36. 4.12: Decide in the policy whether `require-dev` packages count, then pass `--no-dev` or not.
-37. 8.7: Name a minimum patched GitLab version in the PREFLIGHT guide.
-38. 4.11: Re-read the Composer cooldown policy once 2.11 is stable, and decide whether to ask for it.
-39. 6.7 (tagged Enforced by construction): Add a test that the text output contains no ANSI escape codes.
+30. 8.6: Run Composer with `--no-plugins --no-interaction` and an explicit environment.
+31. 6.8: Escape app-supplied strings before printing, and add a test with a tag-like package name.
+32. 5.8: Warn on an override that matches nothing and on one close to expiry.
+33. 2.7: Put the security-end date and days left in the security-only warning.
+34. 3.7: Document "install from the lock, never update" in the PREFLIGHT guide, and ask authors not to re-tag.
+35. 4.12: Decide in the policy whether `require-dev` packages count, then pass `--no-dev` or not.
+36. 8.7: Name a minimum patched GitLab version in the PREFLIGHT guide.
+37. 4.11: Re-read the Composer cooldown policy once 2.11 is stable, and decide whether to ask for it.
+38. 6.7 (tagged Enforced by construction): Add a test that the text output contains no ANSI escape codes.
 
 ## Second pass (2026-10-27)
 
