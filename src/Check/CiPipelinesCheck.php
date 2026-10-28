@@ -103,6 +103,8 @@ final class CiPipelinesCheck implements CheckInterface
                 'ci-pipelines-gitlab-missing: .gitlab-ci.yml is missing; add a GitLab pipeline with a job whose script runs composer ci',
                 self::GITLAB_CI,
                 1,
+                null,
+                'gitlab-missing',
             )];
         }
 
@@ -117,6 +119,8 @@ final class CiPipelinesCheck implements CheckInterface
                 ),
                 self::GITLAB_CI,
                 1,
+                null,
+                'gitlab-parse',
             )];
         }
 
@@ -138,6 +142,8 @@ final class CiPipelinesCheck implements CheckInterface
             'ci-pipelines-gitlab-no-ci: no job in .gitlab-ci.yml runs composer ci; add a job whose script runs composer ci',
             self::GITLAB_CI,
             1,
+            null,
+            'gitlab-no-ci',
         )];
     }
 
@@ -165,6 +171,8 @@ final class CiPipelinesCheck implements CheckInterface
                 'ci-pipelines-github-missing: .github/workflows/ci.yml is missing; add a GitHub workflow that runs composer ci',
                 self::GITHUB_CI,
                 1,
+                null,
+                'github-missing',
             )];
         }
 
@@ -181,6 +189,8 @@ final class CiPipelinesCheck implements CheckInterface
                 ),
                 self::GITHUB_CI,
                 1,
+                null,
+                'github-parse',
             )];
         }
 
@@ -242,6 +252,8 @@ final class CiPipelinesCheck implements CheckInterface
                 'ci-pipelines-github-no-ci: no job in .github/workflows/ci.yml runs composer ci or calls a reusable workflow with ci-command: composer ci; run composer ci in a job, or call a reusable workflow with ci-command: composer ci',
                 self::GITHUB_CI,
                 1,
+                null,
+                'github-no-ci',
             );
         }
 
@@ -272,6 +284,8 @@ final class CiPipelinesCheck implements CheckInterface
             ),
             self::GITHUB_CI,
             $this->lineOf($uses, $absolutePath),
+            null,
+            'unpinned-uses',
         );
     }
 

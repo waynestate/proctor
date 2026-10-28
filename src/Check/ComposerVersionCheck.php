@@ -50,6 +50,10 @@ final class ComposerVersionCheck implements CheckInterface
                 $this->id(),
                 Finding::STATUS_WARNING,
                 'composer executable not found on PATH; composer version check skipped',
+                null,
+                1,
+                null,
+                'not-found',
             )];
         }
 
@@ -64,6 +68,10 @@ final class ComposerVersionCheck implements CheckInterface
                 $this->id(),
                 Finding::STATUS_WARNING,
                 'composer version could not be determined: ' . $e->getMessage(),
+                null,
+                1,
+                null,
+                'could-not-determine',
             )];
         }
 
@@ -74,6 +82,10 @@ final class ComposerVersionCheck implements CheckInterface
                 $this->id(),
                 Finding::STATUS_WARNING,
                 'composer version could not be determined: ' . ($firstLine !== '' ? $firstLine : 'no error output'),
+                null,
+                1,
+                null,
+                'could-not-determine',
             )];
         }
 

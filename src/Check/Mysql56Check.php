@@ -82,11 +82,13 @@ final class Mysql56Check implements CheckInterface
             $statements = $phpFiles->statements($appPath . '/' . $relativePath);
             if ($statements === null) {
                 $findings[] = new Finding(
-                    'proctor.parse-error',
+                    $this->id(),
                     Finding::STATUS_WARNING,
                     'could not parse: ' . $phpFiles->lastError(),
                     $relativePath,
                     $phpFiles->lastErrorLine(),
+                    null,
+                    'parse-error',
                 );
                 continue;
             }
@@ -172,7 +174,7 @@ final class Mysql56Check implements CheckInterface
             foreach ($phpFiles->findInstanceOf($statements, String_::class) as $string) {
                 if ($string->value === 'use_upsert_alias') {
                     $findings[] = $this->warning(
-                        'mysql56-upsert-alias',
+                        'upsert-alias',
                         'the upsert row alias needs MySQL 8.0.19',
                         $relativePath,
                         $string->getStartLine(),
@@ -201,7 +203,7 @@ final class Mysql56Check implements CheckInterface
                 || str_contains($lowerName, 'wherejson')
                 || ($this->isWhereCall($lowerName) && $this->firstStringArgContains($call->args, '->'))) {
                 $findings[] = $this->warning(
-                    'mysql56-json',
+                    'json',
                     'JSON columns and JSON queries need MySQL 5.7.8',
                     $relativePath,
                     $line,
@@ -211,7 +213,7 @@ final class Mysql56Check implements CheckInterface
             // mysql56-generated: virtual/stored generated columns.
             if (in_array($lowerName, ['virtualas', 'storedas', 'virtualasjson', 'storedasjson'], true)) {
                 $findings[] = $this->warning(
-                    'mysql56-generated',
+                    'generated',
                     'generated columns need MySQL 5.7.6',
                     $relativePath,
                     $line,
@@ -221,7 +223,7 @@ final class Mysql56Check implements CheckInterface
             // mysql56-rename: renameColumn/renameIndex.
             if (in_array($lowerName, ['renameindex', 'renamecolumn'], true)) {
                 $findings[] = $this->warning(
-                    'mysql56-rename',
+                    'rename',
                     'use a raw ALTER TABLE ... CHANGE on 5.6',
                     $relativePath,
                     $line,
@@ -231,7 +233,7 @@ final class Mysql56Check implements CheckInterface
             // mysql56-newer-column: vector, invisible, instant, spatial.
             if (in_array($lowerName, ['vector', 'vectorindex', 'invisible', 'instant', 'spatialindex'], true)) {
                 $findings[] = $this->warning(
-                    'mysql56-newer-column',
+                    'newer-column',
                     'needs a newer MySQL than 5.6',
                     $relativePath,
                     $line,
@@ -241,7 +243,7 @@ final class Mysql56Check implements CheckInterface
             // mysql56-introspection: Schema::hasColumn and friends, lateral joins.
             if ($this->isSchemaIntrospection($call) || in_array($lowerName, ['joinlateral', 'leftjoinlateral'], true)) {
                 $findings[] = $this->warning(
-                    'mysql56-introspection',
+                    'introspection',
                     'not reliable on MySQL 5.6; use Schema::hasTable',
                     $relativePath,
                     $line,
@@ -251,7 +253,7 @@ final class Mysql56Check implements CheckInterface
             // mysql56-raw-sql: DB::statement / DB::unprepared with 5.7+ syntax.
             if ($this->isRawSqlCall($call)) {
                 $findings[] = $this->warning(
-                    'mysql56-raw-sql',
+                    'raw-sql',
                     'raw SQL uses syntax MySQL 5.6 rejects',
                     $relativePath,
                     $line,
@@ -261,7 +263,7 @@ final class Mysql56Check implements CheckInterface
             // mysql56-string-length: indexed strings over 191 characters.
             if ($lowerName === 'string' && $this->secondIntArgGreaterThan($call->args, 191)) {
                 $findings[] = $this->warning(
-                    'mysql56-string-length',
+                    'string-length',
                     "indexed strings over 191 characters exceed 5.6's key limit",
                     $relativePath,
                     $line,
@@ -271,7 +273,7 @@ final class Mysql56Check implements CheckInterface
             // mysql56-current-date: date/year columns defaulting to now.
             if ($lowerName === 'usecurrent' && $this->varChainHasMethod($call, ['date', 'year'])) {
                 $findings[] = $this->warning(
-                    'mysql56-current-date',
+                    'current-date',
                     '5.6 cannot default a date column to the current time; use timestamp',
                     $relativePath,
                     $line,
@@ -283,7 +285,7 @@ final class Mysql56Check implements CheckInterface
         foreach ($strings as $string) {
             if (str_contains($string->value, 'db:show') || str_contains($string->value, 'db:monitor')) {
                 $findings[] = $this->warning(
-                    'mysql56-command',
+                    'command',
                     'these commands do not support MySQL 5.6',
                     $relativePath,
                     $string->getStartLine(),
@@ -333,6 +335,8 @@ final class Mysql56Check implements CheckInterface
             'mysql56-string-default: call Schema::defaultStringLength(191) in boot()',
             self::APP_SERVICE_PROVIDER,
             1,
+            null,
+            'string-default',
         );
     }
 
@@ -494,14 +498,16 @@ final class Mysql56Check implements CheckInterface
     /**
      * A warning finding for one rule.
      */
-    private function warning(string $ruleId, string $message, string $relativePath, int $line): Finding
+    private function warning(string $rule, string $message, string $relativePath, int $line): Finding
     {
         return new Finding(
             $this->id(),
             Finding::STATUS_WARNING,
-            $ruleId . ': ' . $message,
+            'mysql56-' . $rule . ': ' . $message,
             $relativePath,
             $line,
+            null,
+            $rule,
         );
     }
 }

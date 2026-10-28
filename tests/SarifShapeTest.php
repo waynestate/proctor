@@ -81,7 +81,7 @@ final class SarifShapeTest extends ProctorTestCase
         self::assertSame('warning', $warn['level']);
     }
 
-    public function testRulesAreDeduplicatedPerCheckId(): void
+    public function testRulesAreDeduplicatedPerRuleId(): void
     {
         $log = $this->log('open-bound-app');
         $rules = $log['runs'][0]['tool']['driver']['rules'];
@@ -95,17 +95,17 @@ final class SarifShapeTest extends ProctorTestCase
         $ids = array_column($rules, 'id');
         self::assertCount(count($ids), array_unique($ids), 'rule ids must be unique');
 
-        // One rule per distinct check id across every finding of the run.
-        $text = $this->runProctor($this->app('open-bound-app'), 'text');
-        preg_match_all('/^(?:PASS|INFO|WARN|FAIL) (\S+): /m', $text['stdout'], $matches);
-        self::assertEqualsCanonicalizing(array_unique($matches[1]), $ids);
+        // One rule per distinct rule id across every finding of the run.
+        $json = $this->json('open-bound-app');
+        $ruleIds = array_column($json['findings'], 'rule_id');
+        self::assertEqualsCanonicalizing(array_unique($ruleIds), $ids);
     }
 
     public function testFindingWithoutAFilePointsAtComposerJson(): void
     {
         $results = $this->results('open-bound-app');
 
-        $audit = $this->findByRuleId($results, 'composer-audit');
+        $audit = $this->findByRuleId($results, 'proctor/composer-audit/skipped');
         self::assertNotNull($audit, 'expected a composer-audit result');
 
         $location = $audit['locations'][0]['physicalLocation'];
@@ -128,15 +128,15 @@ final class SarifShapeTest extends ProctorTestCase
         $fail = $this->findByMessage($results, 'is unbounded');
         self::assertNotNull($fail);
         self::assertSame(
-            Fingerprint::of('unbounded-constraints', 'composer.json', $fail['message']['text']),
+            Fingerprint::of('proctor/unbounded-constraints/unbounded', 'composer.json', $fail['message']['text']),
             $fail['partialFingerprints']['proctorFingerprint/v1'],
         );
 
         // A finding without a file: the fingerprint uses a null path.
-        $audit = $this->findByRuleId($results, 'composer-audit');
+        $audit = $this->findByRuleId($results, 'proctor/composer-audit/skipped');
         self::assertNotNull($audit);
         self::assertSame(
-            Fingerprint::of('composer-audit', null, $audit['message']['text']),
+            Fingerprint::of('proctor/composer-audit/skipped', null, $audit['message']['text']),
             $audit['partialFingerprints']['proctorFingerprint/v1'],
         );
     }
@@ -164,6 +164,20 @@ final class SarifShapeTest extends ProctorTestCase
         self::assertIsArray($log, 'sarif output must be valid JSON');
 
         return $log;
+    }
+
+    /**
+     * The decoded JSON report of a run on the given fixture app.
+     *
+     * @return array<string, mixed>
+     */
+    private function json(string $app): array
+    {
+        $result = $this->runProctor($this->app($app), 'json');
+        $json = json_decode($result['stdout'], true);
+        self::assertIsArray($json, 'json output must be valid JSON');
+
+        return $json;
     }
 
     /**

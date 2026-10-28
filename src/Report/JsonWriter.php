@@ -26,6 +26,7 @@ final class JsonWriter implements ReportWriter
             'findings' => array_map(
                 static fn(Finding $finding): array => [
                     'check_id' => $finding->checkId,
+                    'rule_id' => $finding->ruleId,
                     'status' => $finding->status,
                     'message' => $finding->message,
                     'path' => $finding->path,

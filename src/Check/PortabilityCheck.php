@@ -62,11 +62,13 @@ final class PortabilityCheck implements CheckInterface
                 $statements = $phpFiles->statements($absolutePath);
                 if ($statements === null) {
                     $findings[] = new Finding(
-                        'proctor.parse-error',
+                        $this->id(),
                         Finding::STATUS_WARNING,
                         'could not parse ' . $relativePath . ': ' . $phpFiles->lastError(),
                         $relativePath,
                         $phpFiles->lastErrorLine(),
+                        null,
+                        'parse-error',
                     );
                     continue;
                 }
@@ -76,13 +78,15 @@ final class PortabilityCheck implements CheckInterface
             } else {
                 foreach ($lines as $index => $line) {
                     $line = rtrim((string) $line, "\r\n");
-                    foreach ($this->messagesForLine($relativePath, $line) as $message) {
+                    foreach ($this->messagesForLine($relativePath, $line) as [$rule, $message]) {
                         $findings[] = new Finding(
                             $this->id(),
                             Finding::STATUS_WARNING,
                             $message,
                             $relativePath,
                             $index + 1,
+                            null,
+                            $rule,
                         );
                     }
                 }
@@ -243,6 +247,8 @@ final class PortabilityCheck implements CheckInterface
                 ),
                 $relativePath,
                 min($dynamicLines),
+                null,
+                'dynamic-call',
             );
         }
 
@@ -256,7 +262,7 @@ final class PortabilityCheck implements CheckInterface
      * @param string $relativePath the file's path relative to the app
      * @param string $line         the line without its line ending
      *
-     * @return list<string>
+     * @return list<array{0: string, 1: string}> pairs of [rule, full message]
      */
     private function messagesForLine(string $relativePath, string $line): array
     {
@@ -266,10 +272,10 @@ final class PortabilityCheck implements CheckInterface
         // a Windows drive letter.
         foreach ($this->quotedLiterals($line) as $literal) {
             if ($this->isHostPath($literal)) {
-                $messages[] = sprintf(
+                $messages[] = ['host-path', sprintf(
                     'host-path: absolute host path "%s"; read it from env or config',
                     $literal,
-                );
+                )];
             }
         }
 
@@ -292,10 +298,10 @@ final class PortabilityCheck implements CheckInterface
                 if (in_array($ip, $this->rules->notProxyAddresses, true)) {
                     continue;
                 }
-                $messages[] = sprintf(
+                $messages[] = ['proxy-address', sprintf(
                     'proxy-address: hard-coded proxy address %s; use HELMET_PRESET or HELMET_PROXIES',
                     $ip,
-                );
+                )];
             }
         }
 
@@ -309,7 +315,7 @@ final class PortabilityCheck implements CheckInterface
             $sessionHit = $namesTheDriver && $this->hasQuotedLiteral($line, static fn(string $literal): bool => 'file' === $literal);
         }
         if ($sessionHit) {
-            $messages[] = 'local-session: sessions on local disk; use a shared store (database or redis)';
+            $messages[] = ['local-session', 'local-session: sessions on local disk; use a shared store (database or redis)'];
         }
 
         // htaccess-php-setting: php_value/php_flag as the first word of a
@@ -317,10 +323,10 @@ final class PortabilityCheck implements CheckInterface
         // left in this check: .htaccess is not PHP, so there is no tree.
         if ('.htaccess' === pathinfo($relativePath, PATHINFO_BASENAME)
             && preg_match('/^\s*(php_value|php_flag)\b/i', $line, $matches) === 1) {
-            $messages[] = sprintf(
+            $messages[] = ['htaccess-php-setting', sprintf(
                 "htaccess-php-setting: %s does nothing under php-fpm; set it in the platform's php.ini or with ini_set",
                 $matches[1],
-            );
+            )];
         }
 
         return $messages;
@@ -522,14 +528,16 @@ final class PortabilityCheck implements CheckInterface
     /**
      * A warning finding for one rule.
      */
-    private function warning(string $ruleId, string $message, string $relativePath, int $line): Finding
+    private function warning(string $rule, string $message, string $relativePath, int $line): Finding
     {
         return new Finding(
             $this->id(),
             Finding::STATUS_WARNING,
-            $ruleId . ': ' . $message,
+            $rule . ': ' . $message,
             $relativePath,
             $line,
+            null,
+            $rule,
         );
     }
 }

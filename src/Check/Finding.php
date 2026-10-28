@@ -26,6 +26,8 @@ final class Finding
      * @param int         $line    line number in $path, 1-based
      * @param State|null  $state   the policy state behind the finding, or null when the
      *                             finding has no state
+     * @param string|null $rule    the rule within the check, or null for the check's default
+     *                             finding; the stable rule id is proctor/<checkId>/<rule>
      */
     public function __construct(
         public readonly string $checkId,
@@ -34,7 +36,14 @@ final class Finding
         public readonly ?string $path = null,
         public readonly int $line = 1,
         public readonly ?State $state = null,
+        public readonly ?string $rule = null,
     ) {
+        if (!preg_match('/^[a-z0-9-]+$/', $checkId)) {
+            throw new \InvalidArgumentException(sprintf('Invalid finding check id "%s".', $checkId));
+        }
+        if ($rule !== null && !preg_match('/^[a-z0-9-]+$/', $rule)) {
+            throw new \InvalidArgumentException(sprintf('Invalid finding rule "%s".', $rule));
+        }
         if (!in_array($status, [
             self::STATUS_PASS,
             self::STATUS_INFO,
@@ -49,5 +58,12 @@ final class Finding
                 $path,
             ));
         }
+        $this->ruleId = 'proctor/' . $checkId . ($rule !== null ? '/' . $rule : '');
     }
+
+    /**
+     * The stable, namespaced rule id: proctor/<checkId> for the check's
+     * default finding, proctor/<checkId>/<rule> for a named rule.
+     */
+    public readonly string $ruleId;
 }

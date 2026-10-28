@@ -12,11 +12,11 @@ final class Fingerprint
     private function __construct() {}
 
     /**
-     * Lower-case hex SHA-256 of check_id + "\n" + path ("" when null)
+     * Lower-case hex SHA-256 of rule_id + "\n" + path ("" when null)
      * + "\n" + message.
      */
-    public static function of(string $checkId, ?string $path, string $message): string
+    public static function of(string $ruleId, ?string $path, string $message): string
     {
-        return hash('sha256', $checkId . "\n" . ($path ?? '') . "\n" . $message);
+        return hash('sha256', $ruleId . "\n" . ($path ?? '') . "\n" . $message);
     }
 }

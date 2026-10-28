@@ -21,9 +21,16 @@ final class CodeQualityShapeTest extends ProctorTestCase
         self::assertIsList($items, 'the top level must be a list');
         self::assertNotEmpty($items);
 
-        // The checks that did not pass in the same run (text format).
-        $text = $this->runProctor($this->app('unbounded-app'), 'text');
-        $nonPass = $this->nonPassCheckIds($text['stdout']);
+        // The rule ids that did not pass in the same run (json format).
+        $json = json_decode($this->runProctor($this->app('unbounded-app'), 'json')['stdout'], true);
+        self::assertIsArray($json, 'json output must be valid JSON');
+        $nonPass = [];
+        foreach ($json['findings'] as $finding) {
+            if ($finding['status'] !== 'pass') {
+                $nonPass[] = $finding['rule_id'];
+            }
+        }
+        $nonPass = array_values(array_unique($nonPass));
 
         foreach ($items as $item) {
             self::assertSame(

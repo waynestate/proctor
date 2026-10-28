@@ -48,6 +48,7 @@ final class OverrideApplier
                         $finding->path,
                         $finding->line,
                         $finding->state,
+                        $finding->rule,
                     );
                     continue;
                 }

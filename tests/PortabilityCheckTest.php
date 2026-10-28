@@ -250,7 +250,8 @@ final class PortabilityCheckTest extends TestCase
         ]);
 
         self::assertCount(1, $findings);
-        self::assertSame('proctor.parse-error', $findings[0]->checkId);
+        self::assertSame('portability', $findings[0]->checkId);
+        self::assertSame('proctor/portability/parse-error', $findings[0]->ruleId);
         self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
         self::assertStringStartsWith('could not parse broken.php: ', $findings[0]->message);
         self::assertSame(2, $findings[0]->line);

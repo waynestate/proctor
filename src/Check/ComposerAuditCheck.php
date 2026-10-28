@@ -39,6 +39,10 @@ final class ComposerAuditCheck implements CheckInterface
                 $this->id(),
                 Finding::STATUS_INFO,
                 'composer executable not found on PATH; composer audit skipped',
+                null,
+                1,
+                null,
+                'skipped',
             )];
         }
 
@@ -47,6 +51,10 @@ final class ComposerAuditCheck implements CheckInterface
                 $this->id(),
                 Finding::STATUS_INFO,
                 'no composer.lock in the app path; composer audit skipped',
+                null,
+                1,
+                null,
+                'skipped',
             )];
         }
 
@@ -64,6 +72,9 @@ final class ComposerAuditCheck implements CheckInterface
                 Finding::STATUS_WARNING,
                 'composer audit could not run: ' . ($firstLine !== '' ? $firstLine : 'no error output'),
                 'composer.lock',
+                1,
+                null,
+                'could-not-run',
             )];
         }
 
@@ -93,6 +104,9 @@ final class ComposerAuditCheck implements CheckInterface
                             is_string($severity) ? $severity : 'unknown',
                         ),
                         'composer.lock',
+                        1,
+                        null,
+                        'advisory',
                     );
                 }
             }
@@ -108,6 +122,9 @@ final class ComposerAuditCheck implements CheckInterface
                         ? sprintf('%s is abandoned (use %s instead)', (string) $package, $replacement)
                         : sprintf('%s is abandoned', (string) $package),
                     'composer.lock',
+                    1,
+                    null,
+                    'abandoned',
                 );
             }
         }

@@ -60,6 +60,8 @@ final class UnboundedConstraintsCheck implements CheckInterface
                     sprintf('%s constraint "%s" is unbounded', $package, $constraint),
                     'composer.json',
                     $this->lineOfPackage($raw, $package),
+                    null,
+                    'unbounded',
                 );
             }
         }
@@ -225,6 +227,9 @@ final class UnboundedConstraintsCheck implements CheckInterface
                     Finding::STATUS_WARNING,
                     sprintf('repository of type "%s" is not a stable source', $type),
                     'composer.json',
+                    1,
+                    null,
+                    'repository',
                 );
             }
         }

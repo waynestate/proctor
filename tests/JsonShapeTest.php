@@ -25,5 +25,17 @@ final class JsonShapeTest extends ProctorTestCase
         // The CLI tests run with a PATH that finds no composer, so the
         // composer version is null, not a string.
         self::assertSame(['composer' => null], $data['tools']);
+
+        // Every finding carries the stable rule id next to the check id.
+        foreach ($data['findings'] as $finding) {
+            self::assertSame(
+                ['check_id', 'rule_id', 'status', 'message', 'path', 'line'],
+                array_keys($finding),
+            );
+            self::assertMatchesRegularExpression(
+                '/^proctor\/[a-z0-9-]+(\/[a-z0-9-]+)?$/',
+                $finding['rule_id'],
+            );
+        }
     }
 }

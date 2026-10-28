@@ -119,6 +119,66 @@ flowchart LR
 - `codequality`: GitLab's Code Quality JSON: a single array of findings, so a merge request shows them.
 - `sarif`: a SARIF 2.1.0 log: one run, one rule per check, one result per non-pass finding, so GitHub code scanning and other SARIF viewers show them.
 
+## Rule ids
+
+Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a
+check's default finding, `proctor/<check-id>/<rule>` for a named rule. The id
+is the finding's identity in the machine formats — `rule_id` in `json`,
+`ruleId` in `sarif`, and `check_name` in `codequality` — so a rule keeps the
+same id across runs and across formats even when its message changes.
+
+The full set, grouped by check:
+
+| Check | Rule id |
+| --- | --- |
+| `php-floor` | `proctor/php-floor` |
+| `unpatched` | `proctor/unpatched` |
+| `lock-committed` | `proctor/lock-committed` |
+| `destructive-deploy` | `proctor/destructive-deploy` |
+| `overrides` | `proctor/overrides` |
+| `unbounded-constraints` | `proctor/unbounded-constraints` |
+| `unbounded-constraints` | `proctor/unbounded-constraints/unbounded` |
+| `unbounded-constraints` | `proctor/unbounded-constraints/repository` |
+| `portability` | `proctor/portability` |
+| `portability` | `proctor/portability/host-path` |
+| `portability` | `proctor/portability/proxy-address` |
+| `portability` | `proctor/portability/local-session` |
+| `portability` | `proctor/portability/htaccess-php-setting` |
+| `portability` | `proctor/portability/parse-error` |
+| `portability` | `proctor/portability/dynamic-call` |
+| `mysql56` | `proctor/mysql56` |
+| `mysql56` | `proctor/mysql56/json` |
+| `mysql56` | `proctor/mysql56/generated` |
+| `mysql56` | `proctor/mysql56/rename` |
+| `mysql56` | `proctor/mysql56/newer-column` |
+| `mysql56` | `proctor/mysql56/introspection` |
+| `mysql56` | `proctor/mysql56/raw-sql` |
+| `mysql56` | `proctor/mysql56/string-length` |
+| `mysql56` | `proctor/mysql56/current-date` |
+| `mysql56` | `proctor/mysql56/command` |
+| `mysql56` | `proctor/mysql56/upsert-alias` |
+| `mysql56` | `proctor/mysql56/string-default` |
+| `mysql56` | `proctor/mysql56/parse-error` |
+| `ci-pipelines` | `proctor/ci-pipelines` |
+| `ci-pipelines` | `proctor/ci-pipelines/gitlab-missing` |
+| `ci-pipelines` | `proctor/ci-pipelines/gitlab-parse` |
+| `ci-pipelines` | `proctor/ci-pipelines/gitlab-no-ci` |
+| `ci-pipelines` | `proctor/ci-pipelines/github-missing` |
+| `ci-pipelines` | `proctor/ci-pipelines/github-parse` |
+| `ci-pipelines` | `proctor/ci-pipelines/github-no-ci` |
+| `ci-pipelines` | `proctor/ci-pipelines/unpinned-uses` |
+| `composer-audit` | `proctor/composer-audit` |
+| `composer-audit` | `proctor/composer-audit/advisory` |
+| `composer-audit` | `proctor/composer-audit/abandoned` |
+| `composer-audit` | `proctor/composer-audit/skipped` |
+| `composer-audit` | `proctor/composer-audit/could-not-run` |
+| `composer-version` | `proctor/composer-version` |
+| `composer-version` | `proctor/composer-version/not-found` |
+| `composer-version` | `proctor/composer-version/could-not-determine` |
+
+`tests/RuleIdContractTest.php` keeps this table in step with the checks: a rule
+id that is emitted but not listed here fails the suite.
+
 ## GitHub code scanning
 
 The `sarif` format feeds GitHub code scanning on the GitHub mirror. Upload the

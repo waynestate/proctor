@@ -28,7 +28,7 @@ final class CodeQualityWriter implements ReportWriter
 
             $items[] = $this->item(
                 $finding->message,
-                $finding->checkId,
+                $finding->ruleId,
                 $finding->path,
                 $finding->line,
                 $this->severity($finding->status),
@@ -58,12 +58,12 @@ final class CodeQualityWriter implements ReportWriter
      *
      * @return array<string, mixed>
      */
-    private function item(string $message, string $checkName, ?string $path, int $line, string $severity): array
+    private function item(string $message, string $ruleId, ?string $path, int $line, string $severity): array
     {
         return [
             'description' => $message,
-            'check_name' => $checkName,
-            'fingerprint' => Fingerprint::of($checkName, $path, $message),
+            'check_name' => $ruleId,
+            'fingerprint' => Fingerprint::of($ruleId, $path, $message),
             'severity' => $severity,
             'location' => [
                 'path' => $path ?? self::DEFAULT_PATH,

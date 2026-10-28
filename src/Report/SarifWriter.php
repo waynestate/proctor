@@ -53,7 +53,7 @@ final class SarifWriter implements ReportWriter
     }
 
     /**
-     * One rule entry per distinct check id in the report, in first-seen order.
+     * One rule entry per distinct rule id in the report, in first-seen order.
      *
      * @return list<array<string, mixed>>
      */
@@ -62,7 +62,7 @@ final class SarifWriter implements ReportWriter
         $rules = [];
         $seen = [];
         foreach ($report->findings as $finding) {
-            $id = $finding->checkId;
+            $id = $finding->ruleId;
             if (isset($seen[$id])) {
                 continue;
             }
@@ -105,7 +105,7 @@ final class SarifWriter implements ReportWriter
     private function result(Finding $finding): array
     {
         return [
-            'ruleId' => $finding->checkId,
+            'ruleId' => $finding->ruleId,
             'level' => $this->level($finding->status),
             'message' => [
                 'text' => $finding->message,
@@ -114,7 +114,7 @@ final class SarifWriter implements ReportWriter
                 $this->location($finding),
             ],
             'partialFingerprints' => [
-                'proctorFingerprint/v1' => Fingerprint::of($finding->checkId, $finding->path, $finding->message),
+                'proctorFingerprint/v1' => Fingerprint::of($finding->ruleId, $finding->path, $finding->message),
             ],
         ];
     }
