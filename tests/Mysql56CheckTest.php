@@ -51,28 +51,51 @@ final class Mysql56CheckTest extends TestCase
         );
     }
 
-    public function testMysql56AppGivesExactlyEightWarnings(): void
+    public function testMysql56AppGivesExactlyTwelveWarnings(): void
     {
         $findings = (new Mysql56Check())->run(
             $this->contextFor(__DIR__ . '/fixtures/apps/mysql56-app')
         );
 
-        self::assertCount(8, $findings);
+        self::assertCount(12, $findings);
         foreach ($findings as $finding) {
             self::assertSame(Finding::STATUS_WARNING, $finding->status);
         }
 
-        // The check sorts by path, then line, so the eight warnings come
+        // Every rule id is covered by the fixture; the four rules added
+        // for coverage appear exactly once.
+        foreach (
+            [
+                'mysql56-generated',
+                'mysql56-newer-column',
+                'mysql56-introspection',
+                'mysql56-upsert-alias',
+            ] as $ruleId
+        ) {
+            self::assertCount(
+                1,
+                array_filter(
+                    $findings,
+                    static fn (Finding $finding): bool => str_starts_with($finding->message, $ruleId . ':')
+                )
+            );
+        }
+
+        // The check sorts by path, then line, so the twelve warnings come
         // out in this order.
         self::assertSame(
             [
-                ['mysql56-json', 'app/Models/Thing.php', 11],
+                ['mysql56-json', 'app/Models/Thing.php', 12],
+                ['mysql56-introspection', 'app/Models/Thing.php', 15],
                 ['mysql56-string-default', 'app/Providers/AppServiceProvider.php', 1],
+                ['mysql56-upsert-alias', 'config/database.php', 5],
                 ['mysql56-json', 'database/migrations/2026_01_01_000000_create_things_table.php', 14],
                 ['mysql56-string-length', 'database/migrations/2026_01_01_000000_create_things_table.php', 15],
                 ['mysql56-current-date', 'database/migrations/2026_01_01_000000_create_things_table.php', 16],
-                ['mysql56-rename', 'database/migrations/2026_01_01_000000_create_things_table.php', 21],
-                ['mysql56-raw-sql', 'database/migrations/2026_01_01_000000_create_things_table.php', 24],
+                ['mysql56-generated', 'database/migrations/2026_01_01_000000_create_things_table.php', 17],
+                ['mysql56-newer-column', 'database/migrations/2026_01_01_000000_create_things_table.php', 18],
+                ['mysql56-rename', 'database/migrations/2026_01_01_000000_create_things_table.php', 23],
+                ['mysql56-raw-sql', 'database/migrations/2026_01_01_000000_create_things_table.php', 26],
                 ['mysql56-command', 'routes/console.php', 11],
             ],
             $this->triples($findings)

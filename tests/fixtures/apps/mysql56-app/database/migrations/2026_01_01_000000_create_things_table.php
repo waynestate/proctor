@@ -14,6 +14,8 @@ return new class extends Migration
             $table->json('meta');
             $table->string('email', 255)->unique();
             $table->date('day')->useCurrent();
+            $table->string('full_name')->virtualAs("concat(first, ' ', last)");
+            $table->vector('embedding', 3);
             $table->timestamps();
         });
 
