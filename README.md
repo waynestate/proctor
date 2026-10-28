@@ -1,12 +1,18 @@
+<p align="center">
+  <a href="site/index.html"><img src="docs/readme/hero.jpg" width="100%" alt="PROCTOR's front page: a green examination book sealed with PROCTOR's eye mark, beside the headline 'Watches the exam. Doesn't help.'"></a>
+</p>
+
 # PROCTOR
 
-[![GitHub CI](https://github.com/waynestate/proctor/actions/workflows/ci.yml/badge.svg)](https://github.com/waynestate/proctor/actions/workflows/ci.yml)
+<p>
+  <img src="docs/readme/badges/php.svg" alt="php ^8.3">
+  <img src="docs/readme/badges/license.svg" alt="licence MIT">
+  <img src="docs/readme/badges/exit.svg" alt="exit codes: 0 pass, 1 fail, 2 tripped">
+  <a href="https://github.com/waynestate/proctor/actions/workflows/ci.yml"><img src="https://github.com/waynestate/proctor/actions/workflows/ci.yml/badge.svg" alt="GitHub CI"></a>
+</p>
 
-Checks: `composer ci` (the same command runs on GitLab and GitHub).
-
-Front page: [`site/index.html`](site/index.html).
-
-PROCTOR is the invigilator your composer.lock didn't know it needed: no phones, no EOL PHP.
+**Policy Rules Of Code, Tested On Release.** The invigilator your composer.lock didn't know it needed: no phones,
+no EOL PHP.
 
 PROCTOR is a framework-free PHP CLI that measures a PHP application against
 the WSU version policy. It reads the app's composer.json and composer.lock,
@@ -15,8 +21,13 @@ reports each check as pass, warning, info or fail. The checks and their rules
 come from the stack's version policy decision and from the policy file
 passed with `--policy`; PROCTOR itself holds no policy of its own.
 
-This repository is published from Wayne State University's internal GitLab and mirrored here. Changes land there
-first; Wayne State developers open issues and merge requests on the internal project.
+Checks: `composer ci` (the same command runs on GitLab and GitHub). Front page: [`site/index.html`](site/index.html).
+
+> [!NOTE]
+> This repository is published from Wayne State University's internal GitLab and mirrored here. Changes land there
+> first; Wayne State developers open issues and merge requests on the internal project.
+
+<p><img src="docs/readme/rule.png" width="100%" alt=""></p>
 
 ## Install
 
@@ -58,6 +69,11 @@ vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--po
 
 ## Checks
 
+<p align="center">
+  <img src="docs/readme/report.svg" width="100%" alt="Nine real lines from PROCTOR's text report, one per check: FAIL php-floor, WARN unpatched, FAIL unbounded-constraints, PASS lock-committed, WARN portability, WARN mysql56, WARN ci-pipelines, PASS composer-audit, FAIL overrides. Each line is written in words; colour only repeats what the word says.">
+</p>
+<p align="center"><sub>Nine questions, asked in this order on every run. The lines are real output from the test fixtures.</sub></p>
+
 - `php-floor`: fails when the lowest PHP version allowed by `require.php` is past security support plus the grace window, or when composer.json has no usable php constraint.
 - `unpatched`: warns when a locked component is behind the policy's `latest_patch` for its version line, and passes when it is current. Reads laravel from composer.lock (`laravel/framework`), vue and inertia from package-lock.json (`vue`, `@inertiajs/vue3`), and the PHP runtime from `--php-runtime`. No finding when the component, its version line, or `latest_patch` is absent from the policy.
 - `unbounded-constraints`: fails for every runtime constraint that is `*` or names a dev- branch.
@@ -75,6 +91,28 @@ vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--po
 - `0`: pass (warnings allowed)
 - `1`: one or more failures
 - `2`: tool error (bad options, unreadable policy, malformed composer.json or overrides file)
+
+```mermaid
+%%{init: {'theme':'base','themeVariables':{'fontFamily':'ui-monospace, Consolas, Menlo, monospace','primaryColor':'#F4F1EA','primaryTextColor':'#1f2a33','primaryBorderColor':'#0C5449','lineColor':'#0C5449'}}}%%
+flowchart LR
+  run["proctor check"] --> ok{"options and policy readable?"}
+  ok -- no --> two["exit 2: the proctor tripped"]
+  ok -- yes --> fails{"any FAIL?"}
+  fails -- yes --> one["exit 1: resit"]
+  fails -- no --> zero["exit 0: pass, warnings allowed"]
+  classDef pass fill:#0C5449,stroke:#0C5449,color:#F4F1EA
+  classDef fail fill:#9B1C2E,stroke:#9B1C2E,color:#F4F1EA
+  classDef trip fill:#F4F1EA,stroke:#9B1C2E,color:#9B1C2E,stroke-dasharray:4 3
+  class zero pass
+  class one fail
+  class two trip
+```
+
+<details>
+<summary><b>Watch it mark a paper</b>: the answer sheet from the front page, handed over finished</summary>
+<br>
+<p align="center"><img src="docs/readme/marking.jpg" width="100%" alt="The front page's answer sheet: five steps from 'pencils up' to 'resit, pencils down', nine bubbles filled, question 3 circled in red pen with the fix in the margin, the fail struck through and a PASS stamp."></p>
+</details>
 
 ## Formats
 
@@ -154,3 +192,32 @@ Strongly recommended: a git.wayne.edu instance runner.
 ## Licence
 
 MIT, Wayne State University, Enterprise Applications.
+
+<details>
+<summary><b>The brand board</b>: the mark, lockups, palette and type</summary>
+<br>
+<p align="center"><img src="docs/readme/board.jpg" width="100%" alt="PROCTOR's brand board: the eye mark on a green tile, horizontal and stacked lockups, the palette of Wayne State green, gold, cream and the red pen, and the type."></p>
+</details>
+
+<p><img src="docs/readme/rule.png" width="100%" alt=""></p>
+
+<p align="center"><b>Seated in the same hall</b><br><sub>WayneUI and the stack. Each one sits its own exam.</sub></p>
+
+<p align="center">
+  <a href="https://github.com/waynestate/wayne-ui" title="WayneUI"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/cast/wayneui-dark.png"><img src="docs/readme/cast/wayneui.png" width="40" alt="WayneUI"></picture></a>
+  <a href="https://github.com/waynestate/creed" title="CREED"><img src="docs/readme/cast/creed.png" width="40" alt="CREED"></a>
+  <a href="https://github.com/waynestate/proctor" title="PROCTOR"><img src="docs/readme/cast/proctor.png" width="40" alt="PROCTOR"></a>
+  <a href="https://github.com/waynestate/sesame" title="SESAME"><img src="docs/readme/cast/sesame.png" width="40" alt="SESAME"></a>
+  <a href="https://github.com/waynestate/helmet" title="HELMET"><img src="docs/readme/cast/helmet.png" width="40" alt="HELMET"></a>
+  <a href="https://github.com/waynestate/sourdough" title="Sourdough"><img src="docs/readme/cast/sourdough.png" width="40" alt="Sourdough"></a>
+  <a href="https://github.com/waynestate/squire" title="SQUIRE"><img src="docs/readme/cast/squire.png" width="40" alt="SQUIRE"></a>
+  <a href="https://github.com/waynestate/preflight" title="PREFLIGHT"><img src="docs/readme/cast/preflight.png" width="40" alt="PREFLIGHT"></a>
+  <a href="https://github.com/waynestate/pinstripe" title="Pinstripe"><img src="docs/readme/cast/pinstripe.png" width="40" alt="Pinstripe"></a>
+  <a href="https://github.com/waynestate/booster" title="BOOSTER"><img src="docs/readme/cast/booster.png" width="40" alt="BOOSTER"></a>
+  <a href="https://github.com/waynestate/rollcall" title="ROLLCALL"><img src="docs/readme/cast/rollcall.png" width="40" alt="ROLLCALL"></a>
+  <a href="https://github.com/waynestate/drawbridge" title="DRAWBRIDGE"><img src="docs/readme/cast/drawbridge.png" width="40" alt="DRAWBRIDGE"></a>
+  <a href="https://github.com/waynestate/advisor" title="ADVISOR"><img src="docs/readme/cast/advisor.png" width="40" alt="ADVISOR"></a>
+  <a href="https://github.com/waynestate/weld" title="WELD"><img src="docs/readme/cast/weld.png" width="40" alt="WELD"></a>
+</p>
+
+<p align="center"><sub>Images are regenerated from the front page by <a href="scripts/readme-art/README.md"><code>scripts/readme-art</code></a>. Pencils down.</sub></p>
