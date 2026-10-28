@@ -1,6 +1,6 @@
-<p align="center">
+<div align="center">
   <a href="site/index.html"><img src="docs/readme/hero.jpg" width="100%" alt="PROCTOR's front page: a green examination book sealed with PROCTOR's eye mark, beside the headline 'Watches the exam. Doesn't help.'"></a>
-</p>
+</div>
 
 # PROCTOR
 
@@ -69,10 +69,10 @@ vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--po
 
 ## Checks
 
-<p align="center">
+<div align="center">
   <img src="docs/readme/report.svg" width="100%" alt="Nine real lines from PROCTOR's text report, one per check: FAIL php-floor, WARN unpatched, FAIL unbounded-constraints, PASS lock-committed, WARN portability, WARN mysql56, WARN ci-pipelines, PASS composer-audit, FAIL overrides. Each line is written in words; colour only repeats what the word says.">
-</p>
-<p align="center"><sub>Nine questions, asked in this order on every run. The lines are real output from the test fixtures.</sub></p>
+</div>
+<div align="center"><sub>Nine questions, asked in this order on every run. The lines are real output from the test fixtures.</sub></div>
 
 - `php-floor`: fails when the lowest PHP version allowed by `require.php` is past security support plus the grace window, or when composer.json has no usable php constraint.
 - `unpatched`: warns when a locked component is behind the policy's `latest_patch` for its version line, and passes when it is current. Reads laravel from composer.lock (`laravel/framework`), vue and inertia from package-lock.json (`vue`, `@inertiajs/vue3`), and the PHP runtime from `--php-runtime`. No finding when the component, its version line, or `latest_patch` is absent from the policy.
@@ -111,7 +111,7 @@ flowchart LR
 <details>
 <summary><b>Watch it mark a paper</b>: the answer sheet from the front page, handed over finished</summary>
 <br>
-<p align="center"><img src="docs/readme/marking.jpg" width="100%" alt="The front page's answer sheet: five steps from 'pencils up' to 'resit, pencils down', nine bubbles filled, question 3 circled in red pen with the fix in the margin, the fail struck through and a PASS stamp."></p>
+<div align="center"><img src="docs/readme/marking.jpg" width="100%" alt="The front page's answer sheet: five steps from 'pencils up' to 'resit, pencils down', nine bubbles filled, question 3 circled in red pen with the fix in the margin, the fail struck through and a PASS stamp."></div>
 </details>
 
 ## Formats
@@ -196,14 +196,14 @@ MIT, Wayne State University, Enterprise Applications.
 <details>
 <summary><b>The brand board</b>: the mark, lockups, palette and type</summary>
 <br>
-<p align="center"><img src="docs/readme/board.jpg" width="100%" alt="PROCTOR's brand board: the eye mark on a green tile, horizontal and stacked lockups, the palette of Wayne State green, gold, cream and the red pen, and the type."></p>
+<div align="center"><img src="docs/readme/board.jpg" width="100%" alt="PROCTOR's brand board: the eye mark on a green tile, horizontal and stacked lockups, the palette of Wayne State green, gold, cream and the red pen, and the type."></div>
 </details>
 
 <p><img src="docs/readme/rule.png" width="100%" alt=""></p>
 
-<p align="center"><b>Seated in the same hall</b><br><sub>WayneUI and the stack. Each one sits its own exam.</sub></p>
+<div align="center"><b>Seated in the same hall</b><br><sub>WayneUI and the stack. Each one sits its own exam.</sub></div>
 
-<p align="center">
+<div align="center">
   <a href="https://github.com/waynestate/wayne-ui" title="WayneUI"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/readme/cast/wayneui-dark.png"><img src="docs/readme/cast/wayneui.png" width="40" alt="WayneUI"></picture></a>
   <a href="https://github.com/waynestate/creed" title="CREED"><img src="docs/readme/cast/creed.png" width="40" alt="CREED"></a>
   <a href="https://github.com/waynestate/proctor" title="PROCTOR"><img src="docs/readme/cast/proctor.png" width="40" alt="PROCTOR"></a>
@@ -218,6 +218,6 @@ MIT, Wayne State University, Enterprise Applications.
   <a href="https://github.com/waynestate/drawbridge" title="DRAWBRIDGE"><img src="docs/readme/cast/drawbridge.png" width="40" alt="DRAWBRIDGE"></a>
   <a href="https://github.com/waynestate/advisor" title="ADVISOR"><img src="docs/readme/cast/advisor.png" width="40" alt="ADVISOR"></a>
   <a href="https://github.com/waynestate/weld" title="WELD"><img src="docs/readme/cast/weld.png" width="40" alt="WELD"></a>
-</p>
+</div>
 
-<p align="center"><sub>Images are regenerated from the front page by <a href="scripts/readme-art/README.md"><code>scripts/readme-art</code></a>. Pencils down.</sub></p>
+<div align="center"><sub>Images are regenerated from the front page by <a href="scripts/readme-art/README.md"><code>scripts/readme-art</code></a>. Pencils down.</sub></div>
