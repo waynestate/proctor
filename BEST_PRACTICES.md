@@ -905,7 +905,7 @@ Pages from the first pass that were re-read in the second pass: PHP supported ve
 Composer 2.10 release, GitLab Code Quality, GitLab CI/CD YAML reference, GitLab protected branches, PHPStan baseline,
 Semgrep blocking and errors, OpenSSF Scorecard checks, SLSA v1.0 levels.
 
-Internal design documents used for tagging: the stack's enforcement-points decision, the stack's version-policy decision, the stack's deploy-gate decision, the stack's one-repo-per-project decision, the PROCTOR repo, and the PREFLIGHT repo.
+Stack design decisions used for tagging: the stack's enforcement-points decision, the stack's version-policy decision, the stack's deploy-gate decision, the stack's one-repo-per-project decision, the PROCTOR repo, and the PREFLIGHT repo.
 
 ## Platform assumptions
 
