@@ -1,0 +1,15 @@
+{
+  "name": "proctor-readme-art",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Generates the README images under docs/readme/ from PROCTOR's own front page and brand files.",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "dependencies": {
+    "playwright": "1.64.1",
+    "badge-maker": "^4.1.0",
+    "sharp": "^0.34.0"
+  }
+}

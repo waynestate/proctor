@@ -3,3 +3,5 @@
 *.bat text eol=crlf
 *.cmd text eol=crlf
 /tests export-ignore
+/docs/readme export-ignore
+/scripts/readme-art export-ignore
