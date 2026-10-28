@@ -4,6 +4,8 @@
 
 Checks: `composer ci` (the same command runs on GitLab and GitHub).
 
+Front page: [`site/index.html`](site/index.html).
+
 PROCTOR is the invigilator your composer.lock didn't know it needed: no phones, no EOL PHP.
 
 PROCTOR is a framework-free PHP CLI that measures a PHP application against
