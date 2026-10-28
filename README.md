@@ -41,7 +41,7 @@ vendor/bin/proctor check [--path=.] [--format=text|json|codequality] [--policy=<
 - `unbounded-constraints`: fails for every runtime constraint that is `*` or names a dev- branch.
 - `lock-committed`: fails when composer.lock is missing from the app path.
 - `portability`: warns when code hard-codes a platform fact: an absolute host path, a hard-coded proxy address, a local-disk session store, or a php_value/php_flag line in .htaccess.
-- `ci-pipelines`: fails when `.gitlab-ci.yml` or `.github/workflows/ci.yml` is missing, or when neither pipeline runs `composer ci`; warns when a GitHub `uses:` ref is not a 40-hex commit SHA. The proctor checks that both exam halls are actually watched.
+- `ci-pipelines`: for stack packages (composer.json `name` starting with `waynestate/`), fails when `.gitlab-ci.yml` or `.github/workflows/ci.yml` is missing or runs no `composer ci`; for any other project, a missing or incomplete `.gitlab-ci.yml` is a warning and `.github/workflows/ci.yml` is optional. Warns when a GitHub `uses:` ref is not a 40-hex commit SHA. The proctor fails the stack's own exam halls, and only leaves a note for everyone else's.
 - `composer-audit`: fails for advisories at or above the policy's `audit_severity_threshold`, warns for lower ones, and reports info when composer or the lock file is absent.
 - `overrides`: fails for every expired entry in policy-overrides.json.
 

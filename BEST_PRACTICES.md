@@ -901,11 +901,15 @@ php-fpm). It reports warnings, not failures, while the stack stages the rule.
 ## CI pipelines
 
 ### The ci-pipelines check
-Every stack repo runs `composer ci` on both GitLab and GitHub (ADR-0012, decision 6), so the two pipeline files are
-part of the contract, and a reusable workflow must be pinned to a commit SHA so the contract cannot move out from
-under the pipeline.
+Every stack repo runs `composer ci` on both GitLab and GitHub (ADR-0012, decision 6), so for stack packages the two
+pipeline files are part of the contract, and a reusable workflow must be pinned to a commit SHA so the contract
+cannot move out from under the pipeline. Other projects are not part of the stack contract: a GitLab pipeline that
+runs `composer ci` is still expected, but a missing or incomplete one is a warning, and a GitHub workflow is
+optional.
 
-**How the stack holds it: Enforced.** The `ci-pipelines` check fails when `.gitlab-ci.yml` or
-`.github/workflows/ci.yml` is missing, unparseable, or runs no `composer ci`, and warns when a GitHub `uses:` ref
-is not a 40-hex commit SHA. `CiPipelinesCheckTest` pins the fixture outcomes, and `CheckCommandTest` runs the good
-app through the whole CLI.
+**How the stack holds it: Enforced.** For stack packages (composer.json `name` starting with `waynestate/`), the
+`ci-pipelines` check fails when `.gitlab-ci.yml` or `.github/workflows/ci.yml` is missing, unparseable, or runs no
+`composer ci`. For other projects the same rules are warnings, and a missing `.github/workflows/ci.yml` is no
+finding at all. A GitHub `uses:` ref that is not a 40-hex commit SHA is a warning either way.
+`CiPipelinesCheckTest` pins the fixture outcomes for stack packages and other projects alike, and
+`CheckCommandTest` runs the good app and the acme apps through the whole CLI.
