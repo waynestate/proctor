@@ -11,6 +11,7 @@
     "require": {
         "php": "^8.3",
         "symfony/console": "^7.1",
+        "symfony/yaml": "^7.1",
         "composer/semver": "^3.4",
         "nikic/php-parser": "^5.6"
     },
