@@ -45,4 +45,14 @@ interface PolicySource
      * @return array{latest_patch: string, latest_patch_checked: string|null}|null
      */
     public function latestPatchOf(string $component, string $version): ?array;
+
+    /**
+     * Returns the security_until date of $version of $component, parsed at
+     * midnight, or null when the component, the version line or the
+     * security_until key is not in the policy.
+     *
+     * @param string $component a component name, e.g. "php"
+     * @param string $version   a version line as used in the policy, e.g. "8.3"
+     */
+    public function securityUntilOf(string $component, string $version): ?DateTimeImmutable;
 }

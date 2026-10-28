@@ -75,6 +75,16 @@ final class JsonFilePolicySource implements PolicySource
         ];
     }
 
+    public function securityUntilOf(string $component, string $version): ?DateTimeImmutable
+    {
+        $entry = $this->data['components'][$component]['versions'][$version] ?? null;
+        if (!is_array($entry) || !isset($entry['security_until']) || !is_string($entry['security_until'])) {
+            return null;
+        }
+
+        return self::parseDate($entry['security_until']);
+    }
+
     /**
      * Reads and validates the policy file.
      *

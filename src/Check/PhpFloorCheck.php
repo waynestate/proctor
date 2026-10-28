@@ -65,7 +65,7 @@ final class PhpFloorCheck implements CheckInterface
             State::SECURITY => [new Finding(
                 $this->id(),
                 Finding::STATUS_WARNING,
-                sprintf('php floor %s is in security-only support', $floor),
+                $this->securityOnlyMessage($floor, $context),
                 'composer.json',
                 1,
                 $state,
@@ -134,5 +134,35 @@ final class PhpFloorCheck implements CheckInterface
         $version = $numeric[0]->getStart()->getVersion();
 
         return preg_replace('/^(\d+\.\d+).*$/', '$1', $version) ?? $version;
+    }
+
+    /**
+     * The security-only warning with the end date and the days left.
+     *
+     * The days are whole days from the context's today to security_until,
+     * the same midnight-to-midnight comparison PolicySource uses for its
+     * state: today == security_until is the last day ("ends today"), the
+     * day before has 1 day left.
+     */
+    private function securityOnlyMessage(string $floor, CheckContext $context): string
+    {
+        $until = $context->policy->securityUntilOf('php', $floor);
+        if ($until === null) {
+            return sprintf('php floor %s is in security-only support', $floor);
+        }
+
+        $days = (int) $context->today->diff($until)->format('%a');
+        $left = match (true) {
+            $days === 0 => 'ends today',
+            $days === 1 => '1 day left',
+            default => sprintf('%d days left', $days),
+        };
+
+        return sprintf(
+            'php floor %s is in security-only support until %s (%s)',
+            $floor,
+            $until->format('Y-m-d'),
+            $left,
+        );
     }
 }

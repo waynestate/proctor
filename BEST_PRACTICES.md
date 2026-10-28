@@ -165,8 +165,10 @@ Why: the owner can plan from a date. A bare warning is easy to leave for later, 
 
 Sources: [PHP supported versions](https://www.php.net/supported-versions.php).
 
-**How the stack holds it: Not yet.** `PhpFloorCheck` prints "php floor X is in security-only support" and nothing more.
-The policy file already holds the date.
+**How the stack holds it: Checked.** `PhpFloorCheck` prints the end date and the days left, e.g. "php floor 8.3 is
+in security-only support until 2027-12-31 (430 days left)": the date is the policy file's `security_until`, the days
+are the whole days from the run's date (`--today`) to it, with "1 day left" for one and "ends today" for zero.
+`PhpFloorCheckTest` pins the mid-window, one-day and last-day messages.
 
 ---
 
