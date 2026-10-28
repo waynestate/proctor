@@ -1,0 +1,6 @@
+{
+    "name": "acme/deploy-ignored-app",
+    "require": {
+        "php": "^8.4"
+    }
+}

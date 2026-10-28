@@ -1,0 +1,13 @@
+{
+    "name": "acme/wipe-app",
+    "require": {
+        "php": "^8.4"
+    },
+    "scripts": {
+        "deploy": [
+            "php artisan config:cache",
+            "php artisan db:wipe",
+            "php artisan migrate --force"
+        ]
+    }
+}

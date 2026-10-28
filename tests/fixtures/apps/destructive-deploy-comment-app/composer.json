@@ -1,0 +1,6 @@
+{
+    "name": "acme/deploy-comment-app",
+    "require": {
+        "php": "^8.4"
+    }
+}

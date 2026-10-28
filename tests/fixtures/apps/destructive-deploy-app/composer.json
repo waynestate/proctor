@@ -1,0 +1,6 @@
+{
+    "name": "acme/deploy-app",
+    "require": {
+        "php": "^8.4"
+    }
+}

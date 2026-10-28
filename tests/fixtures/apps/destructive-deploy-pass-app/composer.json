@@ -1,0 +1,6 @@
+{
+    "name": "acme/deploy-pass-app",
+    "require": {
+        "php": "^8.4"
+    }
+}
