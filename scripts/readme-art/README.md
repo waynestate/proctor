@@ -4,7 +4,7 @@ Generates everything under `docs/readme/` from PROCTOR's own front page (`site/`
 (`site/brand/`): the hero and marking screenshots, a section divider cut from the real ruled paper,
 the animated report SVG (nine real report lines, read from the page at build time), the brand board,
 the badges and the cast strip. Every image is a crop, resize or local render of something the page
-already shows — the proctor never draws anything it did not sit the exam on.
+already shows. The proctor never draws anything it did not sit the exam on.
 
 ## Run
 

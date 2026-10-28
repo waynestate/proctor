@@ -50,7 +50,7 @@ Linux / macOS:
     scripts/build-phar.sh
 
 Each script writes `build/proctor.phar` and verifies it by printing PROCTOR's
-version. The phar is not published yet — there is no release step — so build it
+version. The phar is not published yet (there is no release step), so build it
 from a checkout rather than downloading it.
 
 ## Usage
@@ -81,7 +81,7 @@ vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--po
 - `destructive-deploy`: fails when a deploy script runs an artisan command that drops or rebuilds the database (`migrate:fresh`, `migrate:refresh`, `migrate:reset`, `db:wipe`), which erases production data on every deploy. Scans `.sh` and `.php` files under a top-level `deployments/`, `deploy_scripts/`, `deploy/` or `scripts/` directory, the top-level `build.sh`, `release.sh` and `.gitlab-ci.yml`, and the `scripts` section of composer.json; shell comments are ignored. Fix by running plain `php artisan migrate --force` in the deploy.
 - `ci-pipelines`: for stack packages (composer.json `name` starting with `waynestate/`), fails when `.gitlab-ci.yml` or `.github/workflows/ci.yml` is missing or runs no `composer ci`; for any other project, a missing or incomplete `.gitlab-ci.yml` is a warning and `.github/workflows/ci.yml` is optional. Warns when a GitHub `uses:` ref is not a 40-hex commit SHA. The proctor fails the stack's own exam halls, and only leaves a note for everyone else's.
 - `composer-audit`: fails for advisories at or above the policy's `audit_severity_threshold`, warns for lower ones, and reports info when composer or the lock file is absent.
-- `composer-version`: fails when the Composer on PATH carries the command-injection holes CVE-2024-35241 and CVE-2024-35242 — 2.2.x below 2.2.24, or any other 2.x below 2.7.7 — or is Composer 1, which is end of life; warns when composer cannot be run. The invigilator checks its own pen: [GHSA-47f6-5gq3-vx9c](https://github.com/advisories/GHSA-47f6-5gq3-vx9c) and [GHSA-v9qv-c7wm-wgmf](https://github.com/advisories/GHSA-v9qv-c7wm-wgmf).
+- `composer-version`: fails when the Composer on PATH carries the command-injection holes CVE-2024-35241 and CVE-2024-35242 (2.2.x below 2.2.24, or any other 2.x below 2.7.7) or is Composer 1, which is end of life; warns when composer cannot be run. The invigilator checks its own pen: [GHSA-47f6-5gq3-vx9c](https://github.com/advisories/GHSA-47f6-5gq3-vx9c) and [GHSA-v9qv-c7wm-wgmf](https://github.com/advisories/GHSA-v9qv-c7wm-wgmf).
 - `overrides`: fails for every expired entry in policy-overrides.json.
 
 ## Exit codes
@@ -123,8 +123,8 @@ flowchart LR
 
 Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a
 check's default finding, `proctor/<check-id>/<rule>` for a named rule. The id
-is the finding's identity in the machine formats — `rule_id` in `json`,
-`ruleId` in `sarif`, and `check_name` in `codequality` — so a rule keeps the
+is the finding's identity in the machine formats: `rule_id` in `json`,
+`ruleId` in `sarif`, and `check_name` in `codequality`. A rule keeps the
 same id across runs and across formats even when its message changes.
 
 The full set, grouped by check:
@@ -205,8 +205,8 @@ jobs:
           sarif_file: proctor.sarif
 ```
 
-PROCTOR now files the mark sheet in the format the head office already reads —
-no more translating the exam results by hand.
+PROCTOR now files the mark sheet in the format the head office already reads.
+No more translating the exam results by hand.
 
 ## Overrides
 
