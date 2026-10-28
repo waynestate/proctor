@@ -15,7 +15,7 @@ use Waynestate\Proctor\Policy\State;
  * fail findings into warning findings, with "(overridden: <reason>)"
  * appended to the message.
  *
- * Exception (ADR-0003: "EOL + 90 days: fail; no override"): an override
+ * Exception (the stack's version policy: "EOL + 90 days: fail; no override"): an override
  * NEVER downgrades a fail whose state is eol_grace_expired. That exception
  * lives in apply(), in the isOverridable() guard below.
  */
@@ -60,7 +60,7 @@ final class OverrideApplier
 
     /**
      * A fail is never overridable when its state is eol_grace_expired (the
-     * EOL exception, ADR-0003: "EOL + 90 days: fail; no override") or when
+     * EOL exception, per the stack's version policy: "EOL + 90 days: fail; no override") or when
      * it comes from the overrides check itself: an expired override must
      * always fail, even if another active override names the overrides check.
      */
