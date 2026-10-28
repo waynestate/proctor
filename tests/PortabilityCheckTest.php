@@ -110,4 +110,38 @@ final class PortabilityCheckTest extends TestCase
             rmdir($appPath);
         }
     }
+
+    public function testHostPathInCommentIsNotFlagged(): void
+    {
+        $appPath = sys_get_temp_dir() . '/proctor-portability-' . uniqid('', true);
+        self::assertTrue(is_dir($appPath) || mkdir($appPath, 0777, true));
+        file_put_contents($appPath . '/comment.php', "<?php\n\n// logs live in /var/log/app.log\n\$p = 'relative/path';\n");
+
+        try {
+            $findings = (new PortabilityCheck())->run($this->contextFor($appPath));
+
+            self::assertCount(1, $findings);
+            self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+        } finally {
+            unlink($appPath . '/comment.php');
+            rmdir($appPath);
+        }
+    }
+
+    public function testProxyAddressInCommentIsNotFlagged(): void
+    {
+        $appPath = sys_get_temp_dir() . '/proctor-portability-' . uniqid('', true);
+        self::assertTrue(is_dir($appPath) || mkdir($appPath, 0777, true));
+        file_put_contents($appPath . '/comment.php', "<?php\n\n// trusted_proxies: 172.18.0.1\n\$p = 'relative/path';\n");
+
+        try {
+            $findings = (new PortabilityCheck())->run($this->contextFor($appPath));
+
+            self::assertCount(1, $findings);
+            self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+        } finally {
+            unlink($appPath . '/comment.php');
+            rmdir($appPath);
+        }
+    }
 }
