@@ -1,5 +1,11 @@
 # PROCTOR
 
+[![GitLab pipeline](https://gitlab.example/enterprise-apps/proctor/badges/main/pipeline.svg)](https://gitlab.example/enterprise-apps/proctor/-/pipelines) [![GitHub CI](https://github.com/waynestate/proctor/actions/workflows/ci.yml/badge.svg)](https://github.com/waynestate/proctor/actions/workflows/ci.yml)
+
+Checks: `composer ci` (the same command runs on GitLab and GitHub).
+
+PROCTOR is the invigilator your composer.lock didn't know it needed: no phones, no EOL PHP.
+
 PROCTOR is a framework-free PHP CLI that measures a PHP application against
 the WSU version policy. It reads the app's composer.json and composer.lock,
 decides the support state of the app's PHP floor from a policy file, and
