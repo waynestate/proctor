@@ -1,0 +1,5 @@
+# A pipeline that tests, but never runs composer ci.
+test:
+  image: php:8.4-cli
+  script:
+    - vendor/bin/phpunit

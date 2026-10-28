@@ -8,6 +8,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 use Waynestate\Proctor\Check\CheckRunner;
+use Waynestate\Proctor\Check\CiPipelinesCheck;
 use Waynestate\Proctor\Check\ComposerAuditCheck;
 use Waynestate\Proctor\Check\Finding;
 use Waynestate\Proctor\Check\LockCommittedCheck;
@@ -125,6 +126,7 @@ $application->add(new class () extends Command {
                     new LockCommittedCheck(),
                     new PortabilityCheck(),
                     new Mysql56Check(),
+                    new CiPipelinesCheck(),
                     new ComposerAuditCheck(),
                     new OverridesCheck(),
                 ],
