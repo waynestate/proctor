@@ -164,7 +164,7 @@ a:hover { color: var(--crimson); }
   position: relative;
   display: flex;
   width: 100%;
-  max-width: 440px;
+  max-width: min(440px, calc(100% - 12px));
   margin-inline: auto;
   transform: rotate(-2.2deg);
   filter: drop-shadow(0 22px 26px rgba(20, 37, 33, .22)) drop-shadow(0 2px 2px rgba(20, 37, 33, .18));
@@ -453,25 +453,24 @@ a:hover { color: var(--crimson); }
 
 /* The red pen */
 .redpen-ring { position: absolute; right: -8px; top: 50%; width: 52px; height: 32px; transform: translateY(-50%) rotate(-4deg); overflow: visible; pointer-events: none; }
-.redpen-ring path, .redpen-arrow path { fill: none; stroke: var(--crimson); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 0; }
+.redpen-ring path { fill: none; stroke: var(--crimson); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 0; }
 .redpen-note {
   position: relative; margin: 10px 0 4px auto; width: max-content; max-width: 100%;
   padding: 0 8px 0 0; color: var(--crimson); text-align: right; transform: rotate(-2.5deg);
 }
 .redpen-note__line { display: block; font-size: 1.4rem; line-height: 1.05; font-weight: 700; }
-.redpen-arrow { position: absolute; right: -6px; top: -30px; width: 30px; height: 22px; overflow: visible; transform: scale(-1, -1); }
 
-.sheet[data-live] .redpen-ring path,
-.sheet[data-live] .redpen-arrow path { stroke-dashoffset: 1; transition: stroke-dashoffset .9s var(--ease-out); }
+.sheet[data-live] .redpen-ring path { stroke-dashoffset: 1; transition: stroke-dashoffset .9s var(--ease-out); }
 .sheet[data-live] .redpen-ring.on path { stroke-dashoffset: 0; transition-delay: .35s; }
 .sheet[data-live] .redpen-note .redpen-note__line { clip-path: inset(0 100% 0 0); transition: clip-path .9s steps(18, end); }
-.sheet[data-live] .redpen-note.on .redpen-note__line { clip-path: inset(0 0 0 0); }
+.sheet[data-live] .redpen-note.on .redpen-note__line { clip-path: inset(-6px -12px -6px -6px); }
 .sheet[data-live] .redpen-note.on .redpen-note__line + .redpen-note__line { transition-delay: 1.5s; }
-.sheet[data-live] .redpen-note.on .redpen-arrow path { stroke-dashoffset: 0; transition-delay: 2.3s; }
 .sheet[data-live] .redpen-note.on .redpen-note__line:first-child { transition-delay: .7s; }
 
 .sheet__foot { position: relative; display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; margin-top: 8px; border-top: 2px solid var(--sheet-ink); padding-top: 8px; min-height: 64px; }
-.result { display: flex; gap: 10px; align-items: baseline; min-width: 0; max-width: 58%; }
+.result { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.result__fail { white-space: nowrap; font-size: .95rem; }
+@media (max-width: 479.98px) { .sheet__foot { min-height: 96px; } .stamp { bottom: 4px; } .result { padding-bottom: 34px; } }
 .result__k { font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; }
 .result__v { display: flex; flex-direction: column; color: var(--pencil); font-size: 1.1rem; line-height: 1.1; }
 .result__fail { text-decoration: line-through; text-decoration-color: var(--crimson); text-decoration-thickness: 2px; color: #59605e; }
@@ -617,7 +616,6 @@ a:hover { color: var(--crimson); }
 .desk--front { max-width: 460px; margin-inline: auto; background: var(--green); border-color: var(--green-deep); }
 .desk--front .desk__name { color: var(--white); font-size: 1.4rem; }
 .desk--front .desk__role { color: var(--cream); }
-.desk--front .desk__mark { box-shadow: 0 0 0 2px var(--gold); }
 .desk--front::before {
   content: "the front of the room"; position: absolute; top: -26px; left: 50%; transform: translateX(-50%);
   font-family: var(--f-hand); font-size: 1.15rem; color: var(--muted); white-space: nowrap;
@@ -674,7 +672,7 @@ a:hover { color: var(--crimson); }
   58%, 68% { transform: translateX(5px) rotate(2deg); }
   76% { transform: translateX(0); }
 }
-@keyframes write-in { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes write-in { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(-6px -12px -6px -6px); } }
 @keyframes word-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 
 @media (prefers-reduced-motion: reduce) {
