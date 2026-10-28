@@ -96,7 +96,7 @@ final class Mysql56CheckTest extends TestCase
                 ['mysql56-newer-column', 'database/migrations/2026_01_01_000000_create_things_table.php', 18],
                 ['mysql56-rename', 'database/migrations/2026_01_01_000000_create_things_table.php', 23],
                 ['mysql56-raw-sql', 'database/migrations/2026_01_01_000000_create_things_table.php', 26],
-                ['mysql56-command', 'routes/console.php', 11],
+                ['mysql56-command', 'routes/console.php', 19],
             ],
             $this->triples($findings),
         );
@@ -123,5 +123,94 @@ final class Mysql56CheckTest extends TestCase
         self::assertCount(1, $findings);
         self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
         self::assertSame('no Laravel migrations found; skipped', $findings[0]->message);
+    }
+
+    public function testCommentOnlyDbShowIsNotFlagged(): void
+    {
+        // The db:show text appears only in a comment, so the AST-based
+        // command rule must not flag it (the regex version did).
+        $appPath = sys_get_temp_dir() . '/proctor-mysql56-' . uniqid('', true);
+        self::assertTrue(
+            is_dir($appPath . '/database/migrations') || mkdir($appPath . '/database/migrations', 0777, true),
+        );
+        file_put_contents(
+            $appPath . '/database/migrations/2026_01_01_000000_create_things_table.php',
+            <<<'PHP'
+<?php
+
+return new class extends \Illuminate\Database\Migrations\Migration
+{
+    public function up(): void
+    {
+        // The db:show command is handy for inspecting the schema.
+    }
+};
+PHP,
+        );
+
+        try {
+            $findings = (new Mysql56Check())->run($this->contextFor($appPath));
+
+            self::assertCount(
+                0,
+                array_filter(
+                    $findings,
+                    static fn(Finding $finding): bool => str_starts_with($finding->message, 'mysql56-command:'),
+                ),
+            );
+        } finally {
+            unlink($appPath . '/database/migrations/2026_01_01_000000_create_things_table.php');
+            rmdir($appPath . '/database/migrations');
+            rmdir($appPath . '/database');
+            rmdir($appPath);
+        }
+    }
+
+    public function testMultiLineRawSqlIsCaught(): void
+    {
+        // A DB::statement call that spans several lines is still one call to
+        // the AST, so the raw-sql rule sees the whole SQL string (the regex
+        // version only looked at the line that named DB::statement).
+        $appPath = sys_get_temp_dir() . '/proctor-mysql56-' . uniqid('', true);
+        self::assertTrue(
+            is_dir($appPath . '/database/migrations') || mkdir($appPath . '/database/migrations', 0777, true),
+        );
+        file_put_contents(
+            $appPath . '/database/migrations/2026_01_01_000000_create_things_table.php',
+            <<<'PHP'
+<?php
+
+use Illuminate\Support\Facades\DB;
+
+return new class extends \Illuminate\Database\Migrations\Migration
+{
+    public function up(): void
+    {
+        DB::statement(
+            'ALTER TABLE things
+             ALGORITHM=INSTANT,
+             ADD COLUMN x INT'
+        );
+    }
+};
+PHP,
+        );
+
+        try {
+            $findings = (new Mysql56Check())->run($this->contextFor($appPath));
+
+            self::assertCount(
+                1,
+                array_filter(
+                    $findings,
+                    static fn(Finding $finding): bool => str_starts_with($finding->message, 'mysql56-raw-sql:'),
+                ),
+            );
+        } finally {
+            unlink($appPath . '/database/migrations/2026_01_01_000000_create_things_table.php');
+            rmdir($appPath . '/database/migrations');
+            rmdir($appPath . '/database');
+            rmdir($appPath);
+        }
     }
 }
