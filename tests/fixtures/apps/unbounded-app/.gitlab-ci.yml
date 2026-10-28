@@ -1,0 +1,6 @@
+# composer ci is the contract: the checks are defined there, and this pipeline only wraps them.
+composer-ci:
+  image: composer:2.10.3
+  script:
+    - composer install --no-interaction --no-progress --prefer-dist
+    - composer ci

@@ -99,4 +99,64 @@ final class CheckCommandTest extends ProctorTestCase
             $result['stdout'],
         );
     }
+
+    public function testCiPipelinesGoodAppExitsZeroAndPassesCiPipelines(): void
+    {
+        $result = $this->runProctor($this->app('ci-pipelines-good-app'));
+
+        self::assertSame(0, $result['exit']);
+        self::assertSame([], $this->failCheckIds($result['stdout']));
+        self::assertMatchesRegularExpression(
+            '/^PASS ci-pipelines: both pipelines run composer ci$/m',
+            $result['stdout'],
+        );
+    }
+
+    public function testCiPipelinesMissingGitlabAppFailsOnlyCiPipelines(): void
+    {
+        $result = $this->runProctor($this->app('ci-pipelines-missing-gitlab-app'));
+
+        self::assertSame(1, $result['exit']);
+        self::assertSame(['ci-pipelines'], $this->failCheckIds($result['stdout']));
+        self::assertMatchesRegularExpression(
+            '/^FAIL ci-pipelines: ci-pipelines-gitlab-missing: /m',
+            $result['stdout'],
+        );
+    }
+
+    public function testCiPipelinesMissingGithubAppFailsOnlyCiPipelines(): void
+    {
+        $result = $this->runProctor($this->app('ci-pipelines-missing-github-app'));
+
+        self::assertSame(1, $result['exit']);
+        self::assertSame(['ci-pipelines'], $this->failCheckIds($result['stdout']));
+        self::assertMatchesRegularExpression(
+            '/^FAIL ci-pipelines: ci-pipelines-github-missing: /m',
+            $result['stdout'],
+        );
+    }
+
+    public function testCiPipelinesGitlabNoCiAppFailsOnlyCiPipelines(): void
+    {
+        $result = $this->runProctor($this->app('ci-pipelines-gitlab-no-ci-app'));
+
+        self::assertSame(1, $result['exit']);
+        self::assertSame(['ci-pipelines'], $this->failCheckIds($result['stdout']));
+        self::assertMatchesRegularExpression(
+            '/^FAIL ci-pipelines: ci-pipelines-gitlab-no-ci: /m',
+            $result['stdout'],
+        );
+    }
+
+    public function testCiPipelinesGithubMainAppExitsZeroAndWarnsOnTheUnpinnedRef(): void
+    {
+        $result = $this->runProctor($this->app('ci-pipelines-github-main-app'));
+
+        self::assertSame(0, $result['exit']);
+        self::assertSame([], $this->failCheckIds($result['stdout']));
+        self::assertMatchesRegularExpression(
+            '/^WARN ci-pipelines: ci-pipelines-unpinned-uses: uses "waynestate\/preflight\/.github\/workflows\/php-package\.yml@main" is not pinned to a 40-hex commit SHA; pin it to a commit SHA$/m',
+            $result['stdout'],
+        );
+    }
 }
