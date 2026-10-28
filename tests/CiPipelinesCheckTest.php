@@ -63,42 +63,40 @@ final class CiPipelinesCheckTest extends TestCase
         self::assertNull($findings[0]->path);
     }
 
-    public function testMissingGitlabFileFails(): void
+    public function testMissingGitlabFileWarnsForOtherProjects(): void
     {
         $findings = (new CiPipelinesCheck())->run(
             $this->contextFor(__DIR__ . '/fixtures/apps/ci-pipelines-missing-gitlab-app'),
         );
 
         self::assertCount(1, $findings);
-        self::assertSame(Finding::STATUS_FAIL, $findings[0]->status);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
         self::assertSame(
             [['ci-pipelines-gitlab-missing', '.gitlab-ci.yml', 1]],
             $this->triples($findings),
         );
     }
 
-    public function testMissingGithubFileFails(): void
+    public function testMissingGithubFilePassesForOtherProjects(): void
     {
         $findings = (new CiPipelinesCheck())->run(
             $this->contextFor(__DIR__ . '/fixtures/apps/ci-pipelines-missing-github-app'),
         );
 
         self::assertCount(1, $findings);
-        self::assertSame(Finding::STATUS_FAIL, $findings[0]->status);
-        self::assertSame(
-            [['ci-pipelines-github-missing', '.github/workflows/ci.yml', 1]],
-            $this->triples($findings),
-        );
+        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+        self::assertSame('gitlab pipeline runs composer ci', $findings[0]->message);
+        self::assertNull($findings[0]->path);
     }
 
-    public function testGitlabPipelineWithoutComposerCiFails(): void
+    public function testGitlabPipelineWithoutComposerCiWarnsForOtherProjects(): void
     {
         $findings = (new CiPipelinesCheck())->run(
             $this->contextFor(__DIR__ . '/fixtures/apps/ci-pipelines-gitlab-no-ci-app'),
         );
 
         self::assertCount(1, $findings);
-        self::assertSame(Finding::STATUS_FAIL, $findings[0]->status);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
         self::assertSame(
             [['ci-pipelines-gitlab-no-ci', '.gitlab-ci.yml', 1]],
             $this->triples($findings),
@@ -123,10 +121,12 @@ final class CiPipelinesCheckTest extends TestCase
         );
     }
 
-    public function testUnparseableGitlabFileFailsWithTheParseRule(): void
+    public function testUnparseableGitlabFileWarnsForOtherProjects(): void
     {
         // An unclosed flow sequence is invalid YAML, so the pipeline could
         // not run at all: the check must say the file could not be parsed.
+        // The app has no composer.json, so it is an "other project" and the
+        // parse error is a warning, not a fail.
         $appPath = sys_get_temp_dir() . '/proctor-ci-pipelines-' . uniqid('', true);
         self::assertTrue(
             is_dir($appPath . '/.github/workflows') || mkdir($appPath . '/.github/workflows', 0777, true),
@@ -160,7 +160,7 @@ YAML,
             $findings = (new CiPipelinesCheck())->run($this->contextFor($appPath));
 
             self::assertCount(1, $findings);
-            self::assertSame(Finding::STATUS_FAIL, $findings[0]->status);
+            self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
             self::assertSame(
                 [['ci-pipelines-gitlab-parse', '.gitlab-ci.yml', 1]],
                 $this->triples($findings),
@@ -172,5 +172,110 @@ YAML,
             rmdir($appPath . '/.github');
             rmdir($appPath);
         }
+    }
+
+    public function testAcmeAppWithoutPipelinesWarnsAboutTheMissingGitlabPipeline(): void
+    {
+        $findings = (new CiPipelinesCheck())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/ci-pipelines-acme-app'),
+        );
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertSame(
+            [['ci-pipelines-gitlab-missing', '.gitlab-ci.yml', 1]],
+            $this->triples($findings),
+        );
+    }
+
+    public function testAcmeAppWithOnlyAGoodGitlabPipelinePasses(): void
+    {
+        $findings = (new CiPipelinesCheck())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/ci-pipelines-acme-gitlab-only-app'),
+        );
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+        self::assertSame('gitlab pipeline runs composer ci', $findings[0]->message);
+        self::assertNull($findings[0]->path);
+    }
+
+    public function testStackPackageWithoutPipelinesFailsBothFiles(): void
+    {
+        $appPath = $this->stackAppPath();
+
+        try {
+            $findings = (new CiPipelinesCheck())->run($this->contextFor($appPath));
+
+            self::assertCount(2, $findings);
+            self::assertSame(Finding::STATUS_FAIL, $findings[0]->status);
+            self::assertSame(Finding::STATUS_FAIL, $findings[1]->status);
+            self::assertSame(
+                [
+                    ['ci-pipelines-github-missing', '.github/workflows/ci.yml', 1],
+                    ['ci-pipelines-gitlab-missing', '.gitlab-ci.yml', 1],
+                ],
+                $this->triples($findings),
+            );
+        } finally {
+            $this->removeStackApp($appPath);
+        }
+    }
+
+    public function testStackPackageWithGitlabWithoutComposerCiFails(): void
+    {
+        $appPath = $this->stackAppPath();
+        file_put_contents(
+            $appPath . '/.gitlab-ci.yml',
+            "lint:\n  script:\n    - composer validate\n",
+        );
+
+        try {
+            $findings = (new CiPipelinesCheck())->run($this->contextFor($appPath));
+
+            self::assertCount(2, $findings);
+            self::assertSame(Finding::STATUS_FAIL, $findings[0]->status);
+            self::assertSame(Finding::STATUS_FAIL, $findings[1]->status);
+            self::assertSame(
+                [
+                    ['ci-pipelines-github-missing', '.github/workflows/ci.yml', 1],
+                    ['ci-pipelines-gitlab-no-ci', '.gitlab-ci.yml', 1],
+                ],
+                $this->triples($findings),
+            );
+        } finally {
+            $this->removeStackApp($appPath);
+        }
+    }
+
+    /**
+     * A temp app whose composer.json names it a stack package.
+     */
+    private function stackAppPath(): string
+    {
+        $appPath = sys_get_temp_dir() . '/proctor-ci-pipelines-' . uniqid('', true);
+        self::assertTrue(is_dir($appPath) || mkdir($appPath, 0777, true));
+        file_put_contents(
+            $appPath . '/composer.json',
+            <<<'JSON'
+{
+    "name": "waynestate/fixture",
+    "require": {
+        "php": "^8.4"
+    }
+}
+JSON,
+        );
+
+        return $appPath;
+    }
+
+    private function removeStackApp(string $appPath): void
+    {
+        if (is_file($appPath . '/.gitlab-ci.yml')) {
+            unlink($appPath . '/.gitlab-ci.yml');
+        }
+        unlink($appPath . '/composer.json');
+        rmdir($appPath);
     }
 }

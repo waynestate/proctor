@@ -8,10 +8,13 @@ use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 
 /**
- * Fails when the project's CI contract is broken: .gitlab-ci.yml or
- * .github/workflows/ci.yml is missing, or neither pipeline runs
- * `composer ci`. Warns when a GitHub `uses:` ref is not a 40-hex commit
- * SHA, so a reusable workflow cannot move out from under the pipeline.
+ * Checks the project's CI contract. For stack packages (a composer.json
+ * name starting with waynestate/) the contract is hard: .gitlab-ci.yml
+ * and .github/workflows/ci.yml must both exist and run `composer ci`,
+ * and a GitHub `uses:` ref must be a 40-hex commit SHA so a reusable
+ * workflow cannot move out from under the pipeline. For any other
+ * project the GitLab pipeline is still expected, but a missing or
+ * incomplete one is a warning, and the GitHub workflow is optional.
  *
  * The files are parsed as YAML, not grepped: a `composer ci` that only
  * appears in a comment is not a script line, and a GitLab job is a
@@ -36,13 +39,18 @@ final class CiPipelinesCheck implements CheckInterface
     public function run(CheckContext $context): array
     {
         $appPath = rtrim($context->appPath, '/\\');
+        $isStack = $this->isStackPackage($appPath);
         $findings = [
-            ...$this->gitlabFindings($appPath . '/' . self::GITLAB_CI),
-            ...$this->githubFindings($appPath . '/' . self::GITHUB_CI),
+            ...$this->gitlabFindings($appPath . '/' . self::GITLAB_CI, $isStack),
+            ...$this->githubFindings($appPath . '/' . self::GITHUB_CI, $isStack),
         ];
 
         if ($findings === []) {
-            return [new Finding($this->id(), Finding::STATUS_PASS, 'both pipelines run composer ci')];
+            $message = is_file($appPath . '/' . self::GITHUB_CI)
+                ? 'both pipelines run composer ci'
+                : 'gitlab pipeline runs composer ci';
+
+            return [new Finding($this->id(), Finding::STATUS_PASS, $message)];
         }
 
         // Stable on every OS: by path, then line.
@@ -54,17 +62,44 @@ final class CiPipelinesCheck implements CheckInterface
     }
 
     /**
-     * The findings for .gitlab-ci.yml: a fail when the file is missing,
-     * unparseable, or no job's script runs composer ci.
+     * Whether the app is a stack package: its composer.json carries a
+     * name that starts with waynestate/. Anything else (no composer.json,
+     * no name, a different vendor) is an "other project" and gets the
+     * warning-only rules.
+     */
+    private function isStackPackage(string $appPath): bool
+    {
+        $composerJson = $appPath . '/composer.json';
+        if (!is_file($composerJson)) {
+            return false;
+        }
+        $raw = file_get_contents($composerJson);
+        if ($raw === false) {
+            return false;
+        }
+        $data = json_decode($raw, true);
+        if (!is_array($data) || !isset($data['name']) || !is_string($data['name'])) {
+            return false;
+        }
+
+        return str_starts_with($data['name'], 'waynestate/');
+    }
+
+    /**
+     * The findings for .gitlab-ci.yml: a fail (stack packages) or a
+     * warning (other projects) when the file is missing, unparseable, or
+     * no job's script runs composer ci.
      *
      * @return list<Finding>
      */
-    private function gitlabFindings(string $absolutePath): array
+    private function gitlabFindings(string $absolutePath, bool $isStack): array
     {
+        $status = $isStack ? Finding::STATUS_FAIL : Finding::STATUS_WARNING;
+
         if (!is_file($absolutePath)) {
             return [new Finding(
                 $this->id(),
-                Finding::STATUS_FAIL,
+                $status,
                 'ci-pipelines-gitlab-missing: .gitlab-ci.yml is missing; add a GitLab pipeline with a job whose script runs composer ci',
                 self::GITLAB_CI,
                 1,
@@ -75,7 +110,7 @@ final class CiPipelinesCheck implements CheckInterface
         if ($data === null) {
             return [new Finding(
                 $this->id(),
-                Finding::STATUS_FAIL,
+                $status,
                 sprintf(
                     'ci-pipelines-gitlab-parse: .gitlab-ci.yml could not be parsed: %s; fix the YAML so the pipeline can run',
                     $error,
@@ -99,7 +134,7 @@ final class CiPipelinesCheck implements CheckInterface
 
         return [new Finding(
             $this->id(),
-            Finding::STATUS_FAIL,
+            $status,
             'ci-pipelines-gitlab-no-ci: no job in .gitlab-ci.yml runs composer ci; add a job whose script runs composer ci',
             self::GITLAB_CI,
             1,
@@ -107,16 +142,23 @@ final class CiPipelinesCheck implements CheckInterface
     }
 
     /**
-     * The findings for .github/workflows/ci.yml: a fail when the file is
-     * missing, unparseable, or no job runs composer ci (directly, or
-     * through a reusable workflow with ci-command: composer ci), plus a
-     * warning for every uses: ref that is not a 40-hex commit SHA.
+     * The findings for .github/workflows/ci.yml. For stack packages the
+     * file is required: a fail when it is missing, unparseable, or no job
+     * runs composer ci (directly, or through a reusable workflow with
+     * ci-command: composer ci). For other projects it is optional: a
+     * missing file gives no finding, and the same rules apply as
+     * warnings. A uses: ref that is not a 40-hex commit SHA is a warning
+     * either way.
      *
      * @return list<Finding>
      */
-    private function githubFindings(string $absolutePath): array
+    private function githubFindings(string $absolutePath, bool $isStack): array
     {
         if (!is_file($absolutePath)) {
+            if (!$isStack) {
+                return [];
+            }
+
             return [new Finding(
                 $this->id(),
                 Finding::STATUS_FAIL,
@@ -126,11 +168,13 @@ final class CiPipelinesCheck implements CheckInterface
             )];
         }
 
+        $status = $isStack ? Finding::STATUS_FAIL : Finding::STATUS_WARNING;
+
         [$data, $error] = $this->parseYaml($absolutePath);
         if ($data === null) {
             return [new Finding(
                 $this->id(),
-                Finding::STATUS_FAIL,
+                $status,
                 sprintf(
                     'ci-pipelines-github-parse: .github/workflows/ci.yml could not be parsed: %s; fix the YAML so the workflow can run',
                     $error,
@@ -194,7 +238,7 @@ final class CiPipelinesCheck implements CheckInterface
         if (!$runsComposerCi) {
             $findings[] = new Finding(
                 $this->id(),
-                Finding::STATUS_FAIL,
+                $status,
                 'ci-pipelines-github-no-ci: no job in .github/workflows/ci.yml runs composer ci or calls a reusable workflow with ci-command: composer ci; run composer ci in a job, or call a reusable workflow with ci-command: composer ci',
                 self::GITHUB_CI,
                 1,

@@ -112,38 +112,62 @@ final class CheckCommandTest extends ProctorTestCase
         );
     }
 
-    public function testCiPipelinesMissingGitlabAppFailsOnlyCiPipelines(): void
+    public function testCiPipelinesMissingGitlabAppExitsZeroAndWarns(): void
     {
         $result = $this->runProctor($this->app('ci-pipelines-missing-gitlab-app'));
 
-        self::assertSame(1, $result['exit']);
-        self::assertSame(['ci-pipelines'], $this->failCheckIds($result['stdout']));
+        self::assertSame(0, $result['exit']);
+        self::assertSame([], $this->failCheckIds($result['stdout']));
         self::assertMatchesRegularExpression(
-            '/^FAIL ci-pipelines: ci-pipelines-gitlab-missing: /m',
+            '/^WARN ci-pipelines: ci-pipelines-gitlab-missing: /m',
             $result['stdout'],
         );
     }
 
-    public function testCiPipelinesMissingGithubAppFailsOnlyCiPipelines(): void
+    public function testCiPipelinesMissingGithubAppExitsZeroAndPasses(): void
     {
         $result = $this->runProctor($this->app('ci-pipelines-missing-github-app'));
 
-        self::assertSame(1, $result['exit']);
-        self::assertSame(['ci-pipelines'], $this->failCheckIds($result['stdout']));
+        self::assertSame(0, $result['exit']);
+        self::assertSame([], $this->failCheckIds($result['stdout']));
         self::assertMatchesRegularExpression(
-            '/^FAIL ci-pipelines: ci-pipelines-github-missing: /m',
+            '/^PASS ci-pipelines: gitlab pipeline runs composer ci$/m',
             $result['stdout'],
         );
     }
 
-    public function testCiPipelinesGitlabNoCiAppFailsOnlyCiPipelines(): void
+    public function testCiPipelinesGitlabNoCiAppExitsZeroAndWarns(): void
     {
         $result = $this->runProctor($this->app('ci-pipelines-gitlab-no-ci-app'));
 
-        self::assertSame(1, $result['exit']);
-        self::assertSame(['ci-pipelines'], $this->failCheckIds($result['stdout']));
+        self::assertSame(0, $result['exit']);
+        self::assertSame([], $this->failCheckIds($result['stdout']));
         self::assertMatchesRegularExpression(
-            '/^FAIL ci-pipelines: ci-pipelines-gitlab-no-ci: /m',
+            '/^WARN ci-pipelines: ci-pipelines-gitlab-no-ci: /m',
+            $result['stdout'],
+        );
+    }
+
+    public function testCiPipelinesAcmeAppExitsZeroAndWarnsAboutTheMissingGitlabPipeline(): void
+    {
+        $result = $this->runProctor($this->app('ci-pipelines-acme-app'));
+
+        self::assertSame(0, $result['exit']);
+        self::assertSame([], $this->failCheckIds($result['stdout']));
+        self::assertMatchesRegularExpression(
+            '/^WARN ci-pipelines: ci-pipelines-gitlab-missing: /m',
+            $result['stdout'],
+        );
+    }
+
+    public function testCiPipelinesAcmeGitlabOnlyAppExitsZeroAndPasses(): void
+    {
+        $result = $this->runProctor($this->app('ci-pipelines-acme-gitlab-only-app'));
+
+        self::assertSame(0, $result['exit']);
+        self::assertSame([], $this->failCheckIds($result['stdout']));
+        self::assertMatchesRegularExpression(
+            '/^PASS ci-pipelines: gitlab pipeline runs composer ci$/m',
             $result['stdout'],
         );
     }
