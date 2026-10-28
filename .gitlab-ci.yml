@@ -1,3 +1,4 @@
+# composer ci is the contract: the checks are defined there, and this pipeline only wraps them.
 # PROCTOR's pipeline, built from the PREFLIGHT components on this GitLab.
 # Pinned to PREFLIGHT 0.1.0. Never use ~latest.
 # The proctor component is not included yet: PROCTOR needs --policy until it
@@ -8,3 +9,9 @@ include:
     inputs:
       php_versions: ["8.3", "8.4", "8.5"]
   - component: $CI_SERVER_FQDN/enterprise-apps/preflight/composer-audit@0.1.0
+
+composer-ci:
+  image: composer:2.10.3
+  script:
+    - composer install --no-interaction --no-progress --prefer-dist
+    - composer ci

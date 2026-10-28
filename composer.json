@@ -27,7 +27,17 @@
     "scripts": {
         "lint": "pint --test",
         "fix": "pint",
-        "analyse": "phpstan analyse --memory-limit=1G"
+        "analyse": "phpstan analyse --memory-limit=1G",
+        "ci": [
+            "@composer validate --strict",
+            "phpunit",
+            "pint --test",
+            "phpstan analyse --memory-limit=1G",
+            "@composer audit"
+        ]
+    },
+    "scripts-descriptions": {
+        "ci": "Run every CI check: manifest, tests, style, static analysis, audit"
     },
     "bin": [
         "bin/proctor"
