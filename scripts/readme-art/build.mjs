@@ -28,7 +28,7 @@ const badgesDir = path.join(outDir, "badges");
 const castDir = path.join(outDir, "cast");
 
 const MAX_BYTES = 300 * 1024;
-const FORBIDDEN = /GitLab|gitlab\.example|citadel/i;
+const FORBIDDEN = /noug[a]t|snu[.]gs|citadel/i;
 
 function fail(msg) {
   console.error(`readme-art: ${msg}`);
