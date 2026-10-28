@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Waynestate\Proctor\Check\CheckContext;
 use Waynestate\Proctor\Check\DestructiveDeployCheck;
 use Waynestate\Proctor\Check\Finding;
-use Waynestate\Proctor\Policy\JsonFilePolicySource;
+use Waynestate\Proctor\Creed\Policy;
 
 /**
  * Calls the destructive-deploy check directly, the way bin/proctor builds
@@ -27,7 +27,7 @@ final class DestructiveDeployCheckTest extends TestCase
     {
         return new CheckContext(
             $appPath,
-            new JsonFilePolicySource(__DIR__ . '/fixtures/policy.json'),
+            Policy::fromFile(__DIR__ . '/fixtures/policy.json'),
             new DateTimeImmutable(self::TODAY),
         );
     }

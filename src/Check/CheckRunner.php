@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Waynestate\Proctor\Check;
 
 use DateTimeImmutable;
+use Waynestate\Proctor\Creed\Policy;
 use Waynestate\Proctor\Override\Override;
-use Waynestate\Proctor\Policy\PolicySource;
 use Waynestate\Proctor\ToolError;
 
 /**
@@ -27,7 +27,7 @@ final class CheckRunner
      */
     public function __construct(
         private readonly string $appPath,
-        private readonly PolicySource $policy,
+        private readonly Policy $policy,
         private readonly DateTimeImmutable $today,
         private readonly array $checks,
         private readonly array $overrides = [],

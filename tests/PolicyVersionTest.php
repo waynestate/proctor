@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Waynestate\Proctor\Tests;
 
 use DateTimeImmutable;
-use Waynestate\Proctor\Policy\JsonFilePolicySource;
-use Waynestate\Proctor\Policy\State;
+use Waynestate\Proctor\Creed\Policy;
+use Waynestate\Proctor\Creed\State;
 
 /**
  * An older reader (the current code) must still read a newer policy file: a
@@ -27,11 +27,11 @@ final class PolicyVersionTest extends ProctorTestCase
     {
         // The current reader must not refuse the newer schema_version (2) or
         // the keys it does not know (the mysql component, platform_components).
-        $policy = new JsonFilePolicySource($this->newerPolicy());
+        $policy = Policy::fromFile($this->newerPolicy());
 
         // A known component/version still resolves to the right state.
         self::assertSame(
-            State::ACTIVE,
+            State::Active,
             $policy->stateOf('php', '8.4', new DateTimeImmutable(self::TODAY)),
         );
     }

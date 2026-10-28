@@ -138,6 +138,12 @@ versions with released, active_until and security_until dates, and rules
 (audit_severity_threshold, banned_constraints, eol_grace_days). The
 policy-file wiring to `waynestate/creed` follows its v0.1.0 tag.
 
+PROCTOR carries a generated copy of the CREED reader under `src/Creed/`
+(namespace `Waynestate\Proctor\Creed`), so it never depends on the CREED
+package at runtime. `composer creed-copy:check` verifies the copy against the
+CREED checkout named by `CREED_PATH` (default `../creed`); refresh it by
+running CREED's `bin/export.php` against `src/Creed/`.
+
 ## Running the tests in Docker
 
 No PHP is needed on the host:

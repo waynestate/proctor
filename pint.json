@@ -2,6 +2,7 @@
     "preset": "per",
     "exclude": [
         "vendor",
-        "tests/fixtures"
+        "tests/fixtures",
+        "src/Creed"
     ]
 }

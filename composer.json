@@ -30,6 +30,7 @@
         "lint": "pint --test",
         "fix": "pint",
         "analyse": "phpstan analyse --memory-limit=1G",
+        "creed-copy:check": "php scripts/creed-copy-check.php",
         "ci": [
             "@composer validate --strict",
             "phpunit",
@@ -39,7 +40,8 @@
         ]
     },
     "scripts-descriptions": {
-        "ci": "Run every CI check: manifest, tests, style, static analysis, audit"
+        "ci": "Run every CI check: manifest, tests, style, static analysis, audit",
+        "creed-copy:check": "Verify the generated CREED reader copy in src/Creed/ matches a fresh export (set CREED_PATH to the CREED checkout)"
     },
     "bin": [
         "bin/proctor"
