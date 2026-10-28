@@ -10,6 +10,7 @@ use Waynestate\Proctor\Check\CheckRunner;
 use Waynestate\Proctor\Check\ComposerAuditCheck;
 use Waynestate\Proctor\Check\Finding;
 use Waynestate\Proctor\Check\LockCommittedCheck;
+use Waynestate\Proctor\Check\Mysql56Check;
 use Waynestate\Proctor\Check\OverridesCheck;
 use Waynestate\Proctor\Check\PhpFloorCheck;
 use Waynestate\Proctor\Check\PortabilityCheck;
@@ -120,6 +121,7 @@ $application->add(new class () extends Command {
                     new UnboundedConstraintsCheck(),
                     new LockCommittedCheck(),
                     new PortabilityCheck(),
+                    new Mysql56Check(),
                     new ComposerAuditCheck(),
                     new OverridesCheck(),
                 ],
