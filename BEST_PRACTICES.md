@@ -916,6 +916,17 @@ An app must run on Citadel, OpenShift, Coolify or raw Docker, so platform facts 
 addresses, sessions on local disk, and `php_value` or `php_flag` lines in `.htaccess` (they do nothing under
 php-fpm). It reports warnings, not failures, while the stack stages the rule.
 
+### The mysql56 check
+Citadel's shared MySQL server is 5.6, so migrations and app code must avoid MySQL features newer than 5.6.
+
+**How the stack holds it: Checked.** The `mysql56` check (`src/Check/Mysql56Check.php`) warns on JSON columns and JSON
+queries, generated columns, `renameColumn`/`renameIndex`, vector, invisible and spatial columns, `Schema::hasColumn`-style
+introspection, raw SQL with 5.7+ syntax, the upsert row alias, indexed strings over 191 characters, date columns defaulting
+to the current time, and the `db:show`/`db:monitor` commands, in `database/migrations/`, `app/`, `routes/` and
+`config/database.php`. It also warns when `app/Providers/AppServiceProvider.php` does not call `Schema::defaultStringLength(191)`.
+It reads the AST, so a pattern in a comment or string is not flagged. Warnings, not failures: an app on its own newer
+database is not affected.
+
 ## CI pipelines
 
 ### The ci-pipelines check
