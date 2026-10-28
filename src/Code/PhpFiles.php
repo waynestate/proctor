@@ -22,7 +22,7 @@ final class PhpFiles
 {
     private Parser $parser;
 
-    private NodeFinder $finder = new NodeFinder();
+    private NodeFinder $finder;
 
     private ?string $lastError = null;
 
@@ -31,6 +31,7 @@ final class PhpFiles
     public function __construct()
     {
         $this->parser = (new ParserFactory())->createForNewestSupportedVersion();
+        $this->finder = new NodeFinder();
     }
 
     /**
