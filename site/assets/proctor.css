@@ -681,3 +681,13 @@ a:hover { color: var(--crimson); }
 
 /* Grid children may shrink below their longest line; long code scrolls inside its own box. */
 .notes__grid > *, .halls > *, .marking__grid > *, .questions > *, .rules > *, .os__steps > *, .os, .carbons { min-width: 0; }
+
+/* Part names in the stack list link to each part's own front page. They keep
+   this page's colours; the underline is the only new thing. */
+.part-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: .18em;
+}
+.part-link:hover { text-decoration-thickness: 2px; }
