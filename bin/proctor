@@ -12,6 +12,7 @@ use Waynestate\Proctor\Check\Finding;
 use Waynestate\Proctor\Check\LockCommittedCheck;
 use Waynestate\Proctor\Check\OverridesCheck;
 use Waynestate\Proctor\Check\PhpFloorCheck;
+use Waynestate\Proctor\Check\PortabilityCheck;
 use Waynestate\Proctor\Check\UnboundedConstraintsCheck;
 use Waynestate\Proctor\Override\OverrideFile;
 use Waynestate\Proctor\Policy\JsonFilePolicySource;
@@ -118,6 +119,7 @@ $application->add(new class () extends Command {
                     new PhpFloorCheck(),
                     new UnboundedConstraintsCheck(),
                     new LockCommittedCheck(),
+                    new PortabilityCheck(),
                     new ComposerAuditCheck(),
                     new OverridesCheck(),
                 ],
