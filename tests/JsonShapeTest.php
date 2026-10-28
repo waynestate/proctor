@@ -20,7 +20,7 @@ final class JsonShapeTest extends ProctorTestCase
         self::assertIsArray($data, 'json output must be valid JSON');
         self::assertSame(
             ['tool', 'version', 'path', 'today', 'result', 'exit', 'findings', 'overrides'],
-            array_keys($data)
+            array_keys($data),
         );
     }
 }

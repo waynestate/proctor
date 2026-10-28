@@ -80,7 +80,7 @@ final class JsonFilePolicySource implements PolicySource
             throw new PolicyException(sprintf(
                 'Policy file "%s" is not valid JSON: %s',
                 $file,
-                json_last_error_msg()
+                json_last_error_msg(),
             ));
         }
 
@@ -98,21 +98,21 @@ final class JsonFilePolicySource implements PolicySource
                 throw new PolicyException(sprintf(
                     'Policy file "%s": components.php.versions["%s"] is not an object.',
                     $file,
-                    $version
+                    $version,
                 ));
             }
             if (!isset($entry['security_until']) || !self::isValidDate($entry['security_until'])) {
                 throw new PolicyException(sprintf(
                     'Policy file "%s": components.php.versions["%s"] is missing a security_until date (YYYY-MM-DD).',
                     $file,
-                    $version
+                    $version,
                 ));
             }
             if (isset($entry['active_until']) && !self::isValidDate($entry['active_until'])) {
                 throw new PolicyException(sprintf(
                     'Policy file "%s": components.php.versions["%s"].active_until is not a YYYY-MM-DD date.',
                     $file,
-                    $version
+                    $version,
                 ));
             }
         }

@@ -27,8 +27,7 @@ final class OverrideApplier
     public function __construct(
         private readonly array $overrides,
         private readonly DateTimeImmutable $today,
-    ) {
-    }
+    ) {}
 
     /**
      * @param list<Finding> $findings
@@ -48,7 +47,7 @@ final class OverrideApplier
                         $finding->message . sprintf(' (overridden: %s)', $override->reason),
                         $finding->path,
                         $finding->line,
-                        $finding->state
+                        $finding->state,
                     );
                     continue;
                 }

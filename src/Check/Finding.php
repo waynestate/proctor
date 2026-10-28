@@ -44,7 +44,7 @@ final class Finding
         if ($path !== null && (str_starts_with($path, './') || str_starts_with($path, '/'))) {
             throw new \InvalidArgumentException(sprintf(
                 'Finding path "%s" must be relative to the checked app without a leading "./" or "/".',
-                $path
+                $path,
             ));
         }
     }

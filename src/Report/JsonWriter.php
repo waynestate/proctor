@@ -23,35 +23,35 @@ final class JsonWriter implements ReportWriter
             'result' => $report->result(),
             'exit' => $report->exitCode,
             'findings' => array_map(
-                static fn (Finding $finding): array => [
+                static fn(Finding $finding): array => [
                     'check_id' => $finding->checkId,
                     'status' => $finding->status,
                     'message' => $finding->message,
                     'path' => $finding->path,
                     'line' => $finding->line,
                 ],
-                $report->findings
+                $report->findings,
             ),
             'overrides' => array_map(
-                static fn (Override $override): array => [
+                static fn(Override $override): array => [
                     'check' => $override->check,
                     'reason' => $override->reason,
                     'expires' => $override->displayDate(),
                     'approved_by' => $override->approvedBy,
                     'expired' => $override->isExpired($report->today),
                 ],
-                $report->overrides
+                $report->overrides,
             ),
         ];
 
         $json = json_encode(
             $data,
-            JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE,
         );
         if (false === $json) {
             throw new ToolError(sprintf(
                 'Could not encode the JSON report: %s',
-                json_last_error_msg()
+                json_last_error_msg(),
             ));
         }
 

@@ -120,7 +120,7 @@ final class Mysql56Check implements CheckInterface
                         Finding::STATUS_WARNING,
                         $message,
                         $relativePath,
-                        $index + 1
+                        $index + 1,
                     );
                 }
             }
@@ -137,7 +137,7 @@ final class Mysql56Check implements CheckInterface
                 Finding::STATUS_WARNING,
                 'mysql56-string-default: call Schema::defaultStringLength(191) in boot()',
                 self::APP_SERVICE_PROVIDER,
-                1
+                1,
             );
         }
 

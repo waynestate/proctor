@@ -53,7 +53,7 @@ final class PortabilityCheck implements CheckInterface
                         Finding::STATUS_WARNING,
                         $message,
                         $relativePath,
-                        $index + 1
+                        $index + 1,
                     );
                 }
             }
@@ -124,7 +124,7 @@ final class PortabilityCheck implements CheckInterface
             if ($this->isHostPath($literal)) {
                 $messages[] = sprintf(
                     'host-path: absolute host path "%s"; read it from env or config',
-                    $literal
+                    $literal,
                 );
             }
         }
@@ -150,7 +150,7 @@ final class PortabilityCheck implements CheckInterface
                 }
                 $messages[] = sprintf(
                     'proxy-address: hard-coded proxy address %s; use HELMET_PRESET or HELMET_PROXIES',
-                    $ip
+                    $ip,
                 );
             }
         }
@@ -158,11 +158,11 @@ final class PortabilityCheck implements CheckInterface
         // local-session: session.save_path together with a quoted absolute
         // path, or the file driver in config/session.php.
         $sessionHit = str_contains($line, 'session.save_path')
-            && $this->hasQuotedLiteral($line, static fn (string $literal): bool => str_starts_with($literal, '/'));
+            && $this->hasQuotedLiteral($line, static fn(string $literal): bool => str_starts_with($literal, '/'));
         if (!$sessionHit && 'config/session.php' === $relativePath) {
             $namesTheDriver = preg_match("/['\"]driver['\"]/i", $line) === 1
                 || str_contains($line, 'SESSION_DRIVER');
-            $sessionHit = $namesTheDriver && $this->hasQuotedLiteral($line, static fn (string $literal): bool => 'file' === $literal);
+            $sessionHit = $namesTheDriver && $this->hasQuotedLiteral($line, static fn(string $literal): bool => 'file' === $literal);
         }
         if ($sessionHit) {
             $messages[] = 'local-session: sessions on local disk; use a shared store (database or redis)';
@@ -174,7 +174,7 @@ final class PortabilityCheck implements CheckInterface
             && preg_match('/^\s*(php_value|php_flag)\b/i', $line, $matches) === 1) {
             $messages[] = sprintf(
                 "htaccess-php-setting: %s does nothing under php-fpm; set it in the platform's php.ini or with ini_set",
-                $matches[1]
+                $matches[1],
             );
         }
 

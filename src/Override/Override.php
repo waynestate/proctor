@@ -24,8 +24,7 @@ final class Override
         public readonly string $reason,
         public readonly DateTimeImmutable $expires,
         public readonly string $approvedBy,
-    ) {
-    }
+    ) {}
 
     /**
      * An override is expired when its expires date is before $today;

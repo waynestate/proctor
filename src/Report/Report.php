@@ -44,7 +44,7 @@ final class Report
                 'Report exit code must be %d or %d; got %d.',
                 self::EXIT_PASS,
                 self::EXIT_FAIL,
-                $this->exitCode
+                $this->exitCode,
             ));
         }
     }

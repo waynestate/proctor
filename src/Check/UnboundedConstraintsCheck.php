@@ -59,7 +59,7 @@ final class UnboundedConstraintsCheck implements CheckInterface
                     Finding::STATUS_FAIL,
                     sprintf('%s constraint "%s" is unbounded', $package, $constraint),
                     'composer.json',
-                    $this->lineOfPackage($raw, $package)
+                    $this->lineOfPackage($raw, $package),
                 );
             }
         }
@@ -73,7 +73,7 @@ final class UnboundedConstraintsCheck implements CheckInterface
                 $this->id(),
                 Finding::STATUS_PASS,
                 'all require constraints are bounded',
-                'composer.json'
+                'composer.json',
             )];
         }
 
@@ -94,7 +94,7 @@ final class UnboundedConstraintsCheck implements CheckInterface
 
         return array_values(array_filter(
             $banned,
-            static fn (mixed $pattern): bool => is_string($pattern) && $pattern !== ''
+            static fn(mixed $pattern): bool => is_string($pattern) && $pattern !== '',
         ));
     }
 
@@ -195,7 +195,7 @@ final class UnboundedConstraintsCheck implements CheckInterface
 
         return array_values(array_filter(
             array_map('trim', $parts),
-            static fn (string $part): bool => $part !== ''
+            static fn(string $part): bool => $part !== '',
         ));
     }
 
@@ -224,7 +224,7 @@ final class UnboundedConstraintsCheck implements CheckInterface
                     $this->id(),
                     Finding::STATUS_WARNING,
                     sprintf('repository of type "%s" is not a stable source', $type),
-                    'composer.json'
+                    'composer.json',
                 );
             }
         }

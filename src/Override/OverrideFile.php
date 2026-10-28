@@ -20,9 +20,7 @@ final class OverrideFile
 {
     public const FILENAME = 'policy-overrides.json';
 
-    private function __construct()
-    {
-    }
+    private function __construct() {}
 
     /**
      * @return list<Override>
@@ -47,7 +45,7 @@ final class OverrideFile
                 '%s in "%s" is not valid JSON: %s',
                 self::FILENAME,
                 $appPath,
-                json_last_error_msg()
+                json_last_error_msg(),
             ));
         }
 
@@ -56,7 +54,7 @@ final class OverrideFile
             throw new ToolError(sprintf(
                 '%s in "%s" must be a JSON array of override objects.',
                 self::FILENAME,
-                $appPath
+                $appPath,
             ));
         }
 
@@ -95,7 +93,7 @@ final class OverrideFile
         if (!is_string($expires) || self::parseDate($expires) === null) {
             throw new ToolError(sprintf(
                 '%s has a missing or invalid "expires" date (expected YYYY-MM-DD).',
-                $where
+                $where,
             ));
         }
 

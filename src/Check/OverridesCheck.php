@@ -33,9 +33,9 @@ final class OverridesCheck implements CheckInterface
                     sprintf(
                         'override for "%s" expired on %s',
                         $override->check,
-                        $override->displayDate()
+                        $override->displayDate(),
                     ),
-                    OverrideFile::FILENAME
+                    OverrideFile::FILENAME,
                 );
             }
         }

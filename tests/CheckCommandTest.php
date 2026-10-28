@@ -49,7 +49,7 @@ final class CheckCommandTest extends ProctorTestCase
         self::assertSame(1, $result['exit']);
         self::assertSame(
             ['unbounded-constraints', 'unbounded-constraints'],
-            $this->failCheckIds($result['stdout'])
+            $this->failCheckIds($result['stdout']),
         );
         self::assertStringContainsString('vendor/dev constraint "dev-master" is unbounded', $result['stdout']);
         self::assertStringContainsString('vendor/any constraint "*" is unbounded', $result['stdout']);
@@ -62,17 +62,17 @@ final class CheckCommandTest extends ProctorTestCase
         self::assertSame(1, $result['exit']);
         self::assertSame(
             ['unbounded-constraints', 'unbounded-constraints'],
-            $this->failCheckIds($result['stdout'])
+            $this->failCheckIds($result['stdout']),
         );
         self::assertStringContainsString('vendor/open constraint ">=1.0" is unbounded', $result['stdout']);
         self::assertStringContainsString('vendor/devflag constraint "1.0@dev" is unbounded', $result['stdout']);
         self::assertMatchesRegularExpression(
             '/^WARN unbounded-constraints: repository of type "path" is not a stable source$/m',
-            $result['stdout']
+            $result['stdout'],
         );
         self::assertMatchesRegularExpression(
             '/^WARN unbounded-constraints: repository of type "vcs" is not a stable source$/m',
-            $result['stdout']
+            $result['stdout'],
         );
     }
 
@@ -84,7 +84,7 @@ final class CheckCommandTest extends ProctorTestCase
         self::assertSame(['overrides'], $this->failCheckIds($result['stdout']));
         self::assertMatchesRegularExpression(
             '/^OVERRIDE lock-committed: fixture: expired \(expires 2026-01-01, approved by tester\)$/m',
-            $result['stdout']
+            $result['stdout'],
         );
     }
 
@@ -96,7 +96,7 @@ final class CheckCommandTest extends ProctorTestCase
         self::assertSame(['overrides'], $this->failCheckIds($result['stdout']));
         self::assertMatchesRegularExpression(
             '/^FAIL overrides: override for "lock-committed" expired on 2026-01-01$/m',
-            $result['stdout']
+            $result['stdout'],
         );
     }
 }

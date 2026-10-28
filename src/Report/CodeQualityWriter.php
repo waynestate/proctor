@@ -31,7 +31,7 @@ final class CodeQualityWriter implements ReportWriter
                 $finding->checkId,
                 $finding->path,
                 $finding->line,
-                $this->severity($finding->status)
+                $this->severity($finding->status),
             );
         }
 
@@ -49,7 +49,7 @@ final class CodeQualityWriter implements ReportWriter
             Report::TOOL,
             null,
             1,
-            'blocker'
+            'blocker',
         )]);
     }
 
@@ -81,12 +81,12 @@ final class CodeQualityWriter implements ReportWriter
     {
         $json = json_encode(
             $items,
-            JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE,
         );
         if (false === $json) {
             throw new ToolError(sprintf(
                 'Could not encode the code quality report: %s',
-                json_last_error_msg()
+                json_last_error_msg(),
             ));
         }
 

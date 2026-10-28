@@ -30,8 +30,7 @@ final class CheckRunner
         private readonly array $checks,
         private readonly array $overrides = [],
         private readonly int $timeout = 300,
-    ) {
-    }
+    ) {}
 
     /**
      * Runs all checks, applies the overrides, and returns the findings in
@@ -82,7 +81,7 @@ final class CheckRunner
             throw new ToolError(sprintf(
                 'composer.json in "%s" is not valid JSON: %s',
                 $this->appPath,
-                json_last_error_msg()
+                json_last_error_msg(),
             ));
         }
     }

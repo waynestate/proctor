@@ -28,6 +28,5 @@ final class CheckContext
         public readonly DateTimeImmutable $today,
         public readonly array $overrides = [],
         public readonly int $timeout = 300,
-    ) {
-    }
+    ) {}
 }
