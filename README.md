@@ -7,6 +7,9 @@ reports each check as pass, warning, info or fail. The checks and their rules
 come from ADR-0003 (the version policy decision) and from the policy file
 passed with `--policy`; PROCTOR itself holds no policy of its own.
 
+This repository is published from Wayne State University's internal GitLab and mirrored here. Changes land there
+first; Wayne State developers open issues and merge requests on the internal project.
+
 ## Install
 
 ```
@@ -84,7 +87,7 @@ docker run --rm -v "${PWD}:/app" -w /app php:8.4-cli vendor/bin/phpunit
 
 The same works with `php:8.3-cli` in place of `php:8.4-cli`.
 
-Strongly recommended: a git.wayne.edu instance runner (see design/instance-runner-case.md in the coordination repo).
+Strongly recommended: a git.wayne.edu instance runner.
 
 ## Licence
 
