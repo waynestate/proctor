@@ -48,6 +48,22 @@ final class DestructiveDeployCheckTest extends TestCase
         self::assertSame(5, $findings[0]->line);
     }
 
+    public function testNestedDeployScriptsDirectoryFails(): void
+    {
+        $findings = (new DestructiveDeployCheck())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/destructive-deploy-nested-app'),
+        );
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_FAIL, $findings[0]->status);
+        self::assertSame(
+            'migrate:fresh in a deploy script drops data on every run. Use `php artisan migrate --force`.',
+            $findings[0]->message,
+        );
+        self::assertSame('src/deploy_scripts/deploy_script.sh', $findings[0]->path);
+        self::assertSame(4, $findings[0]->line);
+    }
+
     public function testPlainMigratePasses(): void
     {
         $findings = (new DestructiveDeployCheck())->run(

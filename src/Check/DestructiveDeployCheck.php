@@ -16,8 +16,8 @@ use SplFileInfo;
  * migrate:reset, db:wipe) in a deploy script runs on every deploy and
  * erases production data. Deploys must run plain `php artisan migrate --force`.
  *
- * Scanned: every .sh and .php file under a top-level deployments/,
- * deploy_scripts/, deploy/ or scripts/ directory, the top-level build.sh,
+ * Scanned: every .sh and .php file under a deployments/,
+ * deploy_scripts/, deploy/ or scripts/ directory at any depth, the top-level build.sh,
  * release.sh and .gitlab-ci.yml, and the scripts section of composer.json.
  * Shell comments are ignored.
  *
@@ -81,7 +81,7 @@ final class DestructiveDeployCheck implements CheckInterface
 
     /**
      * The relative paths (forward slashes) of the deploy scripts this check
-     * scans: every .sh and .php file under a top-level deploy directory, and
+     * scans: every .sh and .php file under a deploy directory at any depth, and
      * the top-level build.sh, release.sh and .gitlab-ci.yml.
      *
      * @param string $appPath the application path
@@ -106,7 +106,7 @@ final class DestructiveDeployCheck implements CheckInterface
                 if (in_array($basename, self::DEPLOY_FILES, true)) {
                     $files[] = $relativePath;
                 }
-            } elseif (in_array($segments[0], self::DEPLOY_DIRS, true)
+            } elseif (array_intersect(array_slice($segments, 0, -1), self::DEPLOY_DIRS) !== []
                 && (str_ends_with($basename, '.sh') || str_ends_with($basename, '.php'))) {
                 $files[] = $relativePath;
             }
