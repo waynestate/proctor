@@ -6,8 +6,8 @@ Items marked "(second pass)" were added or changed in the second pass; see the s
 ## What this covers
 
 PROCTOR is the stack's one command for measuring a PHP app against the WSU policy file (`policy.json` from CREED):
-`vendor/bin/proctor check`. It looks at the PHP floor, unbounded Composer constraints, a committed lock file,
-`composer audit` results and dated overrides. It prints text, JSON or GitLab Code Quality.
+`vendor/bin/proctor check`. It looks at the PHP floor, patch currency, unbounded Composer constraints, a committed
+lock file, `composer audit` results and dated overrides. It prints text, JSON or GitLab Code Quality.
 
 This guide is for two groups:
 
@@ -252,6 +252,21 @@ Sources: [Packagist: an update on Composer and Packagist supply chain security, 
 
 **How the stack holds it: Not yet.** The PREFLIGHT `proctor` component runs `composer install`, so it uses the lock.
 Nothing stops a custom job from running `update`, and PROCTOR cannot see the pipeline.
+
+### 3.8 Keep locked components on the latest patch
+A locked component that is behind the policy's `latest_patch` for its version line is a warning, not a failure: a
+patch may not be urgent, and the owner decides when to move. The policy carries `latest_patch` and
+`latest_patch_checked` per version line, so currency is a policy decision, not a hard-coded one.
+
+Why: a patch release usually carries security fixes, and a lock that lags the latest patch is a known, bounded risk.
+Warning (not failing) keeps the gate from blocking on a patch that is not yet urgent.
+
+Sources: the stack's version-policy decision.
+
+**How the stack holds it: Checked.** `unpatched` reads laravel from composer.lock (`laravel/framework`), vue and
+inertia from package-lock.json (`vue`, `@inertiajs/vue3`), and the PHP runtime from `--php-runtime`, and warns when a
+locked version is below the policy's `latest_patch` for its major.minor line. No finding when the component, its
+version line, or `latest_patch` is absent from the policy.
 
 ---
 
