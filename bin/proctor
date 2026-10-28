@@ -17,6 +17,7 @@ use Waynestate\Proctor\Check\OverridesCheck;
 use Waynestate\Proctor\Check\PhpFloorCheck;
 use Waynestate\Proctor\Check\PortabilityCheck;
 use Waynestate\Proctor\Check\UnboundedConstraintsCheck;
+use Waynestate\Proctor\Check\UnpatchedCheck;
 use Waynestate\Proctor\Override\OverrideFile;
 use Waynestate\Proctor\Policy\JsonFilePolicySource;
 use Waynestate\Proctor\Policy\PolicyException;
@@ -60,6 +61,7 @@ $application->add(new class () extends Command {
             ->addOption('format', null, InputOption::VALUE_REQUIRED, 'Output format (text, json, codequality, sarif).', 'text')
             ->addOption('policy', null, InputOption::VALUE_REQUIRED, 'Path to the policy file.')
             ->addOption('today', null, InputOption::VALUE_REQUIRED, "Override today's date (YYYY-MM-DD).")
+            ->addOption('php-runtime', null, InputOption::VALUE_REQUIRED, 'The PHP version that will serve the app (X.Y.Z), for the unpatched check.')
             ->addOption('timeout', null, InputOption::VALUE_REQUIRED, 'Maximum seconds for composer audit before it is killed.', '300');
     }
 
@@ -115,6 +117,19 @@ $application->add(new class () extends Command {
         }
         $timeout = (int) $timeoutOption;
 
+        $phpRuntimeOption = $input->getOption('php-runtime');
+        $phpRuntime = null;
+        if (null !== $phpRuntimeOption && '' !== $phpRuntimeOption) {
+            if (!preg_match('/^\d+\.\d+\.\d+$/', $phpRuntimeOption)) {
+                $errorOutput->writeln(sprintf(
+                    'Invalid --php-runtime value "%s". Expected format: X.Y.Z (digits and dots only).',
+                    $phpRuntimeOption
+                ));
+                return 2;
+            }
+            $phpRuntime = $phpRuntimeOption;
+        }
+
         try {
             $overrides = OverrideFile::load($appPath);
             $runner = new CheckRunner(
@@ -123,6 +138,7 @@ $application->add(new class () extends Command {
                 $today,
                 [
                     new PhpFloorCheck(),
+                    new UnpatchedCheck(),
                     new UnboundedConstraintsCheck(),
                     new LockCommittedCheck(),
                     new PortabilityCheck(),
@@ -132,7 +148,8 @@ $application->add(new class () extends Command {
                     new OverridesCheck(),
                 ],
                 $overrides,
-                $timeout
+                $timeout,
+                $phpRuntime
             );
             $findings = $runner->run();
         } catch (ToolError $e) {

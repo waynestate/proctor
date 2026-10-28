@@ -60,6 +60,21 @@ final class JsonFilePolicySource implements PolicySource
         return $rules;
     }
 
+    public function latestPatchOf(string $component, string $version): ?array
+    {
+        $entry = $this->data['components'][$component]['versions'][$version] ?? null;
+        if (!is_array($entry) || !isset($entry['latest_patch']) || !is_string($entry['latest_patch'])) {
+            return null;
+        }
+
+        $checked = $entry['latest_patch_checked'] ?? null;
+
+        return [
+            'latest_patch' => $entry['latest_patch'],
+            'latest_patch_checked' => is_string($checked) ? $checked : null,
+        ];
+    }
+
     /**
      * Reads and validates the policy file.
      *
