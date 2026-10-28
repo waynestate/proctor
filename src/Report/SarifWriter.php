@@ -15,7 +15,7 @@ use Waynestate\Proctor\ToolError;
  * The level mapping and the fingerprint live only here.
  *
  * The invigilator files the mark sheet in the format the head office already
- * reads — no more translating the exam results by hand.
+ * reads. No more translating the exam results by hand.
  */
 final class SarifWriter implements ReportWriter
 {

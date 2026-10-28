@@ -7,7 +7,7 @@
  * local render of something the page already shows; nothing is redrawn or
  * traced. The proctor watches the build. It does not help.
  *
- * Deterministic: same inputs, same images. No server, no network — the page
+ * Deterministic: same inputs, same images. No server, no network. The page
  * is opened as a file:// URL and every badge is rendered locally.
  */
 
@@ -65,7 +65,7 @@ await page.goto(pathToFileURL(indexHtml).href, { waitUntil: "networkidle" });
 await page.evaluate(() => document.fonts.ready);
 
 /* Hide the masthead only if it overlaps the page (fixed/sticky). It sits in
-   normal flow today, so this is a no-op — but the rule is the rule. */
+   normal flow today, so this is a no-op, but the rule is the rule. */
 const mastheadPos = await page.evaluate(() => {
   const el = document.querySelector(".masthead");
   return el ? getComputedStyle(el).position : "static";
@@ -139,7 +139,7 @@ stripY = Math.max(0, Math.min(stripY, ph - stripH));
 const clip = { x: 0, y: padTop + stripY / 2, width: 1280, height: 28 };
 
 /* The strip must be text-free: grep the rendered rectangles of every text
-   node that intersects it (containers are ignored — only painted text counts). */
+   node that intersects it (containers are ignored; only painted text counts). */
 const stripTexts = await page.evaluate((c) => {
   const sy = window.scrollY;
   const out = new Set();
@@ -161,7 +161,7 @@ const stripTexts = await page.evaluate((c) => {
 }, clip);
 for (const t of stripTexts) assertClean("rule strip", t);
 
-/* Cut the strip out of the pad capture itself — no second render, no drift. */
+/* Cut the strip out of the pad capture itself. No second render, no drift. */
 await sharp(padPng)
   .extract({ left: 0, top: stripY, width: pw, height: stripH })
   .resize({ width: 1280 })
@@ -301,7 +301,7 @@ for (const b of badges) {
 /* The WayneUI tile is composed here, not copied: the reverse mark (white
    frame, gold tab) is set on a Wayne State green rounded square so it sits
    beside the other thirteen tiles as a sibling, not a foreign object. The
-   traced paths are placed unchanged — no edits to any d= value, fill, or
+   traced paths are placed unchanged. No edits to any d= value, fill, or
    the mark's own viewBox. */
 const markSrc = path.join(scriptDir, "src", "wayneui-mark-reverse.svg");
 if (!fs.existsSync(markSrc)) fail("scripts/readme-art/src/wayneui-mark-reverse.svg is missing");
