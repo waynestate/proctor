@@ -298,6 +298,36 @@ for (const b of badges) {
 }
 
 /* ------------------------------------------------------------------- cast */
+/* The WayneUI tile is composed here, not copied: the reverse mark (white
+   frame, gold tab) is set on a Wayne State green rounded square so it sits
+   beside the other thirteen tiles as a sibling, not a foreign object. The
+   traced paths are placed unchanged — no edits to any d= value, fill, or
+   the mark's own viewBox. */
+const markSrc = path.join(scriptDir, "src", "wayneui-mark-reverse.svg");
+if (!fs.existsSync(markSrc)) fail("scripts/readme-art/src/wayneui-mark-reverse.svg is missing");
+const markText = fs.readFileSync(markSrc, "utf8");
+const markOpen = markText.match(/<svg[^>]*>/);
+const markClose = markText.lastIndexOf("</svg>");
+if (!markOpen || markClose < markOpen.index + markOpen[0].length) fail("cannot find the <svg> element in wayneui-mark-reverse.svg");
+const markInner = markText.slice(markOpen.index + markOpen[0].length, markClose);
+const wayneuiTile = [
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="WayneUI">',
+  '  <rect width="512" height="512" rx="80" ry="80" fill="#0C5449"/>',
+  '  <svg x="31.3" y="30.3" width="449.4" height="451.4" viewBox="0 0 1980 1989">',
+  markInner,
+  "  </svg>",
+  "</svg>",
+].join("\n");
+const wayneuiTileSvg = path.join(castDir, "wayneui.svg");
+fs.writeFileSync(wayneuiTileSvg, wayneuiTile);
+console.log(`wrote ${rel(wayneuiTileSvg)}`);
+/* The dark variant is retired: the green tile reads in both themes. */
+const wayneuiDark = path.join(castDir, "wayneui-dark.png");
+if (fs.existsSync(wayneuiDark)) {
+  fs.rmSync(wayneuiDark);
+  console.log(`removed ${rel(wayneuiDark)}`);
+}
+
 const CAST = [
   "wayneui", "creed", "proctor", "sesame", "helmet", "sourdough", "squire",
   "preflight", "pinstripe", "booster", "rollcall", "drawbridge", "advisor", "weld",
@@ -305,7 +335,7 @@ const CAST = [
 for (const name of CAST) {
   let src;
   if (name === "proctor") src = path.join(siteDir, "brand", "proctor-avatar-256.png");
-  else if (name === "wayneui") src = path.join(siteDir, "assets", "marks", "wayneui.svg");
+  else if (name === "wayneui") src = wayneuiTileSvg;
   else src = path.join(siteDir, "assets", "marks", `${name}.png`);
   if (!fs.existsSync(src)) {
     console.log(`cast: no source for ${name} (${rel(src)}); skipped`);
