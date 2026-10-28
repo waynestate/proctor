@@ -10,7 +10,7 @@ PROCTOR is a framework-free PHP CLI that measures a PHP application against
 the WSU version policy. It reads the app's composer.json and composer.lock,
 decides the support state of the app's PHP floor from a policy file, and
 reports each check as pass, warning, info or fail. The checks and their rules
-come from ADR-0003 (the version policy decision) and from the policy file
+come from the stack's version policy decision and from the policy file
 passed with `--policy`; PROCTOR itself holds no policy of its own.
 
 This repository is published from Wayne State University's internal GitLab and mirrored here. Changes land there
@@ -106,7 +106,7 @@ An app can carry a `policy-overrides.json` file next to its composer.json:
 
 An expired override fails the `overrides` check. An active override turns the
 check's fail findings into warnings. An override never waives a failure whose
-state is EOL plus grace (eol_grace_expired); that failure stands (ADR-0003).
+state is EOL plus grace (eol_grace_expired); that failure stands (the stack's version policy decision).
 
 ## Policy
 

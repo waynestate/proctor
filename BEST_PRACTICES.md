@@ -64,13 +64,13 @@ so an app can change both. The plan is for PROCTOR to bundle CREED's policy once
 A checker should accept a policy file with a newer minor schema or extra fields and ignore what it does not know.
 Rejecting any other version breaks every pinned older checker on the day the policy gains a field.
 
-Why: ADR-0003 says older checkers must still read newer policy files.
+Why: the stack's version policy says older checkers must still read newer policy files.
 
 Sources: the stack's version-policy decision; [GitLab Code Quality format: only the listed fields are processed](https://docs.gitlab.com/ci/testing/code_quality/)
 (an example of a reader that ignores extras).
 
 **How the stack holds it: Not yet.** `JsonFilePolicySource` fails with "unsupported schema_version" unless the value is
-exactly `1`. That is the opposite of what ADR-0003 asks for.
+exactly `1`. That is the opposite of what the stack's version policy asks for.
 
 ### 1.4 Read the banned-constraint list from the policy
 The policy has `rules.banned_constraints`. The check must use it, so a change to the rule needs no PROCTOR release.
@@ -141,7 +141,7 @@ Why: declared and actual versions drift.
 
 Sources: [PHP supported versions](https://www.php.net/supported-versions.php); the stack's deploy-gate decision.
 
-**How the stack holds it: Documented.** ADR-0006 proposes `proctor gate` against the target image tag. The command does
+**How the stack holds it: Documented.** The stack's deploy-gate decision proposes `proctor gate` against the target image tag. The command does
 not exist yet. The gate is platform-neutral: on Citadel it runs from SQUIRE's `citadel` target, whose hook is not
 agreed yet, and other hosts run the same gate as a CI job.
 
@@ -203,7 +203,7 @@ Why: both make the lock file unreproducible or unsafe.
 
 Sources: [Composer config: secure-http](https://getcomposer.org/doc/06-config.md); the stack's one-repo-per-project decision.
 
-**How the stack holds it: Not yet.** ADR-0008 says Check flags committed `path` repositories. No such check exists.
+**How the stack holds it: Not yet.** The stack's one-repo-per-project decision says Check flags committed `path` repositories. No such check exists.
 
 ### 3.4 Commit `composer.lock` and install from it
 Applications and libraries both commit the lock so everyone installs the same versions.
@@ -225,7 +225,7 @@ Sources: [Composer CLI: validate and install](https://getcomposer.org/doc/03-cli
 [Composer basic usage](https://getcomposer.org/doc/01-basic-usage.md).
 
 **How the stack holds it: Not yet.** PROCTOR checks only that the file exists. `composer validate --check-lock` does the
-real test. ADR-0006 lists "present and matches" as a gate rule. (Second pass: the Composer 2.11.0-RC1 changelog,
+real test. The stack's deploy-gate decision lists "present and matches" as a gate rule. (Second pass: the Composer 2.11.0-RC1 changelog,
 dated 2026-10-22, says a change to the `policy` config now marks the lock as outdated. So a lock-in-sync check will
 start to report that case once apps move to Composer 2.11. RC1 is not a stable release.)
 
@@ -499,7 +499,7 @@ Why: a far-future date is a permanent override with extra steps.
 
 Sources: the stack's deploy-gate decision.
 
-**How the stack holds it: Documented.** ADR-0006 states the rule for the deploy gate. `OverrideFile` accepts any
+**How the stack holds it: Documented.** The stack's deploy-gate decision states the rule for the deploy gate. `OverrideFile` accepts any
 valid date.
 
 ### 5.6 Do not let an override waive the override check, and reject unknown check names
@@ -519,7 +519,7 @@ Why: an approval that nobody checks is a note.
 
 Sources: [GitLab protected branches: Code Owner approval is Premium or Ultimate](https://docs.gitlab.com/user/project/repository/branches/protected/).
 
-**How the stack holds it: Not yet.** ADR-0006 moves override storage to the platform admins for the deploy gate
+**How the stack holds it: Not yet.** The stack's deploy-gate decision moves override storage to the platform admins for the deploy gate
 (Citadel's admins today, through SQUIRE's `citadel` target). In CI there
 is no check that the approver exists or differs from the author, and git.wayne.edu runs GitLab Community Edition, which
 has no code owner approval. (Second pass: the GitLab protected-branches page still lists Code Owner approval as
@@ -662,7 +662,7 @@ Why: blocking all old violations on day one freezes the fixes that would clear t
 Sources: [Semgrep: diff-aware scanning and baseline commit](https://docs.semgrep.dev/semgrep-ci/configuring-blocking-and-errors-in-ci);
 [PHPStan: baseline](https://phpstan.org/user-guide/baseline).
 
-**How the stack holds it: Documented.** ADR-0006 describes the ratchet and the stages `report`, `warn` and `block`.
+**How the stack holds it: Documented.** The stack's deploy-gate decision describes the ratchet and the stages `report`, `warn` and `block`.
 PROCTOR v0.1.0 has no ratchet and no stage field.
 
 ### 7.2 Keep gate mode small, offline and fast, and let a checker bug fail open
@@ -905,7 +905,7 @@ Pages from the first pass that were re-read in the second pass: PHP supported ve
 Composer 2.10 release, GitLab Code Quality, GitLab CI/CD YAML reference, GitLab protected branches, PHPStan baseline,
 Semgrep blocking and errors, OpenSSF Scorecard checks, SLSA v1.0 levels.
 
-Internal design documents used for tagging: ADR-0002, ADR-0003, ADR-0006, ADR-0008, the PROCTOR repo, and the PREFLIGHT repo.
+Internal design documents used for tagging: the stack's enforcement-points decision, the stack's version-policy decision, the stack's deploy-gate decision, the stack's one-repo-per-project decision, the PROCTOR repo, and the PREFLIGHT repo.
 
 ## Platform assumptions
 
@@ -919,7 +919,7 @@ php-fpm). It reports warnings, not failures, while the stack stages the rule.
 ## CI pipelines
 
 ### The ci-pipelines check
-Every stack repo runs `composer ci` on both GitLab and GitHub (ADR-0012, decision 6), so for stack packages the two
+Every stack repo runs `composer ci` on both GitLab and GitHub (the stack's public-mirror publishing decision), so for stack packages the two
 pipeline files are part of the contract, and a reusable workflow must be pinned to a commit SHA so the contract
 cannot move out from under the pipeline. Other projects are not part of the stack contract: a GitLab pipeline that
 runs `composer ci` is still expected, but a missing or incomplete one is a warning, and a GitHub workflow is
