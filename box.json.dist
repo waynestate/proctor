@@ -1,0 +1,6 @@
+{
+    "main": "bin/proctor",
+    "output": "build/proctor.phar",
+    "compression": "GZ",
+    "check-requirements": true
+}
