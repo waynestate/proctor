@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="en" data-theme="wsu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROCTOR — Watches the exam. Doesn't help.</title>
+<meta name="description" content="PROCTOR is the Wayne State stack's check command: one vendor/bin/proctor check grades a PHP app against CREED's policy and writes text, JSON, GitLab Code Quality or SARIF.">
+<meta name="theme-color" content="#0c5449">
+<meta property="og:title" content="PROCTOR — Watches the exam. Doesn't help.">
+<meta property="og:image" content="brand/proctor-avatar-512.png">
+<link rel="icon" href="brand/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="brand/favicon-32.png">
+<link rel="icon" type="image/png" sizes="64x64" href="brand/favicon-64.png">
+<!--
+  WayneUI 2.0.8, copied from its documented static path
+  (wayne-ui/apps/site/public/v2) so this page works offline. PROCTOR's own
+  sheet goes on top: ruled paper, exam-book cardstock and a red pen.
+-->
+<link rel="stylesheet" href="assets/wayne-ui/wayne-ui.css">
+<link rel="stylesheet" href="assets/proctor.css">
+<script>
+  /* Only candidates who are fine with motion get the live grading. Everyone
+     else is handed the marked paper: every bubble filled, every word there. */
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+    document.documentElement.classList.add("motion");
+  }
+</script>
+</head>
+<body>
+<a class="wsu-skip-link" href="#main">Skip to content</a>
+
+<header class="masthead">
+  <div class="wrap masthead__row">
+    <a class="masthead__brand" href="#main">
+      <img class="masthead__mark" src="brand/proctor-avatar-256.png" width="34" height="34" alt="">
+      <span class="masthead__name">PROCTOR</span>
+      <span class="masthead__form">Form 0.1</span>
+    </a>
+    <nav class="masthead__nav" aria-label="Sections">
+      <a href="#questions">Questions</a>
+      <a href="#sheet-title">Answer sheet</a>
+      <a href="#reports-title">Reports</a>
+      <a href="#start-title">Quick start</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ============================================================ cover -->
+  <section class="cover" aria-labelledby="cover-title">
+    <div class="wrap cover__grid">
+
+      <!-- The exam book. Its seal is the brand mark, untouched; it only turns
+           its head to keep an eye on the pointer. -->
+      <div class="book" aria-hidden="true">
+        <div class="book__spine"><span class="staple"></span><span class="staple"></span></div>
+        <div class="book__face">
+          <p class="book__issuer">Wayne State University<br>Enterprise Applications</p>
+          <p class="book__kind">Examination Book</p>
+          <div class="book__seal">
+            <img class="book__mark" src="brand/proctor-avatar-512.png" width="512" height="512" alt="">
+          </div>
+          <p class="book__name">PROCTOR</p>
+          <div class="book__label">
+            <p class="field"><span class="field__k">Name</span><span class="field__v hand">your-app</span></p>
+            <p class="field"><span class="field__k">Subject</span><span class="field__v hand">composer.lock</span></p>
+            <p class="field"><span class="field__k">Proctor</span><span class="field__v hand">the eye, obviously</span></p>
+          </div>
+          <p class="book__warn">Do not open this book until the proctor says so.</p>
+          <p class="book__ok hand">ok, go &rarr;</p>
+        </div>
+      </div>
+
+      <div class="cover__copy">
+        <p class="kicker">The stack's check command</p>
+        <h1 class="cover__title" id="cover-title">
+          <span class="wsu-sr-only">PROCTOR: </span>Watches the exam. <span class="cover__title-2">Doesn't help.</span>
+        </h1>
+
+        <!-- The name, spelled out. Every word the same weight and colour; the
+             initials are not picked out, because nobody is being graded on them. -->
+        <p class="acro">
+          <span class="acro__label">PROCTOR stands for</span>
+          <span class="acro__words">
+            <span class="acro__w" style="--i:0">Policy</span>
+            <span class="acro__w" style="--i:1">Rules</span>
+            <span class="acro__w" style="--i:2">Of</span>
+            <span class="acro__w" style="--i:3">Code,</span>
+            <span class="acro__w" style="--i:4">Tested</span>
+            <span class="acro__w" style="--i:5">On</span>
+            <span class="acro__w" style="--i:6">Release.</span>
+          </span>
+        </p>
+
+        <p class="cover__blurb">One <code>vendor/bin/proctor check</code> grades a PHP app against CREED's version policy: the PHP floor, patch levels, Composer constraints, the lock file, <code>composer audit</code>, MySQL&nbsp;5.6 safety, portability and both CI pipelines. It writes text, JSON, GitLab Code Quality or SARIF, and exits 0, 1 or 2. The invigilator your <code>composer.lock</code> didn't know it needed: no phones, no EOL PHP.</p>
+
+        <div class="cmd">
+          <code class="cmd__code" id="install-cmd"><span class="cmd__ps" aria-hidden="true">$</span> composer require waynestate/proctor --dev</code>
+          <button class="copy" type="button" data-copy="composer require waynestate/proctor --dev"><span class="copy__label">Copy</span></button>
+        </div>
+
+        <p class="cover__cta">
+          <a class="btn btn--ink" href="#start-title">Sit the exam</a>
+          <a class="btn btn--line" href="#sheet-title">Watch it mark a paper</a>
+        </p>
+
+        <ul class="cover__facts">
+          <li><strong>9</strong> questions</li>
+          <li><strong>4</strong> report formats</li>
+          <li><strong>3</strong> exit codes</li>
+          <li><strong>0</strong> policy of its own</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===================================================== instructions -->
+  <section class="sheet-sec instructions" aria-labelledby="instr-title">
+    <div class="wrap">
+      <header class="sec-head">
+        <p class="sec-head__part">Page 1</p>
+        <h2 id="instr-title">Instructions to candidates</h2>
+        <p>Read these before you turn the page. The proctor will not repeat them.</p>
+      </header>
+      <ol class="rules">
+        <li data-reveal>
+          <h3>Bring your own lock.</h3>
+          <p>PROCTOR reads the app's <code>composer.json</code> and <code>composer.lock</code>, and <code>package-lock.json</code> for Vue and Inertia. It never runs your app.</p>
+        </li>
+        <li data-reveal>
+          <h3>The questions are set by CREED.</h3>
+          <p>Support dates, the grace window and the audit threshold come from the policy file passed with <code>--policy</code>. PROCTOR holds no policy of its own, and a PHP version missing from the policy is a failure, not a pass.</p>
+        </li>
+        <li data-reveal>
+          <h3>Every answer is written in words.</h3>
+          <p>Each line starts <code>PASS</code>, <code>INFO</code>, <code>WARN</code> or <code>FAIL</code> and the last line says <code>RESULT</code>. No colour, no ANSI codes: meaning never rides on colour alone.</p>
+        </li>
+        <li data-reveal>
+          <h3>Three ways to leave the room.</h3>
+          <p><code>0</code> pass, warnings allowed. <code>1</code> one or more failures. <code>2</code> a tool error: bad options, an unreadable policy, a malformed <code>composer.json</code>. Exit 2 means the proctor tripped, not you.</p>
+        </li>
+        <li data-reveal>
+          <h3>Notes from home expire.</h3>
+          <p>An override needs a reason, an expiry and an approver, and is printed on every run. Past end of life plus grace, no note excuses you.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ======================================================== questions -->
+  <section class="sheet-sec" id="questions" aria-labelledby="questions-title">
+    <div class="wrap">
+      <header class="sec-head">
+        <p class="sec-head__part">Part A</p>
+        <h2 id="questions-title">The questions</h2>
+        <p>Nine checks, asked in this order on every run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures.</p>
+      </header>
+
+      <ol class="questions">
+        <li class="q" data-reveal>
+          <p class="q__no"><span>Q1</span><code>php-floor</code></p>
+          <h3 class="q__ask">Is the lowest PHP your <code>composer.json</code> allows still supported?</h3>
+          <p class="q__rubric">Active passes. Security-only warns. Past end of life, or no usable <code>php</code> constraint, fails. The floor comes from the constraint, not from the PHP that runs the check.</p>
+          <p class="q__answer"><span class="mark mark--fail">FAIL</span> php-floor: php floor 7.4 is eol_grace_expired</p>
+          <svg class="q__tick" viewBox="0 0 40 30" aria-hidden="true"><path pathLength="1" d="M3 16 L14 26 L37 3"/></svg>
+        </li>
+        <li class="q" data-reveal>
+          <p class="q__no"><span>Q2</span><code>unpatched</code></p>
+          <h3 class="q__ask">Is every locked component on its line's latest patch?</h3>
+          <p class="q__rubric">Reads Laravel from <code>composer.lock</code>, Vue and Inertia from <code>package-lock.json</code>, and PHP from <code>--php-runtime</code>. Behind is a warning; the owner picks the day.</p>
+          <p class="q__answer"><span class="mark mark--warn">WARN</span> unpatched: laravel 12.1.3 is behind 12.4.7 (checked 2026-10-28); update to the latest patch.</p>
+          <svg class="q__tick" viewBox="0 0 40 30" aria-hidden="true"><path pathLength="1" d="M3 16 L14 26 L37 3"/></svg>
+        </li>
+        <li class="q" data-reveal>
+          <p class="q__no"><span>Q3</span><code>unbounded-constraints</code></p>
+          <h3 class="q__ask">Is every runtime requirement tied to a released range?</h3>
+          <p class="q__rubric">A <code>*</code> or a <code>dev-</code> branch fails, including <code>dev-master as 1.0</code>. <code>require-dev</code>, <code>php</code>, <code>ext-*</code> and <code>lib-*</code> are skipped.</p>
+          <p class="q__answer"><span class="mark mark--fail">FAIL</span> unbounded-constraints: vendor/any constraint "*" is unbounded</p>
+          <svg class="q__tick" viewBox="0 0 40 30" aria-hidden="true"><path pathLength="1" d="M3 16 L14 26 L37 3"/></svg>
+        </li>
+        <li class="q" data-reveal>
+          <p class="q__no"><span>Q4</span><code>lock-committed</code></p>
+          <h3 class="q__ask">Did you hand in your <code>composer.lock</code>?</h3>
+          <p class="q__rubric">Missing from the app path fails. In CI the working tree is a clone, so present means committed.</p>
+          <p class="q__answer"><span class="mark mark--pass">PASS</span> lock-committed: composer.lock is present</p>
+          <svg class="q__tick" viewBox="0 0 40 30" aria-hidden="true"><path pathLength="1" d="M3 16 L14 26 L37 3"/></svg>
+        </li>
+        <li class="q" data-reveal>
+          <p class="q__no"><span>Q5</span><code>portability</code></p>
+          <h3 class="q__ask">Would the app still run on another host?</h3>
+          <p class="q__rubric">Warns on an absolute host path, a hard-coded proxy address, sessions on local disk, or a <code>php_value</code> line in <code>.htaccess</code>. Citadel, OpenShift, Coolify or plain Docker: same app.</p>
+          <p class="q__answer"><span class="mark mark--warn">WARN</span> portability: host-path: absolute host path "/var/log/app.log"; read it from env or config</p>
+          <svg class="q__tick" viewBox="0 0 40 30" aria-hidden="true"><path pathLength="1" d="M3 16 L14 26 L37 3"/></svg>
+        </li>
+        <li class="q" data-reveal>
+          <p class="q__no"><span>Q6</span><code>mysql56</code></p>
+          <h3 class="q__ask">Will your migrations survive the shared MySQL 5.6 server?</h3>
+          <p class="q__rubric">Reads the code as a syntax tree, not as lines, so a pattern in a comment or a string is not flagged: JSON and generated columns, <code>renameColumn</code>, the upsert alias, long indexed strings. Warnings only; the proctor raises an eyebrow.</p>
+          <p class="q__answer"><span class="mark mark--warn">WARN</span> mysql56: mysql56-json: JSON columns and JSON queries need MySQL 5.7.8</p>
+          <svg class="q__tick" viewBox="0 0 40 30" aria-hidden="true"><path pathLength="1" d="M3 16 L14 26 L37 3"/></svg>
+        </li>
+        <li class="q" data-reveal>
+          <p class="q__no"><span>Q7</span><code>ci-pipelines</code></p>
+          <h3 class="q__ask">Do both pipelines run <code>composer ci</code>?</h3>
+          <p class="q__rubric">For <code>waynestate/</code> packages a missing GitLab or GitHub pipeline fails; for everyone else a missing GitLab one is a note. A GitHub <code>uses:</code> ref that is not a commit SHA warns.</p>
+          <p class="q__answer"><span class="mark mark--warn">WARN</span> ci-pipelines: ci-pipelines-gitlab-missing: .gitlab-ci.yml is missing; add a GitLab pipeline with a job whose script runs composer ci</p>
+          <svg class="q__tick" viewBox="0 0 40 30" aria-hidden="true"><path pathLength="1" d="M3 16 L14 26 L37 3"/></svg>
+        </li>
+        <li class="q" data-reveal>
+          <p class="q__no"><span>Q8</span><code>composer-audit</code></p>
+          <h3 class="q__ask">Does the lock carry a known advisory?</h3>
+          <p class="q__rubric">Fails at or above the policy's <code>audit_severity_threshold</code>, warns below it. An advisory with no severity counts as failing: unknown input never turns into a pass.</p>
+          <p class="q__answer"><span class="mark mark--pass">PASS</span> composer-audit: no advisories found</p>
+          <svg class="q__tick" viewBox="0 0 40 30" aria-hidden="true"><path pathLength="1" d="M3 16 L14 26 L37 3"/></svg>
+        </li>
+        <li class="q" data-reveal>
+          <p class="q__no"><span>Q9</span><code>overrides</code></p>
+          <h3 class="q__ask">Has any note from home expired?</h3>
+          <p class="q__rubric">Every expired entry in <code>policy-overrides.json</code> fails. Active ones are printed on every run, so nothing is waived quietly.</p>
+          <p class="q__answer"><span class="mark mark--fail">FAIL</span> overrides: override for "lock-committed" expired on 2026-01-01</p>
+          <svg class="q__tick" viewBox="0 0 40 30" aria-hidden="true"><path pathLength="1" d="M3 16 L14 26 L37 3"/></svg>
+        </li>
+      </ol>
+
+      <div class="nextterm" data-reveal>
+        <h3 class="nextterm__title">Part B: next term <span class="chip chip--soon">Coming soon</span></h3>
+        <p class="nextterm__lede">Set, not yet on the paper. No commands until they are real.</p>
+        <ul class="nextterm__list">
+          <li><strong>The release gate.</strong> <code>proctor gate</code> against the image that will actually serve the app, with a ratchet that blocks new problems before old ones.</li>
+          <li><strong>Security headers and CSP.</strong> HELMET sets them; PROCTOR will check they are there.</li>
+          <li><strong>The WayneUI contract.</strong> Is the interface the shared one, at a supported version?</li>
+          <li><strong>Node versions.</strong> Today only the Vue and Inertia locks are read.</li>
+          <li><strong>Lock in sync.</strong> A lock whose hash no longer matches <code>composer.json</code>.</li>
+          <li><strong>The policy's own banned list.</strong> Read <code>rules.banned_constraints</code> instead of a list in code.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================== answer sheet -->
+  <!-- The magic. With motion on, the sheet is blank at first and marks
+       itself as each step scrolls past: bubbles fill, the red pen circles
+       question 3 and writes the fix, the resit erases it, the stamp lands.
+       Without motion (or without JavaScript) the marked paper is simply
+       there, every bubble filled and every word present. -->
+  <section class="marking" aria-labelledby="sheet-title">
+    <div class="wrap">
+      <header class="sec-head sec-head--sheet">
+        <p class="sec-head__part">Marking</p>
+        <h2 id="sheet-title">The answer sheet marks itself</h2>
+        <p>One run of <code>proctor check</code> on a small app, from pencils up to the stamp. Scroll, and keep your eyes on your own paper.</p>
+      </header>
+
+      <div class="marking__grid">
+        <ol class="steps">
+          <li class="step" data-step="1">
+            <p class="step__no">1 · Pencils up</p>
+            <p class="step__body">The candidate is <code>your-app</code>. The policy is CREED's, today's date is fixed, and the proctor is watching.</p>
+            <pre class="step__code"><code>vendor/bin/proctor check --policy=policy.json</code></pre>
+          </li>
+          <li class="step" data-step="2">
+            <p class="step__no">2 · Questions 1 and 2</p>
+            <p class="step__body">PHP 8.4 is in active support: pass. Laravel is a few patches behind: a warning, not a failure.</p>
+            <pre class="step__code"><code>PASS php-floor: php floor 8.4 is active
+WARN unpatched: laravel 12.1.3 is behind 12.4.7 (checked 2026-10-28); update to the latest patch.</code></pre>
+          </li>
+          <li class="step" data-step="3">
+            <p class="step__no">3 · Question 3: red pen</p>
+            <p class="step__body">One requirement says <code>"*"</code>. That fails, and the margin says what to write instead.</p>
+            <pre class="step__code"><code>FAIL unbounded-constraints: vendor/any constraint "*" is unbounded</code></pre>
+          </li>
+          <li class="step" data-step="4">
+            <p class="step__no">4 · Questions 4 to 9</p>
+            <p class="step__body">Lock present, nothing hard-coded, no migrations to worry about, both pipelines, a clean audit, no expired notes. One failure is still one failure.</p>
+            <pre class="step__code"><code>RESULT: fail (1 failures, 1 warnings)</code></pre>
+          </li>
+          <li class="step" data-step="5">
+            <p class="step__no">5 · Resit, pencils down</p>
+            <p class="step__body">Pin <code>"vendor/any": "^2.0"</code>, run it again. Question 3 is erased and passes; the patch warning stays on the sheet, and warnings are allowed. Exit 0.</p>
+            <pre class="step__code"><code>PASS unbounded-constraints: all require constraints are bounded
+RESULT: pass</code></pre>
+          </li>
+        </ol>
+
+        <div class="sheet-wrap">
+          <div class="sheet" data-sheet data-step="5">
+            <div class="sheet__timing" aria-hidden="true"></div>
+            <div class="sheet__head">
+              <p class="sheet__title">PROCTOR answer sheet <span>Form 0.1</span></p>
+              <p class="sheet__fields">
+                <span class="sf"><span class="sf__k">Name</span><span class="sf__v hand">your-app</span></span>
+                <span class="sf"><span class="sf__k">Date</span><span class="sf__v hand">2026-10-28</span></span>
+              </p>
+              <p class="sheet__legend" aria-hidden="true">Fill one bubble per question. <b>P</b> pass · <b>I</b> info · <b>W</b> warn · <b>F</b> fail</p>
+            </div>
+
+            <table class="sheet__table">
+              <caption class="wsu-sr-only">The marked answer sheet: final answer for each check after the resit. Question 3 failed first and passed on the resit.</caption>
+              <thead class="wsu-sr-only"><tr><th scope="col">Question</th><th scope="col">Check</th><th scope="col">Answer</th></tr></thead>
+              <tbody>
+                <tr class="row" data-row="1"><th scope="row">1</th><td class="row__id">php-floor</td><td class="row__b"><span class="wsu-sr-only">pass</span><span class="bub" data-l="P" data-at="2" style="--d:0"></span><span class="bub" data-l="I"></span><span class="bub" data-l="W"></span><span class="bub" data-l="F"></span></td></tr>
+                <tr class="row" data-row="2"><th scope="row">2</th><td class="row__id">unpatched</td><td class="row__b"><span class="wsu-sr-only">warn</span><span class="bub" data-l="P"></span><span class="bub" data-l="I"></span><span class="bub" data-l="W" data-at="2" style="--d:1"></span><span class="bub" data-l="F"></span></td></tr>
+                <tr class="row row--red" data-row="3"><th scope="row">3</th><td class="row__id">unbounded-constraints</td><td class="row__b"><span class="wsu-sr-only">fail, then pass on the resit</span><span class="bub" data-l="P" data-at="5" style="--d:2"></span><span class="bub" data-l="I"></span><span class="bub" data-l="W"></span><span class="bub bub--erasable" data-l="F" data-at="3" data-until="5" style="--d:0"></span>
+                  <svg class="redpen-ring" viewBox="0 0 120 44" aria-hidden="true"><path pathLength="1" d="M60 5 C 96 3, 117 12, 114 24 C 111 37, 78 41, 52 40 C 22 39, 4 31, 6 20 C 8 10, 30 4, 66 6 C 80 7, 92 9, 99 13"/></svg>
+                </td></tr>
+                <tr class="row" data-row="4"><th scope="row">4</th><td class="row__id">lock-committed</td><td class="row__b"><span class="wsu-sr-only">pass</span><span class="bub" data-l="P" data-at="4" style="--d:0"></span><span class="bub" data-l="I"></span><span class="bub" data-l="W"></span><span class="bub" data-l="F"></span></td></tr>
+                <tr class="row" data-row="5"><th scope="row">5</th><td class="row__id">portability</td><td class="row__b"><span class="wsu-sr-only">pass</span><span class="bub" data-l="P" data-at="4" style="--d:1"></span><span class="bub" data-l="I"></span><span class="bub" data-l="W"></span><span class="bub" data-l="F"></span></td></tr>
+                <tr class="row" data-row="6"><th scope="row">6</th><td class="row__id">mysql56</td><td class="row__b"><span class="wsu-sr-only">pass</span><span class="bub" data-l="P" data-at="4" style="--d:2"></span><span class="bub" data-l="I"></span><span class="bub" data-l="W"></span><span class="bub" data-l="F"></span></td></tr>
+                <tr class="row" data-row="7"><th scope="row">7</th><td class="row__id">ci-pipelines</td><td class="row__b"><span class="wsu-sr-only">pass</span><span class="bub" data-l="P" data-at="4" style="--d:3"></span><span class="bub" data-l="I"></span><span class="bub" data-l="W"></span><span class="bub" data-l="F"></span></td></tr>
+                <tr class="row" data-row="8"><th scope="row">8</th><td class="row__id">composer-audit</td><td class="row__b"><span class="wsu-sr-only">pass</span><span class="bub" data-l="P" data-at="4" style="--d:4"></span><span class="bub" data-l="I"></span><span class="bub" data-l="W"></span><span class="bub" data-l="F"></span></td></tr>
+                <tr class="row" data-row="9"><th scope="row">9</th><td class="row__id">overrides</td><td class="row__b"><span class="wsu-sr-only">pass</span><span class="bub" data-l="P" data-at="4" style="--d:5"></span><span class="bub" data-l="I"></span><span class="bub" data-l="W"></span><span class="bub" data-l="F"></span></td></tr>
+              </tbody>
+            </table>
+
+            <!-- The red pen's margin note. Real text: the fix for question 3. -->
+            <p class="redpen-note" data-at="3">
+              <span class="redpen-note__line hand"><span class="wsu-sr-only">Red pen, question 3: </span>"*" is unbounded.</span>
+              <span class="redpen-note__line hand">pin it: "vendor/any": "^2.0"</span>
+              <svg class="redpen-arrow" viewBox="0 0 60 40" aria-hidden="true"><path pathLength="1" d="M56 6 C 40 8, 22 16, 8 32 M8 32 L 10 20 M8 32 L 20 30"/></svg>
+            </p>
+
+            <div class="sheet__foot">
+              <p class="result">
+                <span class="result__k">Result</span>
+                <span class="result__v">
+                  <span class="result__fail hand" data-at="4"><span class="wsu-sr-only">First run: </span>fail (1 failures, 1 warnings)</span>
+                  <span class="result__pass hand" data-at="5"><span class="wsu-sr-only">Resit: </span>pass</span>
+                </span>
+              </p>
+              <p class="stamp" data-at="5"><span class="stamp__big">PASS</span><span class="stamp__small">exit 0 · warnings allowed</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================== reports -->
+  <section class="sheet-sec" aria-labelledby="reports-title">
+    <div class="wrap">
+      <header class="sec-head">
+        <p class="sec-head__part">Hand in</p>
+        <h2 id="reports-title">Four copies of the same paper</h2>
+        <p>Pick the copy your reader needs with <code>--format</code>. The findings are the same in all four; these are real runs on PROCTOR's <code>unbounded-app</code> fixture, trimmed where marked.</p>
+      </header>
+
+      <div class="carbons" data-tabs>
+        <div class="carbons__tabs" role="tablist" aria-label="Report formats">
+          <button class="carbons__tab" role="tab" id="tab-text" aria-controls="pane-text" aria-selected="true" type="button">text</button>
+          <button class="carbons__tab" role="tab" id="tab-json" aria-controls="pane-json" aria-selected="false" tabindex="-1" type="button">json</button>
+          <button class="carbons__tab" role="tab" id="tab-cq" aria-controls="pane-cq" aria-selected="false" tabindex="-1" type="button">codequality</button>
+          <button class="carbons__tab" role="tab" id="tab-sarif" aria-controls="pane-sarif" aria-selected="false" tabindex="-1" type="button">sarif</button>
+        </div>
+
+        <div class="carbon carbon--white" role="tabpanel" id="pane-text" aria-labelledby="tab-text" tabindex="0">
+          <p class="carbon__copy">White copy · for people · <code>--format=text</code> (the default)</p>
+<pre class="carbon__pre"><code>PASS php-floor: php floor 8.4 is active
+FAIL unbounded-constraints: vendor/dev constraint "dev-master" is unbounded
+FAIL unbounded-constraints: vendor/any constraint "*" is unbounded
+PASS lock-committed: composer.lock is present
+PASS portability: no hard-coded platform facts found
+PASS mysql56: no Laravel migrations found; skipped
+PASS ci-pipelines: both pipelines run composer ci
+WARN composer-audit: composer audit could not run: No installed packages found. …
+RESULT: fail (2 failures, 1 warnings)</code></pre>
+        </div>
+
+        <div class="carbon carbon--canary" role="tabpanel" id="pane-json" aria-labelledby="tab-json" tabindex="0" hidden>
+          <p class="carbon__copy">Canary copy · for scripts · <code>--format=json</code></p>
+<pre class="carbon__pre"><code>{
+    "tool": "proctor",
+    "version": "0.1.0",
+    "path": "tests/fixtures/apps/unbounded-app",
+    "today": "2026-10-28",
+    "result": "fail",
+    "exit": 1,
+    "findings": [
+        {
+            "check_id": "unbounded-constraints",
+            "status": "fail",
+            "message": "vendor/any constraint \"*\" is unbounded",
+            "path": "composer.json",
+            "line": 5
+        },
+        … seven more findings
+    ],
+    "overrides": []
+}</code></pre>
+        </div>
+
+        <div class="carbon carbon--green" role="tabpanel" id="pane-cq" aria-labelledby="tab-cq" tabindex="0" hidden>
+          <p class="carbon__copy">Green copy · for the merge request · <code>--format=codequality</code></p>
+<pre class="carbon__pre"><code>[
+    {
+        "description": "vendor/any constraint \"*\" is unbounded",
+        "check_name": "unbounded-constraints",
+        "fingerprint": "922e331be083d4bd5975b81bb630bc275e71c7aa74c18218bf817bddf2303ddb",
+        "severity": "major",
+        "location": {
+            "path": "composer.json",
+            "lines": {
+                "begin": 5
+            }
+        }
+    },
+    … two more findings
+]</code></pre>
+          <p class="carbon__note">Fingerprints hash the check, path and message, never the line number, so a finding keeps its name when the file moves.</p>
+        </div>
+
+        <div class="carbon carbon--gold" role="tabpanel" id="pane-sarif" aria-labelledby="tab-sarif" tabindex="0" hidden>
+          <p class="carbon__copy">Gold copy · for GitHub code scanning · <code>--format=sarif</code></p>
+<pre class="carbon__pre"><code>{
+    "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+    "version": "2.1.0",
+    "runs": [
+        {
+            "tool": { "driver": { "name": "proctor", "version": "0.1.0", … } },
+            "results": [
+                {
+                    "ruleId": "unbounded-constraints",
+                    "level": "error",
+                    "message": {
+                        "text": "vendor/any constraint \"*\" is unbounded"
+                    },
+                    "locations": [ … "uri": "composer.json" … "startLine": 5 … ],
+                    "partialFingerprints": {
+                        "proctorFingerprint/v1": "922e331be083d4bd…"
+                    }
+                }
+            ]
+        }
+    ]
+}</code></pre>
+          <p class="carbon__note">The mark sheet, filed in the format the head office already reads.</p>
+        </div>
+      </div>
+
+      <dl class="exits" data-reveal>
+        <div class="exit"><dt>0</dt><dd>Pass. Warnings allowed.</dd></div>
+        <div class="exit"><dt>1</dt><dd>One or more failures.</dd></div>
+        <div class="exit"><dt>2</dt><dd>Tool error. The proctor tripped over the chair.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ======================================================== overrides -->
+  <section class="sheet-sec" aria-labelledby="notes-title">
+    <div class="wrap notes">
+      <header class="sec-head">
+        <p class="sec-head__part">Absences</p>
+        <h2 id="notes-title">A note from home</h2>
+        <p>An app can carry <code>policy-overrides.json</code> next to its <code>composer.json</code>. An active override turns a check's failures into warnings. An expired one fails the <code>overrides</code> check, and every override is printed on every run.</p>
+      </header>
+
+      <div class="notes__grid">
+        <figure class="slip" data-reveal>
+          <figcaption class="slip__head"><span>Excused absence</span><span class="slip__no">No. 001</span></figcaption>
+<pre class="slip__pre"><code>[
+    {
+        "check": "lock-committed",
+        "reason": "lock is generated by CI and not committed",
+        "expires": "2027-01-31",
+        "approved_by": "jane@example.wayne.edu"
+    }
+]</code></pre>
+          <p class="slip__sig"><span class="hand">signed, a real approver</span></p>
+        </figure>
+
+        <div class="notes__side" data-reveal>
+          <p class="notes__label">When the note runs out</p>
+<pre class="term"><code>FAIL overrides: override for "lock-committed" expired on 2026-01-01
+OVERRIDE lock-committed: fixture: expired (expires 2026-01-01, approved by tester)
+RESULT: fail (1 failures, 1 warnings)</code></pre>
+          <p class="notes__rule"><span class="hand redpen-inline">No note excuses end of life plus grace.</span> A failure in the <code>eol_grace_expired</code> state stands, whatever the app carries.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================= exam halls -->
+  <section class="sheet-sec" aria-labelledby="halls-title">
+    <div class="wrap">
+      <header class="sec-head">
+        <p class="sec-head__part">Exam halls</p>
+        <h2 id="halls-title">Sitting it in CI</h2>
+        <p>The same command on both forges. PREFLIGHT books the GitLab hall; on the GitHub mirror the SARIF copy goes to code scanning.</p>
+      </header>
+
+      <div class="halls">
+        <article class="hall" data-reveal>
+          <p class="hall__door"><span class="hall__room">Hall G</span> GitLab, through PREFLIGHT</p>
+<pre class="hall__pre"><code>include:
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.1.0
+    inputs:
+      proctor_command: vendor/bin/proctor check --format=codequality --policy=vendor/waynestate/creed/policy/policy.json</code></pre>
+          <p class="hall__note">The job publishes a Code Quality report, so findings show on the merge request. Strongly recommended: a git.wayne.edu instance runner.</p>
+        </article>
+        <article class="hall" data-reveal>
+          <p class="hall__door"><span class="hall__room">Hall H</span> GitHub code scanning</p>
+<pre class="hall__pre"><code>- run: composer require waynestate/proctor --dev
+# policy.json is the CREED policy file
+- run: vendor/bin/proctor check --format=sarif --policy=policy.json &gt; proctor.sarif
+- uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+  with:
+    sarif_file: proctor.sarif</code></pre>
+          <p class="hall__note">Pinned to a full commit SHA, the way <code>ci-pipelines</code> asks. Needs <code>permissions: security-events: write</code>.</p>
+        </article>
+      </div>
+      <p class="halls__tip">In CI, pass <code>--php-runtime</code> the deploy image's PHP, not the runner's: the app is served by the image.</p>
+    </div>
+  </section>
+
+  <!-- ====================================================== quick start -->
+  <section class="sheet-sec start" aria-labelledby="start-title">
+    <div class="wrap">
+      <header class="sec-head">
+        <p class="sec-head__part">Begin</p>
+        <h2 id="start-title">You may turn over your paper</h2>
+        <p>Install PROCTOR and CREED's policy as dev dependencies, then run the check from the app's folder.</p>
+      </header>
+
+      <div class="os" data-tabs>
+        <div class="os__tabs" role="tablist" aria-label="Your system">
+          <button class="os__tab" role="tab" id="os-tab-nix" aria-controls="os-nix" aria-selected="true" type="button">macOS · Linux</button>
+          <button class="os__tab" role="tab" id="os-tab-win" aria-controls="os-win" aria-selected="false" tabindex="-1" type="button">Windows</button>
+          <button class="os__tab" role="tab" id="os-tab-docker" aria-controls="os-docker" aria-selected="false" tabindex="-1" type="button">No PHP (Docker)</button>
+        </div>
+
+        <div class="os__pane" role="tabpanel" id="os-nix" aria-labelledby="os-tab-nix" tabindex="0">
+          <ol class="os__steps">
+            <li><p>Install, in a terminal:</p>
+              <div class="cmd cmd--block"><code class="cmd__code">composer require waynestate/proctor waynestate/creed --dev</code><button class="copy" type="button" data-copy="composer require waynestate/proctor waynestate/creed --dev"><span class="copy__label">Copy</span></button></div></li>
+            <li><p>Sit the exam:</p>
+              <div class="cmd cmd--block"><code class="cmd__code">vendor/bin/proctor check --policy=vendor/waynestate/creed/policy/policy.json</code><button class="copy" type="button" data-copy="vendor/bin/proctor check --policy=vendor/waynestate/creed/policy/policy.json"><span class="copy__label">Copy</span></button></div></li>
+          </ol>
+        </div>
+
+        <div class="os__pane" role="tabpanel" id="os-win" aria-labelledby="os-tab-win" tabindex="0" hidden>
+          <ol class="os__steps">
+            <li><p>Install, in PowerShell:</p>
+              <div class="cmd cmd--block"><code class="cmd__code">composer require waynestate/proctor waynestate/creed --dev</code><button class="copy" type="button" data-copy="composer require waynestate/proctor waynestate/creed --dev"><span class="copy__label">Copy</span></button></div></li>
+            <li><p>Sit the exam:</p>
+              <div class="cmd cmd--block"><code class="cmd__code">vendor\bin\proctor check --policy=vendor\waynestate\creed\policy\policy.json</code><button class="copy" type="button" data-copy="vendor\bin\proctor check --policy=vendor\waynestate\creed\policy\policy.json"><span class="copy__label">Copy</span></button></div></li>
+          </ol>
+        </div>
+
+        <div class="os__pane" role="tabpanel" id="os-docker" aria-labelledby="os-tab-docker" tabindex="0" hidden>
+          <ol class="os__steps">
+            <li><p>Install, from the app's folder (PowerShell, macOS or Linux):</p>
+              <div class="cmd cmd--block"><code class="cmd__code">docker run --rm -v "${PWD}:/app" -w /app composer:2 composer require waynestate/proctor waynestate/creed --dev</code><button class="copy" type="button" data-copy='docker run --rm -v "${PWD}:/app" -w /app composer:2 composer require waynestate/proctor waynestate/creed --dev'><span class="copy__label">Copy</span></button></div></li>
+            <li><p>Sit the exam. The <code>composer:2</code> image brings PHP and Composer, so <code>composer-audit</code> runs too:</p>
+              <div class="cmd cmd--block"><code class="cmd__code">docker run --rm -v "${PWD}:/app" -w /app composer:2 vendor/bin/proctor check --policy=vendor/waynestate/creed/policy/policy.json</code><button class="copy" type="button" data-copy='docker run --rm -v "${PWD}:/app" -w /app composer:2 vendor/bin/proctor check --policy=vendor/waynestate/creed/policy/policy.json'><span class="copy__label">Copy</span></button></div></li>
+          </ol>
+        </div>
+      </div>
+
+      <p class="start__opts">Options: <code>--path=.</code> · <code>--format=text|json|codequality|sarif</code> · <code>--policy=&lt;file&gt;</code> (required) · <code>--today=YYYY-MM-DD</code> for runs that agree on any day · <code>--php-runtime=X.Y.Z</code> for the <code>unpatched</code> check.</p>
+    </div>
+  </section>
+
+  <!-- ===================================================== seating chart -->
+  <section class="sheet-sec seating-sec" aria-labelledby="seats-title">
+    <div class="wrap">
+      <header class="sec-head">
+        <p class="sec-head__part">Seating chart</p>
+        <h2 id="seats-title">Who else is in the room</h2>
+        <p>PROCTOR is one part of WELD, Wayne State's app stack. The proctor sits at the front; everyone else sits the same exam.</p>
+      </header>
+
+      <div class="seating">
+        <div class="desk desk--front" data-reveal>
+          <img class="desk__mark" src="brand/proctor-avatar-256.png" width="56" height="56" alt="PROCTOR mark: a watchful eye with a gold square pupil">
+          <div><p class="desk__name">PROCTOR</p><p class="desk__role">Watches the exam. Doesn't help.</p></div>
+        </div>
+
+        <p class="seating__label">The class</p>
+        <ul class="desks">
+          <li class="desk" data-reveal><span class="desk__tile"><img src="assets/marks/wayneui.svg" width="40" height="40" alt="WayneUI mark: a rounded frame holding a solid form, with a gold tab"></span><div><p class="desk__name">WayneUI</p><p class="desk__role">The interface every page is drawn with.</p></div></li>
+          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/creed.png" width="56" height="56" alt="CREED mark"><div><p class="desk__name">CREED</p><p class="desk__role">Sets the questions: the <code>policy.json</code> PROCTOR reads.</p></div></li>
+          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/preflight.png" width="56" height="56" alt="PREFLIGHT mark"><div><p class="desk__name">PREFLIGHT</p><p class="desk__role">Books the hall: shared CI that runs PROCTOR.</p></div></li>
+          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/pinstripe.png" width="56" height="56" alt="Pinstripe mark"><div><p class="desk__name">Pinstripe</p><p class="desk__role">Neat handwriting: the coding standard.</p></div></li>
+          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/sesame.png" width="56" height="56" alt="SESAME mark"><div><p class="desk__name">SESAME</p><p class="desk__role">Checks ID at the door: sign-in.</p></div></li>
+          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/helmet.png" width="56" height="56" alt="HELMET mark"><div><p class="desk__name">HELMET</p><p class="desk__role">Security headers and runtime hardening.</p></div></li>
+          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/sourdough.png" width="56" height="56" alt="Sourdough mark"><div><p class="desk__name">Sourdough</p><p class="desk__role">Starters that arrive ready to sit the exam.</p></div></li>
+          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/weld.png" width="56" height="56" alt="WELD mark"><div><p class="desk__name">WELD</p><p class="desk__role">The whole stack, joined; runs <code>proctor check</code> in CI.</p></div></li>
+        </ul>
+
+        <p class="seating__label">Transfer students, new this term</p>
+        <ul class="desks desks--new">
+          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/booster.png" width="56" height="56" alt="BOOSTER mark"><div><p class="desk__name">BOOSTER</p><p class="desk__role">Upgrades you to a passing PHP, one hop at a time.</p></div></li>
+          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/rollcall.png" width="56" height="56" alt="ROLLCALL mark"><div><p class="desk__name">ROLLCALL</p><p class="desk__role">Every app answers “present”, with its PHP version.</p></div></li>
+          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/squire.png" width="56" height="56" alt="SQUIRE mark"><div><p class="desk__name">SQUIRE</p><p class="desk__role">Carries the passed paper to Citadel.</p></div></li>
+          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/drawbridge.png" width="56" height="56" alt="DRAWBRIDGE mark"><div><p class="desk__name">DRAWBRIDGE</p><p class="desk__role">The Citadel sign-in gateway.</p></div></li>
+          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/advisor.png" width="56" height="56" alt="ADVISOR mark"><div><p class="desk__name">ADVISOR</p><p class="desk__role">Ask what applies to your app, and what to do next.</p></div></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap foot__row">
+    <p class="foot__big">Pencils down.</p>
+    <p class="foot__links"><a href="https://github.com/waynestate/proctor">Source on GitHub</a> · MIT · Wayne State University · Enterprise Applications</p>
+    <p class="foot__joke hand">The proctor saw that.</p>
+  </div>
+</footer>
+
+<div class="toast" role="status" aria-live="polite"></div>
+<script src="assets/proctor.js" defer></script>
+</body>
+</html>
