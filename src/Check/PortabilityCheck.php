@@ -7,12 +7,15 @@ namespace Waynestate\Proctor\Check;
 use FilesystemIterator;
 use PhpParser\Node;
 use PhpParser\Node\ArrayItem;
-use PhpParser\Node\Expr\CallLike;
+use PhpParser\Node\Expr\FuncCall;
+use PhpParser\Node\Expr\StaticCall;
+use PhpParser\Node\Name;
 use PhpParser\Node\Scalar\String_;
 use RecursiveCallbackFilterIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;
+use Waynestate\Proctor\Code\BannedPatterns;
 use Waynestate\Proctor\Code\PhpFiles;
 
 /**
@@ -20,26 +23,25 @@ use Waynestate\Proctor\Code\PhpFiles;
  * address, a local-disk session store, or a php_value/php_flag line in .htaccess
  * (those do nothing under php-fpm). Platform facts belong in env or config.
  *
- * PHP files are read as an AST, so a platform fact that only appears in a
- * comment is not flagged; non-PHP files (.htaccess, plain config) are still
- * scanned line by line.
+ * PHP files are read as an AST with names resolved, so a platform fact that
+ * only appears in a comment is not flagged, a call split over several lines is
+ * still caught, and `use function ... as ...` aliases cannot hide a call. The
+ * lists the rules read (function names, class calls, path prefixes) live in
+ * BannedPatterns. Non-PHP files (.htaccess, plain config) are still scanned
+ * line by line; the .htaccess php_value rule is the only regular expression
+ * left, because .htaccess is not PHP and has no tree to walk.
  */
 final class PortabilityCheck implements CheckInterface
 {
     /** Directory names skipped at any depth. */
     private const SKIP_DIRS = ['vendor', 'node_modules', 'storage', 'tests', '.git'];
 
-    /** Quoted literals starting with one of these are absolute host paths. */
-    private const HOST_PATH_PREFIXES = ['/var/', '/srv/', '/home/', '/opt/', '/etc/', '/tmp/'];
+    private readonly BannedPatterns $rules;
 
-    /**
-     * Keywords that put an IPv4 literal on a line into a proxy context, in
-     * any file (case-insensitive).
-     */
-    private const PROXY_KEYWORDS = ['trusted_proxies', 'trustproxies', 'x-forwarded', 'http_x_forwarded', 'remote_addr'];
-
-    /** IPv4 literals that never count as hard-coded proxy addresses. */
-    private const NOT_PROXY_ADDRESSES = ['127.0.0.1', '0.0.0.0'];
+    public function __construct(?BannedPatterns $rules = null)
+    {
+        $this->rules = $rules ?? BannedPatterns::defaults();
+    }
 
     public function id(): string
     {
@@ -62,7 +64,7 @@ final class PortabilityCheck implements CheckInterface
                     $findings[] = new Finding(
                         'proctor.parse-error',
                         Finding::STATUS_WARNING,
-                        'could not parse: ' . $phpFiles->lastError(),
+                        'could not parse ' . $relativePath . ': ' . $phpFiles->lastError(),
                         $relativePath,
                         $phpFiles->lastErrorLine(),
                     );
@@ -87,8 +89,14 @@ final class PortabilityCheck implements CheckInterface
             }
         }
 
-        if ($findings === []) {
-            return [new Finding($this->id(), Finding::STATUS_PASS, 'no hard-coded platform facts found')];
+        // Info findings ("cannot analyse") are notes, not problems: a file full
+        // of closures still earns its pass.
+        $problems = array_filter(
+            $findings,
+            static fn(Finding $finding): bool => Finding::STATUS_INFO !== $finding->status,
+        );
+        if ($problems === []) {
+            $findings[] = new Finding($this->id(), Finding::STATUS_PASS, 'no hard-coded platform facts found');
         }
 
         // Stable on every OS: by path, then line.
@@ -147,6 +155,7 @@ final class PortabilityCheck implements CheckInterface
     private function findingsForPhpFile(string $relativePath, array $statements, PhpFiles $phpFiles, array $lines): array
     {
         $findings = [];
+        $statements = $phpFiles->resolveNames($statements);
         $strings = $phpFiles->findInstanceOf($statements, String_::class);
 
         // host-path: a string literal that is an absolute host path.
@@ -165,7 +174,7 @@ final class PortabilityCheck implements CheckInterface
         // 127.0.0.1 and 0.0.0.0 never count.
         foreach ($strings as $string) {
             foreach ($this->ipv4Literals($string->value) as $ip) {
-                if (in_array($ip, self::NOT_PROXY_ADDRESSES, true)) {
+                if (in_array($ip, $this->rules->notProxyAddresses, true)) {
                     continue;
                 }
                 if ($this->inProxyContext($string->getStartLine(), $lines, $relativePath)) {
@@ -189,8 +198,27 @@ final class PortabilityCheck implements CheckInterface
                 }
             }
         }
-        foreach ($phpFiles->findInstanceOf($statements, CallLike::class) as $call) {
-            if ($this->isSessionSavePath($call)) {
+
+        // Calls are matched on their resolved names, so an aliased import or a
+        // call split over several lines is still caught.
+        $dynamicLines = [];
+        foreach ($phpFiles->findInstanceOf($statements, FuncCall::class) as $call) {
+            if (!$call->name instanceof Name) {
+                $dynamicLines[] = $call->getStartLine();
+                continue;
+            }
+            if (in_array($this->resolvedName($call->name), $this->rules->iniFunctions, true)
+                && $this->setsAbsoluteSavePath($call->getArgs())) {
+                $sessionLines[$call->getStartLine()] = true;
+            }
+        }
+        foreach ($phpFiles->findInstanceOf($statements, StaticCall::class) as $call) {
+            if (!$call->class instanceof Name || !$call->name instanceof Node\Identifier) {
+                continue;
+            }
+            $target = $this->resolvedName($call->class) . '::' . strtolower($call->name->toString());
+            if (in_array($target, $this->rules->iniStaticCalls, true)
+                && $this->setsAbsoluteSavePath($call->getArgs())) {
                 $sessionLines[$call->getStartLine()] = true;
             }
         }
@@ -200,6 +228,21 @@ final class PortabilityCheck implements CheckInterface
                 'sessions on local disk; use a shared store (database or redis)',
                 $relativePath,
                 $line,
+            );
+        }
+
+        // A call through a variable hides its target. Say so once per file
+        // instead of letting it pass for clean (the tree cannot see through $f).
+        if ($dynamicLines !== []) {
+            $findings[] = new Finding(
+                $this->id(),
+                Finding::STATUS_INFO,
+                sprintf(
+                    'dynamic-call: cannot analyse %d call(s) through a variable, like $f(); a banned pattern behind one is not seen',
+                    count($dynamicLines),
+                ),
+                $relativePath,
+                min($dynamicLines),
             );
         }
 
@@ -235,7 +278,7 @@ final class PortabilityCheck implements CheckInterface
         // counts. 127.0.0.1 and 0.0.0.0 never count.
         $lowerLine = strtolower($line);
         $inProxyContext = false;
-        foreach (self::PROXY_KEYWORDS as $keyword) {
+        foreach ($this->rules->proxyKeywords as $keyword) {
             if (str_contains($lowerLine, $keyword)) {
                 $inProxyContext = true;
                 break;
@@ -246,7 +289,7 @@ final class PortabilityCheck implements CheckInterface
         }
         if ($inProxyContext) {
             foreach ($this->ipv4Literals($line) as $ip) {
-                if (in_array($ip, self::NOT_PROXY_ADDRESSES, true)) {
+                if (in_array($ip, $this->rules->notProxyAddresses, true)) {
                     continue;
                 }
                 $messages[] = sprintf(
@@ -261,7 +304,7 @@ final class PortabilityCheck implements CheckInterface
         $sessionHit = str_contains($line, 'session.save_path')
             && $this->hasQuotedLiteral($line, static fn(string $literal): bool => str_starts_with($literal, '/'));
         if (!$sessionHit && 'config/session.php' === $relativePath) {
-            $namesTheDriver = preg_match("/['\"]driver['\"]/i", $line) === 1
+            $namesTheDriver = $this->hasQuotedLiteral($line, static fn(string $literal): bool => 'driver' === strtolower($literal))
                 || str_contains($line, 'SESSION_DRIVER');
             $sessionHit = $namesTheDriver && $this->hasQuotedLiteral($line, static fn(string $literal): bool => 'file' === $literal);
         }
@@ -270,7 +313,8 @@ final class PortabilityCheck implements CheckInterface
         }
 
         // htaccess-php-setting: php_value/php_flag as the first word of a
-        // .htaccess line; under php-fpm the line does nothing.
+        // .htaccess line; under php-fpm the line does nothing. The one regex
+        // left in this check: .htaccess is not PHP, so there is no tree.
         if ('.htaccess' === pathinfo($relativePath, PATHINFO_BASENAME)
             && preg_match('/^\s*(php_value|php_flag)\b/i', $line, $matches) === 1) {
             $messages[] = sprintf(
@@ -284,17 +328,33 @@ final class PortabilityCheck implements CheckInterface
 
     /**
      * The contents of every single- or double-quoted string literal on the
-     * line, in order of appearance.
+     * line, in order of appearance. A literal holds no quote of either kind.
      *
      * @return list<string>
      */
     private function quotedLiterals(string $line): array
     {
-        if (preg_match_all('/(["\'])([^"\']*)\1/', $line, $matches) === false) {
-            return [];
+        $literals = [];
+        $length = strlen($line);
+        $i = 0;
+        while ($i < $length) {
+            $quote = $line[$i];
+            if ('"' !== $quote && "'" !== $quote) {
+                ++$i;
+                continue;
+            }
+            // The next quote of either kind either closes this literal or
+            // shows this one was never an opener.
+            $end = $i + 1 + strcspn($line, '"\'', $i + 1);
+            if ($end < $length && $line[$end] === $quote) {
+                $literals[] = substr($line, $i + 1, $end - $i - 1);
+                $i = $end + 1;
+            } else {
+                ++$i;
+            }
         }
 
-        return $matches[2];
+        return $literals;
     }
 
     /**
@@ -319,17 +379,20 @@ final class PortabilityCheck implements CheckInterface
      */
     private function isHostPath(string $literal): bool
     {
-        foreach (self::HOST_PATH_PREFIXES as $prefix) {
+        foreach ($this->rules->hostPathPrefixes as $prefix) {
             if (str_starts_with($literal, $prefix)) {
                 return true;
             }
         }
 
-        return preg_match('/^[A-Za-z]:\\\\/', $literal) === 1;
+        return strlen($literal) >= 3
+            && ctype_alpha($literal[0])
+            && ':' === $literal[1]
+            && '\\' === $literal[2];
     }
 
     /**
-     * The IPv4 literals on the line (four dot-separated numbers, each 0-255,
+     * The IPv4 literals in the text (four dot-separated numbers, each 0-255,
      * optionally followed by /<bits>), without the /<bits> part.
      *
      * @return list<string>
@@ -337,25 +400,60 @@ final class PortabilityCheck implements CheckInterface
     private function ipv4Literals(string $line): array
     {
         $ips = [];
-        $pattern = '/(?<![\d.])(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})(?:\/(\d{1,2}))?(?![\d.])/';
-        if (preg_match_all($pattern, $line, $matches, PREG_SET_ORDER) === false) {
-            return $ips;
-        }
-
-        foreach ($matches as $match) {
-            $octets = [$match[1], $match[2], $match[3], $match[4]];
-            foreach ($octets as $octet) {
-                if ((int) $octet > 255) {
-                    $octets = null;
-                    break;
-                }
+        $length = strlen($line);
+        $i = 0;
+        while ($i < $length) {
+            $startsHere = ctype_digit($line[$i])
+                && (0 === $i || !(ctype_digit($line[$i - 1]) || '.' === $line[$i - 1]));
+            $end = $i;
+            $octets = $startsHere ? $this->octetsAt($line, $i, $end) : null;
+            if (null === $octets) {
+                ++$i;
+                continue;
             }
-            if (null !== $octets) {
+            if ($octets !== [] && max($octets) <= 255) {
                 $ips[] = implode('.', $octets);
             }
+            $i = $end;
         }
 
         return $ips;
+    }
+
+    /**
+     * Four dot-separated groups of one to three digits starting at $start,
+     * not followed by another digit or a dot (a "/bits" suffix is fine).
+     *
+     * @param int $end set to the offset just past the fourth group
+     *
+     * @return list<int>|null
+     */
+    private function octetsAt(string $line, int $start, int &$end): ?array
+    {
+        $octets = [];
+        $position = $start;
+        for ($group = 0; $group < 4; ++$group) {
+            $digits = strspn($line, '0123456789', $position);
+            if ($digits < 1 || $digits > 3) {
+                return null;
+            }
+            $octets[] = (int) substr($line, $position, $digits);
+            $position += $digits;
+            if (3 === $group) {
+                break;
+            }
+            if ('.' !== ($line[$position] ?? '')) {
+                return null;
+            }
+            ++$position;
+        }
+        $next = $line[$position] ?? '';
+        if ('.' === $next || ('' !== $next && ctype_digit($next))) {
+            return null;
+        }
+        $end = $position;
+
+        return $octets;
     }
 
     /**
@@ -367,7 +465,7 @@ final class PortabilityCheck implements CheckInterface
     private function inProxyContext(int $line, array $lines, string $relativePath): bool
     {
         $lowerLine = strtolower((string) ($lines[$line - 1] ?? ''));
-        foreach (self::PROXY_KEYWORDS as $keyword) {
+        foreach ($this->rules->proxyKeywords as $keyword) {
             if (str_contains($lowerLine, $keyword)) {
                 return true;
             }
@@ -390,14 +488,24 @@ final class PortabilityCheck implements CheckInterface
     }
 
     /**
-     * Whether a call sets session.save_path to an absolute path.
+     * The lowercase fully qualified name, without a leading backslash.
      */
-    private function isSessionSavePath(CallLike $call): bool
+    private function resolvedName(Name $name): string
+    {
+        return strtolower($name->toString());
+    }
+
+    /**
+     * Whether the arguments name session.save_path and an absolute path.
+     *
+     * @param array<Node\Arg|Node\VariadicPlaceholder> $args
+     */
+    private function setsAbsoluteSavePath(array $args): bool
     {
         $hasSavePath = false;
         $hasAbsolutePath = false;
-        foreach ($call->getArgs() as $arg) {
-            if (!$arg->value instanceof String_) {
+        foreach ($args as $arg) {
+            if (!$arg instanceof Node\Arg || !$arg->value instanceof String_) {
                 continue;
             }
             if ('session.save_path' === $arg->value->value) {

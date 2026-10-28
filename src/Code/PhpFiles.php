@@ -7,6 +7,8 @@ namespace Waynestate\Proctor\Code;
 use PhpParser\Error;
 use PhpParser\Node;
 use PhpParser\NodeFinder;
+use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\Parser;
 use PhpParser\ParserFactory;
 
@@ -67,6 +69,23 @@ final class PhpFiles
         }
 
         return $statements;
+    }
+
+    /**
+     * The statements with every name resolved against its namespace and `use`
+     * lines, so `use function ini_set as set_it; set_it(...)` reads as ini_set.
+     * The nodes are rewritten in place.
+     *
+     * @param array<Node\Stmt> $statements
+     *
+     * @return array<Node\Stmt>
+     */
+    public function resolveNames(array $statements): array
+    {
+        /** @var array<Node\Stmt> $resolved */
+        $resolved = (new NodeTraverser(new NameResolver()))->traverse($statements);
+
+        return $resolved;
     }
 
     /**

@@ -144,4 +144,132 @@ final class PortabilityCheckTest extends TestCase
             rmdir($appPath);
         }
     }
+
+    /**
+     * Writes the files into a fresh temp app, runs the check, cleans up.
+     *
+     * @param array<string, string> $files relative path => contents
+     *
+     * @return list<Finding>
+     */
+    private function runOnFiles(array $files): array
+    {
+        $appPath = sys_get_temp_dir() . '/proctor-portability-' . uniqid('', true);
+        foreach ($files as $path => $contents) {
+            $dir = dirname($appPath . '/' . $path);
+            self::assertTrue(is_dir($dir) || mkdir($dir, 0777, true));
+            file_put_contents($appPath . '/' . $path, $contents);
+        }
+
+        try {
+            return (new PortabilityCheck())->run($this->contextFor($appPath));
+        } finally {
+            foreach (array_keys($files) as $path) {
+                unlink($appPath . '/' . $path);
+            }
+            foreach (array_reverse(array_unique(array_map(static fn(string $p): string => dirname($appPath . '/' . $p), array_keys($files)))) as $dir) {
+                rmdir($dir);
+            }
+            if (is_dir($appPath)) {
+                rmdir($appPath);
+            }
+        }
+    }
+
+    public function testEveryPhpRuleStillFires(): void
+    {
+        $findings = $this->runOnFiles([
+            'a.php' => "<?php\n\$p = '/var/www/app';\n\$trusted_proxies = '172.18.0.1';\nini_set('session.save_path', '/mnt/s');\n",
+            'b.php' => "<?php\nuse Illuminate\\Support\\Facades\\Config;\nConfig::set('session.save_path', '/mnt/s');\n",
+            'config/session.php' => "<?php\nreturn [\n    'driver' => 'file',\n];\n",
+            '.htaccess' => "php_flag display_errors on\n",
+        ]);
+
+        self::assertSame(
+            [
+                ['htaccess-php-setting', '.htaccess', 1],
+                ['host-path', 'a.php', 2],
+                ['proxy-address', 'a.php', 3],
+                ['local-session', 'a.php', 4],
+                ['local-session', 'b.php', 3],
+                ['local-session', 'config/session.php', 3],
+            ],
+            $this->triples($findings),
+        );
+    }
+
+    public function testBannedTextInCommentsAndStringsIsNotFlagged(): void
+    {
+        $findings = $this->runOnFiles([
+            'quiet.php' => "<?php\n"
+                . "// ini_set('session.save_path', '/var/lib/sessions');\n"
+                . "/* Config::set('session.save_path', '/srv/s'); */\n"
+                . "\$a = \"call ini_set('session.save_path', '/tmp/s') later\";\n"
+                . "\$b = 'the driver is file';\n",
+        ]);
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+    }
+
+    public function testCallSplitAcrossLinesFires(): void
+    {
+        $findings = $this->runOnFiles([
+            'split.php' => "<?php\nini_set(\n    'session.save_path',\n    '/mnt/sessions'\n);\n",
+        ]);
+
+        self::assertSame([['local-session', 'split.php', 2]], $this->triples($findings));
+    }
+
+    public function testUseFunctionAliasResolves(): void
+    {
+        $findings = $this->runOnFiles([
+            'alias.php' => "<?php\nnamespace App;\n\nuse function ini_set as set_it;\n\nset_it('session.save_path', '/mnt/php');\n",
+        ]);
+
+        self::assertSame([['local-session', 'alias.php', 6]], $this->triples($findings));
+    }
+
+    public function testDynamicCallGivesAnInfoFindingAndStillPasses(): void
+    {
+        $findings = $this->runOnFiles([
+            'dynamic.php' => "<?php\n\$f = 'ini_set';\n\$f('session.save_path', '/mnt/x');\n",
+        ]);
+
+        self::assertCount(2, $findings);
+        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+        self::assertSame(Finding::STATUS_INFO, $findings[1]->status);
+        self::assertStringStartsWith('dynamic-call: cannot analyse 1 call(s)', $findings[1]->message);
+        self::assertSame(3, $findings[1]->line);
+    }
+
+    public function testSyntaxErrorGivesAParseWarning(): void
+    {
+        $findings = $this->runOnFiles([
+            'broken.php' => "<?php\n\$x = ;\n",
+        ]);
+
+        self::assertCount(1, $findings);
+        self::assertSame('proctor.parse-error', $findings[0]->checkId);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertStringStartsWith('could not parse broken.php: ', $findings[0]->message);
+        self::assertSame(2, $findings[0]->line);
+    }
+
+    public function testPlainConfigLinesAreScannedWithoutRegex(): void
+    {
+        $findings = $this->runOnFiles([
+            'config/proxies.ini' => "trusted_proxies = \"10.0.0.5/24\" 300.1.1.1\npath = 'C:\\data' \"unclosed\nsession.save_path = '/srv/s'\n",
+        ]);
+
+        self::assertSame(
+            [
+                ['proxy-address', 'config/proxies.ini', 1],
+                ['host-path', 'config/proxies.ini', 2],
+                ['host-path', 'config/proxies.ini', 3],
+                ['local-session', 'config/proxies.ini', 3],
+            ],
+            $this->triples($findings),
+        );
+    }
 }

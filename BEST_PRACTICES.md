@@ -43,7 +43,7 @@ Why: one file changes when a version's dates change, and every tool agrees.
 
 Sources: [PHP supported versions](https://www.php.net/supported-versions.php); the stack's version-policy decision.
 
-**How the stack holds it: Enforced.** `JsonFilePolicySource` derives the state of each version from the file.
+**How the stack holds it: Enforced.** `Policy::fromFile()` (the generated `Waynestate\Proctor\Creed\Policy`) derives the state of each version from the file.
 `PolicyStateTest` pins the boundary days. An unknown version raises "version X not in policy", which the php-floor
 check reports as a failure.
 
@@ -69,7 +69,7 @@ Why: the stack's version policy says older checkers must still read newer policy
 Sources: the stack's version-policy decision; [GitLab Code Quality format: only the listed fields are processed](https://docs.gitlab.com/ci/testing/code_quality/)
 (an example of a reader that ignores extras).
 
-**How the stack holds it: Not yet.** `JsonFilePolicySource` fails with "unsupported schema_version" unless the value is
+**How the stack holds it: Not yet.** `Policy::fromFile()` (the generated `Waynestate\Proctor\Creed\Policy`) fails with "unsupported schema_version" unless the value is
 exactly `1`. That is the opposite of what the stack's version policy asks for.
 
 ### 1.4 Read the banned-constraint list from the policy
