@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Waynestate\Proctor\Check;
 
 use DateTimeImmutable;
+use Waynestate\Proctor\Creed\State;
 use Waynestate\Proctor\Override\Override;
-use Waynestate\Proctor\Policy\State;
 
 /**
  * Applies active overrides to the findings of a run.
@@ -66,7 +66,7 @@ final class OverrideApplier
      */
     private function isOverridable(Finding $finding): bool
     {
-        return $finding->state !== State::EOL_GRACE_EXPIRED
+        return $finding->state !== State::EolGraceExpired
             && $finding->checkId !== OverridesCheck::ID;
     }
 

@@ -6,8 +6,8 @@ namespace Waynestate\Proctor\Check;
 
 use Composer\Semver\Intervals;
 use Composer\Semver\VersionParser;
-use Waynestate\Proctor\Policy\PolicyException;
-use Waynestate\Proctor\Policy\State;
+use InvalidArgumentException;
+use Waynestate\Proctor\Creed\State;
 use Waynestate\Proctor\ToolError;
 
 /**
@@ -49,12 +49,12 @@ final class PhpFloorCheck implements CheckInterface
 
         try {
             $state = $context->policy->stateOf('php', $floor, $context->today);
-        } catch (PolicyException $e) {
+        } catch (InvalidArgumentException $e) {
             return [new Finding($this->id(), Finding::STATUS_FAIL, $e->getMessage(), 'composer.json')];
         }
 
         return match ($state) {
-            State::ACTIVE => [new Finding(
+            State::Active => [new Finding(
                 $this->id(),
                 Finding::STATUS_PASS,
                 sprintf('php floor %s is active', $floor),
@@ -62,7 +62,7 @@ final class PhpFloorCheck implements CheckInterface
                 1,
                 $state,
             )],
-            State::SECURITY => [new Finding(
+            State::Security => [new Finding(
                 $this->id(),
                 Finding::STATUS_WARNING,
                 $this->securityOnlyMessage($floor, $context),
@@ -73,7 +73,7 @@ final class PhpFloorCheck implements CheckInterface
             default => [new Finding(
                 $this->id(),
                 Finding::STATUS_FAIL,
-                sprintf('php floor %s is %s', $floor, $state),
+                sprintf('php floor %s is %s', $floor, $state->value),
                 'composer.json',
                 1,
                 $state,
@@ -140,13 +140,13 @@ final class PhpFloorCheck implements CheckInterface
      * The security-only warning with the end date and the days left.
      *
      * The days are whole days from the context's today to security_until,
-     * the same midnight-to-midnight comparison PolicySource uses for its
-     * state: today == security_until is the last day ("ends today"), the
+     * the same midnight-to-midnight comparison the policy reader uses for
+     * its state: today == security_until is the last day ("ends today"), the
      * day before has 1 day left.
      */
     private function securityOnlyMessage(string $floor, CheckContext $context): string
     {
-        $until = $context->policy->securityUntilOf('php', $floor);
+        $until = $context->policy->securityUntil('php', $floor);
         if ($until === null) {
             return sprintf('php floor %s is in security-only support', $floor);
         }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Waynestate\Proctor\Check;
 
+use Waynestate\Proctor\Creed\State;
+
 /**
  * A single result of a check.
  *
@@ -22,8 +24,8 @@ final class Finding
      * @param string      $message human-readable description of the result
      * @param string|null $path    path relative to the checked app, no leading "./", or null if none
      * @param int         $line    line number in $path, 1-based
-     * @param string|null $state   the policy state behind the finding, one of the State::
-     *                             constants, or null when the finding has no state
+     * @param State|null  $state   the policy state behind the finding, or null when the
+     *                             finding has no state
      */
     public function __construct(
         public readonly string $checkId,
@@ -31,7 +33,7 @@ final class Finding
         public readonly string $message,
         public readonly ?string $path = null,
         public readonly int $line = 1,
-        public readonly ?string $state = null,
+        public readonly ?State $state = null,
     ) {
         if (!in_array($status, [
             self::STATUS_PASS,

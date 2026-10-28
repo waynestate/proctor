@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Waynestate\Proctor\Check;
 
-use Waynestate\Proctor\Policy\PolicySource;
+use Waynestate\Proctor\Creed\Policy;
 use Waynestate\Proctor\ToolError;
 
 /**
@@ -129,7 +129,7 @@ final class ComposerAuditCheck implements CheckInterface
      *
      * @throws ToolError if the rule is missing or not a known severity
      */
-    private function threshold(PolicySource $policy): string
+    private function threshold(Policy $policy): string
     {
         $threshold = $policy->rules()['audit_severity_threshold'] ?? null;
         if (!is_string($threshold) || !in_array($threshold, self::SEVERITIES, true)) {

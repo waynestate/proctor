@@ -84,12 +84,16 @@ final class UnpatchedCheck implements CheckInterface
             return null;
         }
 
-        $latest = $context->policy->latestPatchOf($component, $line);
+        $latest = $context->policy->line($component, $line);
         if ($latest === null) {
             return null;
         }
 
         $latestPatch = $latest['latest_patch'];
+        if ($latestPatch === null) {
+            return null;
+        }
+
         $path = $this->pathFor($component);
 
         if (version_compare($version, $latestPatch) < 0) {

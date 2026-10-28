@@ -11,7 +11,7 @@ use Waynestate\Proctor\Check\ComposerAuditCheck;
 use Waynestate\Proctor\Check\Finding;
 use Waynestate\Proctor\Check\ProcessResult;
 use Waynestate\Proctor\Check\ProcessRunnerInterface;
-use Waynestate\Proctor\Policy\JsonFilePolicySource;
+use Waynestate\Proctor\Creed\Policy;
 
 /**
  * Tests the ComposerAuditCheck with a stub ProcessRunner, so the advisory,
@@ -73,7 +73,7 @@ final class ComposerAuditCheckTest extends TestCase
 
         $context = new CheckContext(
             __DIR__ . '/fixtures/apps/audit-app',
-            new JsonFilePolicySource(__DIR__ . '/fixtures/policy.json'),
+            Policy::fromFile(__DIR__ . '/fixtures/policy.json'),
             new DateTimeImmutable('2026-10-27'),
         );
 

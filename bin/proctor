@@ -20,9 +20,8 @@ use Waynestate\Proctor\Check\PhpFloorCheck;
 use Waynestate\Proctor\Check\PortabilityCheck;
 use Waynestate\Proctor\Check\UnboundedConstraintsCheck;
 use Waynestate\Proctor\Check\UnpatchedCheck;
+use Waynestate\Proctor\Creed\Policy;
 use Waynestate\Proctor\Override\OverrideFile;
-use Waynestate\Proctor\Policy\JsonFilePolicySource;
-use Waynestate\Proctor\Policy\PolicyException;
 use Waynestate\Proctor\Report\CodeQualityWriter;
 use Waynestate\Proctor\Report\JsonWriter;
 use Waynestate\Proctor\Report\Report;
@@ -87,8 +86,8 @@ $application->add(new class () extends Command {
         }
 
         try {
-            $policy = new JsonFilePolicySource((string) $policyFile);
-        } catch (PolicyException $e) {
+            $policy = Policy::fromFile((string) $policyFile);
+        } catch (InvalidArgumentException | RuntimeException $e) {
             $errorOutput->writeln($e->getMessage());
             return 2;
         }
