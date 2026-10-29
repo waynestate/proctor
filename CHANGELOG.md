@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- `overrides` guards (PROCTOR-6, PROCTOR-33): an entry in policy-overrides.json that names a check that is not registered in the run, or names the `overrides` check itself, is now a tool error (exit 2) instead of being silently accepted; the valid ids are built from the registered checks. An active override that expires within 14 days of `--today` (the expiry day counts) now warns (`proctor/overrides/expiring`); a warning never changes the exit code.
+
 ## 0.2.2 (2026-10-29)
 
 - `composer-config`: new check (PROCTOR-17, PROCTOR-18): warns when composer.json sets `allow-plugins` to `true`, `secure-http` to `false`, `lock` to `false` or `audit.block-insecure` to `false`, and notes when `require.php` is set without `config.platform.php`. Warning and info only: never a fail, so an app that passes today keeps passing.

@@ -1,0 +1,8 @@
+[
+    {
+        "check": "no-such-check",
+        "reason": "fixture: names a check that is not registered",
+        "expires": "2027-01-01",
+        "approved_by": "tester"
+    }
+]

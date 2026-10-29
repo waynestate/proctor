@@ -33,10 +33,11 @@ abstract class ProctorTestCase extends TestCase
      * @param string      $format     the report format
      * @param string|null $policy     an optional policy file; defaults to the fixture policy
      * @param string|null $phpRuntime an optional --php-runtime value (X.Y.Z)
+     * @param string|null $today      an optional --today value (YYYY-MM-DD); defaults to self::TODAY
      *
      * @return array{exit: int, stdout: string, stderr: string}
      */
-    protected function runProctor(string $app, string $format = 'text', ?string $policy = null, ?string $phpRuntime = null): array
+    protected function runProctor(string $app, string $format = 'text', ?string $policy = null, ?string $phpRuntime = null, ?string $today = null): array
     {
         $cmd = [
             PHP_BINARY,
@@ -45,7 +46,7 @@ abstract class ProctorTestCase extends TestCase
             '--path=' . $app,
             '--format=' . $format,
             '--policy=' . ($policy ?? __DIR__ . '/fixtures/policy.json'),
-            '--today=' . self::TODAY,
+            '--today=' . ($today ?? self::TODAY),
         ];
         if ($phpRuntime !== null) {
             $cmd[] = '--php-runtime=' . $phpRuntime;

@@ -1,0 +1,8 @@
+[
+    {
+        "check": "lock-committed",
+        "reason": "fixture: expires on the last day of the 14-day warning window",
+        "expires": "2026-11-10",
+        "approved_by": "tester"
+    }
+]

@@ -85,14 +85,14 @@ vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--po
 - `composer-audit`: fails for advisories at or above the policy's `audit_severity_threshold`, warns for lower ones, and reports info when composer or the lock file is absent.
 - `composer-version`: fails when the Composer on PATH carries the command-injection holes CVE-2024-35241 and CVE-2024-35242 (2.2.x below 2.2.24, or any other 2.x below 2.7.7) or is Composer 1, which is end of life; warns when composer cannot be run. The invigilator checks its own pen: [GHSA-47f6-5gq3-vx9c](https://github.com/advisories/GHSA-47f6-5gq3-vx9c) and [GHSA-v9qv-c7wm-wgmf](https://github.com/advisories/GHSA-v9qv-c7wm-wgmf).
 - `repo-url-credentials`: warns when a credential is written into a package source URL: a deploy token in the userinfo of a composer.json repository URL or a composer.lock source/dist URL (`https://gitlab+deploy-token-12:***@host/group/lib.git`), a bare token user of 20+ characters, a `private_token`, `access_token`, `token` or `password` query parameter, or a `.npmrc` line that sets `_authToken`, `_auth` or `_password` to a literal value (`${SOME_VAR}` is fine). The secret is masked as `***` in the message, so the report itself is safe to hand back. Warning, not failure: about sixteen production apps carry such URLs today (D-034). Fix by moving the token to `auth.json`, which is gitignored, or a CI variable, and using one registry URL without credentials. The proctor spots the answer key taped inside the desk before the student does.
-- `overrides`: fails for every expired entry in policy-overrides.json.
+- `overrides`: fails for every expired entry in policy-overrides.json, and warns (`proctor/overrides/expiring`) for an active entry that expires within 14 days of `--today` (the expiry day counts), so an approval that is about to lapse is visible instead of silent. The warning never changes the exit code. An entry that names a check that is not registered in the run, or that names the `overrides` check itself, is a tool error (exit 2): the file is rejected before any check runs.
 - `policy-age`: warns when the policy in use is more than 60 days old (its `refreshed_on` date is more than 60 days before `--today`), or when a non-bundled policy has no `refreshed_on` date. Warning only: an old policy never fails a run, and the bundled policy may omit the date. It exists so a stopped CREED refresh robot is visible instead of silent.
 
 ## Exit codes
 
 - `0`: pass (warnings allowed)
 - `1`: one or more failures
-- `2`: tool error (bad options, unreadable policy, a present but malformed or unreadable composer.json, or an unreadable overrides file). A missing composer.json is not a tool error: the app gets a verdict, with php-floor failing.
+- `2`: tool error (bad options, unreadable policy, a present but malformed or unreadable composer.json, or an overrides file that is malformed, unreadable, or names a check that is not registered or the overrides check itself). A missing composer.json is not a tool error: the app gets a verdict, with php-floor failing.
 
 ```mermaid
 %%{init: {'theme':'base','themeVariables':{'fontFamily':'Helvetica, Arial, sans-serif','primaryColor':'#F4F1EA','primaryTextColor':'#1f2a33','primaryBorderColor':'#0C5449','lineColor':'#8A9A94'}}}%%
@@ -140,6 +140,7 @@ The full set, grouped by check:
 | `lock-committed` | `proctor/lock-committed` |
 | `destructive-deploy` | `proctor/destructive-deploy` |
 | `overrides` | `proctor/overrides` |
+| `overrides` | `proctor/overrides/expiring` |
 | `unbounded-constraints` | `proctor/unbounded-constraints` |
 | `unbounded-constraints` | `proctor/unbounded-constraints/unbounded` |
 | `unbounded-constraints` | `proctor/unbounded-constraints/repository` |
@@ -238,6 +239,16 @@ An app can carry a `policy-overrides.json` file next to its composer.json:
 An expired override fails the `overrides` check. An active override turns the
 check's fail findings into warnings. An override never waives a failure whose
 state is EOL plus grace (eol_grace_expired); that failure stands (the stack's version policy decision).
+
+PROCTOR rejects the file (exit 2) when an entry names a check that is not
+registered in the run, or names the `overrides` check itself: an override
+cannot exempt the check that polices overrides, and an entry for a check
+that does not exist would silently do nothing. The list of valid check ids
+is built from the checks PROCTOR runs, so a new check needs no change to
+the guard. An active override that expires within 14 days of `--today`
+(the expiry day counts) gets a warning finding
+(`proctor/overrides/expiring`) instead of lapsing without a trace. A
+warning never changes the exit code.
 
 ## Policy
 
