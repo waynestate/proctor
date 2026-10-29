@@ -18,6 +18,7 @@ use Waynestate\Proctor\Check\Mysql56Check;
 use Waynestate\Proctor\Check\OverridesCheck;
 use Waynestate\Proctor\Check\PhpFloorCheck;
 use Waynestate\Proctor\Check\PortabilityCheck;
+use Waynestate\Proctor\Check\RepoUrlCredentialsCheck;
 use Waynestate\Proctor\Check\UnboundedConstraintsCheck;
 use Waynestate\Proctor\Check\UnpatchedCheck;
 use Waynestate\Proctor\Creed\Policy;
@@ -149,6 +150,7 @@ $application->add(new class () extends Command {
                     new CiPipelinesCheck(),
                     new ComposerAuditCheck(),
                     $composerVersionCheck,
+                    new RepoUrlCredentialsCheck(),
                     new OverridesCheck(),
                 ],
                 $overrides,
