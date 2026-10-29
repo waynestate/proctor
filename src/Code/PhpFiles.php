@@ -16,7 +16,9 @@ use PhpParser\ParserFactory;
  * Parses PHP files into ASTs.
  *
  * The parser is built once and reused, so a check that scans many files pays
- * the factory cost a single time. When a file cannot be read or parsed,
+ * the factory cost a single time. Each returned tree belongs to exactly one
+ * file: parse, traverse, drop it before parsing the next, so a long scan
+ * holds at most one tree in memory. When a file cannot be read or parsed,
  * statements() returns null and lastError() / lastErrorLine() describe the
  * problem so the caller can report a proctor.parse-error finding.
  */

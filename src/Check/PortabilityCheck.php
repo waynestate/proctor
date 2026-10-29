@@ -59,20 +59,9 @@ final class PortabilityCheck implements CheckInterface
                 continue;
             }
             if (str_ends_with($relativePath, '.php')) {
-                $statements = $phpFiles->statements($absolutePath);
-                if ($statements === null) {
-                    $findings[] = new Finding(
-                        $this->id(),
-                        Finding::STATUS_WARNING,
-                        'could not parse ' . $relativePath . ': ' . $phpFiles->lastError(),
-                        $relativePath,
-                        $phpFiles->lastErrorLine(),
-                        null,
-                        'parse-error',
-                    );
-                    continue;
-                }
-                foreach ($this->findingsForPhpFile($relativePath, $statements, $phpFiles, $lines) as $finding) {
+                // Parse, traverse, drop: the tree lives only inside this call,
+                // so a scan of many files holds at most one tree at a time.
+                foreach ($this->scanPhpFile($relativePath, $absolutePath, $lines, $phpFiles) as $finding) {
                     $findings[] = $finding;
                 }
             } else {
@@ -143,6 +132,40 @@ final class PortabilityCheck implements CheckInterface
         sort($files);
 
         return $files;
+    }
+
+    /**
+     * The findings for one PHP file: parse it, match its statements against
+     * the rules, then let the tree go before the caller parses the next file.
+     * The statements never leave this method, so a long scan holds at most
+     * one tree in memory instead of every tree seen so far.
+     *
+     * @param string             $relativePath the file's path relative to the app
+     * @param string             $absolutePath the file's absolute path
+     * @param array<int, string> $lines        the file's lines (for proxy context)
+     * @param PhpFiles           $phpFiles     the shared AST layer (one parser, reused)
+     *
+     * @return list<Finding>
+     */
+    private function scanPhpFile(string $relativePath, string $absolutePath, array $lines, PhpFiles $phpFiles): array
+    {
+        $statements = $phpFiles->statements($absolutePath);
+        if ($statements === null) {
+            return [new Finding(
+                $this->id(),
+                Finding::STATUS_WARNING,
+                'could not parse ' . $relativePath . ': ' . $phpFiles->lastError(),
+                $relativePath,
+                $phpFiles->lastErrorLine(),
+                null,
+                'parse-error',
+            )];
+        }
+
+        $found = $this->findingsForPhpFile($relativePath, $statements, $phpFiles, $lines);
+        unset($statements);
+
+        return $found;
     }
 
     /**

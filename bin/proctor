@@ -53,6 +53,22 @@ if ($autoload === null) {
 
 require $autoload;
 
+// A shared host may cap PHP at 128M, and scanning a large app's syntax trees
+// needs more room. Raise a low limit to 512M, but never lower a higher one
+// and never touch -1 (unlimited).
+$limit = (string) ini_get('memory_limit');
+if (preg_match('/^(\d+)\s*([KMG])?B?$/i', trim($limit), $m) === 1) {
+    $bytes = (int) $m[1] * match (strtoupper($m[2] ?? '')) {
+        'K' => 1024,
+        'M' => 1024 * 1024,
+        'G' => 1024 * 1024 * 1024,
+        default => 1,
+    };
+    if ($bytes < 512 * 1024 * 1024) {
+        ini_set('memory_limit', '512M');
+    }
+}
+
 $application = new class (Report::TOOL, Report::VERSION) extends Application {
     public function doRun(InputInterface $input, OutputInterface $output): int
     {

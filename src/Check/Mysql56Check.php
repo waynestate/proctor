@@ -79,21 +79,9 @@ final class Mysql56Check implements CheckInterface
         $phpFiles = new PhpFiles();
         $findings = [];
         foreach ($this->filesToScan($appPath) as $relativePath) {
-            $statements = $phpFiles->statements($appPath . '/' . $relativePath);
-            if ($statements === null) {
-                $findings[] = new Finding(
-                    $this->id(),
-                    Finding::STATUS_WARNING,
-                    'could not parse: ' . $phpFiles->lastError(),
-                    $relativePath,
-                    $phpFiles->lastErrorLine(),
-                    null,
-                    'parse-error',
-                );
-                continue;
-            }
-
-            foreach ($this->findingsForFile($relativePath, $statements, $phpFiles) as $finding) {
+            // Parse, traverse, drop: the tree lives only inside this call, so
+            // a scan of many migrations holds at most one tree at a time.
+            foreach ($this->scanFile($appPath, $relativePath, $phpFiles) as $finding) {
                 $findings[] = $finding;
             }
         }
@@ -155,6 +143,39 @@ final class Mysql56Check implements CheckInterface
         sort($files);
 
         return $files;
+    }
+
+    /**
+     * The findings for one migration file: parse it, match its statements
+     * against the rules, then let the tree go before the caller parses the
+     * next file. The statements never leave this method, so a long scan holds
+     * at most one tree in memory instead of every tree seen so far.
+     *
+     * @param string   $appPath      the app's absolute path
+     * @param string   $relativePath the file's path relative to the app
+     * @param PhpFiles $phpFiles     the shared AST layer (one parser, reused)
+     *
+     * @return list<Finding>
+     */
+    private function scanFile(string $appPath, string $relativePath, PhpFiles $phpFiles): array
+    {
+        $statements = $phpFiles->statements($appPath . '/' . $relativePath);
+        if ($statements === null) {
+            return [new Finding(
+                $this->id(),
+                Finding::STATUS_WARNING,
+                'could not parse: ' . $phpFiles->lastError(),
+                $relativePath,
+                $phpFiles->lastErrorLine(),
+                null,
+                'parse-error',
+            )];
+        }
+
+        $found = $this->findingsForFile($relativePath, $statements, $phpFiles);
+        unset($statements);
+
+        return $found;
     }
 
     /**
