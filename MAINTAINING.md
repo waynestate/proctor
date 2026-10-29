@@ -12,7 +12,7 @@ it enforces. No phones during the exam, including ours.
 - **Its policy comes from CREED.** `src/Creed/` is a generated copy of CREED's reader and `policy.json`
   (namespace `Waynestate\Proctor\Creed`), with a `manifest.json` of hashes. Never hand-edit it. A `--policy <file>`
   flag points PROCTOR at any other `policy.json`, for example `vendor/waynestate/creed/policy/policy.json`.
-- **Who uses it:** apps, PREFLIGHT's `proctor` component, SQUIRE's release script (as a report), WELD, and the stack's
+- **Who uses it:** apps, Preflight's `proctor` component, Squire's release script (as a report), WELD, and the stack's
   own front-page deploys.
 
 ## Where it lives
@@ -46,8 +46,8 @@ docker run --rm -v "${PWD}:/app" -w /app php:8.5-cli vendor/bin/phpunit
 
 ## CI
 
-- **GitLab:** PREFLIGHT's `php-test` (PHP 8.3, 8.4, 8.5) and `composer-audit` components, plus a `composer-ci` job.
-- **GitHub:** `.github/workflows/ci.yml` calls PREFLIGHT's reusable workflow with `composer ci`.
+- **GitLab:** Preflight's `php-test` (PHP 8.3, 8.4, 8.5) and `composer-audit` components, plus a `composer-ci` job.
+- **GitHub:** `.github/workflows/ci.yml` calls Preflight's reusable workflow with `composer ci`.
 - Green means `composer ci` passed on all three PHP versions on both.
 
 ## Refreshing the CREED copy
@@ -82,7 +82,7 @@ checkout, so run it by hand after each refresh. Commit the copy with the CREED c
 ## The front page
 
 `site/` is the static front page, for `https://proctor.apps.wayne.edu/` on Citadel. It is served through a small
-raw-PHP `deploy/` layer generated with SQUIRE (one per stack project); regenerate that layer, do not hand-edit it.
+raw-PHP `deploy/` layer generated with Squire (one per stack project); regenerate that layer, do not hand-edit it.
 
 ## Who maintains it
 
