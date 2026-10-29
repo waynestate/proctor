@@ -22,6 +22,9 @@ reports each check as pass, warning, info or fail. The checks and their rules
 come from the stack's version policy decision and from the policy file
 passed with `--policy`; PROCTOR itself holds no policy of its own.
 
+> [!NOTE]
+> **Not to be confused with:** code style is Pinstripe, CI is Preflight. PROCTOR grades an app against CREED's rules.
+
 Checks: `composer ci` (the same command runs on GitLab and GitHub). Front page: [`site/index.html`](https://github.com/waynestate/proctor/blob/HEAD/site/index.html).
 On Citadel it is served by the raw-PHP deploy layer in [`deploy/`](https://github.com/waynestate/proctor/blob/HEAD/deploy/): a Squire kit whose front controller serves `site/` behind HELMET's security headers. For local development, keep serving `site/` directly.
 
