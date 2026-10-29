@@ -375,7 +375,7 @@ RESULT: fail (2 failures, 1 warnings)</code></pre>
           <p class="carbon__copy">Canary copy · for scripts · <code>--format=json</code></p>
 <pre class="carbon__pre"><code>{
     "tool": "proctor",
-    "version": "0.2.5",
+    "version": "0.2.6",
     "path": "tests/fixtures/apps/unbounded-app",
     "today": "2026-10-28",
     "result": "fail",
@@ -421,7 +421,7 @@ RESULT: fail (2 failures, 1 warnings)</code></pre>
     "version": "2.1.0",
     "runs": [
         {
-            "tool": { "driver": { "name": "proctor", "version": "0.2.5", … } },
+            "tool": { "driver": { "name": "proctor", "version": "0.2.6", … } },
             "results": [
                 {
                     "ruleId": "unbounded-constraints",
@@ -497,7 +497,7 @@ RESULT: fail (1 failures, 1 warnings)</code></pre>
         <article class="hall" data-reveal>
           <p class="hall__door"><span class="hall__room">Hall G</span> GitLab, through PREFLIGHT</p>
 <pre class="hall__pre"><code>include:
-  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.1.0
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.1.1
     inputs:
       proctor_command: vendor/bin/proctor check --format=codequality --policy=vendor/waynestate/creed/policy/policy.json</code></pre>
           <p class="hall__note">The job publishes a Code Quality report, so findings show on the merge request. Strongly recommended: a git.wayne.edu instance runner.</p>
