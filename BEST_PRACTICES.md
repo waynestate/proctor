@@ -1,6 +1,6 @@
 # PROCTOR best practices
 
-Written against PROCTOR 0.2.6; later changes are in CHANGELOG.md.
+Written against PROCTOR 0.2.7; later changes are in CHANGELOG.md.
 Items marked "(second pass)" were added or changed in the second pass; see the section of that name near the end.
 
 ## What this covers
