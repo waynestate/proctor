@@ -768,7 +768,7 @@ Sources: [SLSA v1.0 build levels](https://slsa.dev/spec/v1.0/levels) (page marke
 **How the stack holds it: Not yet.** No release is tagged. `Report::VERSION` is a constant in code and must be kept in
 step with the tag by hand.
 
-Update 0.2.x: releases are tagged (0.1.0 through 0.2.6), and since 0.2.4 the reports read the installed
+Update 0.2.x: releases are tagged (0.1.0 through 0.2.7), and since 0.2.4 the reports read the installed
 `waynestate/proctor` version from Composer, with the in-code constant as the fallback.
 
 ### 8.6 Start Composer with plugins off and a known environment (second pass)
