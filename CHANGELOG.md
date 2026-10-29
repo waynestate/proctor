@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Fixed
+
+- A scan of a large app no longer exits 255 with "Allowed memory size exhausted": each file's syntax tree is dropped before the next file is parsed, and `bin/proctor` raises a memory limit below 512M to 512M (a higher limit or -1 is left alone).
+- Reports carry the real version: JSON, SARIF and text read the installed `waynestate/proctor` version from Composer, with `0.2.3` as the fallback, instead of the stale `0.1.0`.
+
 ## 0.2.3 (2026-10-29)
 
 - `overrides` guards (PROCTOR-6, PROCTOR-33): an entry in policy-overrides.json that names a check that is not registered in the run, or names the `overrides` check itself, is now a tool error (exit 2) instead of being silently accepted; the valid ids are built from the registered checks. An active override that expires within 14 days of `--today` (the expiry day counts) now warns (`proctor/overrides/expiring`); a warning never changes the exit code.
