@@ -24,3 +24,7 @@
 - `portability`: the parse-error warning now names the file ("could not parse src/Foo.php: ...").
 - Docs: `BEST_PRACTICES.md` names `Policy::fromFile()` instead of the deleted `JsonFilePolicySource`.
 - `vendor/bin/proctor` now works when PROCTOR is installed as a dependency (it finds the host app's autoloader).
+
+## 0.1.0 (2026-10-27)
+
+- First tagged release.
