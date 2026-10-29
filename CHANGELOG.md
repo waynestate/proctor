@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.2.2 (2026-10-29)
+
 - `composer-config`: new check (PROCTOR-17, PROCTOR-18): warns when composer.json sets `allow-plugins` to `true`, `secure-http` to `false`, `lock` to `false` or `audit.block-insecure` to `false`, and notes when `require.php` is set without `config.platform.php`. Warning and info only: never a fail, so an app that passes today keeps passing.
 
 ## 0.2.1 (2026-10-29)
