@@ -27,6 +27,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/destructive-deploy',
         'proctor/overrides',
         'proctor/unbounded-constraints',
+        'proctor/composer-config',
         'proctor/portability',
         'proctor/mysql56',
         'proctor/ci-pipelines',
@@ -37,6 +38,12 @@ final class RuleIdContractTest extends ProctorTestCase
         // unbounded-constraints
         'proctor/unbounded-constraints/unbounded',
         'proctor/unbounded-constraints/repository',
+        // composer-config
+        'proctor/composer-config/allow-plugins-all',
+        'proctor/composer-config/secure-http-off',
+        'proctor/composer-config/lock-off',
+        'proctor/composer-config/audit-blocking-off',
+        'proctor/composer-config/platform-php-unset',
         // portability
         'proctor/portability/host-path',
         'proctor/portability/proxy-address',
