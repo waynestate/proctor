@@ -57,7 +57,7 @@ Sources: [OWASP Top 10 CI/CD Security Risks, CICD-SEC-4 Poisoned Pipeline Execut
 [GitLab: how included configuration is merged](https://docs.gitlab.com/ci/yaml/includes/).
 
 **How the stack holds it: Not yet.** `--policy` is required and takes any path. `--today` is accepted on every run.
-PREFLIGHT's `proctor_command` input is free text, and the main `.gitlab-ci.yml` of an app overrides included job keys,
+Preflight's `proctor_command` input is free text, and the main `.gitlab-ci.yml` of an app overrides included job keys,
 so an app can change both. The plan is for PROCTOR to bundle CREED's policy once CREED v0.1.0 is tagged.
 
 ### 1.3 Version the policy schema and read newer files without breaking
@@ -142,7 +142,7 @@ Why: declared and actual versions drift.
 Sources: [PHP supported versions](https://www.php.net/supported-versions.php); the stack's deploy-gate decision.
 
 **How the stack holds it: Documented.** The stack's deploy-gate decision proposes `proctor gate` against the target image tag. The command does
-not exist yet. The gate is platform-neutral: on Citadel it runs from SQUIRE's `citadel` target, whose hook is not
+not exist yet. The gate is platform-neutral: on Citadel it runs from Squire's `citadel` target, whose hook is not
 agreed yet, and other hosts run the same gate as a CI job.
 
 ### 2.6 A tool must pass its own check
@@ -253,7 +253,7 @@ Failures" as A03 and notes that only 11 CVEs map to its CWEs, so an advisory-onl
 Sources: [Packagist: an update on Composer and Packagist supply chain security, 2026-05-27](https://blog.packagist.com/an-update-on-composer-packagist-supply-chain-security);
 [OWASP Top 10 2025, A03 Software Supply Chain Failures](https://top10.owasp.org/2025/A03_2025-Software_Supply_Chain_Failures).
 
-**How the stack holds it: Not yet.** The PREFLIGHT `proctor` component runs `composer install`, so it uses the lock.
+**How the stack holds it: Not yet.** The Preflight `proctor` component runs `composer install`, so it uses the lock.
 Nothing stops a custom job from running `update`, and PROCTOR cannot see the pipeline.
 
 ### 3.8 Keep locked components on the latest patch
@@ -308,7 +308,7 @@ Sources: [Composer CLI: audit (`--ignore-unreachable`)](https://getcomposer.org/
 [OpenSSF Scorecard: Vulnerabilities](https://github.com/ossf/scorecard/blob/main/docs/checks.md).
 
 **How the stack holds it: Not yet.** A missing `composer` or lock gives an `info` finding, and unparsable output gives a
-`warning`. Both exit 0. PREFLIGHT's `composer-audit` job covers part of this because it fails on Composer's own exit
+`warning`. Both exit 0. Preflight's `composer-audit` job covers part of this because it fails on Composer's own exit
 code.
 
 ### 4.4 Keep advisory ignores out of `composer.json`
@@ -370,7 +370,7 @@ from the project. Give each schedule a named team owner and have a Maintainer ta
 GitLab's built-in Dependency Scanning page lists "Tier: Ultimate" and does not mention PHP or Composer, so do not
 assume it covers this job on a Free or Community instance.
 
-**How the stack holds it: Not yet.** No PREFLIGHT or PROCTOR document asks for a scheduled run.
+**How the stack holds it: Not yet.** No Preflight or PROCTOR document asks for a scheduled run.
 
 ### 4.8 Run a patched Composer, because PROCTOR feeds it files the app controls (second pass)
 Set a minimum Composer version for the job that runs PROCTOR, and fail with a clear message below it.
@@ -389,7 +389,7 @@ Sources: [The Hacker News: Composer Perforce flaws, 2026-04-14](https://thehacke
 [Composer changelog](https://raw.githubusercontent.com/composer/composer/main/CHANGELOG.md). I read the two
 advisory pages through summaries and did not confirm the CVSS scores against NVD.
 
-**How the stack holds it: Not yet.** PROCTOR does not read the Composer version, and the PREFLIGHT component installs
+**How the stack holds it: Not yet.** PROCTOR does not read the Composer version, and the Preflight component installs
 whatever Composer is current at the time.
 
 ### 4.9 Report an app that switches the dependency policy off (second pass)
@@ -523,7 +523,7 @@ Why: an approval that nobody checks is a note.
 Sources: [GitLab protected branches: Code Owner approval is Premium or Ultimate](https://docs.gitlab.com/user/project/repository/branches/protected/).
 
 **How the stack holds it: Not yet.** The stack's deploy-gate decision moves override storage to the platform admins for the deploy gate
-(Citadel's admins today, through SQUIRE's `citadel` target). In CI there
+(Citadel's admins today, through Squire's `citadel` target). In CI there
 is no check that the approver exists or differs from the author, and git.wayne.edu runs GitLab Community Edition, which
 has no code owner approval. (Second pass: the GitLab protected-branches page still lists Code Owner approval as
 Premium and Ultimate.)
@@ -594,11 +594,11 @@ Why: an empty file turns a clear tool error into a second parse error in the mer
 
 Sources: [GitLab Code Quality: report requirements](https://docs.gitlab.com/ci/testing/code_quality/).
 
-**How the stack holds it: Not yet.** Tool errors go to stderr and stdout stays empty, so the PREFLIGHT redirect leaves an
+**How the stack holds it: Not yet.** Tool errors go to stderr and stdout stays empty, so the Preflight redirect leaves an
 empty artifact.
 
 Second pass: this is worse than it looks. GitLab says artifacts under `artifacts:reports` are "always uploaded,
-regardless of the job results", and the PREFLIGHT component sets `artifacts:when: always`. So the empty file does reach
+regardless of the job results", and the Preflight component sets `artifacts:when: always`. So the empty file does reach
 GitLab on exit 2 and is parsed there. The GitLab Code Quality page does not say what GitLab does with an empty file, so
 the exact failure in the merge request is unverified.
 
@@ -726,7 +726,7 @@ Why: a checker that is wrong in silence is dangerous.
 
 Sources: [GitLab: test with a sample project that exercises the tool](https://docs.gitlab.com/ci/components/).
 
-**How the stack holds it: Checked.** PROCTOR's pipeline runs PHPUnit on PHP 8.3 to 8.5 through the PREFLIGHT
+**How the stack holds it: Checked.** PROCTOR's pipeline runs PHPUnit on PHP 8.3 to 8.5 through the Preflight
 `php-test` component, with fixtures for pass, end of life, unbounded and expired override. The audit parsing path
 has no test: the CLI tests remove `composer` from the PATH, so no fixture produces a real advisory.
 
@@ -757,7 +757,7 @@ Sources: [Composer CLI: global options and environment variables](https://getcom
 inherits everything, and the audit command line carries no `--no-plugins`. It does use an argument array (8.2).
 
 ### 8.7 Treat the CI platform as part of the trust base (second pass)
-Keep the GitLab instance and its runners on a patched release, and say so in the PREFLIGHT docs.
+Keep the GitLab instance and its runners on a patched release, and say so in the Preflight docs.
 
 Why: GitLab's patch page for 2026-10-12 describes CVE-2026-97229, a CVSS 10.0 integer overflow in the CI/CD regular
 expression compiler of CE and EE, exploitable by an unauthenticated user, fixed in 19.2.8, 19.3.5 and 19.4.2. A gate
@@ -795,7 +795,7 @@ Practices tagged `Not yet` or `Documented`, each one line. Highest value first.
 18. 2.4: Ask for `config.platform.php` equal to the floor.
 19. 8.3: Add a timeout to child processes.
 20. 6.4: Write a valid empty report on tool errors.
-21. 4.7: Add a scheduled audit pipeline to the PREFLIGHT docs.
+21. 4.7: Add a scheduled audit pipeline to the Preflight docs.
 22. 8.5: Tag, sign and publish provenance for releases.
 23. 7.1 and 7.2: Build `proctor gate` with the ratchet, stages and fail-open exit.
 24. 2.5: Check the target image tag once the gate exists.
@@ -816,9 +816,9 @@ Added in the second pass (2026-10-27):
 31. 6.8: Escape app-supplied strings before printing, and add a test with a tag-like package name.
 32. 5.8: Warn on an override that matches nothing and on one close to expiry.
 33. 2.7: Put the security-end date and days left in the security-only warning.
-34. 3.7: Document "install from the lock, never update" in the PREFLIGHT guide, and ask authors not to re-tag.
+34. 3.7: Document "install from the lock, never update" in the Preflight guide, and ask authors not to re-tag.
 35. 4.12: Decide in the policy whether `require-dev` packages count, then pass `--no-dev` or not.
-36. 8.7: Name a minimum patched GitLab version in the PREFLIGHT guide.
+36. 8.7: Name a minimum patched GitLab version in the Preflight guide.
 37. 4.11: Re-read the Composer cooldown policy once 2.11 is stable, and decide whether to ask for it.
 38. 6.7 (tagged Enforced by construction): Add a test that the text output contains no ANSI escape codes.
 
@@ -908,7 +908,7 @@ Pages from the first pass that were re-read in the second pass: PHP supported ve
 Composer 2.10 release, GitLab Code Quality, GitLab CI/CD YAML reference, GitLab protected branches, PHPStan baseline,
 Semgrep blocking and errors, OpenSSF Scorecard checks, SLSA v1.0 levels.
 
-Stack design decisions used for tagging: the stack's enforcement-points decision, the stack's version-policy decision, the stack's deploy-gate decision, the stack's one-repo-per-project decision, the PROCTOR repo, and the PREFLIGHT repo.
+Stack design decisions used for tagging: the stack's enforcement-points decision, the stack's version-policy decision, the stack's deploy-gate decision, the stack's one-repo-per-project decision, the PROCTOR repo, and the Preflight repo.
 
 ## Platform assumptions
 
