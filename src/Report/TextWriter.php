@@ -60,7 +60,7 @@ final class TextWriter implements ReportWriter
      */
     private function headerLine(Report $report): string
     {
-        $parts = [sprintf('%s %s', Report::TOOL, Report::VERSION)];
+        $parts = [sprintf('%s %s', Report::TOOL, Report::version())];
         foreach ($report->tools as $name => $version) {
             $parts[] = sprintf('%s: %s', $name, $version ?? 'unknown');
         }

@@ -69,7 +69,7 @@ if (preg_match('/^(\d+)\s*([KMG])?B?$/i', trim($limit), $m) === 1) {
     }
 }
 
-$application = new class (Report::TOOL, Report::VERSION) extends Application {
+$application = new class (Report::TOOL, Report::version()) extends Application {
     public function doRun(InputInterface $input, OutputInterface $output): int
     {
         $errorOutput = $output instanceof ConsoleOutput ? $output->getErrorOutput() : $output;

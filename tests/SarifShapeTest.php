@@ -40,7 +40,7 @@ final class SarifShapeTest extends ProctorTestCase
 
         $driver = $run['tool']['driver'];
         self::assertSame(Report::TOOL, $driver['name']);
-        self::assertSame(Report::VERSION, $driver['version']);
+        self::assertSame(Report::version(), $driver['version']);
         self::assertSame('https://git.wayne.edu/enterprise-apps/proctor', $driver['informationUri']);
     }
 

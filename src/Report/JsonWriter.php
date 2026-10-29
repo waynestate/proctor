@@ -17,7 +17,7 @@ final class JsonWriter implements ReportWriter
     {
         $data = [
             'tool' => Report::TOOL,
-            'version' => Report::VERSION,
+            'version' => Report::version(),
             'path' => $report->path,
             'today' => $report->today->format('Y-m-d'),
             'result' => $report->result(),

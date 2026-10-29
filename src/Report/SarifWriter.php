@@ -41,7 +41,7 @@ final class SarifWriter implements ReportWriter
                     'tool' => [
                         'driver' => [
                             'name' => Report::TOOL,
-                            'version' => Report::VERSION,
+                            'version' => Report::version(),
                             'informationUri' => self::INFORMATION_URI,
                             'rules' => $this->rules($report),
                         ],
