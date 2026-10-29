@@ -12,6 +12,10 @@
 <meta name="theme-color" content="#0c5449">
 <meta property="og:title" content="PROCTOR: Watches the exam. Doesn't help.">
 <meta property="og:image" content="brand/proctor-avatar-512.png">
+<link rel="canonical" href="https://proctor.apps.wayne.edu/">
+<!-- For agents (ADR-0019): this page as Markdown, beside it. bin/agent-ready.php writes it from
+     Squire's kit, and the front controller also sends it to any client that asks for text/markdown. -->
+<link rel="alternate" type="text/markdown" href="index.md">
 <link rel="icon" href="brand/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="brand/favicon-32.png">
 <link rel="icon" type="image/png" sizes="64x64" href="brand/favicon-64.png">
@@ -21,6 +25,7 @@
   sheet goes on top: ruled paper, exam-book cardstock and a red pen.
 -->
 <link rel="stylesheet" href="assets/wayne-ui/wayne-ui.css">
+<link rel="stylesheet" href="assets/agent-ready.css">
 <link rel="stylesheet" href="assets/proctor.css">
 <script>
   /* Only candidates who are fine with motion get the live grading. Everyone
@@ -45,6 +50,7 @@
       <a href="#sheet-title">Answer sheet</a>
       <a href="#reports-title">Reports</a>
       <a href="#start-title">Quick start</a>
+      <a href="#agents-title">Agents</a>
       <a href="https://proof.apps.wayne.edu/proctor/">Proof</a>
     </nav>
   </div>
@@ -116,6 +122,17 @@
           <li><strong>3</strong> exit codes</li>
           <li><strong>0</strong> policy of its own</li>
         </ul>
+
+        <!-- The candidate number line: where an agent reads this paper. The script adds Copy page as
+             Markdown and Open in ChatGPT; without it, the plain links still work. -->
+        <nav class="ar-page candidate" aria-labelledby="candidate-label" data-ar-page>
+          <p class="ar-page__label" id="candidate-label">For your agent</p>
+          <ul class="ar-page__list">
+            <li><a class="ar-page__link" href="#agents-title">Sit it with an agent</a></li>
+            <li><a class="ar-page__link" href="index.md" type="text/markdown">This page as Markdown</a></li>
+            <li><a class="ar-page__link" href="llms.txt">llms.txt</a></li>
+          </ul>
+        </nav>
       </div>
 
     </div>
@@ -588,6 +605,117 @@ RESULT: fail (1 failures, 1 warnings)</code></pre>
     </div>
   </section>
 
+  <!-- ======================================================== open book -->
+  <!-- The prompts. Each is an exam paper the reader hands to their own agent: role, task, the
+       app's constraints, the output wanted, and a standing order to ask before guessing. The text
+       is plain HTML, so an agent reading this page (or index.md) gets it without the script;
+       agent-ready.js only adds the buttons. Keep the commands in step with the README:
+       bin/agent-ready.php --check fails a prompt that runs a command the docs do not. -->
+  <section class="sheet-sec agents" aria-labelledby="agents-title">
+    <div class="wrap">
+      <header class="sec-head">
+        <p class="sec-head__part">Open book</p>
+        <h2 id="agents-title">Sitting it with an agent</h2>
+        <p>Three papers, ready for the coding agent you already use. Copy one, or run it straight in OpenCode, Claude Code, Codex or ChatGPT. Open book, closed guesses: each paper tells the agent where to read and to ask before it assumes.</p>
+      </header>
+
+      <div class="papers">
+        <section class="ar-prompt ar-prompt--lead" id="prompt-get-started" aria-labelledby="prompt-get-started-title" data-ar-prompt data-reveal>
+          <header class="ar-prompt__head">
+            <span class="ar-prompt__glyph" aria-hidden="true">P1</span>
+            <div>
+              <p class="ar-prompt__kicker">Paper 1 · Any PHP app</p>
+              <h3 class="ar-prompt__title" id="prompt-get-started-title">Get started with PROCTOR</h3>
+              <p class="ar-prompt__desc">Install it, sit the exam on the app in front of you, and read every FAIL and WARN back with the smallest fix. Raw PHP, Laravel with Blade, or Laravel with Inertia and Vue.</p>
+            </div>
+          </header>
+          <pre class="ar-prompt__text"><code>You are a coding agent helping a Wayne State University developer run PROCTOR on the PHP app in this folder. PROCTOR is the check command of WELD, the Wayne State application stack: one vendor/bin/proctor check grades a PHP app against CREED's version policy and exits 0 (pass, warnings allowed), 1 (one or more failures) or 2 (a tool error).
+
+Read first:
+- https://proctor.apps.wayne.edu/llms.txt, the index of PROCTOR's pages, each one as Markdown. Fetch the pages you need; do not work from memory.
+- This app's composer.json and composer.lock, and package-lock.json if there is one: PROCTOR reads Vue and Inertia from it.
+- ADVISOR, the stack's MCP server, if it is connected: run_proctor_check runs the app's own vendor/bin/proctor and returns the findings, and policy_lookup answers support dates from CREED. If it is not connected, say so and work from the pages. How to add it: https://advisor.apps.wayne.edu/llms.txt
+
+Task:
+1. Say which kind of app this is: raw PHP, Laravel with Blade, or Laravel with Inertia and Vue. PROCTOR checks all three with the same command.
+2. If PROCTOR is not installed, give me the install command and wait: `composer require waynestate/proctor waynestate/creed --dev`
+3. Run the check, or ask ADVISOR to: `vendor/bin/proctor check --policy=vendor/waynestate/creed/policy/policy.json` (on Windows the path is vendor\bin\proctor).
+4. For every FAIL and WARN, say what it means and the smallest fix. Change nothing yet.
+
+Constraints:
+- PROCTOR holds no policy of its own; CREED's policy decides. Never guess a support date.
+- An override in policy-overrides.json needs a reason, an expiry and an approver. Never propose one to hide an end-of-life PHP: past end of life plus grace, no override counts.
+- Give separate commands for Windows (PowerShell), macOS and Linux wherever they differ.
+- Ask me before you guess, and before you touch anything that deploys.
+
+Output: a findings table (result, check, rule id, file, fix), the exit code, then the fixes as numbered steps, then your questions.</code></pre>
+        </section>
+
+        <h3 class="papers__title">Or sit it in CI</h3>
+        <section class="ar-prompt" id="prompt-gitlab" aria-labelledby="prompt-gitlab-title" data-ar-prompt data-reveal>
+          <header class="ar-prompt__head">
+            <span class="ar-prompt__glyph" aria-hidden="true">P2</span>
+            <div>
+              <p class="ar-prompt__kicker">Paper 2 · Hall G · GitLab</p>
+              <h3 class="ar-prompt__title" id="prompt-gitlab-title">PROCTOR in GitLab CI, through Preflight</h3>
+              <p class="ar-prompt__desc">Preflight's proctor component in the app's pipeline, with the findings on every merge request as Code Quality.</p>
+            </div>
+          </header>
+          <pre class="ar-prompt__text"><code>You are a coding agent adding PROCTOR to the GitLab pipeline of the PHP app in this folder, at Wayne State University. PROCTOR is the check command of WELD, the Wayne State application stack. Preflight is the stack's shared GitLab CI: its proctor component runs PROCTOR and publishes a Code Quality report, so the findings show on the merge request.
+
+Read first:
+- https://proctor.apps.wayne.edu/llms.txt, then Preflight's own index: https://preflight.apps.wayne.edu/llms.txt
+- This app's .gitlab-ci.yml, composer.json and composer.lock.
+- ADVISOR, the stack's MCP server, if it is connected: read_project_docs for preflight and proctor, and run_proctor_check to see today's findings before the pipeline does. If it is not connected, say so and work from the pages.
+
+Task:
+1. Check that waynestate/proctor and waynestate/creed are dev dependencies. If not, give me the command and wait: `composer require waynestate/proctor waynestate/creed --dev`
+2. Add Preflight's proctor component to .gitlab-ci.yml, at the version Preflight's page gives today, with proctor_command set to `vendor/bin/proctor check --format=codequality --policy=vendor/waynestate/creed/policy/policy.json`
+3. Keep every job the file already has. Show me the whole diff before you write it.
+
+Constraints:
+- Pin the component to a released version, never a branch.
+- If you add --php-runtime, give it the PHP of the image that serves the app, not the runner's. If you cannot tell, ask.
+- Strongly recommended: a git.wayne.edu instance runner. Say whether this project has one, or that you cannot tell.
+- Ask me before you guess, and before you push anything.
+
+Output: the diff, then what the merge request will show, then your questions.</code></pre>
+        </section>
+
+        <section class="ar-prompt" id="prompt-github" aria-labelledby="prompt-github-title" data-ar-prompt data-reveal>
+          <header class="ar-prompt__head">
+            <span class="ar-prompt__glyph" aria-hidden="true">P3</span>
+            <div>
+              <p class="ar-prompt__kicker">Paper 3 · Hall H · GitHub</p>
+              <h3 class="ar-prompt__title" id="prompt-github-title">PROCTOR in GitHub code scanning</h3>
+              <p class="ar-prompt__desc">The SARIF copy, uploaded on every push and pull request, with every action pinned the way the ci-pipelines check asks.</p>
+            </div>
+          </header>
+          <pre class="ar-prompt__text"><code>You are a coding agent adding PROCTOR to GitHub code scanning for the PHP app in this folder, at Wayne State University. PROCTOR is the check command of WELD, the Wayne State application stack. Its sarif format is what GitHub code scanning reads.
+
+Read first:
+- https://proctor.apps.wayne.edu/llms.txt, and PROCTOR's README, section GitHub code scanning, which has the workflow to start from.
+- This app's .github/workflows/, composer.json and composer.lock.
+- ADVISOR, the stack's MCP server, if it is connected: run_proctor_check shows today's findings before the workflow does. If it is not connected, say so and work from the pages.
+
+Task:
+1. Add a workflow, or a job in the existing one, that installs PROCTOR with `composer require waynestate/proctor --dev`, runs vendor/bin/proctor check with --format=sarif and CREED's policy, writes proctor.sarif, and uploads it with github/codeql-action/upload-sarif.
+2. Give the job permissions: security-events: write, and nothing more than it needs.
+3. Show me the whole file before you write it.
+
+Constraints:
+- Pin every uses: ref to a full 40-character commit SHA, with the version in a comment. PROCTOR's ci-pipelines check warns on anything else.
+- If this app has no GitHub repository, stop and say so: GitLab is the primary, and Paper 2 is the one to sit.
+- Ask me before you guess, and before you push anything.
+
+Output: the workflow file, then what code scanning will show, then your questions.</code></pre>
+        </section>
+
+        <p class="papers__fine">The agent reads the same pages you do: <a href="llms.txt">llms.txt</a> lists them, <a href="llms-full.txt">llms-full.txt</a> holds them in one file, and this page has a <a href="index.md" type="text/markdown">Markdown twin</a>. Nothing here phones home; the buttons only copy text or open the tool you picked. <span class="hand redpen-aside">Show your working.</span></p>
+      </div>
+    </div>
+  </section>
+
   <!-- ===================================================== seating chart -->
   <section class="sheet-sec seating-sec" aria-labelledby="seats-title">
     <div class="wrap">
@@ -638,6 +766,7 @@ RESULT: fail (1 failures, 1 warnings)</code></pre>
 </footer>
 
 <div class="toast" role="status" aria-live="polite"></div>
+<script src="assets/agent-ready.js" defer></script>
 <script src="assets/proctor.js" defer></script>
 </body>
 </html>

@@ -1,0 +1,42 @@
+# PROCTOR
+
+> PROCTOR is the Wayne State stack's check command: one vendor/bin/proctor check grades a PHP app against CREED's policy and writes text, JSON, GitLab Code Quality or SARIF.
+
+**Policy Rules Of Code, Tested On Release.** The invigilator your composer.lock didn't know it needed: no phones,
+no EOL PHP.
+
+PROCTOR is a framework-free PHP CLI that measures a PHP application against
+the WSU version policy. It reads the app's composer.json and composer.lock,
+decides the support state of the app's PHP floor from a policy file, and
+reports each check as pass, warning, info or fail. The checks and their rules
+come from the stack's version policy decision and from the policy file
+passed with `--policy`; PROCTOR itself holds no policy of its own.
+
+Checks: `composer ci` (the same command runs on GitLab and GitHub). Front page: [`site/index.html`](https://github.com/waynestate/proctor/blob/HEAD/site/index.html).
+On Citadel it is served by the raw-PHP deploy layer in [`deploy/`](https://github.com/waynestate/proctor/blob/HEAD/deploy/): a Squire kit whose front controller serves `site/` behind HELMET's security headers. For local development, keep serving `site/` directly.
+
+> [!NOTE]
+> This repository is published from Wayne State University's internal GitLab and mirrored here. Changes land there
+> first; Wayne State developers open issues and merge requests on the internal project.
+
+Every page below is Markdown. The HTML pages send the same Markdown to a client that asks for `text/markdown`. Written by Squire's agent-ready kit from the README and the pages; do not edit.
+
+## Pages
+
+- [PROCTOR: Watches the exam. Doesn't help.](https://proctor.apps.wayne.edu/index.md): PROCTOR is the Wayne State stack's check command: one vendor/bin/proctor check grades a PHP app against CREED's policy and writes text, JSON, GitLab Code Quality or SARIF.
+
+## Prompts
+
+- [Get started with PROCTOR](https://proctor.apps.wayne.edu/#prompt-get-started): Install it, sit the exam on the app in front of you, and read every FAIL and WARN back with the smallest fix. Raw PHP, Laravel with Blade, or Laravel with Inertia and Vue. The prompt itself is in https://proctor.apps.wayne.edu/index.md.
+- [PROCTOR in GitLab CI, through Preflight](https://proctor.apps.wayne.edu/#prompt-gitlab): Preflight's proctor component in the app's pipeline, with the findings on every merge request as Code Quality. The prompt itself is in https://proctor.apps.wayne.edu/index.md.
+- [PROCTOR in GitHub code scanning](https://proctor.apps.wayne.edu/#prompt-github): The SARIF copy, uploaded on every push and pull request, with every action pinned the way the ci-pipelines check asks. The prompt itself is in https://proctor.apps.wayne.edu/index.md.
+
+## Source
+
+- [README](https://github.com/waynestate/proctor/blob/HEAD/README.md): the project's README, with install, commands and checks
+- [Everything in one file](https://proctor.apps.wayne.edu/llms-full.txt): the README and every page above, as one Markdown file
+
+## Optional
+
+- [ADVISOR](https://advisor.apps.wayne.edu/llms.txt): the stack's MCP server: read-only tools that answer from CREED's policy and the parts' docs instead of from memory
+- [WELD](https://weld.apps.wayne.edu/llms.txt): the Wayne State application stack: every part, and the reference app

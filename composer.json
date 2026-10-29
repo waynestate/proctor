@@ -39,17 +39,22 @@
         "fix": "pint",
         "analyse": "phpstan analyse --memory-limit=1G",
         "creed-copy:check": "php scripts/creed-copy-check.php",
+        "site:agent-ready": "php bin/agent-ready.php",
+        "site:agent-ready-check": "php bin/agent-ready.php --check",
         "ci": [
             "@composer validate --strict",
             "phpunit",
             "pint --test",
             "phpstan analyse --memory-limit=1G",
+            "@site:agent-ready-check",
             "@composer audit"
         ]
     },
     "scripts-descriptions": {
-        "ci": "Run every CI check: manifest, tests, style, static analysis, audit",
-        "creed-copy:check": "Verify the generated CREED reader copy in src/Creed/ matches a fresh export (set CREED_PATH to the CREED checkout)"
+        "ci": "Run every CI check: manifest, tests, style, static analysis, agent-ready files, audit",
+        "creed-copy:check": "Verify the generated CREED reader copy in src/Creed/ matches a fresh export (set CREED_PATH to the CREED checkout)",
+        "site:agent-ready": "Rewrite the Markdown twins, llms.txt, llms-full.txt, robots.txt and sitemap.xml in site/ (Squire's agent-ready kit).",
+        "site:agent-ready-check": "Fail when the agent-ready files are stale, a page lacks its Markdown link, a prompt drifts from the docs, or the kit was edited here."
     },
     "bin": [
         "bin/proctor"
