@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.2.4 (2026-10-29)
+
 ### Fixed
 
 - A scan of a large app no longer exits 255 with "Allowed memory size exhausted": each file's syntax tree is dropped before the next file is parsed, and `bin/proctor` raises a memory limit below 512M to 512M (a higher limit or -1 is left alone).
