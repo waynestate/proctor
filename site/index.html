@@ -160,7 +160,7 @@
       <header class="sec-head">
         <p class="sec-head__part">Part A</p>
         <h2 id="questions-title">The questions</h2>
-        <p>Nine checks, asked in this order on every run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures.</p>
+        <p>Nine of PROCTOR's fourteen checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures.</p>
       </header>
 
       <ol class="questions">
@@ -238,7 +238,6 @@
           <li><strong>The WayneUI contract.</strong> Is the interface the shared one, at a supported version?</li>
           <li><strong>Node versions.</strong> Today only the Vue and Inertia locks are read.</li>
           <li><strong>Lock in sync.</strong> A lock whose hash no longer matches <code>composer.json</code>.</li>
-          <li><strong>The policy's own banned list.</strong> Read <code>rules.banned_constraints</code> instead of a list in code.</li>
         </ul>
       </div>
     </div>
@@ -360,14 +359,20 @@ RESULT: pass</code></pre>
 
         <div class="carbon carbon--white" role="tabpanel" id="pane-text" aria-labelledby="tab-text" tabindex="0">
           <p class="carbon__copy">White copy · for people · <code>--format=text</code> (the default)</p>
-<pre class="carbon__pre"><code>PASS php-floor: php floor 8.4 is active
+<pre class="carbon__pre"><code>proctor 0.2.6 | composer: 2.10.3
+Policy: bundled (/app/src/Creed/policy.json), refreshed 2026-10-29, 0 days ago
+PASS php-floor: php floor 8.4 is active
 FAIL unbounded-constraints: vendor/dev constraint "dev-master" is unbounded
 FAIL unbounded-constraints: vendor/any constraint "*" is unbounded
+INFO composer-config: require.php is set but config.platform.php is not, so the lock resolves against the local PHP
 PASS lock-committed: composer.lock is present
 PASS portability: no hard-coded platform facts found
 PASS mysql56: no Laravel migrations found; skipped
+PASS destructive-deploy: no destructive deploy commands found
 PASS ci-pipelines: both pipelines run composer ci
 WARN composer-audit: composer audit could not run: No installed packages found. …
+PASS composer-version: composer 2.10.3 is at or above the 2.7.7 floor
+PASS repo-url-credentials: no credentials found in repository URLs
 RESULT: fail (2 failures, 1 warnings)</code></pre>
         </div>
 
@@ -377,18 +382,36 @@ RESULT: fail (2 failures, 1 warnings)</code></pre>
     "tool": "proctor",
     "version": "0.2.6",
     "path": "tests/fixtures/apps/unbounded-app",
-    "today": "2026-10-28",
+    "today": "2026-10-29",
     "result": "fail",
     "exit": 1,
+    "tools": {
+        "composer": "2.10.3"
+    },
+    "policy": {
+        "origin": "bundled",
+        "path": "/app/src/Creed/policy.json",
+        "refreshed_on": "2026-10-29",
+        "age_days": 0
+    },
     "findings": [
         {
-            "check_id": "unbounded-constraints",
-            "status": "fail",
-            "message": "vendor/any constraint \"*\" is unbounded",
+            "check_id": "php-floor",
+            "rule_id": "proctor/php-floor",
+            "status": "pass",
+            "message": "php floor 8.4 is active",
             "path": "composer.json",
-            "line": 5
+            "line": 1
         },
-        … seven more findings
+        {
+            "check_id": "unbounded-constraints",
+            "rule_id": "proctor/unbounded-constraints/unbounded",
+            "status": "fail",
+            "message": "vendor/dev constraint \"dev-master\" is unbounded",
+            "path": "composer.json",
+            "line": 4
+        },
+        … ten more findings
     ],
     "overrides": []
 }</code></pre>
@@ -398,20 +421,20 @@ RESULT: fail (2 failures, 1 warnings)</code></pre>
           <p class="carbon__copy">Green copy · for the merge request · <code>--format=codequality</code></p>
 <pre class="carbon__pre"><code>[
     {
-        "description": "vendor/any constraint \"*\" is unbounded",
-        "check_name": "unbounded-constraints",
-        "fingerprint": "922e331be083d4bd5975b81bb630bc275e71c7aa74c18218bf817bddf2303ddb",
+        "description": "vendor/dev constraint \"dev-master\" is unbounded",
+        "check_name": "proctor/unbounded-constraints/unbounded",
+        "fingerprint": "5e27f1a0f163c3ad1c0d2f10dbac60e87ae91759f0d31c3551fad2570a66468e",
         "severity": "major",
         "location": {
             "path": "composer.json",
             "lines": {
-                "begin": 5
+                "begin": 4
             }
         }
     },
-    … two more findings
+    … three more findings
 ]</code></pre>
-          <p class="carbon__note">Fingerprints hash the check, path and message, never the line number, so a finding keeps its name when the file moves.</p>
+          <p class="carbon__note">Fingerprints hash the rule id, path and message, never the line number, so a finding keeps its name when the file moves.</p>
         </div>
 
         <div class="carbon carbon--gold" role="tabpanel" id="pane-sarif" aria-labelledby="tab-sarif" tabindex="0" hidden>
@@ -424,14 +447,14 @@ RESULT: fail (2 failures, 1 warnings)</code></pre>
             "tool": { "driver": { "name": "proctor", "version": "0.2.6", … } },
             "results": [
                 {
-                    "ruleId": "unbounded-constraints",
+                    "ruleId": "proctor/unbounded-constraints/unbounded",
                     "level": "error",
                     "message": {
-                        "text": "vendor/any constraint \"*\" is unbounded"
+                        "text": "vendor/dev constraint \"dev-master\" is unbounded"
                     },
-                    "locations": [ … "uri": "composer.json" … "startLine": 5 … ],
+                    "locations": [ … "uri": "composer.json" … "startLine": 4 … ],
                     "partialFingerprints": {
-                        "proctorFingerprint/v1": "922e331be083d4bd…"
+                        "proctorFingerprint/v1": "5e27f1a0f163c3ad…"
                     }
                 }
             ]
@@ -561,7 +584,7 @@ RESULT: fail (1 failures, 1 warnings)</code></pre>
         </div>
       </div>
 
-      <p class="start__opts">Options: <code>--path=.</code> · <code>--format=text|json|codequality|sarif</code> · <code>--policy=&lt;file&gt;</code> (required) · <code>--today=YYYY-MM-DD</code> for runs that agree on any day · <code>--php-runtime=X.Y.Z</code> for the <code>unpatched</code> check.</p>
+      <p class="start__opts">Options: <code>--path=.</code> · <code>--format=text|json|codequality|sarif</code> · <code>--policy=&lt;file&gt;</code> (optional; defaults to the policy in vendor/waynestate/creed, then the bundled one) · <code>--today=YYYY-MM-DD</code> for runs that agree on any day · <code>--php-runtime=X.Y.Z</code> for the <code>unpatched</code> check.</p>
     </div>
   </section>
 
