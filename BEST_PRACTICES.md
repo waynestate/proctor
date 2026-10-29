@@ -131,8 +131,8 @@ requirements at deploy time because the setting weakens dependency checks.
 
 Sources: [Composer config: platform](https://getcomposer.org/doc/06-config.md).
 
-**How the stack holds it: Not yet.** PROCTOR's own `composer.json` sets `platform.php` to `8.3.0`, but no check asks
-other apps to do the same.
+**How the stack holds it: Checked.** `composer-config` notes (info) when `require.php` is set and `config.platform.php`
+is not, so the gap shows on every run.
 
 ### 2.5 Check the PHP that will serve the app, not only what composer.json declares
 The deploy image is the real floor. A declared `^8.4` on an app that deploys on an older image proves nothing.
@@ -238,7 +238,8 @@ Why: plugins run code during install, and an open allow-list lets any dependency
 
 Sources: [Composer config: allow-plugins, secure-http, lock](https://getcomposer.org/doc/06-config.md).
 
-**How the stack holds it: Not yet.** No check reads the `config` block.
+**How the stack holds it: Checked.** `composer-config` warns when `allow-plugins` is `true`, `secure-http` is `false`,
+`lock` is `false` or `audit.block-insecure` is `false`. Warning only: an app that passes today keeps passing.
 
 ### 3.7 Install from the lock in CI and never re-tag a release (second pass)
 In CI run `composer install`, which reproduces the locked versions. Do not run `composer update` in a deploy pipeline.

@@ -76,6 +76,7 @@ vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--po
 - `php-floor`: fails when the lowest PHP version allowed by `require.php` is past security support plus the grace window, when composer.json has no usable php constraint, or when there is no composer.json at all.
 - `unpatched`: warns when a locked component is behind the policy's `latest_patch` for its version line, and passes when it is current. Reads laravel from composer.lock (`laravel/framework`), vue and inertia from package-lock.json (`vue`, `@inertiajs/vue3`), and the PHP runtime from `--php-runtime`. No finding when the component, its version line, or `latest_patch` is absent from the policy.
 - `unbounded-constraints`: fails for every runtime constraint that is `*` or names a dev- branch.
+- `composer-config`: warns when composer.json opens a door Composer closes by default: `allow-plugins` set to `true`, `secure-http` set to `false`, `lock` set to `false`, or `audit.block-insecure` set to `false`; notes when `require.php` is set without `config.platform.php`. Warning and info only, never a fail, so an app that passes today keeps passing.
 - `lock-committed`: fails when composer.lock is missing from the app path.
 - `portability`: warns when code hard-codes a platform fact: an absolute host path, a hard-coded proxy address, a local-disk session store, or a php_value/php_flag line in .htaccess. PHP files are matched on the syntax tree (nikic/php-parser with names resolved), not with regular expressions, so a comment or string that merely mentions a banned call is not flagged and a call split over several lines, or hidden behind a `use function ... as ...` alias, is. A call through a variable (`$f()`) is reported as an info note, never as a pass.
 - `mysql56`: warns when migrations or app code use MySQL features the shared 5.6 server rejects: JSON columns and JSON queries, generated columns, `renameColumn`/`renameIndex`, vector, invisible and spatial columns, `Schema::hasColumn`-style introspection, raw SQL with 5.7+ syntax, the upsert row alias, indexed strings over 191 characters, date columns defaulting to the current time, and the `db:show`/`db:monitor` commands. Citadel's shared MySQL server is 5.6, so migrations must avoid newer features. Warnings, not failures: an app on its own newer database is not affected. Fix by avoiding the feature (a raw `ALTER TABLE ... CHANGE` instead of `renameColumn`, `timestamp` instead of a date column defaulting to now, `Schema::defaultStringLength(191)` in `boot()`) or by moving the app to its own database.
@@ -142,6 +143,12 @@ The full set, grouped by check:
 | `unbounded-constraints` | `proctor/unbounded-constraints` |
 | `unbounded-constraints` | `proctor/unbounded-constraints/unbounded` |
 | `unbounded-constraints` | `proctor/unbounded-constraints/repository` |
+| `composer-config` | `proctor/composer-config` |
+| `composer-config` | `proctor/composer-config/allow-plugins-all` |
+| `composer-config` | `proctor/composer-config/secure-http-off` |
+| `composer-config` | `proctor/composer-config/lock-off` |
+| `composer-config` | `proctor/composer-config/audit-blocking-off` |
+| `composer-config` | `proctor/composer-config/platform-php-unset` |
 | `portability` | `proctor/portability` |
 | `portability` | `proctor/portability/host-path` |
 | `portability` | `proctor/portability/proxy-address` |

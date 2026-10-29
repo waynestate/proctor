@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- `composer-config`: new check (PROCTOR-17, PROCTOR-18): warns when composer.json sets `allow-plugins` to `true`, `secure-http` to `false`, `lock` to `false` or `audit.block-insecure` to `false`, and notes when `require.php` is set without `config.platform.php`. Warning and info only: never a fail, so an app that passes today keeps passing.
+
 ## 0.2.1 (2026-10-29)
 
 - PHPStan now includes Pinstripe's raw preset (`vendor/waynestate/pinstripe/phpstan/raw.neon`) instead of a hand copy of its parameters, so level 8, the ignore-reporting flags and the deprecation checks follow the coding standard from one place. PROCTOR keeps only its own paths and PHP version range. The new deprecation rules caught one call: `bin/proctor` now registers its command with `Application::addCommand()`, because `add()` is deprecated since Symfony 7.4.
