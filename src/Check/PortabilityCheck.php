@@ -36,6 +36,16 @@ final class PortabilityCheck implements CheckInterface
     /** Directory names skipped at any depth. */
     private const SKIP_DIRS = ['vendor', 'node_modules', 'storage', 'tests', '.git'];
 
+    /**
+     * The top-level directory Laravel fills with generated files after
+     * `php artisan optimize` (config.php, routes-v7.php, services.php,
+     * packages.php, events.php). It is build output, not app code, so it is
+     * skipped only when the project is a Laravel app: an artisan file at the
+     * project root. A raw-PHP app that keeps its own bootstrap/cache/ folder
+     * is scanned as before.
+     */
+    private const LARAVEL_CACHE_DIR = 'bootstrap/cache';
+
     private readonly BannedPatterns $rules;
 
     public function __construct(?BannedPatterns $rules = null)
@@ -103,7 +113,10 @@ final class PortabilityCheck implements CheckInterface
     /**
      * The relative paths (forward slashes) of the files this check scans:
      * every *.php file, every file under the top-level config/ directory,
-     * and every file named .htaccess.
+     * and every file named .htaccess. Skipped at any depth: vendor/,
+     * node_modules/, storage/, tests/ and .git/. In a Laravel app (an artisan
+     * file at the project root) the top-level bootstrap/cache/ is skipped as
+     * well: it holds the generated output of `php artisan optimize`.
      *
      * @param string $appPath the application path
      *
@@ -112,9 +125,18 @@ final class PortabilityCheck implements CheckInterface
     private function filesToScan(string $appPath): array
     {
         $appPath = rtrim($appPath, '/\\');
+        $skipLaravelCache = is_file($appPath . '/artisan');
         $inner = new RecursiveDirectoryIterator($appPath, FilesystemIterator::SKIP_DOTS);
-        $outer = new RecursiveCallbackFilterIterator($inner, static function (SplFileInfo $current): bool {
-            return !($current->isDir() && in_array($current->getBasename(), self::SKIP_DIRS, true));
+        $outer = new RecursiveCallbackFilterIterator($inner, static function (SplFileInfo $current) use ($appPath, $skipLaravelCache): bool {
+            if (!$current->isDir()) {
+                return true;
+            }
+            if (in_array($current->getBasename(), self::SKIP_DIRS, true)) {
+                return false;
+            }
+
+            return !($skipLaravelCache
+                && self::LARAVEL_CACHE_DIR === str_replace('\\', '/', substr($current->getPathname(), strlen($appPath) + 1)));
         });
         $iterator = new RecursiveIteratorIterator($outer, RecursiveIteratorIterator::LEAVES_ONLY);
 
