@@ -82,6 +82,7 @@ vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--po
 - `ci-pipelines`: for stack packages (composer.json `name` starting with `waynestate/`), fails when `.gitlab-ci.yml` or `.github/workflows/ci.yml` is missing or runs no `composer ci`; for any other project, a missing or incomplete `.gitlab-ci.yml` is a warning and `.github/workflows/ci.yml` is optional. Warns when a GitHub `uses:` ref is not a 40-hex commit SHA. The proctor fails the stack's own exam halls, and only leaves a note for everyone else's.
 - `composer-audit`: fails for advisories at or above the policy's `audit_severity_threshold`, warns for lower ones, and reports info when composer or the lock file is absent.
 - `composer-version`: fails when the Composer on PATH carries the command-injection holes CVE-2024-35241 and CVE-2024-35242 (2.2.x below 2.2.24, or any other 2.x below 2.7.7) or is Composer 1, which is end of life; warns when composer cannot be run. The invigilator checks its own pen: [GHSA-47f6-5gq3-vx9c](https://github.com/advisories/GHSA-47f6-5gq3-vx9c) and [GHSA-v9qv-c7wm-wgmf](https://github.com/advisories/GHSA-v9qv-c7wm-wgmf).
+- `repo-url-credentials`: warns when a credential is written into a package source URL: a deploy token in the userinfo of a composer.json repository URL or a composer.lock source/dist URL (`https://gitlab+deploy-token-12:***@host/group/lib.git`), a bare token user of 20+ characters, a `private_token`, `access_token`, `token` or `password` query parameter, or a `.npmrc` line that sets `_authToken`, `_auth` or `_password` to a literal value (`${SOME_VAR}` is fine). The secret is masked as `***` in the message, so the report itself is safe to hand back. Warning, not failure: about sixteen production apps carry such URLs today (D-034). Fix by moving the token to `auth.json`, which is gitignored, or a CI variable, and using one registry URL without credentials. The proctor spots the answer key taped inside the desk before the student does.
 - `overrides`: fails for every expired entry in policy-overrides.json.
 
 ## Exit codes
@@ -175,6 +176,7 @@ The full set, grouped by check:
 | `composer-version` | `proctor/composer-version` |
 | `composer-version` | `proctor/composer-version/not-found` |
 | `composer-version` | `proctor/composer-version/could-not-determine` |
+| `repo-url-credentials` | `proctor/repo-url-credentials` |
 
 `tests/RuleIdContractTest.php` keeps this table in step with the checks: a rule
 id that is emitted but not listed here fails the suite.
