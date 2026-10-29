@@ -1,0 +1,14 @@
+{
+    "require": {
+        "php": "^8.4",
+        "symfony/console": "^7.1"
+    },
+    "config": {
+        "allow-plugins": true,
+        "secure-http": false,
+        "lock": false,
+        "audit": {
+            "block-insecure": false
+        }
+    }
+}
