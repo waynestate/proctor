@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Changed: the deploy layer's Squire kit is refreshed to 0.3.3 (release options can now live in ./.env.squire, and SQUIRE_PROCTOR=enforce can stop a release on failing checks).
+- Changed: the deploy layer's Squire kit is refreshed to 0.3.4 (the local .env.squire file is now git-ignored).
 
 ## 0.2.7 (2026-10-29)
 
