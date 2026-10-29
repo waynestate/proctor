@@ -23,11 +23,15 @@
         "humbug/box": "4.7.1",
         "phpunit/phpunit": "^11.5",
         "laravel/pint": "^1.32",
-        "phpstan/phpstan": "^2.1"
+        "phpstan/phpstan": "^2.1",
+        "waynestate/pinstripe": "^0.1"
     },
     "config": {
         "platform": {
             "php": "8.3.0"
+        },
+        "allow-plugins": {
+            "phpstan/extension-installer": true
         }
     },
     "scripts": {
