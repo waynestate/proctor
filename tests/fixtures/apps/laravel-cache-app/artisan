@@ -1,0 +1,15 @@
+#!/usr/bin/env php
+<?php
+
+/*
+|--------------------------------------------------------------------------
+| Laravel fixture
+|--------------------------------------------------------------------------
+|
+| This file only marks the fixture as a Laravel app, the way the real
+| artisan file does at a project root. Its contents are never read by
+| the check.
+|
+*/
+
+exit(0);

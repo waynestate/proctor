@@ -88,6 +88,52 @@ final class PortabilityCheckTest extends TestCase
         self::assertSame('no hard-coded platform facts found', $findings[0]->message);
     }
 
+    public function testLaravelGeneratedCacheIsSkipped(): void
+    {
+        $findings = (new PortabilityCheck())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/laravel-cache-app'),
+        );
+
+        // The same file sits in src/ and in bootstrap/cache/. Only the src/
+        // copy is reported: the artisan file marks the app as Laravel, and
+        // bootstrap/cache/ holds the generated output of
+        // `php artisan optimize`, not app code.
+        self::assertSame(
+            [
+                ['host-path', 'src/Paths.php', 5],
+            ],
+            $this->triples($findings),
+        );
+        foreach ($findings as $finding) {
+            self::assertStringNotContainsString('bootstrap/cache/', (string) $finding->path);
+        }
+    }
+
+    public function testRawPhpAppScansItsOwnBootstrapCache(): void
+    {
+        $appPath = sys_get_temp_dir() . '/proctor-portability-' . uniqid('', true);
+        self::assertTrue(is_dir($appPath) || mkdir($appPath . '/bootstrap/cache', 0777, true));
+        file_put_contents($appPath . '/bootstrap/cache/config.php', "<?php\n\n\$log = '/var/log/app.log';\n");
+
+        try {
+            $findings = (new PortabilityCheck())->run($this->contextFor($appPath));
+
+            // No artisan file at the root, so this is a raw-PHP app and its
+            // own bootstrap/cache/ folder is scanned like any other.
+            self::assertSame(
+                [
+                    ['host-path', 'bootstrap/cache/config.php', 3],
+                ],
+                $this->triples($findings),
+            );
+        } finally {
+            unlink($appPath . '/bootstrap/cache/config.php');
+            rmdir($appPath . '/bootstrap/cache');
+            rmdir($appPath . '/bootstrap');
+            rmdir($appPath);
+        }
+    }
+
     public function testWindowsDrivePathIsAHostPath(): void
     {
         $appPath = sys_get_temp_dir() . '/proctor-portability-' . uniqid('', true);
