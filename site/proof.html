@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en" data-theme="wsu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="stack-env" content="auto">
+<script src="assets/stack-env.js" defer></script>
+<title>PROCTOR proof: 82 Wayne State apps sat the exam</title>
+<meta name="description" content="PROCTOR's proof of work: 82 Wayne State application repositories checked against CREED's policy on 2026-10-28, the retake after a fix, and the command to repeat it.">
+<meta name="theme-color" content="#0c5449">
+<meta property="og:title" content="PROCTOR proof: 82 Wayne State apps sat the exam">
+<meta property="og:image" content="brand/proctor-avatar-512.png">
+<link rel="icon" href="brand/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="brand/favicon-32.png">
+<link rel="icon" type="image/png" sizes="64x64" href="brand/favicon-64.png">
+<link rel="stylesheet" href="assets/wayne-ui/wayne-ui.css">
+<link rel="stylesheet" href="assets/proctor.css">
+<link rel="stylesheet" href="assets/proof.css">
+<script>
+  /* Motion only for people who are fine with it. Everyone else gets the
+     finished record: every square filled, every number already counted. */
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+    document.documentElement.classList.add("motion");
+  }
+</script>
+</head>
+<body>
+<a class="wsu-skip-link" href="#main">Skip to content</a>
+
+<header class="masthead">
+  <div class="wrap masthead__row">
+    <a class="masthead__brand" href="index.html">
+      <img class="masthead__mark" src="brand/proctor-avatar-256.png" width="34" height="34" alt="">
+      <span class="masthead__name">PROCTOR</span>
+      <span class="masthead__form">Form 0.1</span>
+    </a>
+    <nav class="masthead__nav" aria-label="Sections">
+      <a href="index.html">Front page</a>
+      <a href="#tally">Tally</a>
+      <a href="#marks">Marks</a>
+      <a href="#retake">Retake</a>
+      <a href="#run">Run it</a>
+      <a href="#limits">Limits</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="proof">
+
+  <section class="proof-hero" aria-labelledby="proof-title">
+    <div class="proof-wrap">
+      <p class="proof-kicker">Exam log · 2026-10-28 · 82 candidates</p>
+      <h1 class="proof-hero__line" id="proof-title"><span class="n">82</span> Wayne State applications run through PROCTOR on 2026-10-28: <span class="n">0</span> passed, <span class="n">81</span> flagged, <span class="n">1</span> tool error.</h1>
+      <p class="proof-hero__sub">Each app was copied with its secrets stripped and checked inside <code>php:8.4-cli</code>, with Wayne State's servers out of reach, against CREED's policy for that date. The first sitting turned up 31 apps PROCTOR could not grade at all. That was fixed and every app sat the exam again; these are the retake's marks.</p>
+      <ul class="proof-meta" aria-label="This run"><li>PROCTOR <b>0.2.0 + fix</b></li><li>commit <b>efc2341</b></li><li>policy <b>CREED, 2026-10-28</b></li><li>image <b>php:8.4-cli</b></li><li>median per app <b>23 s</b></li></ul>
+    </div>
+  </section>
+
+  <section class="proof-sec" id="tally" aria-labelledby="tally-title" data-arrive>
+    <div class="proof-wrap">
+      <p class="proof-kicker">Part 1 · The tally</p>
+      <h2 class="proof-h2" id="tally-title">Eighty-two papers, marked</h2>
+      <p class="proof-lede">An app passes when PROCTOR exits 0: no failing finding. It is flagged when PROCTOR exits 1 with a report that names each problem, its rule and its file. That is PROCTOR doing its job. A tool error is a crash, a report that does not parse, or any other exit code; those are PROCTOR's fault.</p>
+      <ul class="proof-tally"><li class="proof-tile proof-tile--pass"><span class="proof-tile__n" data-count="0">0</span><span class="proof-tile__k">Passed</span><span class="proof-tile__d">no failing finding</span></li><li class="proof-tile proof-tile--flag"><span class="proof-tile__n" data-count="81">81</span><span class="proof-tile__k">Flagged</span><span class="proof-tile__d">a report with at least one fail</span></li><li class="proof-tile proof-tile--err"><span class="proof-tile__n" data-count="1">1</span><span class="proof-tile__k">Tool error</span><span class="proof-tile__d">out of memory on one very large tree; fix queued</span></li><li class="proof-tile proof-tile--na"><span class="proof-tile__n" data-count="0">0</span><span class="proof-tile__k">Not applicable</span><span class="proof-tile__d">every app could be checked</span></li></ul>
+      <p class="sr-only proof-sr">82 applications, one square each: 0 passed, 81 flagged, 1 tool errors, 0 not applicable.</p><ol class="units" aria-hidden="true"><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--err"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li><li class="units__u units__u--flag"></li></ol>
+      <ul class="legend" aria-hidden="true"><li class="l-pass">Passed</li><li class="l-flag">Flagged</li><li class="l-err">Tool error</li><li class="l-na">Not applicable</li></ul>
+      <p class="proof-note">One bubble per application, in the order of its anonymous id. This repository is public, so the apps are counted and never named.</p>
+    </div>
+  </section>
+
+  <section class="proof-sec" id="marks" aria-labelledby="marks-title" data-arrive>
+    <div class="proof-wrap">
+      <p class="proof-kicker">Part 2 · The marks</p>
+      <h2 class="proof-h2" id="marks-title">What PROCTOR wrote in the margin</h2>
+      <p class="proof-lede">How many of the 82 apps got each rule at least once. The per-app reports stay in the stack's internal record.</p>
+      <div class="proof-grid2"><div><h3 class="proof-h3">Fails: these stop a pipeline</h3><ul class="bars" aria-label="Apps with each failing rule"><li><span class="bars__k"><code>php-floor</code>: PHP floor below a supported line, or none</span><span class="bars__track" aria-hidden="true"><span class="bars__fill" style="--w:92.7%"></span></span><span class="bars__n">76</span></li><li><span class="bars__k"><code>lock-committed</code>: no <code>composer.lock</code> in the repo</span><span class="bars__track" aria-hidden="true"><span class="bars__fill" style="--w:36.6%"></span></span><span class="bars__n">30</span></li><li><span class="bars__k"><code>composer-audit</code>: a security advisory</span><span class="bars__track" aria-hidden="true"><span class="bars__fill" style="--w:24.4%"></span></span><span class="bars__n">20</span></li><li><span class="bars__k"><code>unbounded-constraints</code>: a <code>*</code> or open range</span><span class="bars__track" aria-hidden="true"><span class="bars__fill" style="--w:15.9%"></span></span><span class="bars__n">13</span></li><li><span class="bars__k"><code>destructive-deploy</code></span><span class="bars__track" aria-hidden="true"><span class="bars__fill" style="--w:4.9%"></span></span><span class="bars__n">4</span></li><li><span class="bars__k"><code>ci-pipelines</code>: no pipeline file</span><span class="bars__track" aria-hidden="true"><span class="bars__fill" style="--w:2.4%"></span></span><span class="bars__n">2</span></li></ul></div><div><h3 class="proof-h3">Warnings: these get a comment</h3><ul class="bars" aria-label="Apps with each warning"><li><span class="bars__k"><code>ci-pipelines</code>: no GitLab pipeline</span><span class="bars__track" aria-hidden="true"><span class="bars__fill" style="--w:95.1%"></span></span><span class="bars__n">78</span></li><li><span class="bars__k"><code>composer-audit</code>: advisory warnings</span><span class="bars__track" aria-hidden="true"><span class="bars__fill" style="--w:29.3%"></span></span><span class="bars__n">24</span></li><li><span class="bars__k"><code>portability</code>: a host path in code</span><span class="bars__track" aria-hidden="true"><span class="bars__fill" style="--w:17.1%"></span></span><span class="bars__n">14</span></li><li><span class="bars__k"><code>mysql56</code>: schema MySQL 5.6 cannot run</span><span class="bars__track" aria-hidden="true"><span class="bars__fill" style="--w:9.8%"></span></span><span class="bars__n">8</span></li><li><span class="bars__k"><code>portability</code>: a file PHP 8 cannot parse</span><span class="bars__track" aria-hidden="true"><span class="bars__fill" style="--w:9.8%"></span></span><span class="bars__n">8</span></li><li><span class="bars__k"><code>composer-audit</code>: could not run</span><span class="bars__track" aria-hidden="true"><span class="bars__fill" style="--w:9.8%"></span></span><span class="bars__n">8</span></li><li><span class="bars__k"><code>composer-audit</code>: abandoned package</span><span class="bars__track" aria-hidden="true"><span class="bars__fill" style="--w:8.5%"></span></span><span class="bars__n">7</span></li></ul></div></div><p class="proof-note">Every one of the 82 reports was valid JSON with a rule id on each finding. The same run through PREFLIGHT's <code>proctor</code> component produced valid GitLab Code Quality JSON for 81 apps, the 82nd being the memory crash below.</p>
+    </div>
+  </section>
+
+  <section class="proof-sec" id="retake" aria-labelledby="retake-title" data-arrive>
+    <div class="proof-wrap">
+      <p class="proof-kicker">Part 3 · The retake</p>
+      <h2 class="proof-h2" id="retake-title">The first sitting failed PROCTOR, not the apps</h2>
+      <p class="proof-lede">31 of the 82 apps are plain PHP with no <code>composer.json</code>. On the first run PROCTOR refused them with exit 2, "not a PHP project", which is no verdict at all for the apps that most need one.</p>
+      <div class="proof-tablewrap"><table class="proof-table"><caption>First sitting and retake</caption><thead><tr><th scope="col">Sitting</th><th scope="col">PROCTOR</th><th scope="col" class="num">Flagged</th><th scope="col" class="num">Tool errors</th></tr></thead><tbody><tr><th scope="row">First</th><td>0.2.0, the day before its tag</td><td class="num">51</td><td class="num">31</td></tr><tr><th scope="row">Retake</th><td>0.2.0 + "apps without composer.json get a verdict"</td><td class="num">81</td><td class="num">1</td></tr></tbody></table></div><p class="proof-note">The fix gives such an app a failing <code>php-floor</code> finding and runs every other check on its files. It shipped with a fixture test before the retake. The retake then found the one remaining error: on an app with a very large PHP tree, the parser ran past PHP's default 128 MB and the process died with exit 255. Raising PROCTOR's memory limit is queued with a test.</p>
+    </div>
+  </section>
+
+  <section class="proof-sec" id="run" aria-labelledby="run-title" data-arrive>
+    <div class="proof-wrap">
+      <p class="proof-kicker">Part 4 · Sit it yourself</p>
+      <h2 class="proof-h2" id="run-title">Run it on your own app</h2>
+      <p class="proof-lede">Install PROCTOR as a dev dependency and point it at CREED's policy.</p>
+      <p class="proof-cmd__label">Install</p><div class="proof-cmd"><code>composer require waynestate/proctor --dev</code><button class="proof-copy" type="button" data-copy="composer require waynestate/proctor --dev"><span class="proof-copy__label">Copy</span></button></div><p class="proof-cmd__label">Check, with the date pinned so the result repeats</p><div class="proof-cmd"><code>vendor/bin/proctor check --path=. --format=json --policy=policy.json --today=2026-10-28</code><button class="proof-copy" type="button" data-copy="vendor/bin/proctor check --path=. --format=json --policy=policy.json --today=2026-10-28"><span class="proof-copy__label">Copy</span></button></div><p class="proof-note">The proof harness ran exactly this inside <code>php:8.4-cli</code> on a throwaway copy of each app, with <code>.git</code>, <code>auth.json</code> and every <code>.env</code> removed first, and logged each app as one line (tool commit, unit id, command, exit code, duration, outcome) in the stack's internal record.</p>
+    </div>
+  </section>
+
+  <section class="proof-sec" id="limits" aria-labelledby="limits-title" data-arrive>
+    <div class="proof-wrap">
+      <p class="proof-kicker">Part 5 · Rules of the exam</p>
+      <h2 class="proof-h2" id="limits-title">What this does not prove</h2>
+      <ul class="proof-limits"><li>PROCTOR reads the repository. It does not see what runs on a server, so an app whose host is newer than its <code>composer.json</code> says still fails <code>php-floor</code>.</li><li>The <code>unpatched</code> check needs <code>--php-runtime</code>, the PHP that serves the app; the run did not pass one, so that check stayed quiet.</li><li>The report's own <code>version</code> field still says 0.1.0 on the 0.2.0 tree. The marks are right; the label is queued for a fix.</li><li>Nothing reached a database, a sign-in service or any Wayne State server.</li><li>One tool error stands until the memory fix ships.</li></ul><p class="proof-joke">Eighty-one papers handed back in red. The proctor saw that.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap foot__row">
+    <p class="foot__big">Pencils down.</p>
+    <p class="foot__links"><a href="https://github.com/waynestate/proctor">Source on GitHub</a> · MIT · Wayne State University · Enterprise Applications</p>
+    <p class="foot__joke hand">The proctor saw that.</p>
+  </div>
+</footer>
+
+<script src="assets/proof.js" defer></script>
+</body>
+</html>

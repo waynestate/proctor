@@ -269,6 +269,27 @@ package at runtime. `composer creed-copy:check` verifies the copy against the
 CREED checkout named by `CREED_PATH` (default `../creed`); refresh it by
 running CREED's `bin/export.php` against `src/Creed/`.
 
+## Proof
+
+**82 Wayne State applications run through PROCTOR on 2026-10-28: 0 passed, 81 flagged, 1 tool error.**
+
+Each app was copied with `.git`, `auth.json` and every `.env` removed and checked inside `php:8.4-cli`, with Wayne
+State's servers out of reach, using `proctor check --format=json --policy=<CREED policy> --today=2026-10-28`.
+Flagged means exit 1 with a report naming each problem: PROCTOR doing its job.
+
+| Sitting | Flagged | Tool errors |
+|---|---:|---:|
+| First (0.2.0, the day before its tag) | 51 | 31 |
+| Retake (0.2.0 plus "apps without composer.json get a verdict") | 81 | 1 |
+
+The first sitting found 31 plain PHP apps PROCTOR refused with exit 2; that was fixed with a fixture test and every
+app sat again. Most common fails on the retake: `php-floor` (76 apps), `lock-committed` (30), `composer-audit`
+(20), `unbounded-constraints` (13). The one tool error is the PHP parser running out of the default 128 MB on a very
+large tree; the fix is queued with a test. The apps are counted, never named. The breakdown, the command and what
+the run does not prove: [`site/proof.html`](site/proof.html).
+
+Eighty-one papers handed back in red. The proctor saw that.
+
 ## Running the tests in Docker
 
 Maintainers: how to build, test and release this project, and where its data comes from, is in [MAINTAINING.md](MAINTAINING.md).
