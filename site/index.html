@@ -8,7 +8,7 @@
 <meta name="stack-env" content="auto">
 <script src="assets/stack-env.js" defer></script>
 <title>PROCTOR: Watches the exam. Doesn't help.</title>
-<meta name="description" content="PROCTOR is the Wayne State stack's check command: one vendor/bin/proctor check grades a PHP app against CREED's policy and writes text, JSON, GitLab Code Quality or SARIF.">
+<meta name="description" content="PROCTOR checks a PHP app against CREED's version policy from the command line: PHP support, patch levels, Composer constraints, the audit, MySQL 5.6 and CI. It writes text, JSON, GitLab Code Quality or SARIF.">
 <meta name="theme-color" content="#0c5449">
 <meta property="og:title" content="PROCTOR: Watches the exam. Doesn't help.">
 <meta property="og:image" content="brand/proctor-avatar-512.png">
@@ -104,14 +104,14 @@
           </span>
         </p>
 
-        <p class="cover__blurb">One <code>vendor/bin/proctor check</code> grades a PHP app against CREED's version policy: the PHP floor, patch levels, Composer constraints, the lock file, <code>composer audit</code>, MySQL&nbsp;5.6 safety, portability and both CI pipelines. It writes text, JSON, GitLab Code Quality or SARIF, and exits 0, 1 or 2. The invigilator your <code>composer.lock</code> didn't know it needed: no phones, no EOL PHP.</p>
+        <p class="cover__blurb">Run <code>vendor/bin/proctor check</code> in a PHP app and it checks the app against CREED's version policy: the PHP floor, patch levels, Composer constraints, the lock file, <code>composer audit</code>, MySQL&nbsp;5.6 safety, portability and the CI pipelines. You get text, JSON, GitLab Code Quality or SARIF, and an exit code of 0, 1 or 2.</p>
 
         <div class="cmd">
           <code class="cmd__code" id="install-cmd"><span class="cmd__ps" aria-hidden="true">$</span> composer require waynestate/proctor --dev</code>
           <button class="copy" type="button" data-copy="composer require waynestate/proctor --dev"><span class="copy__label">Copy</span></button>
         </div>
 
-        <p class="stack-note"><strong>Already included in <a href="https://weld.apps.wayne.edu/">WELD</a> and in every <a href="https://sourdough.apps.wayne.edu/">Sourdough</a> app.</strong> Use PROCTOR on its own to check an app you already have against the version policy.</p>
+        <p class="stack-note"><strong>Already included in <a href="https://weld.apps.wayne.edu/">WELD</a> and in every <a href="https://sourdough.apps.wayne.edu/">Sourdough</a> app.</strong> You can also install PROCTOR on its own in any PHP app you already have.</p>
 
         <p class="cover__cta">
           <a class="btn btn--ink" href="#start-title">Sit the exam</a>
@@ -119,7 +119,7 @@
         </p>
 
         <ul class="cover__facts">
-          <li><strong>9</strong> questions</li>
+          <li><strong>14</strong> checks</li>
           <li><strong>4</strong> report formats</li>
           <li><strong>3</strong> exit codes</li>
           <li><strong>0</strong> policy of its own</li>
@@ -155,11 +155,11 @@
         </li>
         <li data-reveal>
           <h3>The questions are set by CREED.</h3>
-          <p>Support dates, the grace window and the audit threshold come from the policy file passed with <code>--policy</code>. PROCTOR holds no policy of its own, and a PHP version missing from the policy is a failure, not a pass.</p>
+          <p>Support dates, the grace window and the audit threshold all come from CREED's policy file. PROCTOR has no rules of its own. If your PHP version isn't in the policy at all, that counts as a failure.</p>
         </li>
         <li data-reveal>
           <h3>Every answer is written in words.</h3>
-          <p>Each line starts <code>PASS</code>, <code>INFO</code>, <code>WARN</code> or <code>FAIL</code> and the last line says <code>RESULT</code>. No colour, no ANSI codes: meaning never rides on colour alone.</p>
+          <p>Each line starts <code>PASS</code>, <code>INFO</code>, <code>WARN</code> or <code>FAIL</code> and the last line says <code>RESULT</code>. There's no colour and there are no ANSI codes, so the words carry the meaning.</p>
         </li>
         <li data-reveal>
           <h3>Three ways to leave the room.</h3>
@@ -167,7 +167,7 @@
         </li>
         <li data-reveal>
           <h3>Notes from home expire.</h3>
-          <p>An override needs a reason, an expiry and an approver, and is printed on every run. Past end of life plus grace, no note excuses you.</p>
+          <p>An override needs a reason, an expiry date and an approver, and it shows up in every report. Once a PHP version is past end of life plus the grace period, no override counts.</p>
         </li>
       </ol>
     </div>
@@ -193,7 +193,7 @@
         <li class="q" data-reveal>
           <p class="q__no"><span>Q2</span><code>unpatched</code></p>
           <h3 class="q__ask">Is every locked component on its line's latest patch?</h3>
-          <p class="q__rubric">Reads Laravel from <code>composer.lock</code>, Vue and Inertia from <code>package-lock.json</code>, and PHP from <code>--php-runtime</code>. Behind is a warning; the owner picks the day.</p>
+          <p class="q__rubric">Reads Laravel from <code>composer.lock</code>, Vue and Inertia from <code>package-lock.json</code>, and PHP from <code>--php-runtime</code>. Being behind is a warning, so you choose when to update.</p>
           <p class="q__answer"><span class="mark mark--warn">WARN</span> unpatched: laravel 12.1.3 is behind 12.4.7 (checked 2026-10-28); update to the latest patch.</p>
           <svg class="q__tick" viewBox="0 0 40 30" aria-hidden="true"><path pathLength="1" d="M3 16 L14 26 L37 3"/></svg>
         </li>
@@ -214,35 +214,35 @@
         <li class="q" data-reveal>
           <p class="q__no"><span>Q5</span><code>portability</code></p>
           <h3 class="q__ask">Would the app still run on another host?</h3>
-          <p class="q__rubric">Warns on an absolute host path, a hard-coded proxy address, sessions on local disk, or a <code>php_value</code> line in <code>.htaccess</code>. Citadel, OpenShift, Coolify or plain Docker: same app.</p>
+          <p class="q__rubric">Warns on an absolute host path, a hard-coded proxy address, sessions on local disk, or a <code>php_value</code> line in <code>.htaccess</code>. We want the same app to run on Citadel, OpenShift, Coolify or plain Docker.</p>
           <p class="q__answer"><span class="mark mark--warn">WARN</span> portability: host-path: absolute host path "/var/log/app.log"; read it from env or config</p>
           <svg class="q__tick" viewBox="0 0 40 30" aria-hidden="true"><path pathLength="1" d="M3 16 L14 26 L37 3"/></svg>
         </li>
         <li class="q" data-reveal>
           <p class="q__no"><span>Q6</span><code>mysql56</code></p>
           <h3 class="q__ask">Will your migrations survive the shared MySQL 5.6 server?</h3>
-          <p class="q__rubric">Reads the code as a syntax tree, not as lines, so a pattern in a comment or a string is not flagged: JSON and generated columns, <code>renameColumn</code>, the upsert alias, long indexed strings. Warnings only; the proctor raises an eyebrow.</p>
+          <p class="q__rubric">Looks for JSON and generated columns, <code>renameColumn</code>, the upsert alias, long indexed strings and a few more. It reads the code as a syntax tree, so a match inside a comment or a string doesn't count. These are warnings only, because an app on its own newer database is fine.</p>
           <p class="q__answer"><span class="mark mark--warn">WARN</span> mysql56: mysql56-json: JSON columns and JSON queries need MySQL 5.7.8</p>
           <svg class="q__tick" viewBox="0 0 40 30" aria-hidden="true"><path pathLength="1" d="M3 16 L14 26 L37 3"/></svg>
         </li>
         <li class="q" data-reveal>
           <p class="q__no"><span>Q7</span><code>ci-pipelines</code></p>
           <h3 class="q__ask">Do both pipelines run <code>composer ci</code>?</h3>
-          <p class="q__rubric">For <code>waynestate/</code> packages a missing GitLab or GitHub pipeline fails; for everyone else a missing GitLab one is a note. A GitHub <code>uses:</code> ref that is not a commit SHA warns.</p>
+          <p class="q__rubric">A stack package (named <code>waynestate/...</code>) fails without both a GitLab and a GitHub pipeline. Any other project gets a warning for a missing GitLab one, and GitHub is optional. A GitHub <code>uses:</code> ref that isn't a full commit SHA warns.</p>
           <p class="q__answer"><span class="mark mark--warn">WARN</span> ci-pipelines: ci-pipelines-gitlab-missing: .gitlab-ci.yml is missing; add a GitLab pipeline with a job whose script runs composer ci</p>
           <svg class="q__tick" viewBox="0 0 40 30" aria-hidden="true"><path pathLength="1" d="M3 16 L14 26 L37 3"/></svg>
         </li>
         <li class="q" data-reveal>
           <p class="q__no"><span>Q8</span><code>composer-audit</code></p>
           <h3 class="q__ask">Does the lock carry a known advisory?</h3>
-          <p class="q__rubric">Fails at or above the policy's <code>audit_severity_threshold</code>, warns below it. An advisory with no severity counts as failing: unknown input never turns into a pass.</p>
+          <p class="q__rubric">Fails at or above the policy's <code>audit_severity_threshold</code>, warns below it. An advisory with no severity is treated as failing, because we'd rather not turn unknown input into a pass.</p>
           <p class="q__answer"><span class="mark mark--pass">PASS</span> composer-audit: no advisories found</p>
           <svg class="q__tick" viewBox="0 0 40 30" aria-hidden="true"><path pathLength="1" d="M3 16 L14 26 L37 3"/></svg>
         </li>
         <li class="q" data-reveal>
           <p class="q__no"><span>Q9</span><code>overrides</code></p>
           <h3 class="q__ask">Has any note from home expired?</h3>
-          <p class="q__rubric">Every expired entry in <code>policy-overrides.json</code> fails. Active ones are printed on every run, so nothing is waived quietly.</p>
+          <p class="q__rubric">Every expired entry in <code>policy-overrides.json</code> fails. Active ones still appear in every report, and one that expires within 14 days gets a warning.</p>
           <p class="q__answer"><span class="mark mark--fail">FAIL</span> overrides: override for "lock-committed" expired on 2026-01-01</p>
           <svg class="q__tick" viewBox="0 0 40 30" aria-hidden="true"><path pathLength="1" d="M3 16 L14 26 L37 3"/></svg>
         </li>
@@ -250,13 +250,13 @@
 
       <div class="nextterm" data-reveal>
         <h3 class="nextterm__title">Part B: next term <span class="chip chip--soon">Coming soon</span></h3>
-        <p class="nextterm__lede">Set, not yet on the paper. No commands until they are real.</p>
+        <p class="nextterm__lede">Planned but not built yet, so there are no commands for these.</p>
         <ul class="nextterm__list">
           <li><strong>The release gate.</strong> <code>proctor gate</code> against the image that will actually serve the app, with a ratchet that blocks new problems before old ones.</li>
           <li><strong>Security headers and CSP.</strong> HELMET sets them; PROCTOR will check they are there.</li>
-          <li><strong>The WayneUI contract.</strong> Is the interface the shared one, at a supported version?</li>
+          <li><strong>The WayneUI contract.</strong> Checks that the app uses WayneUI at a supported version.</li>
           <li><strong>Node versions.</strong> Today only the Vue and Inertia locks are read.</li>
-          <li><strong>Lock in sync.</strong> A lock whose hash no longer matches <code>composer.json</code>.</li>
+          <li><strong>Lock in sync.</strong> Flags a lock whose hash no longer matches <code>composer.json</code>.</li>
         </ul>
       </div>
     </div>
@@ -273,35 +273,35 @@
       <header class="sec-head sec-head--sheet">
         <p class="sec-head__part">Marking</p>
         <h2 id="sheet-title">The answer sheet marks itself</h2>
-        <p>One run of <code>proctor check</code> on a small app, from pencils up to the stamp. Scroll, and keep your eyes on your own paper.</p>
+        <p>One run of <code>proctor check</code> on a small app, then a second run after the fix. Scroll, and keep your eyes on your own paper.</p>
       </header>
 
       <div class="marking__grid">
         <ol class="steps">
           <li class="step" data-step="1">
             <p class="step__no">1 · Pencils up</p>
-            <p class="step__body">The candidate is <code>your-app</code>. The policy is CREED's, today's date is fixed, and the proctor is watching.</p>
+            <p class="step__body">The app is called <code>your-app</code>, and the policy is CREED's.</p>
             <pre class="step__code"><code>vendor/bin/proctor check --policy=policy.json</code></pre>
           </li>
           <li class="step" data-step="2">
             <p class="step__no">2 · Questions 1 and 2</p>
-            <p class="step__body">PHP 8.4 is in active support: pass. Laravel is a few patches behind: a warning, not a failure.</p>
+            <p class="step__body">PHP 8.4 is in active support, so that passes. Laravel is a few patches behind, which is only a warning.</p>
             <pre class="step__code"><code>PASS php-floor: php floor 8.4 is active
 WARN unpatched: laravel 12.1.3 is behind 12.4.7 (checked 2026-10-28); update to the latest patch.</code></pre>
           </li>
           <li class="step" data-step="3">
             <p class="step__no">3 · Question 3: red pen</p>
-            <p class="step__body">One requirement says <code>"*"</code>. That fails, and the margin says what to write instead.</p>
+            <p class="step__body">One requirement says <code>"*"</code>. That fails, and the note in the margin says what to write instead.</p>
             <pre class="step__code"><code>FAIL unbounded-constraints: vendor/any constraint "*" is unbounded</code></pre>
           </li>
           <li class="step" data-step="4">
             <p class="step__no">4 · Questions 4 to 9</p>
-            <p class="step__body">Lock present, nothing hard-coded, no migrations to worry about, both pipelines, a clean audit, no expired notes. One failure is still one failure.</p>
+            <p class="step__body">The other six pass: the lock is there, nothing is hard-coded, no migration needs a newer MySQL, both pipelines run, the audit is clean and no override has expired. One failure is still enough to fail the run.</p>
             <pre class="step__code"><code>RESULT: fail (1 failures, 1 warnings)</code></pre>
           </li>
           <li class="step" data-step="5">
             <p class="step__no">5 · Resit, pencils down</p>
-            <p class="step__body">Pin <code>"vendor/any": "^2.0"</code>, run it again. Question 3 is erased and passes; the patch warning stays on the sheet, and warnings are allowed. Exit 0.</p>
+            <p class="step__body">Pin <code>"vendor/any": "^2.0"</code> and run it again. Question 3 passes now. The patch warning is still there, but warnings are allowed, so it exits 0.</p>
             <pre class="step__code"><code>PASS unbounded-constraints: all require constraints are bounded
 RESULT: pass</code></pre>
           </li>
@@ -365,7 +365,7 @@ RESULT: pass</code></pre>
       <header class="sec-head">
         <p class="sec-head__part">Hand in</p>
         <h2 id="reports-title">Four copies of the same paper</h2>
-        <p>Pick the copy your reader needs with <code>--format</code>. The findings are the same in all four; these are real runs on PROCTOR's <code>unbounded-app</code> fixture, trimmed where marked.</p>
+        <p>Pick the copy your reader needs with <code>--format</code>. The findings are the same in all four. These are real runs on PROCTOR's <code>unbounded-app</code> fixture, trimmed where marked.</p>
       </header>
 
       <div class="carbons" data-tabs>
@@ -532,7 +532,7 @@ RESULT: fail (1 failures, 1 warnings)</code></pre>
       <header class="sec-head">
         <p class="sec-head__part">Exam halls</p>
         <h2 id="halls-title">Sitting it in CI</h2>
-        <p>The same command on both forges. Preflight books the GitLab hall; on the GitHub mirror the SARIF copy goes to code scanning.</p>
+        <p>It's the same command on GitLab and GitHub. On GitLab, Preflight's component runs it. On the GitHub mirror, the SARIF report goes to code scanning.</p>
       </header>
 
       <div class="halls">
@@ -542,7 +542,7 @@ RESULT: fail (1 failures, 1 warnings)</code></pre>
   - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.1.1
     inputs:
       proctor_command: vendor/bin/proctor check --format=codequality --policy=vendor/waynestate/creed/policy/policy.json</code></pre>
-          <p class="hall__note">The job publishes a Code Quality report, so findings show on the merge request. Strongly recommended: a git.wayne.edu instance runner.</p>
+          <p class="hall__note">The job publishes a Code Quality report, so findings show on the merge request. We strongly recommend a git.wayne.edu instance runner.</p>
         </article>
         <article class="hall" data-reveal>
           <p class="hall__door"><span class="hall__room">Hall H</span> GitHub code scanning</p>
@@ -555,7 +555,7 @@ RESULT: fail (1 failures, 1 warnings)</code></pre>
           <p class="hall__note">Pinned to a full commit SHA, the way <code>ci-pipelines</code> asks. Needs <code>permissions: security-events: write</code>.</p>
         </article>
       </div>
-      <p class="halls__tip">In CI, pass <code>--php-runtime</code> the deploy image's PHP, not the runner's: the app is served by the image.</p>
+      <p class="halls__tip">In CI, give <code>--php-runtime</code> the PHP version of the deploy image, because that image serves the app. The runner's PHP doesn't matter.</p>
     </div>
   </section>
 
@@ -603,7 +603,7 @@ RESULT: fail (1 failures, 1 warnings)</code></pre>
         </div>
       </div>
 
-      <p class="start__opts">Options: <code>--path=.</code> · <code>--format=text|json|codequality|sarif</code> · <code>--policy=&lt;file&gt;</code> (optional; defaults to the policy in vendor/waynestate/creed, then the bundled one) · <code>--today=YYYY-MM-DD</code> for runs that agree on any day · <code>--php-runtime=X.Y.Z</code> for the <code>unpatched</code> check.</p>
+      <p class="start__opts">Options: <code>--path=.</code> · <code>--format=text|json|codequality|sarif</code> · <code>--policy=&lt;file&gt;</code> (optional; without it PROCTOR tries the <code>PROCTOR_POLICY</code> variable, then vendor/waynestate/creed, then its bundled copy) · <code>--today=YYYY-MM-DD</code> to fix the date so runs repeat · <code>--php-runtime=X.Y.Z</code> for the <code>unpatched</code> check.</p>
     </div>
   </section>
 
@@ -618,7 +618,7 @@ RESULT: fail (1 failures, 1 warnings)</code></pre>
       <header class="sec-head">
         <p class="sec-head__part">Open book</p>
         <h2 id="agents-title">Sitting it with an agent</h2>
-        <p>Three papers, ready for the coding agent you already use. Copy one, or run it straight in OpenCode, Claude Code, Codex or ChatGPT. Open book, closed guesses: each paper tells the agent where to read and to ask before it assumes.</p>
+        <p>Three prompts for whatever coding agent you use. Copy one, or open it in OpenCode, Claude Code, Codex or ChatGPT. Each tells the agent which pages to read, and to ask you before it guesses.</p>
       </header>
 
       <div class="papers">
@@ -628,7 +628,7 @@ RESULT: fail (1 failures, 1 warnings)</code></pre>
             <div>
               <p class="ar-prompt__kicker">Paper 1 · Any PHP app</p>
               <h3 class="ar-prompt__title" id="prompt-get-started-title">Get started with PROCTOR</h3>
-              <p class="ar-prompt__desc">Install it, sit the exam on the app in front of you, and read every FAIL and WARN back with the smallest fix. Raw PHP, Laravel with Blade, or Laravel with Inertia and Vue.</p>
+              <p class="ar-prompt__desc">Installs PROCTOR, runs the check and explains each FAIL and WARN with the smallest fix. It changes nothing. Works for raw PHP, Laravel with Blade, and Laravel with Inertia and Vue.</p>
             </div>
           </header>
           <pre class="ar-prompt__text"><code>You are a coding agent helping a Wayne State University developer run PROCTOR on the PHP app in this folder. PROCTOR is the check command of WELD, the Wayne State application stack: one vendor/bin/proctor check grades a PHP app against CREED's version policy and exits 0 (pass, warnings allowed), 1 (one or more failures) or 2 (a tool error).
@@ -660,7 +660,7 @@ Output: a findings table (result, check, rule id, file, fix), the exit code, the
             <div>
               <p class="ar-prompt__kicker">Paper 2 · Hall G · GitLab</p>
               <h3 class="ar-prompt__title" id="prompt-gitlab-title">PROCTOR in GitLab CI, through Preflight</h3>
-              <p class="ar-prompt__desc">Preflight's proctor component in the app's pipeline, with the findings on every merge request as Code Quality.</p>
+              <p class="ar-prompt__desc">Adds Preflight's proctor component to the app's pipeline, so findings show on each merge request as Code Quality.</p>
             </div>
           </header>
           <pre class="ar-prompt__text"><code>You are a coding agent adding PROCTOR to the GitLab pipeline of the PHP app in this folder, at Wayne State University. PROCTOR is the check command of WELD, the Wayne State application stack. Preflight is the stack's shared GitLab CI: its proctor component runs PROCTOR and publishes a Code Quality report, so the findings show on the merge request.
@@ -690,7 +690,7 @@ Output: the diff, then what the merge request will show, then your questions.</c
             <div>
               <p class="ar-prompt__kicker">Paper 3 · Hall H · GitHub</p>
               <h3 class="ar-prompt__title" id="prompt-github-title">PROCTOR in GitHub code scanning</h3>
-              <p class="ar-prompt__desc">The SARIF copy, uploaded on every push and pull request, with every action pinned the way the ci-pipelines check asks.</p>
+              <p class="ar-prompt__desc">Adds a workflow that uploads the SARIF report on each push and pull request. Every action is pinned to a commit SHA, as the ci-pipelines check asks.</p>
             </div>
           </header>
           <pre class="ar-prompt__text"><code>You are a coding agent adding PROCTOR to GitHub code scanning for the PHP app in this folder, at Wayne State University. PROCTOR is the check command of WELD, the Wayne State application stack. Its sarif format is what GitHub code scanning reads.
@@ -713,7 +713,7 @@ Constraints:
 Output: the workflow file, then what code scanning will show, then your questions.</code></pre>
         </section>
 
-        <p class="papers__fine">The agent reads the same pages you do: <a href="llms.txt">llms.txt</a> lists them, <a href="llms-full.txt">llms-full.txt</a> holds them in one file, and this page has a <a href="index.md" type="text/markdown">Markdown twin</a>. Nothing here phones home; the buttons only copy text or open the tool you picked. <span class="hand redpen-aside">Show your working.</span></p>
+        <p class="papers__fine">The agent reads the same pages you do: <a href="llms.txt">llms.txt</a> lists them, <a href="llms-full.txt">llms-full.txt</a> holds them in one file, and this page has a <a href="index.md" type="text/markdown">Markdown twin</a>. Nothing here phones home. The buttons only copy text or open the tool you picked. <span class="hand redpen-aside">Show your working.</span></p>
       </div>
     </div>
   </section>
@@ -724,34 +724,34 @@ Output: the workflow file, then what code scanning will show, then your question
       <header class="sec-head">
         <p class="sec-head__part">Seating chart</p>
         <h2 id="seats-title">Who else is in the room</h2>
-        <p>PROCTOR is one part of WELD, Wayne State's app stack. The proctor sits at the front; everyone else sits the same exam.</p>
+        <p>The rest of the Wayne State app stack. The proctor sits at the front, and everyone else sits the same exam.</p>
       </header>
 
       <div class="seating">
         <div class="desk desk--front" data-reveal>
-          <img class="desk__mark" src="brand/proctor-avatar-256.png" width="56" height="56" alt="PROCTOR mark: a watchful eye with a gold square pupil">
+          <img class="desk__mark" src="brand/proctor-avatar-256.png" width="56" height="56" alt="PROCTOR logo: an eye with a gold square pupil">
           <div><p class="desk__name">PROCTOR</p><p class="desk__role">Watches the exam. Doesn't help.</p></div>
         </div>
 
         <p class="seating__label">The class</p>
         <ul class="desks">
-          <li class="desk" data-reveal><span class="desk__tile"><img src="assets/marks/wayneui.svg" width="40" height="40" alt="WayneUI mark: a rounded frame holding a solid form, with a gold tab"></span><div><p class="desk__name"><a class="part-link" href="https://wayneui.apps.wayne.edu/">WayneUI</a></p><p class="desk__role">The interface every page is drawn with.</p></div></li>
-          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/creed.png" width="56" height="56" alt="CREED mark"><div><p class="desk__name"><a class="part-link" href="https://creed.apps.wayne.edu/">CREED</a></p><p class="desk__role">Sets the questions: the <code>policy.json</code> PROCTOR reads.</p></div></li>
-          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/preflight.png" width="56" height="56" alt="Preflight mark"><div><p class="desk__name"><a class="part-link" href="https://preflight.apps.wayne.edu/">Preflight</a></p><p class="desk__role">Books the hall: shared CI that runs PROCTOR.</p></div></li>
-          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/pinstripe.png" width="56" height="56" alt="Pinstripe mark"><div><p class="desk__name"><a class="part-link" href="https://pinstripe.apps.wayne.edu/">Pinstripe</a></p><p class="desk__role">Neat handwriting: the coding standard.</p></div></li>
-          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/sesame.png" width="56" height="56" alt="SESAME mark"><div><p class="desk__name"><a class="part-link" href="https://sesame.apps.wayne.edu/">SESAME</a></p><p class="desk__role">Checks ID at the door: sign-in.</p></div></li>
-          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/helmet.png" width="56" height="56" alt="HELMET mark"><div><p class="desk__name"><a class="part-link" href="https://helmet.apps.wayne.edu/">HELMET</a></p><p class="desk__role">Security headers and runtime hardening.</p></div></li>
-          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/sourdough.png" width="56" height="56" alt="Sourdough mark"><div><p class="desk__name"><a class="part-link" href="https://sourdough.apps.wayne.edu/">Sourdough</a></p><p class="desk__role">Starters that arrive ready to sit the exam.</p></div></li>
-          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/weld.png" width="56" height="56" alt="WELD mark"><div><p class="desk__name"><a class="part-link" href="https://weld.apps.wayne.edu/">WELD</a></p><p class="desk__role">The whole stack, joined; runs <code>proctor check</code> in CI.</p></div></li>
+          <li class="desk" data-reveal><span class="desk__tile"><img src="assets/marks/wayneui.svg" width="40" height="40" alt="WayneUI logo: a rounded frame around a solid shape, with a gold tab"></span><div><p class="desk__name"><a class="part-link" href="https://wayneui.apps.wayne.edu/">WayneUI</a></p><p class="desk__role">Wayne State's design system, for HTML, raw PHP, Blade and Vue.</p></div></li>
+          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/creed.png" width="56" height="56" alt="CREED logo"><div><p class="desk__name"><a class="part-link" href="https://creed.apps.wayne.edu/">CREED</a></p><p class="desk__role">Sets the questions. Its <code>policy.json</code> is what PROCTOR reads.</p></div></li>
+          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/preflight.png" width="56" height="56" alt="Preflight logo"><div><p class="desk__name"><a class="part-link" href="https://preflight.apps.wayne.edu/">Preflight</a></p><p class="desk__role">GitLab CI components. One of them runs PROCTOR.</p></div></li>
+          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/pinstripe.png" width="56" height="56" alt="Pinstripe logo"><div><p class="desk__name"><a class="part-link" href="https://pinstripe.apps.wayne.edu/">Pinstripe</a></p><p class="desk__role">Code style presets for Pint, PHPStan, Rector, ESLint and Prettier.</p></div></li>
+          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/sesame.png" width="56" height="56" alt="SESAME logo"><div><p class="desk__name"><a class="part-link" href="https://sesame.apps.wayne.edu/">SESAME</a></p><p class="desk__role">Sign-in through CAS, Entra ID or Drawbridge.</p></div></li>
+          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/helmet.png" width="56" height="56" alt="HELMET logo"><div><p class="desk__name"><a class="part-link" href="https://helmet.apps.wayne.edu/">HELMET</a></p><p class="desk__role">Security headers, CSP and a hardened session cookie.</p></div></li>
+          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/sourdough.png" width="56" height="56" alt="Sourdough logo"><div><p class="desk__name"><a class="part-link" href="https://sourdough.apps.wayne.edu/">Sourdough</a></p><p class="desk__role">Starts a new raw PHP app with PROCTOR already set up.</p></div></li>
+          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/weld.png" width="56" height="56" alt="WELD logo"><div><p class="desk__name"><a class="part-link" href="https://weld.apps.wayne.edu/">WELD</a></p><p class="desk__role">A Laravel, Inertia and Vue app with the stack installed. Its pipeline runs PROCTOR through Preflight.</p></div></li>
         </ul>
 
         <p class="seating__label">Transfer students, new this term</p>
         <ul class="desks desks--new">
-          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/booster.png" width="56" height="56" alt="Booster mark"><div><p class="desk__name"><a class="part-link" href="https://booster.apps.wayne.edu/">Booster</a></p><p class="desk__role">Upgrades you to a passing PHP, one hop at a time.</p></div></li>
-          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/rollcall.png" width="56" height="56" alt="Rollcall mark"><div><p class="desk__name"><a class="part-link" href="https://rollcall.apps.wayne.edu/">Rollcall</a></p><p class="desk__role">Every app answers “present”, with its PHP version.</p></div></li>
-          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/squire.png" width="56" height="56" alt="Squire mark"><div><p class="desk__name"><a class="part-link" href="https://squire.apps.wayne.edu/">Squire</a></p><p class="desk__role">Carries the passed paper to Citadel.</p></div></li>
-          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/drawbridge.png" width="56" height="56" alt="Drawbridge mark"><div><p class="desk__name"><a class="part-link" href="https://drawbridge.apps.wayne.edu/">Drawbridge</a></p><p class="desk__role">The Citadel sign-in gateway.</p></div></li>
-          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/advisor.png" width="56" height="56" alt="ADVISOR mark"><div><p class="desk__name"><a class="part-link" href="https://advisor.apps.wayne.edu/">ADVISOR</a></p><p class="desk__role">Ask what applies to your app, and what to do next.</p></div></li>
+          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/booster.png" width="56" height="56" alt="Booster logo"><div><p class="desk__name"><a class="part-link" href="https://booster.apps.wayne.edu/">Booster</a></p><p class="desk__role">Upgrades PHP and Laravel one version at a time, until the PHP floor passes.</p></div></li>
+          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/rollcall.png" width="56" height="56" alt="Rollcall logo"><div><p class="desk__name"><a class="part-link" href="https://rollcall.apps.wayne.edu/">Rollcall</a></p><p class="desk__role">Scans the apps and reports each one's PHP, Laravel and sign-in versions.</p></div></li>
+          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/squire.png" width="56" height="56" alt="Squire logo"><div><p class="desk__name"><a class="part-link" href="https://squire.apps.wayne.edu/">Squire</a></p><p class="desk__role">The deploy kit for Citadel. A release can be set to stop on failing PROCTOR checks.</p></div></li>
+          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/drawbridge.png" width="56" height="56" alt="Drawbridge logo"><div><p class="desk__name"><a class="part-link" href="https://drawbridge.apps.wayne.edu/">Drawbridge</a></p><p class="desk__role">A gateway that signs people in through Entra ID before they reach a Citadel app.</p></div></li>
+          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/advisor.png" width="56" height="56" alt="ADVISOR logo"><div><p class="desk__name"><a class="part-link" href="https://advisor.apps.wayne.edu/">ADVISOR</a></p><p class="desk__role">An MCP server. Its <code>run_proctor_check</code> tool runs your app's PROCTOR for your agent.</p></div></li>
         </ul>
       </div>
     </div>
