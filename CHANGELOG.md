@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.2.3 (2026-10-29)
+
 - `overrides` guards (PROCTOR-6, PROCTOR-33): an entry in policy-overrides.json that names a check that is not registered in the run, or names the `overrides` check itself, is now a tool error (exit 2) instead of being silently accepted; the valid ids are built from the registered checks. An active override that expires within 14 days of `--today` (the expiry day counts) now warns (`proctor/overrides/expiring`); a warning never changes the exit code.
 
 ## 0.2.2 (2026-10-29)
