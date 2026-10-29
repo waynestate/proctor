@@ -287,6 +287,10 @@ package at runtime. `composer creed-copy:check` verifies the copy against the
 CREED checkout named by `CREED_PATH` (default `../creed`); refresh it by
 running CREED's `bin/export.php` against `src/Creed/`.
 
+## Proof
+
+Proof runs against real Wayne State applications are on a private site, [proof.apps.wayne.edu/proctor](https://proof.apps.wayne.edu/proctor/), behind a Wayne State employee sign-in.
+
 ## Running the tests in Docker
 
 Maintainers: how to build, test and release this project, and where its data comes from, is in [MAINTAINING.md](MAINTAINING.md).

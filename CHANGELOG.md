@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Removed: the public proof page; proof results move to a private site.
+- Changed: the proof page moves to a private site that needs a Wayne State sign-in.
 
 ## 0.2.5 (2026-10-29)
 
