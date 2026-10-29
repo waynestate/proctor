@@ -244,7 +244,7 @@ state is EOL plus grace (eol_grace_expired); that failure stands (the stack's ve
 `--policy` takes a CREED-format policy file: schema_version 1, component
 versions with released, active_until and security_until dates, and rules
 (audit_severity_threshold, banned_constraints, eol_grace_days). The
-policy-file wiring to `waynestate/creed` follows its v0.1.0 tag.
+policy-file wiring to `waynestate/creed` is described below.
 
 Without `--policy`, PROCTOR resolves the policy in this order (first match
 wins):
