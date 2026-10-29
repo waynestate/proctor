@@ -4,6 +4,7 @@
 
 - Changed: project names written as words except acronyms.
 - Fixed: stale capability claims in the site and docs.
+- Added: agent-ready site (prompt blocks, Markdown twins, llms.txt), from Squire's kit.
 
 ## 0.2.6 (2026-10-29)
 

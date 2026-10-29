@@ -696,3 +696,83 @@ li.desk:has(.part-link:hover) img { filter: brightness(1.12) saturate(1.1); }
 li.desk img { transition: transform 160ms ease, filter 160ms ease; }
 li.desk:has(.part-link:hover) img { transform: translateY(-2px); }
 }
+
+/* ======================================================= agent-ready kit */
+/* Squire's agent-ready.css lays out the prompt blocks and the page menu; this
+   maps its tokens onto the exam hall. Each prompt is a question paper: white
+   stock, the green rule of a question card across the top, ruled lines under
+   the typed text and the red double margin of exam paper down its left side.
+   The command panel is the exam book's cardstock. */
+:root {
+  --ar-bg: var(--white);
+  --ar-ink: var(--ink);
+  --ar-muted: var(--muted);
+  --ar-rule: rgba(20, 37, 33, .18);
+  --ar-accent: var(--green);
+  --ar-on-accent: var(--white);
+  --ar-focus: var(--green);
+  --ar-code-bg: var(--paper);
+  --ar-code-ink: var(--ink);
+  --ar-term-bg: var(--green-deep);
+  --ar-term-ink: var(--cream);
+  --ar-display: var(--f-display);
+  --ar-body: var(--f-body);
+  --ar-mono: var(--f-mono);
+  --ar-radius: 6px;
+  --ar-shadow: 0 1px 0 rgba(20, 37, 33, .06), 0 14px 26px -20px rgba(20, 37, 33, .45);
+}
+
+.ar-prompt { border-top: 4px solid var(--green); border-radius: 2px 2px 6px 6px; }
+.ar-prompt__glyph {
+  width: auto; min-width: 2.6rem; padding-inline: .45rem;
+  font-family: var(--f-display); font-weight: 400; font-size: 1rem; letter-spacing: 0;
+  color: var(--white); background: var(--green); border-color: var(--green-deep); border-radius: 3px;
+}
+/* The kicker is pencilled in the corner, the way a paper is numbered. */
+.ar-prompt__kicker { font-family: var(--f-hand); font-weight: 700; font-size: 1.3rem; letter-spacing: 0; text-transform: none; color: var(--crimson); line-height: 1.1; }
+.ar-prompt__title { font-weight: 400; color: var(--green-ink); font-size: clamp(1.3rem, 2.6vw, 1.6rem); }
+/* Ruled paper with the red double margin: one rule under every typed line, scrolling with the text. */
+.ar-prompt__text {
+  padding: 1rem 1.1rem 1rem 1.6rem;
+  border: 1px solid rgba(20, 37, 33, .12);
+  box-shadow: inset 6px 0 0 -4px rgba(155, 28, 46, .55), inset 10px 0 0 -8px rgba(155, 28, 46, .55);
+  background-color: var(--paper);
+  background-image: repeating-linear-gradient(to bottom, transparent 0, transparent calc(1.6em - 1px), rgba(12, 84, 73, .12) calc(1.6em - 1px), rgba(12, 84, 73, .12) 1.6em);
+  background-position: 0 1rem;
+  background-attachment: local;
+}
+.ar-btn--primary { box-shadow: 0 3px 0 var(--green-deep); }
+.ar-btn--primary:hover { background: var(--green-ink); box-shadow: 0 3px 0 var(--green-deep); }
+.ar-btn:not(.ar-btn--primary):hover { color: var(--crimson); }
+.ar-prompt__more:hover { color: var(--crimson); }
+.ar-chip[aria-expanded="true"] { border-color: var(--green); box-shadow: inset 0 -3px 0 var(--gold); }
+.ar-cmd .ar-btn { border-color: var(--gold); color: var(--gold); }
+.ar-cmd .ar-btn:hover { color: var(--gold); }
+.ar-cmd .ar-seg__btn[aria-pressed="true"] { background: var(--gold); color: var(--ink); }
+.ar-cmd .ar-seg { border-color: rgba(244, 241, 234, .55); }
+.ar-cmd :focus-visible { outline-color: var(--gold); }
+@media (prefers-reduced-motion: no-preference) {
+  .motion .ar-btn--primary:active { transform: translateY(3px); box-shadow: 0 0 0 var(--green-deep); }
+}
+
+/* The candidate number line under the cover facts. */
+.candidate { margin-top: 22px; padding-top: 10px; border-top: 1px dashed rgba(20, 37, 33, .3); gap: .1rem 1.1rem; font-size: .95rem; }
+.candidate .ar-page__label { font-family: var(--f-hand); font-weight: 700; font-size: 1.3rem; letter-spacing: 0; text-transform: none; color: var(--crimson); }
+.candidate .ar-page__list { gap: 0 1.1rem; }
+.candidate .ar-page__link, .candidate .ar-page__btn { color: var(--green); }
+.candidate .ar-page__link:hover, .candidate .ar-page__btn:hover { color: var(--crimson); }
+.candidate .ar-status { flex-basis: 100%; font-family: var(--f-mono); font-size: .8rem; color: var(--muted); }
+
+/* Open book. */
+.agents { background: var(--cream); background-image: none; border-top: 1px dashed rgba(20, 37, 33, .25); }
+.papers { display: grid; gap: 24px; }
+.papers > * { min-width: 0; }
+.papers__title { margin-top: 18px; font-family: var(--f-hand); font-weight: 700; font-size: 1.6rem; color: var(--crimson); }
+.papers .ar-prompt:not(.ar-prompt--lead) { --ar-preview-lines: 7; }
+.papers__fine { max-width: 60ch; color: var(--muted); font-size: .98rem; }
+.redpen-aside { color: var(--crimson); font-size: 1.4rem; font-weight: 700; white-space: nowrap; }
+
+@media print {
+  .ar-prompt__actions, .ar-cmd, .ar-prompt__more, .candidate { display: none; }
+  .ar-prompt.is-collapsed .ar-prompt__text { max-height: none; -webkit-mask-image: none; mask-image: none; }
+}
