@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Removed: the public proof page; proof results move to a private site.
+
 ## 0.2.5 (2026-10-29)
 
 - CREED reader re-exported from CREED 0.1.2: versions older than the oldest listed line are now end of life instead of refused.
