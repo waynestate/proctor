@@ -65,7 +65,7 @@ $application = new class (Report::TOOL, Report::VERSION) extends Application {
     }
 };
 
-$application->add(new class () extends Command {
+$application->addCommand(new class () extends Command {
     protected function configure(): void
     {
         $this
