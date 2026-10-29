@@ -80,6 +80,8 @@ final class RuleIdContractTest extends ProctorTestCase
         // composer-version
         'proctor/composer-version/not-found',
         'proctor/composer-version/could-not-determine',
+        // overrides
+        'proctor/overrides/expiring',
     ];
 
     public function testEveryFindingCarriesAKnownRuleId(): void
