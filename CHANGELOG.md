@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- An app with no composer.json now gets a verdict (php-floor fails) instead of exit 2.
+
 ## 0.2.0 (2026-10-29)
 
 - `repo-url-credentials`: new warning check (D-034): flags credentials written into package source URLs in

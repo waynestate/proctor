@@ -72,7 +72,7 @@ vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--po
 </div>
 <div align="center"><sub>Nine questions, asked in this order on every run. The lines are real output from the test fixtures.</sub></div>
 
-- `php-floor`: fails when the lowest PHP version allowed by `require.php` is past security support plus the grace window, or when composer.json has no usable php constraint.
+- `php-floor`: fails when the lowest PHP version allowed by `require.php` is past security support plus the grace window, when composer.json has no usable php constraint, or when there is no composer.json at all.
 - `unpatched`: warns when a locked component is behind the policy's `latest_patch` for its version line, and passes when it is current. Reads laravel from composer.lock (`laravel/framework`), vue and inertia from package-lock.json (`vue`, `@inertiajs/vue3`), and the PHP runtime from `--php-runtime`. No finding when the component, its version line, or `latest_patch` is absent from the policy.
 - `unbounded-constraints`: fails for every runtime constraint that is `*` or names a dev- branch.
 - `lock-committed`: fails when composer.lock is missing from the app path.
@@ -89,7 +89,7 @@ vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--po
 
 - `0`: pass (warnings allowed)
 - `1`: one or more failures
-- `2`: tool error (bad options, unreadable policy, malformed composer.json or overrides file)
+- `2`: tool error (bad options, unreadable policy, a present but malformed or unreadable composer.json, or an unreadable overrides file). A missing composer.json is not a tool error: the app gets a verdict, with php-floor failing.
 
 ```mermaid
 %%{init: {'theme':'base','themeVariables':{'fontFamily':'Helvetica, Arial, sans-serif','primaryColor':'#F4F1EA','primaryTextColor':'#1f2a33','primaryBorderColor':'#0C5449','lineColor':'#8A9A94'}}}%%
