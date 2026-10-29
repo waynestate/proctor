@@ -776,3 +776,8 @@ li.desk:has(.part-link:hover) img { transform: translateY(-2px); }
   .ar-prompt__actions, .ar-cmd, .ar-prompt__more, .candidate { display: none; }
   .ar-prompt.is-collapsed .ar-prompt__text { max-height: none; -webkit-mask-image: none; mask-image: none; }
 }
+
+/* Where this piece sits in the stack: a line of fine print under the install
+   command, like the instructions on the back of an exam book. No motion. */
+.stack-note { max-width: 36rem; margin: 1rem 0 1.4rem; font-size: .9rem; color: var(--muted); }
+.stack-note strong { font-weight: 600; color: var(--ink); }

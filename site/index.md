@@ -16,6 +16,8 @@ One `vendor/bin/proctor check` grades a PHP app against CREED's version policy: 
 
 `$ composer require waynestate/proctor --dev`
 
+**Already included in [WELD](https://weld.apps.wayne.edu/) and in every [Sourdough](https://sourdough.apps.wayne.edu/) app.** Use PROCTOR on its own to check an app you already have against the version policy.
+
 [Sit the exam](https://proctor.apps.wayne.edu/#start-title) [Watch it mark a paper](https://proctor.apps.wayne.edu/#sheet-title)
 
 - **9** questions
