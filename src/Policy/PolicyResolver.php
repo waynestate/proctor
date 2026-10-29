@@ -133,11 +133,16 @@ final class PolicyResolver
 
     private static function bundled(): ResolvedPolicy
     {
+        $path = realpath(self::BUNDLED_PATH);
+        if ($path === false) {
+            $path = self::BUNDLED_PATH;
+        }
+
         return new ResolvedPolicy(
             Policy::bundled(),
             self::ORIGIN_BUNDLED,
-            self::BUNDLED_PATH,
-            self::refreshedOn(self::BUNDLED_PATH),
+            $path,
+            self::refreshedOn($path),
         );
     }
 

@@ -51,15 +51,60 @@ abstract class ProctorTestCase extends TestCase
             $cmd[] = '--php-runtime=' . $phpRuntime;
         }
 
+        return $this->runCommand($cmd);
+    }
+
+    /**
+     * Runs bin/proctor check without forcing --policy, so the resolution
+     * order decides: the PROCTOR_POLICY environment variable, the app's
+     * vendor/waynestate/creed/policy/policy.json, the bundled copy.
+     *
+     * The host's PROCTOR_POLICY never leaks in; set it with $envPolicy.
+     *
+     * @param string      $app       the app path
+     * @param string      $format    the report format
+     * @param string|null $policy    an explicit --policy value, or null
+     * @param string|null $envPolicy the PROCTOR_POLICY value, or null
+     *
+     * @return array{exit: int, stdout: string, stderr: string}
+     */
+    protected function runProctorResolved(string $app, string $format = 'text', ?string $policy = null, ?string $envPolicy = null): array
+    {
+        $cmd = [
+            PHP_BINARY,
+            dirname(__DIR__) . '/bin/proctor',
+            'check',
+            '--path=' . $app,
+            '--format=' . $format,
+            '--today=' . self::TODAY,
+        ];
+        if ($policy !== null) {
+            $cmd[] = '--policy=' . $policy;
+        }
+
+        return $this->runCommand($cmd, $envPolicy);
+    }
+
+    /**
+     * Runs bin/proctor with a PATH that finds no tools, and returns the
+     * exit code, stdout and stderr.
+     *
+     * @param list<string> $cmd
+     */
+    private function runCommand(array $cmd, ?string $envPolicy = null): array
+    {
         // The CLI tests must not depend on whether composer is installed (the CI runner has it, the php:*-cli
         // images do not), so bin/proctor runs with a PATH that finds no tools.
         $env = getenv();
         foreach (array_keys($env) as $key) {
-            if (strcasecmp((string) $key, 'PATH') === 0) {
+            if (strcasecmp((string) $key, 'PATH') === 0 || strcasecmp((string) $key, 'PROCTOR_POLICY') === 0) {
                 unset($env[$key]);
             }
         }
         $env['PATH'] = __DIR__ . '/fixtures/no-tools';
+        if ($envPolicy !== null) {
+            $env['PROCTOR_POLICY'] = $envPolicy;
+        }
 
         $process = proc_open($cmd, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, null, $env);
         if (!is_resource($process)) {
