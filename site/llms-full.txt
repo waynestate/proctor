@@ -1,6 +1,6 @@
 # PROCTOR: everything in one file
 
-> PROCTOR is the Wayne State stack's check command: one vendor/bin/proctor check grades a PHP app against CREED's policy and writes text, JSON, GitLab Code Quality or SARIF.
+> PROCTOR checks a PHP app against CREED's version policy from the command line: PHP support, patch levels, Composer constraints, the audit, MySQL 5.6 and CI. It writes text, JSON, GitLab Code Quality or SARIF.
 
 The README and the Markdown twin of every page, joined. The index is https://proctor.apps.wayne.edu/llms.txt. Written by Squire's agent-ready kit; do not edit.
 
@@ -314,15 +314,15 @@ The stack's check command
 
 PROCTOR stands for Policy Rules Of Code, Tested On Release.
 
-One `vendor/bin/proctor check` grades a PHP app against CREED's version policy: the PHP floor, patch levels, Composer constraints, the lock file, `composer audit`, MySQL 5.6 safety, portability and both CI pipelines. It writes text, JSON, GitLab Code Quality or SARIF, and exits 0, 1 or 2. The invigilator your `composer.lock` didn't know it needed: no phones, no EOL PHP.
+Run `vendor/bin/proctor check` in a PHP app and it checks the app against CREED's version policy: the PHP floor, patch levels, Composer constraints, the lock file, `composer audit`, MySQL 5.6 safety, portability and the CI pipelines. You get text, JSON, GitLab Code Quality or SARIF, and an exit code of 0, 1 or 2.
 
 `$ composer require waynestate/proctor --dev`
 
-**Already included in [WELD](https://weld.apps.wayne.edu/) and in every [Sourdough](https://sourdough.apps.wayne.edu/) app.** Use PROCTOR on its own to check an app you already have against the version policy.
+**Already included in [WELD](https://weld.apps.wayne.edu/) and in every [Sourdough](https://sourdough.apps.wayne.edu/) app.** You can also install PROCTOR on its own in any PHP app you already have.
 
 [Sit the exam](https://proctor.apps.wayne.edu/#start-title) [Watch it mark a paper](https://proctor.apps.wayne.edu/#sheet-title)
 
-- **9** questions
+- **14** checks
 - **4** report formats
 - **3** exit codes
 - **0** policy of its own
@@ -336,13 +336,13 @@ Read these before you turn the page. The proctor will not repeat them.
 1. ### Bring your own lock.
    PROCTOR reads the app's `composer.json` and `composer.lock`, and `package-lock.json` for Vue and Inertia. It never runs your app.
 2. ### The questions are set by CREED.
-   Support dates, the grace window and the audit threshold come from the policy file passed with `--policy`. PROCTOR holds no policy of its own, and a PHP version missing from the policy is a failure, not a pass.
+   Support dates, the grace window and the audit threshold all come from CREED's policy file. PROCTOR has no rules of its own. If your PHP version isn't in the policy at all, that counts as a failure.
 3. ### Every answer is written in words.
-   Each line starts `PASS`, `INFO`, `WARN` or `FAIL` and the last line says `RESULT`. No colour, no ANSI codes: meaning never rides on colour alone.
+   Each line starts `PASS`, `INFO`, `WARN` or `FAIL` and the last line says `RESULT`. There's no colour and there are no ANSI codes, so the words carry the meaning.
 4. ### Three ways to leave the room.
    `0` pass, warnings allowed. `1` one or more failures. `2` a tool error: bad options, an unreadable policy, a malformed `composer.json`. Exit 2 means the proctor tripped, not you.
 5. ### Notes from home expire.
-   An override needs a reason, an expiry and an approver, and is printed on every run. Past end of life plus grace, no note excuses you.
+   An override needs a reason, an expiry date and an approver, and it shows up in every report. Once a PHP version is past end of life plus the grace period, no override counts.
 
 Part A
 
@@ -356,7 +356,7 @@ Nine of PROCTOR's fourteen checks, in the order they run. Each one shows a real 
    FAIL php-floor: php floor 7.4 is eol_grace_expired
 2. Q2 `unpatched`
    ### Is every locked component on its line's latest patch?
-   Reads Laravel from `composer.lock`, Vue and Inertia from `package-lock.json`, and PHP from `--php-runtime`. Behind is a warning; the owner picks the day.
+   Reads Laravel from `composer.lock`, Vue and Inertia from `package-lock.json`, and PHP from `--php-runtime`. Being behind is a warning, so you choose when to update.
    WARN unpatched: laravel 12.1.3 is behind 12.4.7 (checked 2026-10-28); update to the latest patch.
 3. Q3 `unbounded-constraints`
    ### Is every runtime requirement tied to a released range?
@@ -368,64 +368,64 @@ Nine of PROCTOR's fourteen checks, in the order they run. Each one shows a real 
    PASS lock-committed: composer.lock is present
 5. Q5 `portability`
    ### Would the app still run on another host?
-   Warns on an absolute host path, a hard-coded proxy address, sessions on local disk, or a `php_value` line in `.htaccess`. Citadel, OpenShift, Coolify or plain Docker: same app.
+   Warns on an absolute host path, a hard-coded proxy address, sessions on local disk, or a `php_value` line in `.htaccess`. We want the same app to run on Citadel, OpenShift, Coolify or plain Docker.
    WARN portability: host-path: absolute host path "/var/log/app.log"; read it from env or config
 6. Q6 `mysql56`
    ### Will your migrations survive the shared MySQL 5.6 server?
-   Reads the code as a syntax tree, not as lines, so a pattern in a comment or a string is not flagged: JSON and generated columns, `renameColumn`, the upsert alias, long indexed strings. Warnings only; the proctor raises an eyebrow.
+   Looks for JSON and generated columns, `renameColumn`, the upsert alias, long indexed strings and a few more. It reads the code as a syntax tree, so a match inside a comment or a string doesn't count. These are warnings only, because an app on its own newer database is fine.
    WARN mysql56: mysql56-json: JSON columns and JSON queries need MySQL 5.7.8
 7. Q7 `ci-pipelines`
    ### Do both pipelines run `composer ci`?
-   For `waynestate/` packages a missing GitLab or GitHub pipeline fails; for everyone else a missing GitLab one is a note. A GitHub `uses:` ref that is not a commit SHA warns.
+   A stack package (named `waynestate/...`) fails without both a GitLab and a GitHub pipeline. Any other project gets a warning for a missing GitLab one, and GitHub is optional. A GitHub `uses:` ref that isn't a full commit SHA warns.
    WARN ci-pipelines: ci-pipelines-gitlab-missing: .gitlab-ci.yml is missing; add a GitLab pipeline with a job whose script runs composer ci
 8. Q8 `composer-audit`
    ### Does the lock carry a known advisory?
-   Fails at or above the policy's `audit_severity_threshold`, warns below it. An advisory with no severity counts as failing: unknown input never turns into a pass.
+   Fails at or above the policy's `audit_severity_threshold`, warns below it. An advisory with no severity is treated as failing, because we'd rather not turn unknown input into a pass.
    PASS composer-audit: no advisories found
 9. Q9 `overrides`
    ### Has any note from home expired?
-   Every expired entry in `policy-overrides.json` fails. Active ones are printed on every run, so nothing is waived quietly.
+   Every expired entry in `policy-overrides.json` fails. Active ones still appear in every report, and one that expires within 14 days gets a warning.
    FAIL overrides: override for "lock-committed" expired on 2026-01-01
 
 #### Part B: next term Coming soon
 
-Set, not yet on the paper. No commands until they are real.
+Planned but not built yet, so there are no commands for these.
 
 - **The release gate.** `proctor gate` against the image that will actually serve the app, with a ratchet that blocks new problems before old ones.
 - **Security headers and CSP.** HELMET sets them; PROCTOR will check they are there.
-- **The WayneUI contract.** Is the interface the shared one, at a supported version?
+- **The WayneUI contract.** Checks that the app uses WayneUI at a supported version.
 - **Node versions.** Today only the Vue and Inertia locks are read.
-- **Lock in sync.** A lock whose hash no longer matches `composer.json`.
+- **Lock in sync.** Flags a lock whose hash no longer matches `composer.json`.
 
 Marking
 
 ### The answer sheet marks itself
 
-One run of `proctor check` on a small app, from pencils up to the stamp. Scroll, and keep your eyes on your own paper.
+One run of `proctor check` on a small app, then a second run after the fix. Scroll, and keep your eyes on your own paper.
 
 1. 1 · Pencils up
-   The candidate is `your-app`. The policy is CREED's, today's date is fixed, and the proctor is watching.
+   The app is called `your-app`, and the policy is CREED's.
    ```
    vendor/bin/proctor check --policy=policy.json
    ```
 2. 2 · Questions 1 and 2
-   PHP 8.4 is in active support: pass. Laravel is a few patches behind: a warning, not a failure.
+   PHP 8.4 is in active support, so that passes. Laravel is a few patches behind, which is only a warning.
    ```
    PASS php-floor: php floor 8.4 is active
    WARN unpatched: laravel 12.1.3 is behind 12.4.7 (checked 2026-10-28); update to the latest patch.
    ```
 3. 3 · Question 3: red pen
-   One requirement says `"*"`. That fails, and the margin says what to write instead.
+   One requirement says `"*"`. That fails, and the note in the margin says what to write instead.
    ```
    FAIL unbounded-constraints: vendor/any constraint "*" is unbounded
    ```
 4. 4 · Questions 4 to 9
-   Lock present, nothing hard-coded, no migrations to worry about, both pipelines, a clean audit, no expired notes. One failure is still one failure.
+   The other six pass: the lock is there, nothing is hard-coded, no migration needs a newer MySQL, both pipelines run, the audit is clean and no override has expired. One failure is still enough to fail the run.
    ```
    RESULT: fail (1 failures, 1 warnings)
    ```
 5. 5 · Resit, pencils down
-   Pin `"vendor/any": "^2.0"`, run it again. Question 3 is erased and passes; the patch warning stays on the sheet, and warnings are allowed. Exit 0.
+   Pin `"vendor/any": "^2.0"` and run it again. Question 3 passes now. The patch warning is still there, but warnings are allowed, so it exits 0.
    ```
    PASS unbounded-constraints: all require constraints are bounded
    RESULT: pass
@@ -459,7 +459,7 @@ Hand in
 
 ### Four copies of the same paper
 
-Pick the copy your reader needs with `--format`. The findings are the same in all four; these are real runs on PROCTOR's `unbounded-app` fixture, trimmed where marked.
+Pick the copy your reader needs with `--format`. The findings are the same in all four. These are real runs on PROCTOR's `unbounded-app` fixture, trimmed where marked.
 
 **text**
 
@@ -621,7 +621,7 @@ Exam halls
 
 ### Sitting it in CI
 
-The same command on both forges. Preflight books the GitLab hall; on the GitHub mirror the SARIF copy goes to code scanning.
+It's the same command on GitLab and GitHub. On GitLab, Preflight's component runs it. On the GitHub mirror, the SARIF report goes to code scanning.
 
 Hall G GitLab, through Preflight
 
@@ -632,7 +632,7 @@ include:
       proctor_command: vendor/bin/proctor check --format=codequality --policy=vendor/waynestate/creed/policy/policy.json
 ```
 
-The job publishes a Code Quality report, so findings show on the merge request. Strongly recommended: a git.wayne.edu instance runner.
+The job publishes a Code Quality report, so findings show on the merge request. We strongly recommend a git.wayne.edu instance runner.
 
 Hall H GitHub code scanning
 
@@ -647,7 +647,7 @@ Hall H GitHub code scanning
 
 Pinned to a full commit SHA, the way `ci-pipelines` asks. Needs `permissions: security-events: write`.
 
-In CI, pass `--php-runtime` the deploy image's PHP, not the runner's: the app is served by the image.
+In CI, give `--php-runtime` the PHP version of the deploy image, because that image serves the app. The runner's PHP doesn't matter.
 
 Begin
 
@@ -676,17 +676,17 @@ Install PROCTOR and CREED's policy as dev dependencies, then run the check from 
 2. Sit the exam. The `composer:2` image brings PHP and Composer, so `composer-audit` runs too:
    `docker run --rm -v "${PWD}:/app" -w /app composer:2 vendor/bin/proctor check --policy=vendor/waynestate/creed/policy/policy.json`
 
-Options: `--path=.` · `--format=text|json|codequality|sarif` · `--policy=<file>` (optional; defaults to the policy in vendor/waynestate/creed, then the bundled one) · `--today=YYYY-MM-DD` for runs that agree on any day · `--php-runtime=X.Y.Z` for the `unpatched` check.
+Options: `--path=.` · `--format=text|json|codequality|sarif` · `--policy=<file>` (optional; without it PROCTOR tries the `PROCTOR_POLICY` variable, then vendor/waynestate/creed, then its bundled copy) · `--today=YYYY-MM-DD` to fix the date so runs repeat · `--php-runtime=X.Y.Z` for the `unpatched` check.
 
 Open book
 
 ### Sitting it with an agent
 
-Three papers, ready for the coding agent you already use. Copy one, or run it straight in OpenCode, Claude Code, Codex or ChatGPT. Open book, closed guesses: each paper tells the agent where to read and to ask before it assumes.
+Three prompts for whatever coding agent you use. Copy one, or open it in OpenCode, Claude Code, Codex or ChatGPT. Each tells the agent which pages to read, and to ask you before it guesses.
 
 #### Get started with PROCTOR
 
-Install it, sit the exam on the app in front of you, and read every FAIL and WARN back with the smallest fix. Raw PHP, Laravel with Blade, or Laravel with Inertia and Vue.
+Installs PROCTOR, runs the check and explains each FAIL and WARN with the smallest fix. It changes nothing. Works for raw PHP, Laravel with Blade, and Laravel with Inertia and Vue.
 
 A prompt for your coding agent. Copy it as it stands:
 
@@ -717,7 +717,7 @@ Output: a findings table (result, check, rule id, file, fix), the exit code, the
 
 #### PROCTOR in GitLab CI, through Preflight
 
-Preflight's proctor component in the app's pipeline, with the findings on every merge request as Code Quality.
+Adds Preflight's proctor component to the app's pipeline, so findings show on each merge request as Code Quality.
 
 A prompt for your coding agent. Copy it as it stands:
 
@@ -745,7 +745,7 @@ Output: the diff, then what the merge request will show, then your questions.
 
 #### PROCTOR in GitHub code scanning
 
-The SARIF copy, uploaded on every push and pull request, with every action pinned the way the ci-pipelines check asks.
+Adds a workflow that uploads the SARIF report on each push and pull request. Every action is pinned to a commit SHA, as the ci-pipelines check asks.
 
 A prompt for your coding agent. Copy it as it stands:
 
@@ -770,15 +770,15 @@ Constraints:
 Output: the workflow file, then what code scanning will show, then your questions.
 ```
 
-The agent reads the same pages you do: [llms.txt](https://proctor.apps.wayne.edu/llms.txt) lists them, [llms-full.txt](https://proctor.apps.wayne.edu/llms-full.txt) holds them in one file, and this page has a [Markdown twin](https://proctor.apps.wayne.edu/index.md). Nothing here phones home; the buttons only copy text or open the tool you picked. Show your working.
+The agent reads the same pages you do: [llms.txt](https://proctor.apps.wayne.edu/llms.txt) lists them, [llms-full.txt](https://proctor.apps.wayne.edu/llms-full.txt) holds them in one file, and this page has a [Markdown twin](https://proctor.apps.wayne.edu/index.md). Nothing here phones home. The buttons only copy text or open the tool you picked. Show your working.
 
 Seating chart
 
 ### Who else is in the room
 
-PROCTOR is one part of WELD, Wayne State's app stack. The proctor sits at the front; everyone else sits the same exam.
+The rest of the Wayne State app stack. The proctor sits at the front, and everyone else sits the same exam.
 
-![PROCTOR mark: a watchful eye with a gold square pupil](https://proctor.apps.wayne.edu/brand/proctor-avatar-256.png)
+![PROCTOR logo: an eye with a gold square pupil](https://proctor.apps.wayne.edu/brand/proctor-avatar-256.png)
 
 PROCTOR
 
@@ -786,45 +786,45 @@ Watches the exam. Doesn't help.
 
 The class
 
-- ![WayneUI mark: a rounded frame holding a solid form, with a gold tab](https://proctor.apps.wayne.edu/assets/marks/wayneui.svg)
+- ![WayneUI logo: a rounded frame around a solid shape, with a gold tab](https://proctor.apps.wayne.edu/assets/marks/wayneui.svg)
   [WayneUI](https://wayneui.apps.wayne.edu/)
-  The interface every page is drawn with.
-- ![CREED mark](https://proctor.apps.wayne.edu/assets/marks/creed.png)
+  Wayne State's design system, for HTML, raw PHP, Blade and Vue.
+- ![CREED logo](https://proctor.apps.wayne.edu/assets/marks/creed.png)
   [CREED](https://creed.apps.wayne.edu/)
-  Sets the questions: the `policy.json` PROCTOR reads.
-- ![Preflight mark](https://proctor.apps.wayne.edu/assets/marks/preflight.png)
+  Sets the questions. Its `policy.json` is what PROCTOR reads.
+- ![Preflight logo](https://proctor.apps.wayne.edu/assets/marks/preflight.png)
   [Preflight](https://preflight.apps.wayne.edu/)
-  Books the hall: shared CI that runs PROCTOR.
-- ![Pinstripe mark](https://proctor.apps.wayne.edu/assets/marks/pinstripe.png)
+  GitLab CI components. One of them runs PROCTOR.
+- ![Pinstripe logo](https://proctor.apps.wayne.edu/assets/marks/pinstripe.png)
   [Pinstripe](https://pinstripe.apps.wayne.edu/)
-  Neat handwriting: the coding standard.
-- ![SESAME mark](https://proctor.apps.wayne.edu/assets/marks/sesame.png)
+  Code style presets for Pint, PHPStan, Rector, ESLint and Prettier.
+- ![SESAME logo](https://proctor.apps.wayne.edu/assets/marks/sesame.png)
   [SESAME](https://sesame.apps.wayne.edu/)
-  Checks ID at the door: sign-in.
-- ![HELMET mark](https://proctor.apps.wayne.edu/assets/marks/helmet.png)
+  Sign-in through CAS, Entra ID or Drawbridge.
+- ![HELMET logo](https://proctor.apps.wayne.edu/assets/marks/helmet.png)
   [HELMET](https://helmet.apps.wayne.edu/)
-  Security headers and runtime hardening.
-- ![Sourdough mark](https://proctor.apps.wayne.edu/assets/marks/sourdough.png)
+  Security headers, CSP and a hardened session cookie.
+- ![Sourdough logo](https://proctor.apps.wayne.edu/assets/marks/sourdough.png)
   [Sourdough](https://sourdough.apps.wayne.edu/)
-  Starters that arrive ready to sit the exam.
-- ![WELD mark](https://proctor.apps.wayne.edu/assets/marks/weld.png)
+  Starts a new raw PHP app with PROCTOR already set up.
+- ![WELD logo](https://proctor.apps.wayne.edu/assets/marks/weld.png)
   [WELD](https://weld.apps.wayne.edu/)
-  The whole stack, joined; runs `proctor check` in CI.
+  A Laravel, Inertia and Vue app with the stack installed. Its pipeline runs PROCTOR through Preflight.
 
 Transfer students, new this term
 
-- ![Booster mark](https://proctor.apps.wayne.edu/assets/marks/booster.png)
+- ![Booster logo](https://proctor.apps.wayne.edu/assets/marks/booster.png)
   [Booster](https://booster.apps.wayne.edu/)
-  Upgrades you to a passing PHP, one hop at a time.
-- ![Rollcall mark](https://proctor.apps.wayne.edu/assets/marks/rollcall.png)
+  Upgrades PHP and Laravel one version at a time, until the PHP floor passes.
+- ![Rollcall logo](https://proctor.apps.wayne.edu/assets/marks/rollcall.png)
   [Rollcall](https://rollcall.apps.wayne.edu/)
-  Every app answers “present”, with its PHP version.
-- ![Squire mark](https://proctor.apps.wayne.edu/assets/marks/squire.png)
+  Scans the apps and reports each one's PHP, Laravel and sign-in versions.
+- ![Squire logo](https://proctor.apps.wayne.edu/assets/marks/squire.png)
   [Squire](https://squire.apps.wayne.edu/)
-  Carries the passed paper to Citadel.
-- ![Drawbridge mark](https://proctor.apps.wayne.edu/assets/marks/drawbridge.png)
+  The deploy kit for Citadel. A release can be set to stop on failing PROCTOR checks.
+- ![Drawbridge logo](https://proctor.apps.wayne.edu/assets/marks/drawbridge.png)
   [Drawbridge](https://drawbridge.apps.wayne.edu/)
-  The Citadel sign-in gateway.
-- ![ADVISOR mark](https://proctor.apps.wayne.edu/assets/marks/advisor.png)
+  A gateway that signs people in through Entra ID before they reach a Citadel app.
+- ![ADVISOR logo](https://proctor.apps.wayne.edu/assets/marks/advisor.png)
   [ADVISOR](https://advisor.apps.wayne.edu/)
-  Ask what applies to your app, and what to do next.
+  An MCP server. Its `run_proctor_check` tool runs your app's PROCTOR for your agent.

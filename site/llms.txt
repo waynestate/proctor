@@ -1,6 +1,6 @@
 # PROCTOR
 
-> PROCTOR is the Wayne State stack's check command: one vendor/bin/proctor check grades a PHP app against CREED's policy and writes text, JSON, GitLab Code Quality or SARIF.
+> PROCTOR checks a PHP app against CREED's version policy from the command line: PHP support, patch levels, Composer constraints, the audit, MySQL 5.6 and CI. It writes text, JSON, GitLab Code Quality or SARIF.
 
 **Policy Rules Of Code, Tested On Release.** The invigilator your composer.lock didn't know it needed: no phones,
 no EOL PHP.
@@ -26,13 +26,13 @@ Every page below is Markdown. The HTML pages send the same Markdown to a client 
 
 ## Pages
 
-- [PROCTOR: Watches the exam. Doesn't help.](https://proctor.apps.wayne.edu/index.md): PROCTOR is the Wayne State stack's check command: one vendor/bin/proctor check grades a PHP app against CREED's policy and writes text, JSON, GitLab Code Quality or SARIF.
+- [PROCTOR: Watches the exam. Doesn't help.](https://proctor.apps.wayne.edu/index.md): PROCTOR checks a PHP app against CREED's version policy from the command line: PHP support, patch levels, Composer constraints, the audit, MySQL 5.6 and CI. It writes text, JSON, GitLab Code Quality or SARIF.
 
 ## Prompts
 
-- [Get started with PROCTOR](https://proctor.apps.wayne.edu/#prompt-get-started): Install it, sit the exam on the app in front of you, and read every FAIL and WARN back with the smallest fix. Raw PHP, Laravel with Blade, or Laravel with Inertia and Vue. The prompt itself is in https://proctor.apps.wayne.edu/index.md.
-- [PROCTOR in GitLab CI, through Preflight](https://proctor.apps.wayne.edu/#prompt-gitlab): Preflight's proctor component in the app's pipeline, with the findings on every merge request as Code Quality. The prompt itself is in https://proctor.apps.wayne.edu/index.md.
-- [PROCTOR in GitHub code scanning](https://proctor.apps.wayne.edu/#prompt-github): The SARIF copy, uploaded on every push and pull request, with every action pinned the way the ci-pipelines check asks. The prompt itself is in https://proctor.apps.wayne.edu/index.md.
+- [Get started with PROCTOR](https://proctor.apps.wayne.edu/#prompt-get-started): Installs PROCTOR, runs the check and explains each FAIL and WARN with the smallest fix. It changes nothing. Works for raw PHP, Laravel with Blade, and Laravel with Inertia and Vue. The prompt itself is in https://proctor.apps.wayne.edu/index.md.
+- [PROCTOR in GitLab CI, through Preflight](https://proctor.apps.wayne.edu/#prompt-gitlab): Adds Preflight's proctor component to the app's pipeline, so findings show on each merge request as Code Quality. The prompt itself is in https://proctor.apps.wayne.edu/index.md.
+- [PROCTOR in GitHub code scanning](https://proctor.apps.wayne.edu/#prompt-github): Adds a workflow that uploads the SARIF report on each push and pull request. Every action is pinned to a commit SHA, as the ci-pipelines check asks. The prompt itself is in https://proctor.apps.wayne.edu/index.md.
 
 ## Source
 
