@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.2.6 (2026-10-29)
+
 - Changed: the proof page moves to a private site that needs a Wayne State sign-in.
 - `portability`: stops flagging Laravel's generated cache. In a Laravel app (an `artisan` file at the project root) the top-level `bootstrap/cache/` directory is now skipped, so the files `php artisan optimize` writes there (config.php, routes-v7.php, services.php, packages.php, events.php) no longer raise warnings and hide real findings. A raw-PHP app that keeps its own `bootstrap/cache/` folder is scanned as before.
 
