@@ -97,7 +97,7 @@ final class Report
         try {
             // When this repository is itself the root package, Composer
             // reports a root version (1.0.0, dev-main) that is not a release.
-            if ((InstalledVersions::getRootPackage()['name'] ?? '') === self::PACKAGE) {
+            if (InstalledVersions::getRootPackage()['name'] === self::PACKAGE) {
                 return null;
             }
             $pretty = InstalledVersions::getPrettyVersion(self::PACKAGE);
