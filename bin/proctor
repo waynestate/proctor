@@ -21,8 +21,8 @@ use Waynestate\Proctor\Check\PortabilityCheck;
 use Waynestate\Proctor\Check\RepoUrlCredentialsCheck;
 use Waynestate\Proctor\Check\UnboundedConstraintsCheck;
 use Waynestate\Proctor\Check\UnpatchedCheck;
-use Waynestate\Proctor\Creed\Policy;
 use Waynestate\Proctor\Override\OverrideFile;
+use Waynestate\Proctor\Policy\PolicyResolver;
 use Waynestate\Proctor\Report\CodeQualityWriter;
 use Waynestate\Proctor\Report\JsonWriter;
 use Waynestate\Proctor\Report\Report;
@@ -72,7 +72,7 @@ $application->add(new class () extends Command {
             ->setDescription('Measure a PHP app against the version policy.')
             ->addOption('path', null, InputOption::VALUE_REQUIRED, 'Path to the application to check.', '.')
             ->addOption('format', null, InputOption::VALUE_REQUIRED, 'Output format (text, json, codequality, sarif).', 'text')
-            ->addOption('policy', null, InputOption::VALUE_REQUIRED, 'Path to the policy file.')
+            ->addOption('policy', null, InputOption::VALUE_REQUIRED, "Path to the CREED-format policy file. Without it, PROCTOR checks the PROCTOR_POLICY environment variable, then the app's vendor/waynestate/creed/policy/policy.json, then its own bundled copy.")
             ->addOption('today', null, InputOption::VALUE_REQUIRED, "Override today's date (YYYY-MM-DD).")
             ->addOption('php-runtime', null, InputOption::VALUE_REQUIRED, 'The PHP version that will serve the app (X.Y.Z), for the unpatched check.')
             ->addOption('timeout', null, InputOption::VALUE_REQUIRED, 'Maximum seconds for composer audit before it is killed.', '300');
@@ -91,18 +91,19 @@ $application->add(new class () extends Command {
             return 2;
         }
 
-        $policyFile = $input->getOption('policy');
-        if (null === $policyFile || '' === $policyFile) {
-            $errorOutput->writeln('Missing required option --policy=<file>.');
-            return 2;
-        }
+        $appPath = (string) $input->getOption('path');
 
         try {
-            $policy = Policy::fromFile((string) $policyFile);
+            $resolved = PolicyResolver::resolve(
+                $input->getOption('policy'),
+                $appPath,
+                static fn(string $note): void => $errorOutput->writeln($note),
+            );
         } catch (InvalidArgumentException | RuntimeException $e) {
             $errorOutput->writeln($e->getMessage());
             return 2;
         }
+        $policy = $resolved->policy;
 
         $todayOption = $input->getOption('today');
         if (null === $todayOption) {
@@ -117,8 +118,6 @@ $application->add(new class () extends Command {
                 return 2;
             }
         }
-
-        $appPath = (string) $input->getOption('path');
 
         $timeoutOption = (string) $input->getOption('timeout');
         if (!preg_match('/^\d+$/', $timeoutOption) || (int) $timeoutOption < 1) {
