@@ -1,6 +1,6 @@
 # PROCTOR best practices
 
-Written against PROCTOR v0.1.0; later changes are in CHANGELOG.md.
+Written against PROCTOR 0.2.6; later changes are in CHANGELOG.md.
 Items marked "(second pass)" were added or changed in the second pass; see the section of that name near the end.
 
 ## What this covers
@@ -58,7 +58,7 @@ Sources: [OWASP Top 10 CI/CD Security Risks, CICD-SEC-4 Poisoned Pipeline Execut
 
 **How the stack holds it: Not yet.** `--policy` is required and takes any path. `--today` is accepted on every run.
 Preflight's `proctor_command` input is free text, and the main `.gitlab-ci.yml` of an app overrides included job keys,
-so an app can change both. The plan is for PROCTOR to bundle CREED's policy once CREED v0.1.0 is tagged.
+so an app can change both. PROCTOR has bundled CREED's policy since 0.2.1.
 
 Update 0.2.x: `--policy` is optional since 0.2.1: without it PROCTOR resolves the policy from the `PROCTOR_POLICY`
 environment variable, then the app's `vendor/waynestate/creed/policy/policy.json`, then the copy bundled with PROCTOR
@@ -408,7 +408,7 @@ advisory pages through summaries and did not confirm the CVSS scores against NVD
 **How the stack holds it: Not yet.** PROCTOR does not read the Composer version, and the Preflight component installs
 whatever Composer is current at the time.
 
-Update 0.2.x: since 0.2.0, the `composer-version` check reads the Composer version and fails below the floor (see 4.6).
+Update 0.2.x: the composer-version check is described in 4.6.
 
 ### 4.9 Report an app that switches the dependency policy off (second pass)
 Look for `config.policy` set to `false`, `policy.malware` or `policy.advisories` set to `false`, and the matching
@@ -692,7 +692,7 @@ Sources: [Semgrep: diff-aware scanning and baseline commit](https://docs.semgrep
 [PHPStan: baseline](https://phpstan.org/user-guide/baseline).
 
 **How the stack holds it: Documented.** The stack's deploy-gate decision describes the ratchet and the stages `report`, `warn` and `block`.
-PROCTOR v0.1.0 has no ratchet and no stage field.
+PROCTOR 0.1.0 had no ratchet and no stage field.
 
 ### 7.2 Keep gate mode small, offline and fast, and let a checker bug fail open
 At deploy time the check should need no network and no app boot, finish in seconds, and exit so that an internal error
