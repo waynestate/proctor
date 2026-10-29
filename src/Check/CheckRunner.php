@@ -41,7 +41,8 @@ final class CheckRunner
      *
      * @return list<Finding>
      *
-     * @throws ToolError if the app path or its composer.json is unusable
+     * @throws ToolError if the app path is not a directory, or its
+     *                   composer.json (when present) is unreadable or malformed
      */
     public function run(): array
     {
@@ -66,8 +67,10 @@ final class CheckRunner
     }
 
     /**
-     * The app path must exist and carry a readable, valid composer.json,
-     * because the php-floor check needs it.
+     * The app path must exist. A composer.json, when present, must be
+     * readable and valid JSON. An app without one (raw PHP, no Composer)
+     * gets a verdict instead of a tool error: the php-floor check fails and
+     * unbounded-constraints passes.
      *
      * @throws ToolError
      */
@@ -78,7 +81,10 @@ final class CheckRunner
         }
 
         $composerFile = $this->appPath . '/composer.json';
-        if (!is_file($composerFile) || !is_readable($composerFile)) {
+        if (!is_file($composerFile)) {
+            return;
+        }
+        if (!is_readable($composerFile)) {
             throw new ToolError(sprintf('No readable composer.json in "%s".', $this->appPath));
         }
 

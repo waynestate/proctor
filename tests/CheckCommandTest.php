@@ -183,4 +183,86 @@ final class CheckCommandTest extends ProctorTestCase
             $result['stdout'],
         );
     }
+
+    public function testNoComposerAppExitsOneWithAPhpFloorFailNotAToolError(): void
+    {
+        $result = $this->runProctor($this->noComposerApp());
+
+        self::assertSame(1, $result['exit']);
+        // No exception and no tool error: stderr stays empty.
+        self::assertSame('', $result['stderr']);
+        self::assertSame(['php-floor', 'lock-committed'], $this->failCheckIds($result['stdout']));
+        self::assertMatchesRegularExpression(
+            '/^FAIL php-floor: no composer\.json: the app declares no PHP version$/m',
+            $result['stdout'],
+        );
+        self::assertMatchesRegularExpression(
+            '/^PASS unbounded-constraints: no composer\.json, so no constraints to check$/m',
+            $result['stdout'],
+        );
+        // lock-committed keeps its current behaviour when composer.lock is absent.
+        self::assertMatchesRegularExpression(
+            '/^FAIL lock-committed: composer\.lock is missing$/m',
+            $result['stdout'],
+        );
+    }
+
+    public function testNoComposerAppGetsAResultLineInEveryFormat(): void
+    {
+        foreach (['text', 'json', 'codequality', 'sarif'] as $format) {
+            $result = $this->runProctor($this->noComposerApp(), $format);
+
+            self::assertSame(1, $result['exit'], sprintf('format %s', $format));
+            self::assertSame('', $result['stderr'], sprintf('format %s', $format));
+            self::assertNotSame('', trim($result['stdout']), sprintf('format %s', $format));
+        }
+    }
+
+    public function testNoComposerAppJsonReportCarriesThePhpFloorFailFinding(): void
+    {
+        $result = $this->runProctor($this->noComposerApp(), 'json');
+
+        self::assertSame(1, $result['exit']);
+        $data = json_decode($result['stdout'], true);
+        self::assertIsArray($data);
+
+        $byRule = [];
+        foreach ($data['findings'] as $finding) {
+            $byRule[$finding['rule_id']][] = $finding;
+        }
+
+        self::assertCount(1, $byRule['proctor/php-floor']);
+        self::assertSame('fail', $byRule['proctor/php-floor'][0]['status']);
+        self::assertSame('no composer.json: the app declares no PHP version', $byRule['proctor/php-floor'][0]['message']);
+        self::assertSame('composer.json', $byRule['proctor/php-floor'][0]['path']);
+
+        self::assertCount(1, $byRule['proctor/unbounded-constraints']);
+        self::assertSame('pass', $byRule['proctor/unbounded-constraints'][0]['status']);
+        self::assertSame('no composer.json, so no constraints to check', $byRule['proctor/unbounded-constraints'][0]['message']);
+    }
+
+    public function testMalformedComposerJsonStillExitsTwo(): void
+    {
+        $appPath = sys_get_temp_dir() . '/proctor-malformed-composer-' . uniqid('', true);
+        self::assertTrue(is_dir($appPath) || mkdir($appPath, 0777, true));
+        file_put_contents($appPath . '/composer.json', '{ "require": ');
+
+        try {
+            $result = $this->runProctor($appPath);
+
+            self::assertSame(2, $result['exit']);
+            self::assertStringContainsString('is not valid JSON', $result['stderr']);
+        } finally {
+            unlink($appPath . '/composer.json');
+            rmdir($appPath);
+        }
+    }
+
+    /**
+     * The absolute path of the fixture app that has no composer.json.
+     */
+    private function noComposerApp(): string
+    {
+        return __DIR__ . '/fixtures/no-composer';
+    }
 }

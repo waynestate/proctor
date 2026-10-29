@@ -27,6 +27,15 @@ final class UnboundedConstraintsCheck implements CheckInterface
     public function run(CheckContext $context): array
     {
         $file = $context->appPath . '/composer.json';
+        if (!is_file($file)) {
+            return [new Finding(
+                $this->id(),
+                Finding::STATUS_PASS,
+                'no composer.json, so no constraints to check',
+                'composer.json',
+            )];
+        }
+
         $raw = file_get_contents($file);
         if ($raw === false) {
             throw new ToolError(sprintf('composer.json in "%s" could not be read.', $context->appPath));

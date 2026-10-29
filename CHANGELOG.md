@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- An app with no composer.json now gets a verdict (php-floor fails) instead of exit 2.
 - `repo-url-credentials`: new warning check (D-034): flags credentials written into package source URLs in
   composer.json repository entries, composer.lock source/dist URLs, and .npmrc auth lines. The secret is masked as
   `***` in the message. Fix by moving the token to `auth.json`, which is gitignored, or a CI variable, and using

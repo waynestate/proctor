@@ -26,6 +26,14 @@ final class PhpFloorCheck implements CheckInterface
     public function run(CheckContext $context): array
     {
         $composer = $this->readComposerJson($context->appPath);
+        if ($composer === null) {
+            return [new Finding(
+                $this->id(),
+                Finding::STATUS_FAIL,
+                'no composer.json: the app declares no PHP version',
+                'composer.json',
+            )];
+        }
 
         $constraint = $composer['require']['php'] ?? null;
         if (!is_string($constraint) || trim($constraint) === '') {
@@ -82,18 +90,22 @@ final class PhpFloorCheck implements CheckInterface
     }
 
     /**
-     * Reads and decodes the app's composer.json.
+     * Reads and decodes the app's composer.json, or null when the app has no
+     * composer.json at all (a raw PHP app gets a verdict, not a tool error).
      *
-     * The CheckRunner has already validated the file, so this only throws if
-     * the file changed between the two reads.
+     * The CheckRunner has already validated the file when it is present, so
+     * this only throws if the file changed between the two reads.
      *
-     * @return array<string, mixed>
+     * @return array<string, mixed>|null
      *
      * @throws ToolError
      */
-    private function readComposerJson(string $appPath): array
+    private function readComposerJson(string $appPath): ?array
     {
         $file = $appPath . '/composer.json';
+        if (!is_file($file)) {
+            return null;
+        }
         $raw = file_get_contents($file);
         $data = $raw === false ? null : json_decode($raw, true);
         if (!is_array($data)) {
