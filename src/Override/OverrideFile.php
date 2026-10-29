@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Waynestate\Proctor\Override;
 
 use DateTimeImmutable;
+use Waynestate\Proctor\Check\OverridesCheck;
 use Waynestate\Proctor\ToolError;
 
 /**
@@ -67,6 +68,33 @@ final class OverrideFile
     }
 
     /**
+     * Throws when an override names a check id that is not registered.
+     *
+     * The CLI calls this with the ids of the checks it actually runs, built
+     * from the registered checks, so a new check needs no change here: an
+     * entry that names a check nobody runs is a tool error (exit 2) instead
+     * of an override that silently does nothing.
+     *
+     * @param list<Override> $overrides     the app's policy-overrides.json entries
+     * @param list<string>   $knownCheckIds the ids of the registered checks
+     *
+     * @throws ToolError naming the unknown id and listing the valid ones
+     */
+    public static function assertKnownChecks(array $overrides, array $knownCheckIds): void
+    {
+        foreach ($overrides as $override) {
+            if (!in_array($override->check, $knownCheckIds, true)) {
+                throw new ToolError(sprintf(
+                    '%s names unknown check "%s"; valid check ids are: %s.',
+                    self::FILENAME,
+                    $override->check,
+                    implode(', ', $knownCheckIds),
+                ));
+            }
+        }
+    }
+
+    /**
      * @param mixed $entry
      *
      * @throws ToolError
@@ -82,6 +110,16 @@ final class OverrideFile
         $check = $entry['check'] ?? null;
         if (!is_string($check) || trim($check) === '') {
             throw new ToolError(sprintf('%s is missing a "check" string.', $where));
+        }
+
+        // An override cannot exempt the check that polices overrides: an
+        // expired override must always fail, so targeting the overrides
+        // check is rejected here instead of being silently ignored.
+        if ($check === OverridesCheck::ID) {
+            throw new ToolError(sprintf(
+                '%s: an override cannot target the overrides check.',
+                $where,
+            ));
         }
 
         $reason = $entry['reason'] ?? null;

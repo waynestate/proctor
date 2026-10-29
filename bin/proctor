@@ -7,6 +7,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
+use Waynestate\Proctor\Check\CheckInterface;
 use Waynestate\Proctor\Check\CheckRunner;
 use Waynestate\Proctor\Check\CiPipelinesCheck;
 use Waynestate\Proctor\Check\ComposerAuditCheck;
@@ -149,26 +150,33 @@ $application->addCommand(new class () extends Command {
         try {
             $overrides = OverrideFile::load($appPath);
             $composerVersionCheck = new ComposerVersionCheck();
+            $checks = [
+                new PhpFloorCheck(),
+                new UnpatchedCheck(),
+                new UnboundedConstraintsCheck(),
+                new ComposerConfigCheck(),
+                new LockCommittedCheck(),
+                new PortabilityCheck(),
+                new Mysql56Check(),
+                new DestructiveDeployCheck(),
+                new CiPipelinesCheck(),
+                new ComposerAuditCheck(),
+                $composerVersionCheck,
+                new RepoUrlCredentialsCheck(),
+                new OverridesCheck(),
+                new PolicyAgeCheck($resolved),
+            ];
+            // The ids come from the registered checks, so a new check needs
+            // no change here.
+            OverrideFile::assertKnownChecks(
+                $overrides,
+                array_map(fn (CheckInterface $check) => $check->id(), $checks),
+            );
             $runner = new CheckRunner(
                 $appPath,
                 $policy,
                 $today,
-                [
-                    new PhpFloorCheck(),
-                    new UnpatchedCheck(),
-                    new UnboundedConstraintsCheck(),
-                    new ComposerConfigCheck(),
-                    new LockCommittedCheck(),
-                    new PortabilityCheck(),
-                    new Mysql56Check(),
-                    new DestructiveDeployCheck(),
-                    new CiPipelinesCheck(),
-                    new ComposerAuditCheck(),
-                    $composerVersionCheck,
-                new RepoUrlCredentialsCheck(),
-                new OverridesCheck(),
-                new PolicyAgeCheck($resolved),
-            ],
+                $checks,
                 $overrides,
                 $timeout,
                 $phpRuntime
