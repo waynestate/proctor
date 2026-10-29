@@ -248,32 +248,133 @@ YAML,
         }
     }
 
+    public function testPrivateStackPackageWithoutGithubWorkflowPasses(): void
+    {
+        $appPath = $this->stackAppPath(false);
+        file_put_contents(
+            $appPath . '/.gitlab-ci.yml',
+            "composer-ci:\n  script:\n    - composer ci\n",
+        );
+
+        try {
+            $findings = (new CiPipelinesCheck())->run($this->contextFor($appPath));
+
+            self::assertCount(1, $findings);
+            self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+            self::assertSame('gitlab pipeline runs composer ci', $findings[0]->message);
+            self::assertNull($findings[0]->path);
+        } finally {
+            $this->removeStackApp($appPath);
+        }
+    }
+
+    public function testPrivateStackPackageWithGithubWorkflowWarns(): void
+    {
+        $appPath = $this->stackAppPath(false);
+        file_put_contents(
+            $appPath . '/.gitlab-ci.yml',
+            "composer-ci:\n  script:\n    - composer ci\n",
+        );
+        self::assertTrue(
+            is_dir($appPath . '/.github/workflows') || mkdir($appPath . '/.github/workflows', 0777, true),
+        );
+        file_put_contents($appPath . '/.github/workflows/ci.yml', $this->goodGithubWorkflow());
+
+        try {
+            $findings = (new CiPipelinesCheck())->run($this->contextFor($appPath));
+
+            self::assertCount(1, $findings);
+            self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+            self::assertSame(
+                [['ci-pipelines-github-private', '.github/workflows/ci.yml', 1]],
+                $this->triples($findings),
+            );
+        } finally {
+            $this->removeStackApp($appPath);
+        }
+    }
+
+    public function testStackPackageWithStringFalseGithubMirrorStillFailsWhenMissing(): void
+    {
+        $appPath = $this->stackAppPath('false');
+
+        try {
+            $findings = (new CiPipelinesCheck())->run($this->contextFor($appPath));
+
+            self::assertCount(2, $findings);
+            self::assertSame(Finding::STATUS_FAIL, $findings[0]->status);
+            self::assertSame(Finding::STATUS_FAIL, $findings[1]->status);
+            self::assertSame(
+                [
+                    ['ci-pipelines-github-missing', '.github/workflows/ci.yml', 1],
+                    ['ci-pipelines-gitlab-missing', '.gitlab-ci.yml', 1],
+                ],
+                $this->triples($findings),
+            );
+        } finally {
+            $this->removeStackApp($appPath);
+        }
+    }
+
     /**
-     * A temp app whose composer.json names it a stack package.
+     * A temp app whose composer.json names it a stack package. When
+     * $githubMirror is not null, extra.proctor.github-mirror carries that
+     * exact value (boolean false, or the string "false").
      */
-    private function stackAppPath(): string
+    private function stackAppPath(mixed $githubMirror = null): string
     {
         $appPath = sys_get_temp_dir() . '/proctor-ci-pipelines-' . uniqid('', true);
         self::assertTrue(is_dir($appPath) || mkdir($appPath, 0777, true));
+        $composer = [
+            'name' => 'waynestate/fixture',
+            'require' => ['php' => '^8.4'],
+        ];
+        if ($githubMirror !== null) {
+            $composer['extra'] = ['proctor' => ['github-mirror' => $githubMirror]];
+        }
         file_put_contents(
             $appPath . '/composer.json',
-            <<<'JSON'
-{
-    "name": "waynestate/fixture",
-    "require": {
-        "php": "^8.4"
-    }
-}
-JSON,
+            json_encode($composer, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n",
         );
 
         return $appPath;
+    }
+
+    /**
+     * A GitHub workflow that passes the check on its own: a reusable
+     * workflow call pinned to a 40-hex commit SHA, with
+     * ci-command: composer ci.
+     */
+    private function goodGithubWorkflow(): string
+    {
+        return <<<'YAML'
+name: CI
+
+on:
+  push:
+    branches: ['**']
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: waynestate/preflight/.github/workflows/php-package.yml@65711c350bd0ddf637f0933482d7bdae2a9b3c3b
+    with:
+      php-versions: '["8.3","8.4","8.5"]'
+      ci-command: composer ci
+YAML;
     }
 
     private function removeStackApp(string $appPath): void
     {
         if (is_file($appPath . '/.gitlab-ci.yml')) {
             unlink($appPath . '/.gitlab-ci.yml');
+        }
+        if (is_file($appPath . '/.github/workflows/ci.yml')) {
+            unlink($appPath . '/.github/workflows/ci.yml');
+            rmdir($appPath . '/.github/workflows');
+            rmdir($appPath . '/.github');
         }
         unlink($appPath . '/composer.json');
         rmdir($appPath);
