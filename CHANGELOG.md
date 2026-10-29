@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Changed: the deploy layer's Squire kit is refreshed to 0.3.3 (release options can now live in ./.env.squire, and SQUIRE_PROCTOR=enforce can stop a release on failing checks).
+
 ## 0.2.7 (2026-10-29)
 
 - Added: ci-pipelines skips the GitHub workflow for a private stack package that sets extra.proctor.github-mirror to false.
