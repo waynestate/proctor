@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Waynestate\Proctor\Tests;
 
+use DateTimeImmutable;
 use Waynestate\Proctor\Policy\PolicyResolver;
 
 /**
@@ -82,8 +83,18 @@ final class PolicyResolutionTest extends ProctorTestCase
             self::assertIsArray($data);
             self::assertSame('bundled', $data['policy']['origin']);
             self::assertStringEndsWith('src/Creed/policy.json', $data['policy']['path']);
-            self::assertNull($data['policy']['refreshed_on']);
-            self::assertNull($data['policy']['age_days']);
+            // The bundled copy's own refreshed_on, read at test time: the
+            // re-exported policy data carries it, and the report must carry
+            // the same value with a matching age.
+            $bundled = json_decode((string) file_get_contents(__DIR__ . '/../src/Creed/policy.json'), true);
+            self::assertIsArray($bundled);
+            self::assertArrayHasKey('refreshed_on', $bundled);
+            self::assertSame($bundled['refreshed_on'], $data['policy']['refreshed_on']);
+            // The run uses the suite's fixed --today, so the age is judged
+            // against it, mirroring ResolvedPolicy::ageDays().
+            $interval = (new DateTimeImmutable($bundled['refreshed_on']))->diff(new DateTimeImmutable(self::TODAY));
+            $expectedAge = $interval->invert === 1 ? -$interval->days : $interval->days;
+            self::assertSame($expectedAge, $data['policy']['age_days']);
         } finally {
             $this->removeDir($app);
         }
@@ -91,23 +102,35 @@ final class PolicyResolutionTest extends ProctorTestCase
 
     public function testBundledPolicyLineInTextReports(): void
     {
-        $app = $this->tempApp(['composer.json' => '{"require":{"php":"^8.3"}}']);
+        $app = $this->tempApp([
+            'composer.json' => '{"require":{"php":"^8.3"}}',
+            'undated-policy.json' => $this->policyWith(null),
+        ]);
         try {
             $result = $this->runProctorResolved($app, 'text');
+            $bundled = json_decode((string) file_get_contents(__DIR__ . '/../src/Creed/policy.json'), true);
+            self::assertIsArray($bundled);
+            self::assertArrayHasKey('refreshed_on', $bundled);
             self::assertMatchesRegularExpression(
-                '/^Policy: bundled \(.*\), no refresh date$/m',
+                '/^Policy: bundled \(.*\), refreshed ' . preg_quote($bundled['refreshed_on'], '/') . ', /m',
                 $result['stdout'],
+            );
+            // A policy without refreshed_on still reports "no refresh date".
+            $undated = $this->runProctorResolved($app, 'text', $app . '/undated-policy.json');
+            self::assertMatchesRegularExpression(
+                '/^Policy: option \(.*\), no refresh date$/m',
+                $undated['stdout'],
             );
         } finally {
             $this->removeDir($app);
         }
     }
 
-    public function testVendorCopyIsUsedWhenBundledHasNoRefreshDate(): void
+    public function testVendorCopyIsUsedWhenItIsNewerThanBundled(): void
     {
         $app = $this->tempApp([
             'composer.json' => '{"require":{"php":"^8.3"}}',
-            'vendor/waynestate/creed/policy/policy.json' => $this->policyWith('2026-10-25'),
+            'vendor/waynestate/creed/policy/policy.json' => $this->policyWith('2999-12-31'),
         ]);
         try {
             $result = $this->runProctorResolved($app, 'json');
@@ -115,8 +138,11 @@ final class PolicyResolutionTest extends ProctorTestCase
             self::assertIsArray($data);
             self::assertSame('vendor', $data['policy']['origin']);
             self::assertStringEndsWith('vendor/waynestate/creed/policy/policy.json', $data['policy']['path']);
-            self::assertSame('2026-10-25', $data['policy']['refreshed_on']);
-            self::assertSame(2, $data['policy']['age_days']);
+            self::assertSame('2999-12-31', $data['policy']['refreshed_on']);
+            // The date is far in the future, so the age is negative on any
+            // run date; its exact value would pin today.
+            self::assertIsInt($data['policy']['age_days']);
+            self::assertLessThan(0, $data['policy']['age_days']);
         } finally {
             $this->removeDir($app);
         }
