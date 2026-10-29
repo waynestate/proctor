@@ -17,6 +17,7 @@ use Waynestate\Proctor\Check\LockCommittedCheck;
 use Waynestate\Proctor\Check\Mysql56Check;
 use Waynestate\Proctor\Check\OverridesCheck;
 use Waynestate\Proctor\Check\PhpFloorCheck;
+use Waynestate\Proctor\Check\PolicyAgeCheck;
 use Waynestate\Proctor\Check\PortabilityCheck;
 use Waynestate\Proctor\Check\RepoUrlCredentialsCheck;
 use Waynestate\Proctor\Check\UnboundedConstraintsCheck;
@@ -97,7 +98,9 @@ $application->add(new class () extends Command {
             $resolved = PolicyResolver::resolve(
                 $input->getOption('policy'),
                 $appPath,
-                static fn(string $note): void => $errorOutput->writeln($note),
+                static function (string $note) use ($errorOutput): void {
+                    $errorOutput->writeln($note);
+                },
             );
         } catch (InvalidArgumentException | RuntimeException $e) {
             $errorOutput->writeln($e->getMessage());
@@ -160,9 +163,10 @@ $application->add(new class () extends Command {
                     new CiPipelinesCheck(),
                     new ComposerAuditCheck(),
                     $composerVersionCheck,
-                    new RepoUrlCredentialsCheck(),
-                    new OverridesCheck(),
-                ],
+                new RepoUrlCredentialsCheck(),
+                new OverridesCheck(),
+                new PolicyAgeCheck($resolved),
+            ],
                 $overrides,
                 $timeout,
                 $phpRuntime
@@ -189,6 +193,7 @@ $application->add(new class () extends Command {
             $findings,
             $overrides,
             $hasFail ? Report::EXIT_FAIL : Report::EXIT_PASS,
+            $resolved,
             ['composer' => $composerVersionCheck->composerVersion]
         );
 

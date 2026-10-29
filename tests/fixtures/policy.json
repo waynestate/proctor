@@ -1,5 +1,6 @@
 {
     "schema_version": 1,
+    "refreshed_on": "2026-10-20",
     "components": {
         "php": {
             "versions": {

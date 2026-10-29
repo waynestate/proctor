@@ -54,6 +54,8 @@ final class PolicyResolver
      */
     public static function resolve(?string $policyOption, string $appPath, ?callable $note = null): ResolvedPolicy
     {
+        $emit = $note ?? static function (string $message): void {};
+
         if ($policyOption !== null && $policyOption !== '') {
             return self::explicit($policyOption, self::ORIGIN_OPTION);
         }
@@ -65,21 +67,33 @@ final class PolicyResolver
 
         $vendorPath = $appPath . '/vendor/waynestate/creed/policy/policy.json';
         if (is_file($vendorPath) && is_readable($vendorPath)) {
+            $raw = file_get_contents($vendorPath);
+            if ($raw === false) {
+                $emit("Skipping vendor policy {$vendorPath}: the file could not be read.");
+
+                return self::bundled();
+            }
+            $data = json_decode($raw, true);
+            if (!is_array($data)) {
+                $emit("Skipping vendor policy {$vendorPath}: invalid JSON (" . json_last_error_msg() . ').');
+
+                return self::bundled();
+            }
             try {
-                $vendorPolicy = Policy::fromFile($vendorPath);
-            } catch (InvalidArgumentException | RuntimeException $e) {
-                $note?->("Skipping vendor policy {$vendorPath}: " . $e->getMessage());
+                $vendorPolicy = Policy::fromArray($data);
+            } catch (InvalidArgumentException $e) {
+                $emit("Skipping vendor policy {$vendorPath}: " . $e->getMessage());
 
                 return self::bundled();
             }
 
-            $vendorDate = self::refreshedOn($vendorPath);
+            $vendorDate = self::dateOrNull($data['refreshed_on'] ?? null);
             $bundledDate = self::refreshedOn(self::BUNDLED_PATH);
             if (self::vendorAtLeastAsFresh($vendorDate, $bundledDate)) {
                 return new ResolvedPolicy($vendorPolicy, self::ORIGIN_VENDOR, $vendorPath, $vendorDate);
             }
 
-            $note?->(sprintf(
+            $emit(sprintf(
                 'Using the bundled policy: the vendor copy at %s (%s) is older than the bundled copy (%s).',
                 $vendorPath,
                 self::when($vendorDate),
@@ -150,7 +164,16 @@ final class PolicyResolver
         if (!is_array($data)) {
             return null;
         }
-        $value = $data['refreshed_on'] ?? null;
+
+        return self::dateOrNull($data['refreshed_on'] ?? null);
+    }
+
+    /**
+     * A refreshed_on value as an ISO date string, or null when it is absent
+     * or not one.
+     */
+    private static function dateOrNull(mixed $value): ?string
+    {
         if (is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) === 1) {
             return $value;
         }

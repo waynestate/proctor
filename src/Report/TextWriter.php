@@ -15,6 +15,7 @@ use Waynestate\Proctor\ToolError;
  * a summary line:
  *
  *   proctor 0.1.0 | composer: 2.10.3
+ *   Policy: option (/app/policy.json), refreshed 2026-10-20, 7 days ago
  *   PASS php-floor: php floor 8.4 is active
  *   FAIL unbounded-constraints: vendor/a constraint "dev-master" is unbounded
  *   OVERRIDE lock-committed: x (expires 2026-01-01, approved by t)
@@ -28,6 +29,7 @@ final class TextWriter implements ReportWriter
         if ($report->tools !== []) {
             $lines[] = $this->headerLine($report);
         }
+        $lines[] = $this->policyLine($report);
         foreach ($report->findings as $finding) {
             $lines[] = sprintf(
                 '%s %s: %s',
@@ -64,6 +66,21 @@ final class TextWriter implements ReportWriter
         }
 
         return implode(' | ', $parts);
+    }
+
+    /**
+     * The policy line: where the policy came from, and how old it is.
+     */
+    private function policyLine(Report $report): string
+    {
+        $resolved = $report->resolvedPolicy;
+        $base = sprintf('Policy: %s (%s)', $resolved->origin, $resolved->path);
+        $age = $resolved->ageDays($report->today);
+        if ($age === null || $resolved->refreshedOn === null) {
+            return $base . ', no refresh date';
+        }
+
+        return sprintf('%s, refreshed %s, %d days ago', $base, $resolved->refreshedOn, $age);
     }
 
     private function summaryLine(Report $report): string

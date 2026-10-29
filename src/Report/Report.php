@@ -7,6 +7,7 @@ namespace Waynestate\Proctor\Report;
 use DateTimeImmutable;
 use Waynestate\Proctor\Check\Finding;
 use Waynestate\Proctor\Override\Override;
+use Waynestate\Proctor\Policy\ResolvedPolicy;
 
 /**
  * The result of one `proctor check` run, ready for a ReportWriter.
@@ -31,9 +32,11 @@ final class Report
      * @param list<Finding>              $findings  the findings in check order
      * @param list<Override>             $overrides the app's policy-overrides.json entries
      * @param int                        $exitCode  EXIT_PASS or EXIT_FAIL
-     * @param array<string, string|null> $tools     the versions of the external tools the run
-     *                                              used, e.g. ['composer' => '2.10.3']; null
-     *                                              when a tool's version could not be determined
+     * @param ResolvedPolicy             $resolvedPolicy the CREED policy the run checked against,
+     *                                                   and where it came from
+     * @param array<string, string|null> $tools          the versions of the external tools the run
+     *                                                   used, e.g. ['composer' => '2.10.3']; null
+     *                                                   when a tool's version could not be determined
      */
     public function __construct(
         public readonly string $path,
@@ -41,6 +44,7 @@ final class Report
         public readonly array $findings,
         public readonly array $overrides,
         public readonly int $exitCode,
+        public readonly ResolvedPolicy $resolvedPolicy,
         public readonly array $tools = [],
     ) {
         if (!in_array($this->exitCode, [self::EXIT_PASS, self::EXIT_FAIL], true)) {
