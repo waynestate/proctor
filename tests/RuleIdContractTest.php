@@ -71,6 +71,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/ci-pipelines/github-missing',
         'proctor/ci-pipelines/github-parse',
         'proctor/ci-pipelines/github-no-ci',
+        'proctor/ci-pipelines/github-private',
         'proctor/ci-pipelines/unpinned-uses',
         // composer-audit
         'proctor/composer-audit/advisory',

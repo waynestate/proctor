@@ -12,9 +12,12 @@ use Symfony\Component\Yaml\Yaml;
  * name starting with waynestate/) the contract is hard: .gitlab-ci.yml
  * and .github/workflows/ci.yml must both exist and run `composer ci`,
  * and a GitHub `uses:` ref must be a 40-hex commit SHA so a reusable
- * workflow cannot move out from under the pipeline. For any other
- * project the GitLab pipeline is still expected, but a missing or
- * incomplete one is a warning, and the GitHub workflow is optional.
+ * workflow cannot move out from under the pipeline. A stack package that
+ * sets extra.proctor.github-mirror to exactly false in composer.json is
+ * private and must never be on GitHub: the GitHub workflow is then not
+ * required, and shipping one is a warning. For any other project the
+ * GitLab pipeline is still expected, but a missing or incomplete one is
+ * a warning, and the GitHub workflow is optional.
  *
  * The files are parsed as YAML, not grepped: a `composer ci` that only
  * appears in a comment is not a script line, and a GitLab job is a
@@ -40,9 +43,10 @@ final class CiPipelinesCheck implements CheckInterface
     {
         $appPath = rtrim($context->appPath, '/\\');
         $isStack = $this->isStackPackage($appPath);
+        $private = $isStack && $this->isPrivateStackPackage($appPath);
         $findings = [
             ...$this->gitlabFindings($appPath . '/' . self::GITLAB_CI, $isStack),
-            ...$this->githubFindings($appPath . '/' . self::GITHUB_CI, $isStack),
+            ...$this->githubFindings($appPath . '/' . self::GITHUB_CI, $isStack, $private),
         ];
 
         if ($findings === []) {
@@ -83,6 +87,40 @@ final class CiPipelinesCheck implements CheckInterface
         }
 
         return str_starts_with($data['name'], 'waynestate/');
+    }
+
+    /**
+     * Whether the app is a private stack package: its composer.json sets
+     * extra.proctor.github-mirror to exactly false, the boolean. Such a
+     * package must never be on GitHub, so a missing
+     * .github/workflows/ci.yml gives no finding. Any other value (the key
+     * missing, true, or a string such as "false") keeps the ordinary
+     * stack-package rules.
+     */
+    private function isPrivateStackPackage(string $appPath): bool
+    {
+        $composerJson = $appPath . '/composer.json';
+        if (!is_file($composerJson)) {
+            return false;
+        }
+        $raw = file_get_contents($composerJson);
+        if ($raw === false) {
+            return false;
+        }
+        $data = json_decode($raw, true);
+        if (!is_array($data)) {
+            return false;
+        }
+        $extra = $data['extra'] ?? null;
+        if (!is_array($extra)) {
+            return false;
+        }
+        $proctor = $extra['proctor'] ?? null;
+        if (!is_array($proctor)) {
+            return false;
+        }
+
+        return ($proctor['github-mirror'] ?? null) === false;
     }
 
     /**
@@ -151,17 +189,20 @@ final class CiPipelinesCheck implements CheckInterface
      * The findings for .github/workflows/ci.yml. For stack packages the
      * file is required: a fail when it is missing, unparseable, or no job
      * runs composer ci (directly, or through a reusable workflow with
-     * ci-command: composer ci). For other projects it is optional: a
-     * missing file gives no finding, and the same rules apply as
-     * warnings. A uses: ref that is not a 40-hex commit SHA is a warning
-     * either way.
+     * ci-command: composer ci). A private stack package (one whose
+     * composer.json sets extra.proctor.github-mirror to exactly false)
+     * must never be on GitHub: a missing file gives no finding, and a
+     * present one gets the warning-only rules plus a github-private
+     * warning. For other projects the file is optional: a missing file
+     * gives no finding, and the same rules apply as warnings. A uses:
+     * ref that is not a 40-hex commit SHA is a warning either way.
      *
      * @return list<Finding>
      */
-    private function githubFindings(string $absolutePath, bool $isStack): array
+    private function githubFindings(string $absolutePath, bool $isStack, bool $private): array
     {
         if (!is_file($absolutePath)) {
-            if (!$isStack) {
+            if (!$isStack || $private) {
                 return [];
             }
 
@@ -176,11 +217,24 @@ final class CiPipelinesCheck implements CheckInterface
             )];
         }
 
-        $status = $isStack ? Finding::STATUS_FAIL : Finding::STATUS_WARNING;
+        $findings = [];
+        if ($private) {
+            $findings[] = new Finding(
+                $this->id(),
+                Finding::STATUS_WARNING,
+                'ci-pipelines-github-private: extra.proctor.github-mirror is false but .github/workflows/ci.yml exists; a private package should not ship a GitHub workflow',
+                self::GITHUB_CI,
+                1,
+                null,
+                'github-private',
+            );
+        }
+
+        $status = $isStack && !$private ? Finding::STATUS_FAIL : Finding::STATUS_WARNING;
 
         [$data, $error] = $this->parseYaml($absolutePath);
         if ($data === null) {
-            return [new Finding(
+            $findings[] = new Finding(
                 $this->id(),
                 $status,
                 sprintf(
@@ -191,10 +245,11 @@ final class CiPipelinesCheck implements CheckInterface
                 1,
                 null,
                 'github-parse',
-            )];
+            );
+
+            return $findings;
         }
 
-        $findings = [];
         $runsComposerCi = false;
         $jobs = $data['jobs'] ?? null;
 
