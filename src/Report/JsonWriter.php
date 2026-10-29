@@ -23,6 +23,12 @@ final class JsonWriter implements ReportWriter
             'result' => $report->result(),
             'exit' => $report->exitCode,
             'tools' => $report->tools,
+            'policy' => [
+                'origin' => $report->resolvedPolicy->origin,
+                'path' => $report->resolvedPolicy->path,
+                'refreshed_on' => $report->resolvedPolicy->refreshedOn,
+                'age_days' => $report->resolvedPolicy->ageDays($report->today),
+            ],
             'findings' => array_map(
                 static fn(Finding $finding): array => [
                     'check_id' => $finding->checkId,
