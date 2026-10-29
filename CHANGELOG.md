@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- PHPStan now includes Pinstripe's raw preset (`vendor/waynestate/pinstripe/phpstan/raw.neon`) instead of a hand copy of its parameters, so level 8, the ignore-reporting flags and the deprecation checks follow the coding standard from one place. PROCTOR keeps only its own paths and PHP version range. The new deprecation rules caught one call: `bin/proctor` now registers its command with `Application::addCommand()`, because `add()` is deprecated since Symfony 7.4.
 - The CREED policy now resolves without `--policy`: the option, then the `PROCTOR_POLICY` environment variable, then the app's `vendor/waynestate/creed/policy/policy.json` (when at least as fresh as the bundled copy), then the policy bundled with PROCTOR. Every report names the policy in use (origin, path, `refreshed_on`, age in days); the `json` format gains a `policy` object and the `text` format a policy line.
 - `policy-age`: new warning check (`proctor/policy-age`): warns when the policy in use is more than 60 days old, or when a non-bundled policy has no `refreshed_on` date. Warning only: an old policy never fails a run.
 - An app with no composer.json now gets a verdict (php-floor fails) instead of exit 2.
