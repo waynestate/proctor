@@ -31,8 +31,19 @@ use Waynestate\Proctor\Report\SarifWriter;
 use Waynestate\Proctor\Report\TextWriter;
 use Waynestate\Proctor\ToolError;
 
-$autoload = __DIR__ . '/../vendor/autoload.php';
-if (!is_file($autoload)) {
+// Installed as a dependency, Composer's bin proxy tells us where the host app's autoloader is.
+// Run from a checkout of PROCTOR itself, it is our own vendor/autoload.php. Either way, one roll call.
+$autoload = $GLOBALS['_composer_autoload_path'] ?? null;
+if (!is_string($autoload) || !is_file($autoload)) {
+    $autoload = null;
+    foreach ([__DIR__ . '/../vendor/autoload.php', __DIR__ . '/../../../autoload.php'] as $candidate) {
+        if (is_file($candidate)) {
+            $autoload = $candidate;
+            break;
+        }
+    }
+}
+if ($autoload === null) {
     fwrite(STDERR, "vendor/autoload.php not found. Run `composer install` first.\n");
     exit(2);
 }
