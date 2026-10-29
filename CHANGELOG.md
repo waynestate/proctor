@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.2.7 (2026-10-29)
+
 - Added: ci-pipelines skips the GitHub workflow for a private stack package that sets extra.proctor.github-mirror to false.
 - Changed: project names written as words except acronyms.
 - Fixed: stale capability claims in the site and docs.
