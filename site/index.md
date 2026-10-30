@@ -78,7 +78,7 @@ Nine of PROCTOR's fourteen checks, in the order they run. Each one shows a real 
    WARN ci-pipelines: ci-pipelines-gitlab-missing: .gitlab-ci.yml is missing; add a GitLab pipeline with a job whose script runs composer ci
 8. Q8 `composer-audit`
    ### Does the lock carry a known advisory?
-   Fails at or above the policy's `audit_severity_threshold`, warns below it. An advisory with no severity is treated as failing, because we'd rather not turn unknown input into a pass.
+   Fails at or above the policy's `audit_severity_threshold`, warns below it. Each finding names the package, the locked version, the advisory's CVE or id, its title and its severity. An advisory the app ignores in its own composer.json is a warning, not a fail, and so is anything composer has already moved to its ignored section. An advisory with no severity is treated as failing, because we'd rather not turn unknown input into a pass.
    PASS composer-audit: no advisories found
 9. Q9 `overrides`
    ### Has any note from home expired?
