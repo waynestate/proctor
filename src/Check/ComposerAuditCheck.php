@@ -13,8 +13,12 @@ use Waynestate\Proctor\ToolError;
  *
  * Composer exits non-zero (1, 2 or 3) when it reports findings; that is
  * expected, so the decision is made from stdout, never from the exit code
- * alone. An advisory whose CVE or advisory id is in the app's audit.ignore
- * list is a warning, not a fail. Abandoned packages are warnings. When the
+ * alone. Each advisory finding names the package, the locked version, the
+ * advisory's CVE (or advisory id), its title and its severity. An advisory
+ * the app ignores in its composer.json (config.policy.advisories.ignore-id,
+ * config.policy.advisories.ignore or the legacy config.audit.ignore) is a
+ * warning, not a fail, and so is anything composer has already moved to its
+ * ignored-advisories section. Abandoned packages are warnings. When the
  * composer executable or composer.lock is missing, the check reports one
  * info finding and nothing else.
  */
@@ -80,12 +84,19 @@ final class ComposerAuditCheck implements CheckInterface
 
         $threshold = $this->threshold($context->policy);
         $ignored = $this->ignoredAdvisories($context);
+        $versions = $this->lockedVersions($context);
 
         $findings = [];
 
-        $advisories = $decoded['advisories'] ?? [];
-        if (is_array($advisories)) {
-            foreach ($advisories as $package => $entries) {
+        // The ignored-advisories section holds advisories composer has
+        // already suppressed through the same config; they stay visible as
+        // warnings instead of vanishing from the report.
+        foreach (['advisories' => false, 'ignored-advisories' => true] as $section => $alreadyIgnored) {
+            $packages = $decoded[$section] ?? [];
+            if (!is_array($packages)) {
+                continue;
+            }
+            foreach ($packages as $package => $entries) {
                 if (!is_array($entries)) {
                     continue;
                 }
@@ -96,17 +107,13 @@ final class ComposerAuditCheck implements CheckInterface
                     $severity = $entry['severity'] ?? null;
                     $findings[] = new Finding(
                         $this->id(),
-                        $this->advisoryStatus($entry, $severity, $threshold, $ignored),
-                        sprintf(
-                            '%s %s (%s)',
-                            (string) $package,
-                            $this->advisoryId($entry),
-                            is_string($severity) ? $severity : 'unknown',
-                        ),
+                        $this->advisoryStatus((string) $package, $entry, $severity, $threshold, $ignored, $alreadyIgnored),
+                        $this->advisoryMessage((string) $package, $versions[(string) $package] ?? null, $entry, $severity),
                         'composer.lock',
                         1,
                         null,
                         'advisory',
+                        [$this->advisoryData($entry)],
                     );
                 }
             }
@@ -161,16 +168,23 @@ final class ComposerAuditCheck implements CheckInterface
     }
 
     /**
-     * The status of an advisory: a warning when it is in the app's
-     * audit.ignore list, otherwise a fail when its severity is at or above
-     * the threshold and a warning below it.
+     * The status of an advisory: a warning when the app ignores it, or when
+     * composer has already moved it to the ignored section, otherwise a
+     * fail when its severity is at or above the threshold and a warning
+     * below it.
      *
      * @param array<string, mixed> $entry
-     * @param list<string>         $ignored
+     * @param array{ids: list<string>, packages: list<string>} $ignored
      */
-    private function advisoryStatus(array $entry, mixed $severity, string $threshold, array $ignored): string
-    {
-        if ($this->isIgnored($entry, $ignored)) {
+    private function advisoryStatus(
+        string $package,
+        array $entry,
+        mixed $severity,
+        string $threshold,
+        array $ignored,
+        bool $alreadyIgnored,
+    ): string {
+        if ($alreadyIgnored || $this->isIgnored($package, $entry, $ignored)) {
             return Finding::STATUS_WARNING;
         }
 
@@ -180,26 +194,20 @@ final class ComposerAuditCheck implements CheckInterface
     }
 
     /**
-     * True when the advisory's CVE or advisory id is in the app's
-     * audit.ignore list.
+     * True when the app's composer.json ignores the advisory's package or
+     * any of its identifiers.
      *
      * @param array<string, mixed> $entry
-     * @param list<string>         $ignored
+     * @param array{ids: list<string>, packages: list<string>} $ignored
      */
-    private function isIgnored(array $entry, array $ignored): bool
+    private function isIgnored(string $package, array $entry, array $ignored): bool
     {
-        if ($ignored === []) {
-            return false;
+        if (in_array($package, $ignored['packages'], true)) {
+            return true;
         }
 
-        $advisory = $entry['advisory'] ?? null;
-        if (!is_array($advisory)) {
-            return false;
-        }
-
-        foreach (['cve', 'advisory_id'] as $key) {
-            $value = $advisory[$key] ?? null;
-            if (is_string($value) && $value !== '' && in_array($value, $ignored, true)) {
+        foreach ($this->advisoryIdentifiers($entry) as $identifier) {
+            if (in_array($identifier, $ignored['ids'], true)) {
                 return true;
             }
         }
@@ -208,32 +216,245 @@ final class ComposerAuditCheck implements CheckInterface
     }
 
     /**
-     * The advisory ids the app ignores via audit.ignore in its composer.json.
+     * Every identifier the app can use to ignore the advisory: its CVE,
+     * its advisory id and the remote ids of its sources.
+     *
+     * @param array<string, mixed> $entry
      *
      * @return list<string>
+     */
+    private function advisoryIdentifiers(array $entry): array
+    {
+        $identifiers = [];
+
+        foreach (['cve', 'advisoryId'] as $key) {
+            $value = $entry[$key] ?? null;
+            if (is_string($value) && $value !== '') {
+                $identifiers[] = $value;
+            }
+        }
+
+        $sources = $entry['sources'] ?? [];
+        if (is_array($sources)) {
+            foreach ($sources as $source) {
+                if (!is_array($source)) {
+                    continue;
+                }
+                $remoteId = $source['remoteId'] ?? null;
+                if (is_string($remoteId) && $remoteId !== '') {
+                    $identifiers[] = $remoteId;
+                }
+            }
+        }
+
+        return array_values(array_unique($identifiers));
+    }
+
+    /**
+     * The identifier the finding shows: the CVE when there is one, then the
+     * advisory id, then a GHSA source id, then "unknown".
+     *
+     * @param array<string, mixed> $entry
+     */
+    private function advisoryId(array $entry): string
+    {
+        foreach (['cve', 'advisoryId'] as $key) {
+            $value = $entry[$key] ?? null;
+            if (is_string($value) && $value !== '') {
+                return $value;
+            }
+        }
+
+        $sources = $entry['sources'] ?? [];
+        if (is_array($sources)) {
+            foreach ($sources as $source) {
+                if (!is_array($source)) {
+                    continue;
+                }
+                $remoteId = $source['remoteId'] ?? null;
+                if (is_string($remoteId) && str_starts_with($remoteId, 'GHSA-')) {
+                    return $remoteId;
+                }
+            }
+        }
+
+        return 'unknown';
+    }
+
+    /**
+     * The finding's text: "<package> <version>: <id> <title> (<severity>)",
+     * naming the locked version when composer.lock records one.
+     *
+     * @param array<string, mixed> $entry
+     */
+    private function advisoryMessage(string $package, ?string $version, array $entry, mixed $severity): string
+    {
+        $head = $version !== null && $version !== ''
+            ? $package . ' ' . ltrim($version, 'v')
+            : $package;
+
+        $title = $entry['title'] ?? null;
+
+        return sprintf(
+            '%s: %s %s (%s)',
+            $head,
+            $this->advisoryId($entry),
+            is_string($title) && $title !== '' ? $title : 'no title',
+            is_string($severity) && $severity !== '' ? $severity : 'unknown',
+        );
+    }
+
+    /**
+     * The machine-readable form of the advisory for the JSON report.
+     *
+     * @param array<string, mixed> $entry
+     *
+     * @return array{id: string, cve: string|null, title: string, link: string|null, severity: string|null}
+     */
+    private function advisoryData(array $entry): array
+    {
+        $cve = $entry['cve'] ?? null;
+        $title = $entry['title'] ?? null;
+        $link = $entry['link'] ?? null;
+        $severity = $entry['severity'] ?? null;
+
+        return [
+            'id' => $this->advisoryId($entry),
+            'cve' => is_string($cve) && $cve !== '' ? $cve : null,
+            'title' => is_string($title) ? $title : '',
+            'link' => is_string($link) ? $link : null,
+            'severity' => is_string($severity) ? $severity : null,
+        ];
+    }
+
+    /**
+     * The versions composer.lock pins, keyed by package name.
+     *
+     * @return array<string, string>
+     */
+    private function lockedVersions(CheckContext $context): array
+    {
+        $file = $context->appPath . '/composer.lock';
+        $raw = file_get_contents($file);
+        if ($raw === false) {
+            return [];
+        }
+
+        $lock = json_decode($raw, true);
+        if (!is_array($lock)) {
+            return [];
+        }
+
+        $versions = [];
+        foreach (['packages', 'packages-dev'] as $section) {
+            $packages = $lock[$section] ?? [];
+            if (!is_array($packages)) {
+                continue;
+            }
+            foreach ($packages as $package) {
+                if (!is_array($package)) {
+                    continue;
+                }
+                $name = $package['name'] ?? null;
+                $version = $package['version'] ?? null;
+                if (is_string($name) && $name !== '' && is_string($version) && $version !== '') {
+                    $versions[$name] = $version;
+                }
+            }
+        }
+
+        return $versions;
+    }
+
+    /**
+     * What the app's composer.json tells composer audit to ignore, split
+     * into advisory ids and package names.
+     *
+     * Composer 2.6 and later read config.policy.advisories (ignore-id for
+     * advisory ids, ignore for package names); older releases read the
+     * legacy config.audit.ignore, whose entries are ids or
+     * "vendor/package" strings. Both shapes are honoured here so a
+     * finding's status matches what composer itself suppresses.
+     *
+     * @return array{ids: list<string>, packages: list<string>}
      */
     private function ignoredAdvisories(CheckContext $context): array
     {
         $file = $context->appPath . '/composer.json';
         $raw = file_get_contents($file);
         if ($raw === false) {
-            return [];
+            return ['ids' => [], 'packages' => []];
         }
 
         $data = json_decode($raw, true);
         if (!is_array($data)) {
+            return ['ids' => [], 'packages' => []];
+        }
+
+        $config = $data['config'] ?? null;
+        if (!is_array($config)) {
+            return ['ids' => [], 'packages' => []];
+        }
+
+        $policy = $config['policy']['advisories'] ?? null;
+        if (is_array($policy)) {
+            return [
+                'ids' => $this->ignoreEntries($policy['ignore-id'] ?? null),
+                'packages' => $this->ignoreEntries($policy['ignore'] ?? null),
+            ];
+        }
+
+        $ids = [];
+        $packages = [];
+        foreach ($this->ignoreEntries($config['audit']['ignore'] ?? null) as $entry) {
+            if (str_contains($entry, '/')) {
+                $packages[] = $entry;
+            } else {
+                $ids[] = $entry;
+            }
+        }
+
+        return ['ids' => $ids, 'packages' => $packages];
+    }
+
+    /**
+     * The values of an ignore setting in either of composer's two shapes:
+     * a list of ids (plain strings, or objects carrying an id) or a map of
+     * id to reason.
+     *
+     * @return list<string>
+     */
+    private function ignoreEntries(mixed $setting): array
+    {
+        if (!is_array($setting) || $setting === []) {
             return [];
         }
 
-        $ignore = $data['audit']['ignore'] ?? [];
-        if (!is_array($ignore)) {
-            return [];
+        $isMap = false;
+        foreach (array_keys($setting) as $key) {
+            if (!is_int($key)) {
+                $isMap = true;
+                break;
+            }
         }
 
-        return array_values(array_filter(
-            $ignore,
-            static fn(mixed $id): bool => is_string($id) && $id !== '',
-        ));
+        $entries = [];
+        foreach ($setting as $key => $value) {
+            if ($isMap) {
+                if (is_string($key) && $key !== '') {
+                    $entries[] = $key;
+                }
+                continue;
+            }
+
+            if (is_string($value) && $value !== '') {
+                $entries[] = $value;
+            } elseif (is_array($value) && isset($value['id']) && is_string($value['id']) && $value['id'] !== '') {
+                $entries[] = $value['id'];
+            }
+        }
+
+        return array_values(array_unique($entries));
     }
 
     /**
@@ -247,26 +468,6 @@ final class ComposerAuditCheck implements CheckInterface
         }
 
         return array_search($severity, self::SEVERITIES, true) >= array_search($threshold, self::SEVERITIES, true);
-    }
-
-    /**
-     * The CVE of the advisory, or its advisory id, or "unknown".
-     *
-     * @param array<string, mixed> $entry
-     */
-    private function advisoryId(array $entry): string
-    {
-        $advisory = $entry['advisory'] ?? null;
-        if (is_array($advisory)) {
-            if (isset($advisory['cve']) && is_string($advisory['cve']) && $advisory['cve'] !== '') {
-                return $advisory['cve'];
-            }
-            if (isset($advisory['advisory_id']) && is_string($advisory['advisory_id']) && $advisory['advisory_id'] !== '') {
-                return $advisory['advisory_id'];
-            }
-        }
-
-        return 'unknown';
     }
 
     /**
