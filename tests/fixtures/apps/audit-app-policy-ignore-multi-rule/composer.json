@@ -1,0 +1,24 @@
+{
+    "require": {
+        "php": "^8.4",
+        "laravel/framework": "^9.0"
+    },
+    "config": {
+        "policy": {
+            "advisories": {
+                "ignore": {
+                    "laravel/framework": [
+                        {
+                            "constraint": "^10.0",
+                            "reason": "next major, accepted risk"
+                        },
+                        {
+                            "constraint": "^9.0",
+                            "reason": "current line, accepted risk"
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}

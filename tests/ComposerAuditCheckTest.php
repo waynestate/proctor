@@ -149,6 +149,72 @@ final class ComposerAuditCheckTest extends TestCase
         ]);
     }
 
+    public function testPolicyIgnoreEntryWithOnAuditFalseDoesNotDowngradeTheAdvisories(): void
+    {
+        // Booster's temporary unblock scopes itself to blocking only: with
+        // on-audit false composer still reports the advisories, so PROCTOR
+        // keeps its verdicts instead of hiding them.
+        $findings = $this->runAudit($this->app('audit-app-policy-ignore-on-audit-false'), $this->capturedAudit());
+
+        $this->assertFindings($findings, [
+            Finding::STATUS_FAIL,
+            Finding::STATUS_WARNING,
+            Finding::STATUS_FAIL,
+        ]);
+    }
+
+    public function testPolicyIgnoreEntryWithMatchingConstraintDowngradesEveryAdvisoryToAWarning(): void
+    {
+        // on-audit true and the locked 9.0.0 satisfies ^9.0, so the rule
+        // applies and every advisory of the package is downgraded.
+        $findings = $this->runAudit($this->app('audit-app-policy-ignore-constraint-match'), $this->capturedAudit());
+
+        $this->assertFindings($findings, [
+            Finding::STATUS_WARNING,
+            Finding::STATUS_WARNING,
+            Finding::STATUS_WARNING,
+        ]);
+    }
+
+    public function testPolicyIgnoreEntryWithUnmatchedConstraintDoesNotDowngradeTheAdvisories(): void
+    {
+        // on-audit true, but the locked 9.0.0 does not satisfy ^10.0, so
+        // the rule does not reach this app.
+        $findings = $this->runAudit($this->app('audit-app-policy-ignore-constraint-mismatch'), $this->capturedAudit());
+
+        $this->assertFindings($findings, [
+            Finding::STATUS_FAIL,
+            Finding::STATUS_WARNING,
+            Finding::STATUS_FAIL,
+        ]);
+    }
+
+    public function testPolicyIgnoreIdEntryWithOnAuditFalseDoesNotDowngradeTheAdvisory(): void
+    {
+        // The ignore-id rule scopes itself to blocking only, so the
+        // null-severity advisory keeps its fail-safe fail.
+        $findings = $this->runAudit($this->app('audit-app-policy-ignore-id-on-audit-false'), $this->capturedAudit());
+
+        $this->assertFindings($findings, [
+            Finding::STATUS_FAIL,
+            Finding::STATUS_WARNING,
+            Finding::STATUS_FAIL,
+        ]);
+    }
+
+    public function testPolicyIgnoreEntryWithSeveralRulesIgnoresWhenOneApplies(): void
+    {
+        // One rule misses the locked version and the next one matches, so
+        // the package is ignored.
+        $findings = $this->runAudit($this->app('audit-app-policy-ignore-multi-rule'), $this->capturedAudit());
+
+        $this->assertFindings($findings, [
+            Finding::STATUS_WARNING,
+            Finding::STATUS_WARNING,
+            Finding::STATUS_WARNING,
+        ]);
+    }
+
     public function testAdvisoriesComposerAlreadyMovedToIgnoredAreWarnings(): void
     {
         // Whatever the app's own config says, an advisory in composer's
