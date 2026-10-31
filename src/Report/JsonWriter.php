@@ -10,6 +10,9 @@ use Waynestate\Proctor\ToolError;
 
 /**
  * The machine-readable JSON format: one pretty-printed object on stdout.
+ *
+ * A finding that carries advisory data gets an "advisories" array with its
+ * entries; findings without advisory data carry no such key.
  */
 final class JsonWriter implements ReportWriter
 {
@@ -30,14 +33,21 @@ final class JsonWriter implements ReportWriter
                 'age_days' => $report->resolvedPolicy->ageDays($report->today),
             ],
             'findings' => array_map(
-                static fn(Finding $finding): array => [
-                    'check_id' => $finding->checkId,
-                    'rule_id' => $finding->ruleId,
-                    'status' => $finding->status,
-                    'message' => $finding->message,
-                    'path' => $finding->path,
-                    'line' => $finding->line,
-                ],
+                static function (Finding $finding): array {
+                    $data = [
+                        'check_id' => $finding->checkId,
+                        'rule_id' => $finding->ruleId,
+                        'status' => $finding->status,
+                        'message' => $finding->message,
+                        'path' => $finding->path,
+                        'line' => $finding->line,
+                    ];
+                    if ($finding->advisories !== []) {
+                        $data['advisories'] = $finding->advisories;
+                    }
+
+                    return $data;
+                },
                 $report->findings,
             ),
             'overrides' => array_map(

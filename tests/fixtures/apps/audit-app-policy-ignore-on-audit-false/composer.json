@@ -1,0 +1,20 @@
+{
+    "require": {
+        "php": "^8.4",
+        "laravel/framework": "^9.0"
+    },
+    "config": {
+        "policy": {
+            "advisories": {
+                "ignore": {
+                    "laravel/framework": {
+                        "constraint": "^9.0",
+                        "reason": "Booster temporary unblock: upgrade window pending",
+                        "on-block": true,
+                        "on-audit": false
+                    }
+                }
+            }
+        }
+    }
+}

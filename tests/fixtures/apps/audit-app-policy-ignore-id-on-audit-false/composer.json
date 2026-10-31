@@ -1,0 +1,18 @@
+{
+    "require": {
+        "php": "^8.4",
+        "laravel/framework": "^9.0"
+    },
+    "config": {
+        "policy": {
+            "advisories": {
+                "ignore-id": {
+                    "PKSA-mdq4-51ck-6kdq": {
+                        "reason": "accepted risk",
+                        "on-audit": false
+                    }
+                }
+            }
+        }
+    }
+}

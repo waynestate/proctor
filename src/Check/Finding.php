@@ -19,15 +19,17 @@ final class Finding
     public const STATUS_FAIL = 'fail';
 
     /**
-     * @param string      $checkId the id of the check that produced this finding
-     * @param string      $status  one of the STATUS_* constants
-     * @param string      $message human-readable description of the result
-     * @param string|null $path    path relative to the checked app, no leading "./", or null if none
-     * @param int         $line    line number in $path, 1-based
-     * @param State|null  $state   the policy state behind the finding, or null when the
-     *                             finding has no state
-     * @param string|null $rule    the rule within the check, or null for the check's default
-     *                             finding; the stable rule id is proctor/<checkId>/<rule>
+     * @param string                     $checkId    the id of the check that produced this finding
+     * @param string                     $status     one of the STATUS_* constants
+     * @param string                     $message    human-readable description of the result
+     * @param string|null                $path       path relative to the checked app, no leading "./", or null if none
+     * @param int                        $line       line number in $path, 1-based
+     * @param State|null                 $state      the policy state behind the finding, or null when the
+     *                                               finding has no state
+     * @param string|null                $rule       the rule within the check, or null for the check's default
+     *                                               finding; the stable rule id is proctor/<checkId>/<rule>
+     * @param list<array<string, mixed>> $advisories machine-readable advisory data (id, cve, title, link and
+     *                                               severity per entry), empty when the finding carries none
      */
     public function __construct(
         public readonly string $checkId,
@@ -37,6 +39,7 @@ final class Finding
         public readonly int $line = 1,
         public readonly ?State $state = null,
         public readonly ?string $rule = null,
+        public readonly array $advisories = [],
     ) {
         if (!preg_match('/^[a-z0-9-]+$/', $checkId)) {
             throw new \InvalidArgumentException(sprintf('Invalid finding check id "%s".', $checkId));

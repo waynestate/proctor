@@ -235,7 +235,7 @@
         <li class="q" data-reveal>
           <p class="q__no"><span>Q8</span><code>composer-audit</code></p>
           <h3 class="q__ask">Does the lock carry a known advisory?</h3>
-          <p class="q__rubric">Fails at or above the policy's <code>audit_severity_threshold</code>, warns below it. An advisory with no severity is treated as failing, because we'd rather not turn unknown input into a pass.</p>
+          <p class="q__rubric">Fails at or above the policy's <code>audit_severity_threshold</code>, warns below it. Each finding names the package, the locked version, the advisory's CVE or id, its title and its severity. An advisory the app ignores in its own composer.json is a warning, not a fail, and so is anything composer has already moved to its ignored section. An advisory with no severity is treated as failing, because we'd rather not turn unknown input into a pass.</p>
           <p class="q__answer"><span class="mark mark--pass">PASS</span> composer-audit: no advisories found</p>
           <svg class="q__tick" viewBox="0 0 40 30" aria-hidden="true"><path pathLength="1" d="M3 16 L14 26 L37 3"/></svg>
         </li>
