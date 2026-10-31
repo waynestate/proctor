@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.2.8 (2026-10-30)
+
 - Fixed: composer-audit findings named every advisory "unknown". PROCTOR now reads Composer's real audit JSON, and each finding reads `<package> <version>: <CVE or advisory id> <title> (<severity>)`; the JSON report carries the advisory details.
 - Fixed: the app's ignore list matched nothing. `config.policy.advisories.ignore-id`, `config.policy.advisories.ignore` (by package) and the legacy `config.audit.ignore` are read in both their list and map shapes, matching any of the advisory's ids.
 - Fixed: a package ignore rule hides findings only the way Composer would: not when it sets `on-audit: false` (a block-only unblock, such as Booster's temporary one), and, when it carries a `constraint`, only for locked versions that satisfy it. Wildcard package patterns are not matched yet, so those findings stay visible.
