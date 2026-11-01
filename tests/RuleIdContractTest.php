@@ -35,6 +35,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/composer-version',
         'proctor/repo-url-credentials',
         'proctor/instant-client-committed',
+        'proctor/wayneui-forked-views',
         'proctor/policy-age',
         // unbounded-constraints
         'proctor/unbounded-constraints/unbounded',
