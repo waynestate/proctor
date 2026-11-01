@@ -248,7 +248,7 @@ final class ComposerAuditCheck implements CheckInterface
             return strcasecmp($pattern, $package) === 0;
         }
 
-        $regex = '/^' . str_replace('\*', '.*', preg_quote($pattern)) . '$/i';
+        $regex = '/^' . str_replace('\*', '.*', preg_quote($pattern, '/')) . '$/i';
 
         return preg_match($regex, $package) === 1;
     }
