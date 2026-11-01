@@ -15,6 +15,7 @@ use Waynestate\Proctor\Check\ComposerConfigCheck;
 use Waynestate\Proctor\Check\ComposerVersionCheck;
 use Waynestate\Proctor\Check\DestructiveDeployCheck;
 use Waynestate\Proctor\Check\Finding;
+use Waynestate\Proctor\Check\InstantClientCommittedCheck;
 use Waynestate\Proctor\Check\LockCommittedCheck;
 use Waynestate\Proctor\Check\Mysql56Check;
 use Waynestate\Proctor\Check\OverridesCheck;
@@ -179,6 +180,7 @@ $application->addCommand(new class () extends Command {
                 new ComposerAuditCheck(),
                 $composerVersionCheck,
                 new RepoUrlCredentialsCheck(),
+                new InstantClientCommittedCheck(),
                 new OverridesCheck(),
                 new PolicyAgeCheck($resolved),
             ];
