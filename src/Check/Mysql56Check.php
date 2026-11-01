@@ -219,8 +219,11 @@ final class Mysql56Check implements CheckInterface
             $lowerName = strtolower($name);
 
             // mysql56-json: json/jsonb columns, whereJson* queries, and
-            // where('col->sub') style JSON column queries.
-            if ($lowerName === 'json' || $lowerName === 'jsonb'
+            // where('col->sub') style JSON column queries. A bare ->json()
+            // outside database/ is an HTTP response or client, not a column.
+            $bareJsonColumn = ($lowerName === 'json' || $lowerName === 'jsonb')
+                && str_starts_with($relativePath, 'database/');
+            if ($bareJsonColumn
                 || str_contains($lowerName, 'wherejson')
                 || ($this->isWhereCall($lowerName) && $this->firstStringArgContains($call->args, '->'))) {
                 $findings[] = $this->warning(

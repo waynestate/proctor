@@ -102,6 +102,20 @@ final class Mysql56CheckTest extends TestCase
         );
     }
 
+    public function testHttpJsonAndUnindexedLongStringGiveNoWarning(): void
+    {
+        // ->json() in app/ is an HTTP response or client, and the long
+        // string in the migration has no key on its column, so neither
+        // warns and the app passes clean.
+        $findings = (new Mysql56Check())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/mysql56-scope-app'),
+        );
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+        self::assertSame('no MySQL 5.6 blockers found', $findings[0]->message);
+    }
+
     public function testCleanAppGivesExactlyOnePassFinding(): void
     {
         $findings = (new Mysql56Check())->run(
