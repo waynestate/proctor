@@ -215,12 +215,14 @@ final class ComposerAuditCheck implements CheckInterface
      */
     private function isIgnored(string $package, ?string $version, array $entry, array $ignored): bool
     {
-        if (in_array($package, $ignored['packages'], true)) {
-            return true;
+        foreach ($ignored['packages'] as $pattern) {
+            if ($this->packageMatches($pattern, $package)) {
+                return true;
+            }
         }
 
         foreach ($ignored['constrained'] as $candidate) {
-            if ($candidate['package'] === $package && $this->constraintMatches($version, $candidate['constraint'])) {
+            if ($this->packageMatches($candidate['package'], $package) && $this->constraintMatches($version, $candidate['constraint'])) {
                 return true;
             }
         }
@@ -232,6 +234,23 @@ final class ComposerAuditCheck implements CheckInterface
         }
 
         return false;
+    }
+
+    /**
+     * True when a package ignore pattern from composer's config matches the
+     * package. Names compare case-insensitively, and a star matches any run
+     * of characters, including slashes and none, the way composer does. A
+     * pattern without a star must equal the package name.
+     */
+    private function packageMatches(string $pattern, string $package): bool
+    {
+        if (!str_contains($pattern, '*')) {
+            return strcasecmp($pattern, $package) === 0;
+        }
+
+        $regex = '/^' . str_replace('\*', '.*', preg_quote($pattern)) . '$/i';
+
+        return preg_match($regex, $package) === 1;
     }
 
     /**
