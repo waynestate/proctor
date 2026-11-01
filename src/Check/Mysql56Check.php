@@ -535,7 +535,7 @@ final class Mysql56Check implements CheckInterface
      * ($table->index('code')). PhpParser gives no parent links, so each
      * unique()/index() walks its receiver chain down instead.
      *
-     * @param list<MethodCall> $methodCalls
+     * @param array<MethodCall> $methodCalls
      *
      * @return list<MethodCall>
      */
@@ -607,7 +607,7 @@ final class Mysql56Check implements CheckInterface
         if ($value instanceof Array_) {
             $names = [];
             foreach ($value->items as $item) {
-                if ($item !== null && $item->value instanceof String_) {
+                if ($item->value instanceof String_) {
                     $names[] = $item->value->value;
                 }
             }
