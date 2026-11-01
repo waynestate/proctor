@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fixed: mysql56 no longer warns on HTTP ->json() calls, or on long strings that are not indexed or unique.
+
 ## 0.3.0 (2026-11-01)
 
 - Added: wayneui-forked-views warns when forked WayneUI views or assets are committed in the app.
