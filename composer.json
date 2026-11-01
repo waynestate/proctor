@@ -69,5 +69,10 @@
             "Waynestate\\Proctor\\Tests\\": "tests/"
         }
     },
-    "minimum-stability": "stable"
+    "minimum-stability": "stable",
+    "extra": {
+        "proctor": {
+            "wayneui.copies": "fail"
+        }
+    }
 }
