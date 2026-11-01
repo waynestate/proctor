@@ -15,6 +15,7 @@ use Waynestate\Proctor\Check\ProcessResult;
 use Waynestate\Proctor\Check\ProcessRunnerInterface;
 use Waynestate\Proctor\Check\WayneUiOutdatedCheck;
 use Waynestate\Proctor\Creed\Policy;
+use Waynestate\Proctor\ToolError;
 
 /**
  * Builds a small app in a temp dir and calls the wayneui-outdated check
@@ -132,6 +133,78 @@ final class WayneUiOutdatedCheckTest extends TestCase
 
         self::assertSame([], $findings);
         self::assertSame(0, $this->composerCalls());
+    }
+
+    public function testCopiesFailSettingMakesABehindCopyAFailure(): void
+    {
+        $this->writeComposerJsonWithCopies('fail');
+        $this->writeFile('site/assets/wayne-ui/wayne-ui.css', $this->cssWithBanner('2.0.5'));
+
+        $findings = $this->check(self::LATEST_JSON);
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_FAIL, $findings[0]->status);
+        self::assertSame('site/assets/wayne-ui/wayne-ui.css', $findings[0]->path);
+        self::assertSame(
+            'site/assets/wayne-ui/wayne-ui.css is a committed copy of WayneUI 2.0.5; the latest 2.x is 2.0.8. A pasted copy cannot tell you it is stale: replace it from the release, or link the hosted stylesheet instead of copying it. This project fails on stale copies (wayneui.copies = fail); replace the copy from the release, for example with the stack\'s sync command.',
+            $findings[0]->message,
+        );
+    }
+
+    public function testCopiesFailSettingLeavesABehindComposerLockAWarning(): void
+    {
+        $this->writeComposerJsonWithCopies('fail');
+        $this->writeComposerLock(['waynestate/wayne-ui' => 'v2.0.5']);
+
+        $findings = $this->check(self::LATEST_JSON);
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertSame('composer.lock', $findings[0]->path);
+        self::assertSame(
+            'composer.lock locks WayneUI 2.0.5; the latest 2.x is 2.0.8. Update with: composer update waynestate/wayne-ui',
+            $findings[0]->message,
+        );
+    }
+
+    public function testCopiesFailSettingWithACurrentCopyGivesNoFinding(): void
+    {
+        $this->writeComposerJsonWithCopies('fail');
+        $this->writeFile('site/assets/wayne-ui/wayne-ui.css', $this->cssWithBanner('2.0.8'));
+
+        $findings = $this->check(self::LATEST_JSON);
+
+        self::assertSame([], $findings);
+    }
+
+    public function testCopiesFailSettingOfflineGivesTheInfoSkippedFinding(): void
+    {
+        $this->writeComposerJsonWithCopies('fail');
+        $this->writeFile('site/assets/wayne-ui/wayne-ui.css', $this->cssWithBanner('2.0.5'));
+
+        $findings = $this->check('', 1);
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_INFO, $findings[0]->status);
+        self::assertSame('proctor/wayneui-outdated/skipped', $findings[0]->ruleId);
+        self::assertSame(
+            'could not look up the latest WayneUI release (offline or composer unavailable); wayneui-outdated skipped',
+            $findings[0]->message,
+        );
+    }
+
+    public function testCopiesUnknownSettingValueIsAToolErrorNamingTheSetting(): void
+    {
+        $this->writeComposerJsonWithCopies('shout');
+        $this->writeFile('site/assets/wayne-ui/wayne-ui.css', $this->cssWithBanner('2.0.5'));
+
+        try {
+            $this->check(self::LATEST_JSON);
+            self::fail('expected a ToolError for an unknown wayneui.copies value');
+        } catch (ToolError $e) {
+            self::assertStringContainsString('wayneui.copies', $e->getMessage());
+            self::assertStringContainsString('warn, fail', $e->getMessage());
+        }
     }
 
     public function testV1LockGivesTheOneXWarningAndNoProcessCall(): void
@@ -319,6 +392,23 @@ final class WayneUiOutdatedCheckTest extends TestCase
         $this->writeFile('composer.lock', (string) json_encode([
             'packages' => $packages,
             'packages-dev' => [],
+        ]));
+    }
+
+    /**
+     * Writes a composer.json whose extra.proctor section carries the given
+     * wayneui.copies value, so the strict-copies setting is read from the
+     * same place an app would set it.
+     */
+    private function writeComposerJsonWithCopies(string $value): void
+    {
+        $this->writeFile('composer.json', (string) json_encode([
+            'name' => 'example/app',
+            'extra' => [
+                'proctor' => [
+                    'wayneui.copies' => $value,
+                ],
+            ],
         ]));
     }
 
