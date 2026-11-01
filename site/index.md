@@ -20,7 +20,7 @@ Run `vendor/bin/proctor check` in a PHP app and it checks the app against CREED'
 
 [Sit the exam](https://proctor.apps.wayne.edu/#start-title) [Watch it mark a paper](https://proctor.apps.wayne.edu/#sheet-title)
 
-- **15** checks
+- **16** checks
 - **4** report formats
 - **3** exit codes
 - **0** policy of its own
@@ -46,7 +46,7 @@ Part A
 
 ## The questions
 
-Nine of PROCTOR's fifteen checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures.
+Nine of PROCTOR's sixteen checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures.
 
 1. Q1 `php-floor`
    ### Is the lowest PHP your `composer.json` allows still supported?

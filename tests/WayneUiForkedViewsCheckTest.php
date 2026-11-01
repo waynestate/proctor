@@ -62,7 +62,7 @@ final class WayneUiForkedViewsCheckTest extends TestCase
         self::assertSame('proctor/wayneui-forked-views', $findings[0]->ruleId);
         self::assertSame('resources/views/vendor/wayne-ui', $findings[0]->path);
         self::assertSame(
-            'resources/views/vendor/wayne-ui/ (1 files) holds forked WayneUI views. They override the package, so layout fixes in new WayneUI releases do not reach this app. If you did not change them on purpose, delete the folder and run git rm -r --cached resources/views/vendor/wayne-ui. If you did, compare them with the package views before upgrading.',
+            'resources/views/vendor/wayne-ui/ (1 file) holds forked WayneUI views. They override the package, so layout fixes in new WayneUI releases do not reach this app. If you did not change them on purpose, delete the folder and run git rm -r --cached resources/views/vendor/wayne-ui. If you did, compare them with the package views before upgrading.',
             $findings[0]->message,
         );
     }
@@ -79,7 +79,7 @@ final class WayneUiForkedViewsCheckTest extends TestCase
         self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
         self::assertSame('public/vendor/wayne-ui', $findings[0]->path);
         self::assertSame(
-            'public/vendor/wayne-ui/ (1 files) is a committed copy of WayneUI assets from the 1.x install. WayneUI 2.x serves its assets itself. Delete it and run git rm -r --cached public/vendor/wayne-ui.',
+            'public/vendor/wayne-ui/ (1 file) is a committed copy of WayneUI assets from the 1.x install. WayneUI 2.x serves its assets itself. Delete it and run git rm -r --cached public/vendor/wayne-ui.',
             $findings[0]->message,
         );
     }
@@ -100,7 +100,7 @@ final class WayneUiForkedViewsCheckTest extends TestCase
         self::assertStringContainsString('(2 files)', $findings[0]->message);
         self::assertSame(Finding::STATUS_WARNING, $findings[1]->status);
         self::assertSame('public/vendor/wayne-ui', $findings[1]->path);
-        self::assertStringContainsString('(1 files)', $findings[1]->message);
+        self::assertStringContainsString('(1 file)', $findings[1]->message);
     }
 
     public function testUntrackedViewsFolderGivesNoFinding(): void

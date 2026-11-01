@@ -77,9 +77,10 @@ final class WayneUiForkedViewsCheck implements CheckInterface
                 $this->id(),
                 Finding::STATUS_WARNING,
                 sprintf(
-                    '%s/ (%d files) holds forked WayneUI views. They override the package, so layout fixes in new WayneUI releases do not reach this app. If you did not change them on purpose, delete the folder and run git rm -r --cached %s. If you did, compare them with the package views before upgrading.',
+                    '%s/ (%d %s) holds forked WayneUI views. They override the package, so layout fixes in new WayneUI releases do not reach this app. If you did not change them on purpose, delete the folder and run git rm -r --cached %s. If you did, compare them with the package views before upgrading.',
                     self::VIEWS_DIR,
                     $views,
+                    $views === 1 ? 'file' : 'files',
                     self::VIEWS_DIR,
                 ),
                 self::VIEWS_DIR,
@@ -90,9 +91,10 @@ final class WayneUiForkedViewsCheck implements CheckInterface
                 $this->id(),
                 Finding::STATUS_WARNING,
                 sprintf(
-                    '%s/ (%d files) is a committed copy of WayneUI assets from the 1.x install. WayneUI 2.x serves its assets itself. Delete it and run git rm -r --cached %s.',
+                    '%s/ (%d %s) is a committed copy of WayneUI assets from the 1.x install. WayneUI 2.x serves its assets itself. Delete it and run git rm -r --cached %s.',
                     self::ASSETS_DIR,
                     $assets,
+                    $assets === 1 ? 'file' : 'files',
                     self::ASSETS_DIR,
                 ),
                 self::ASSETS_DIR,
