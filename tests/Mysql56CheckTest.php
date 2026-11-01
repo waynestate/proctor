@@ -102,6 +102,39 @@ final class Mysql56CheckTest extends TestCase
         );
     }
 
+    public function testHttpJsonAndUnindexedLongStringGiveNoWarning(): void
+    {
+        // ->json() in app/ is an HTTP response or client, and the long
+        // string in the migration has no key on its column, so neither
+        // warns and the app passes clean.
+        $findings = (new Mysql56Check())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/mysql56-scope-app'),
+        );
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+        self::assertSame('no MySQL 5.6 blockers found', $findings[0]->message);
+    }
+
+    public function testOnlyIndexedLongStringsWarn(): void
+    {
+        // slug is unique() in its own chain and code gets a key from the
+        // later $table->index('code') statement, so both warn on their
+        // string() lines; note never gets a key and does not warn.
+        $findings = (new Mysql56Check())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/mysql56-scope-index-app'),
+        );
+
+        self::assertCount(2, $findings);
+        self::assertSame(
+            [
+                ['mysql56-string-length', 'database/migrations/2026_02_02_000000_create_keys_table.php', 13],
+                ['mysql56-string-length', 'database/migrations/2026_02_02_000000_create_keys_table.php', 14],
+            ],
+            $this->triples($findings),
+        );
+    }
+
     public function testCleanAppGivesExactlyOnePassFinding(): void
     {
         $findings = (new Mysql56Check())->run(
