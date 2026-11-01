@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Added: instant-client-committed warns when Oracle Instant Client (instantclient zips or folders, libclntsh and similar libraries) is committed to the repo, with its size and the git rm fix. A warning, not a failure.
+- Fixed: a wildcard package ignore pattern (for example laravel/*) now hides audit findings the way Composer does.
 
 ## 0.2.8 (2026-10-30)
 

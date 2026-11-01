@@ -149,6 +149,45 @@ final class ComposerAuditCheckTest extends TestCase
         ]);
     }
 
+    public function testPolicyIgnoreWildcardPackageDowngradesEveryAdvisoryToAWarning(): void
+    {
+        // The rule laravel/* matches laravel/framework the way composer
+        // does, so every advisory of the package is downgraded.
+        $findings = $this->runAudit($this->app('audit-app-policy-ignore-wildcard'), $this->capturedAudit());
+
+        $this->assertFindings($findings, [
+            Finding::STATUS_WARNING,
+            Finding::STATUS_WARNING,
+            Finding::STATUS_WARNING,
+        ]);
+    }
+
+    public function testPolicyIgnoreWildcardPackageThatMissesKeepsTheVerdicts(): void
+    {
+        // The rule symfony/* matches nothing in the captured audit, so the
+        // check keeps its no-ignore verdicts.
+        $findings = $this->runAudit($this->app('audit-app-policy-ignore-wildcard-miss'), $this->capturedAudit());
+
+        $this->assertFindings($findings, [
+            Finding::STATUS_FAIL,
+            Finding::STATUS_WARNING,
+            Finding::STATUS_FAIL,
+        ]);
+    }
+
+    public function testPolicyIgnoreWildcardEntryWithUnmatchedConstraintDoesNotDowngradeTheAdvisories(): void
+    {
+        // on-audit true and laravel/* matches, but the locked 9.0.0 does not
+        // satisfy ^10.0, so the rule does not reach this app.
+        $findings = $this->runAudit($this->app('audit-app-policy-ignore-wildcard-constraint'), $this->capturedAudit());
+
+        $this->assertFindings($findings, [
+            Finding::STATUS_FAIL,
+            Finding::STATUS_WARNING,
+            Finding::STATUS_FAIL,
+        ]);
+    }
+
     public function testPolicyIgnoreEntryWithOnAuditFalseDoesNotDowngradeTheAdvisories(): void
     {
         // Booster's temporary unblock scopes itself to blocking only: with
