@@ -25,6 +25,7 @@ use Waynestate\Proctor\Check\PortabilityCheck;
 use Waynestate\Proctor\Check\RepoUrlCredentialsCheck;
 use Waynestate\Proctor\Check\UnboundedConstraintsCheck;
 use Waynestate\Proctor\Check\UnpatchedCheck;
+use Waynestate\Proctor\Check\WayneUiForkedViewsCheck;
 use Waynestate\Proctor\Override\OverrideFile;
 use Waynestate\Proctor\Policy\PolicyResolver;
 use Waynestate\Proctor\Report\CodeQualityWriter;
@@ -181,6 +182,7 @@ $application->addCommand(new class () extends Command {
                 $composerVersionCheck,
                 new RepoUrlCredentialsCheck(),
                 new InstantClientCommittedCheck(),
+                new WayneUiForkedViewsCheck(),
                 new OverridesCheck(),
                 new PolicyAgeCheck($resolved),
             ];
