@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.3.0 (2026-11-01)
+
+- Added: wayneui-forked-views warns when forked WayneUI views or assets are committed in the app.
+- Added: wayneui-outdated warns when the locked or copied WayneUI is behind the latest release. A new opt-in setting, `extra.proctor."wayneui.copies"`, can make a stale committed `wayne-ui.css` copy fail instead of warn.
 - Added: instant-client-committed warns when Oracle Instant Client (instantclient zips or folders, libclntsh and similar libraries) is committed to the repo, with its size and the git rm fix. A warning, not a failure.
 - Fixed: a wildcard package ignore pattern (for example laravel/*) now hides audit findings the way Composer does.
 
