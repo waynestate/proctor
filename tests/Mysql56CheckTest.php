@@ -116,6 +116,25 @@ final class Mysql56CheckTest extends TestCase
         self::assertSame('no MySQL 5.6 blockers found', $findings[0]->message);
     }
 
+    public function testOnlyIndexedLongStringsWarn(): void
+    {
+        // slug is unique() in its own chain and code gets a key from the
+        // later $table->index('code') statement, so both warn on their
+        // string() lines; note never gets a key and does not warn.
+        $findings = (new Mysql56Check())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/mysql56-scope-index-app'),
+        );
+
+        self::assertCount(2, $findings);
+        self::assertSame(
+            [
+                ['mysql56-string-length', 'database/migrations/2026_02_02_000000_create_keys_table.php', 13],
+                ['mysql56-string-length', 'database/migrations/2026_02_02_000000_create_keys_table.php', 14],
+            ],
+            $this->triples($findings),
+        );
+    }
+
     public function testCleanAppGivesExactlyOnePassFinding(): void
     {
         $findings = (new Mysql56Check())->run(

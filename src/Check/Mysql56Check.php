@@ -7,6 +7,7 @@ namespace Waynestate\Proctor\Check;
 use FilesystemIterator;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
+use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Identifier;
@@ -210,6 +211,11 @@ final class Mysql56Check implements CheckInterface
         $staticCalls = $phpFiles->findInstanceOf($statements, StaticCall::class);
         $strings = $phpFiles->findInstanceOf($statements, String_::class);
 
+        // mysql56-string-length applies to keyed columns only, so collect
+        // first the string(...) calls a unique() or index() in this file
+        // puts a key on.
+        $indexedStrings = $this->indexedStringCalls($methodCalls);
+
         foreach ([...$methodCalls, ...$staticCalls] as $call) {
             $line = $call->getStartLine();
             $name = $this->callName($call);
@@ -285,7 +291,10 @@ final class Mysql56Check implements CheckInterface
             }
 
             // mysql56-string-length: indexed strings over 191 characters.
-            if ($lowerName === 'string' && $this->secondIntArgGreaterThan($call->args, 191)) {
+            // A long string with no key on its column fits in 5.6, so the
+            // call must be unique() or index()ed in this file.
+            if ($lowerName === 'string' && $this->secondIntArgGreaterThan($call->args, 191)
+                && in_array($call, $indexedStrings, true)) {
                 $findings[] = $this->warning(
                     'string-length',
                     "indexed strings over 191 characters exceed 5.6's key limit",
@@ -517,6 +526,96 @@ final class Mysql56Check implements CheckInterface
         }
 
         return false;
+    }
+
+    /**
+     * The string(...) calls in this file that a unique() or index() call
+     * puts a key on: directly in a fluent chain ($table->string('email',
+     * 255)->unique()) or in a separate statement naming the column
+     * ($table->index('code')). PhpParser gives no parent links, so each
+     * unique()/index() walks its receiver chain down instead.
+     *
+     * @param list<MethodCall> $methodCalls
+     *
+     * @return list<MethodCall>
+     */
+    private function indexedStringCalls(array $methodCalls): array
+    {
+        $indexed = [];
+
+        // The long strings this file declares, keyed by column name, for
+        // the separate-statement form.
+        $longStrings = [];
+        foreach ($methodCalls as $call) {
+            $name = $this->callName($call);
+            if ($name === null || strtolower($name) !== 'string'
+                || !$this->secondIntArgGreaterThan($call->args, 191)) {
+                continue;
+            }
+            $column = $this->firstStringArg($call->args);
+            if ($column !== null) {
+                $longStrings[$column][] = $call;
+            }
+        }
+
+        foreach ($methodCalls as $call) {
+            $name = $this->callName($call);
+            if ($name === null || !in_array(strtolower($name), ['unique', 'index'], true)) {
+                continue;
+            }
+
+            // Fluent chain: mark every string(...) the unique()/index()
+            // sits on top of.
+            $node = $call;
+            while ($node instanceof MethodCall) {
+                $nodeName = $this->callName($node);
+                if ($nodeName !== null && strtolower($nodeName) === 'string') {
+                    $indexed[] = $node;
+                }
+                $node = $node->var;
+            }
+
+            // Separate statement: $table->unique('url') or
+            // $table->index(['a', 'url']) names the column by string.
+            foreach ($this->firstArgColumnNames($call->args) as $column) {
+                foreach ($longStrings[$column] ?? [] as $stringCall) {
+                    $indexed[] = $stringCall;
+                }
+            }
+        }
+
+        return $indexed;
+    }
+
+    /**
+     * The column names a unique()/index() first argument names: a plain
+     * string ('url') or an array of strings (['a', 'url']).
+     *
+     * @param array<Arg|\PhpParser\Node\ArgPlaceholder|\PhpParser\Node\VariadicPlaceholder> $args
+     *
+     * @return list<string>
+     */
+    private function firstArgColumnNames(array $args): array
+    {
+        if (!isset($args[0]) || !$args[0] instanceof Arg) {
+            return [];
+        }
+        $value = $args[0]->value;
+        if ($value instanceof String_) {
+            return [$value->value];
+        }
+        if ($value instanceof Array_) {
+            $names = [];
+            foreach ($value->items as $item) {
+                if ($item !== null && $item->value instanceof String_) {
+                    $names[] = $item->value->value;
+                }
+            }
+
+            return $names;
+        }
+
+        return [];
     }
 
     /**
