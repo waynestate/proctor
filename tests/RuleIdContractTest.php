@@ -36,6 +36,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/repo-url-credentials',
         'proctor/instant-client-committed',
         'proctor/wayneui-forked-views',
+        'proctor/wayneui-outdated',
         'proctor/policy-age',
         // unbounded-constraints
         'proctor/unbounded-constraints/unbounded',
@@ -83,6 +84,8 @@ final class RuleIdContractTest extends ProctorTestCase
         // composer-version
         'proctor/composer-version/not-found',
         'proctor/composer-version/could-not-determine',
+        // wayneui-outdated
+        'proctor/wayneui-outdated/skipped',
         // overrides
         'proctor/overrides/expiring',
     ];

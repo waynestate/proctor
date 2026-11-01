@@ -26,6 +26,7 @@ use Waynestate\Proctor\Check\RepoUrlCredentialsCheck;
 use Waynestate\Proctor\Check\UnboundedConstraintsCheck;
 use Waynestate\Proctor\Check\UnpatchedCheck;
 use Waynestate\Proctor\Check\WayneUiForkedViewsCheck;
+use Waynestate\Proctor\Check\WayneUiOutdatedCheck;
 use Waynestate\Proctor\Override\OverrideFile;
 use Waynestate\Proctor\Policy\PolicyResolver;
 use Waynestate\Proctor\Report\CodeQualityWriter;
@@ -183,6 +184,7 @@ $application->addCommand(new class () extends Command {
                 new RepoUrlCredentialsCheck(),
                 new InstantClientCommittedCheck(),
                 new WayneUiForkedViewsCheck(),
+                new WayneUiOutdatedCheck(),
                 new OverridesCheck(),
                 new PolicyAgeCheck($resolved),
             ];
