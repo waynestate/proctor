@@ -33,8 +33,12 @@ use Waynestate\Proctor\ToolError;
  * installed major exists, the check reports one info finding with the same
  * skipped marker ComposerAuditCheck uses, and nothing else, so an offline
  * run never breaks. An app with nothing WayneUI-related runs no process at
- * all and gets no findings. Warning, not failure: being out of date must
- * not turn a passing app into a failing one.
+ * all and gets no findings. By default the check warns, not fails: being
+ * out of date must not turn a passing app into a failing one. An app that
+ * wants a hard stop sets wayneui.copies to fail in its composer.json
+ * (extra.proctor."wayneui.copies"); then a behind committed copy is a
+ * failure, while composer.lock and package-lock.json still warn, and an
+ * offline run never fails in either mode.
  *
  * The proctor marks the paper against the current syllabus, not the one the
  * student photocopied last semester.
@@ -67,6 +71,18 @@ final class WayneUiOutdatedCheck implements CheckInterface
     /** Directories skipped at any depth. */
     private const SKIP_DIRS = ['node_modules', '.git'];
 
+    /** The default of the strict-copies setting: behind copies warn. */
+    private const MODE_WARN = 'warn';
+
+    /** The strict value of the strict-copies setting: behind copies fail. */
+    private const MODE_FAIL = 'fail';
+
+    /** The key of the strict-copies setting under extra.proctor in composer.json. */
+    private const COPIES_SETTING = 'wayneui.copies';
+
+    /** Appended to a failing copy's message when the setting is fail. */
+    private const FAIL_NOTE = "This project fails on stale copies (wayneui.copies = fail); replace the copy from the release, for example with the stack's sync command.";
+
     public function __construct(
         private readonly ProcessRunnerInterface $process = new ProcessRunner(),
     ) {}
@@ -78,6 +94,9 @@ final class WayneUiOutdatedCheck implements CheckInterface
 
     public function run(CheckContext $context): array
     {
+        // A typo in the setting is a tool error, whatever the app carries.
+        $copiesMode = $this->copiesMode($context);
+
         $findings = [];
 
         // WayneUI 1.x: one warning, no latest lookup.
@@ -135,17 +154,72 @@ final class WayneUiOutdatedCheck implements CheckInterface
         foreach ($sources as $source) {
             $major = (string) $this->majorOf($source['version']);
             $latest = ltrim($latestByMajor[$major], 'v');
-            if ($this->isBehind($source['version'], $latest)) {
-                $findings[] = new Finding(
-                    $this->id(),
-                    Finding::STATUS_WARNING,
-                    $this->behindMessage($source, $major, $latest),
-                    $source['path'],
-                );
+            if (!$this->isBehind($source['version'], $latest)) {
+                continue;
             }
+            // Only a committed copy can fail, and only when the app opted
+            // in: lock files stay warnings in both modes.
+            $status = $source['kind'] === 'copy' && $copiesMode === self::MODE_FAIL
+                ? Finding::STATUS_FAIL
+                : Finding::STATUS_WARNING;
+            $message = $this->behindMessage($source, $major, $latest);
+            if ($status === Finding::STATUS_FAIL) {
+                $message .= ' ' . self::FAIL_NOTE;
+            }
+            $findings[] = new Finding(
+                $this->id(),
+                $status,
+                $message,
+                $source['path'],
+            );
         }
 
         return $findings;
+    }
+
+    /**
+     * The value of the strict-copies setting, read from the app's
+     * composer.json the way CiPipelinesCheck reads extra.proctor.github-mirror:
+     * under extra.proctor, the key wayneui.copies. Absent means warn. Any
+     * present value other than warn or fail is a tool error naming the
+     * setting and the allowed values.
+     *
+     * @throws ToolError when the setting holds a value other than warn or fail
+     */
+    private function copiesMode(CheckContext $context): string
+    {
+        $file = $context->appPath . '/composer.json';
+        if (!is_file($file)) {
+            return self::MODE_WARN;
+        }
+        $raw = file_get_contents($file);
+        if ($raw === false) {
+            return self::MODE_WARN;
+        }
+        $data = json_decode($raw, true);
+        if (!is_array($data)) {
+            return self::MODE_WARN;
+        }
+        $extra = $data['extra'] ?? null;
+        if (!is_array($extra)) {
+            return self::MODE_WARN;
+        }
+        $proctor = $extra['proctor'] ?? null;
+        if (!is_array($proctor)) {
+            return self::MODE_WARN;
+        }
+        if (!array_key_exists(self::COPIES_SETTING, $proctor)) {
+            return self::MODE_WARN;
+        }
+        $value = $proctor[self::COPIES_SETTING];
+        if ($value === self::MODE_WARN || $value === self::MODE_FAIL) {
+            return $value;
+        }
+
+        throw new ToolError(sprintf(
+            'Invalid value %s for the setting wayneui.copies (extra.proctor."wayneui.copies" in composer.json). Allowed values: warn, fail.',
+            (string) json_encode($value),
+        ));
     }
 
     /**
