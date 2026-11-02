@@ -231,10 +231,12 @@ Why: an audit of a stale lock reports on packages the next install will not use.
 Sources: [Composer CLI: validate and install](https://getcomposer.org/doc/03-cli.md);
 [Composer basic usage](https://getcomposer.org/doc/01-basic-usage.md).
 
-**How the stack holds it: Not yet.** PROCTOR checks only that the file exists. `composer validate --check-lock` does the
-real test. The stack's deploy-gate decision lists "present and matches" as a gate rule. (Second pass: the Composer 2.11.0-RC1 changelog,
-dated 2026-10-22, says a change to the `policy` config now marks the lock as outdated. So a lock-in-sync check will
-start to report that case once apps move to Composer 2.11. RC1 is not a stable release.)
+**How the stack holds it: Checked.** `lock-committed` warns (`proctor/lock-committed/out-of-sync`) when the lock's
+`content-hash` differs from the hash PROCTOR computes from composer.json with Composer's own algorithm (the relevant
+keys plus `config.platform`, sorted and md5-hashed), so a stale lock that still installs is visible instead of silent.
+Warning only: a stale lock never fails a run. (Second pass note kept: the Composer 2.11.0-RC1 changelog, dated
+2026-10-22, says a change to the `policy` config now marks the lock as outdated. RC1 is not a stable release, and
+`policy` is not part of the hash input this check reads.)
 
 ### 3.6 Make Composer configuration explicit and safe
 Do not set `allow-plugins` to `true`. Do not turn off `secure-http` or TLS. Leave `lock` on.
@@ -800,7 +802,7 @@ Practices tagged `Not yet` or `Documented`, each one line. Highest value first.
 2. 8.1: Run PROCTOR from its own install without `composer install` on the app (PHAR or separate install).
 3. 4.4: Report any `audit`/`policy` ignore entry in `composer.json` as a finding, and move ignores to the override file.
 4. 4.3: Make a skipped or failed audit a failure in CI, with a `not audited` message.
-5. 3.5: Add a lock-in-sync check (`composer validate --check-lock` or the content hash).
+5. 3.5: Done: the `lock-committed` check warns when the lock's `content-hash` differs from composer.json (rule id `proctor/lock-committed/out-of-sync`) (see 3.5).
 6. 5.6: Reject an override that targets `overrides` or an unknown check name, and add tests.
 7. 2.6: Raise PROCTOR's own floor before 2027-01-01 and run the `proctor` component in its own pipeline.
 8. 1.4: Done: the `unbounded-constraints` check reads its rules from the policy file, which carries `banned_constraints` (see 1.4).
