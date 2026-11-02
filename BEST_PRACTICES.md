@@ -664,11 +664,10 @@ not find a primary source for raw terminal control characters in CI logs, so tha
 
 Sources: [Symfony Console: coloring and tags](https://symfony.com/doc/current/console/coloring.html).
 
-**How the stack holds it: Partially.** `TextWriter` now replaces terminal control characters (every C0 except newline
-and tab, plus DEL and the C1 block) with a visible `?` in finding messages, override reasons and approvers before
-printing, and a test feeds an escape sequence and a carriage return through a finding. Tag-like strings are still not
-escaped: `bin/proctor` passes the writer output straight to `$output->writeln()`, so a crafted package name could still
-open a formatting tag in a decorated terminal.
+**How the stack holds it: Enforced.** `TextWriter` replaces terminal control characters (every C0 except newline and
+tab, plus DEL and the C1 block) with a visible `?` in finding messages, override reasons and approvers, and `bin/proctor`
+prints the report with `OutputInterface::OUTPUT_RAW`, so a tag-like package name or constraint reaches the log literally
+instead of being parsed as a formatting tag. A CLI test pins it.
 
 ---
 
@@ -835,8 +834,8 @@ Added in the second pass (2026-10-27):
 29. 4.9: Flag `config.policy: false`, a disabled malware or advisory policy, and `COMPOSER_NO_BLOCKING` or
     `COMPOSER_NO_AUDIT` in the job environment.
 30. 8.6: Done: the audit runs with `--no-plugins --no-interaction` and a minimal explicit environment (see 8.6).
-31. 6.8: Control characters are replaced with `?` and tested; what remains is escaping tag-like strings, and a test
-    with a tag-like package name.
+31. 6.8: Done: control characters are replaced with `?` in the text writer and the report is printed raw, so tag-like
+    strings reach the log literally; a CLI test pins it (see 6.8).
 32. 5.8: Warn on an override that matches nothing and on one close to expiry.
 33. 2.7: Put the security-end date and days left in the security-only warning.
 34. 3.7: Document "install from the lock, never update" in the Preflight guide, and ask authors not to re-tag.

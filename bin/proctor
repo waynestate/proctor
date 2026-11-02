@@ -120,11 +120,11 @@ $application->addCommand(new class () extends Command {
                 $input->getOption('policy'),
                 $appPath,
                 static function (string $note) use ($errorOutput): void {
-                    $errorOutput->writeln($note);
+                    $errorOutput->writeln($note, OutputInterface::OUTPUT_RAW);
                 },
             );
         } catch (InvalidArgumentException | RuntimeException $e) {
-            $errorOutput->writeln($e->getMessage());
+            $errorOutput->writeln($e->getMessage(), OutputInterface::OUTPUT_RAW);
             return 2;
         }
         $policy = $resolved->policy;
@@ -205,9 +205,9 @@ $application->addCommand(new class () extends Command {
             );
             $findings = $runner->run();
         } catch (ToolError $e) {
-            $errorOutput->writeln($e->getMessage());
+            $errorOutput->writeln($e->getMessage(), OutputInterface::OUTPUT_RAW);
             if ('codequality' === $format) {
-                $output->writeln((new CodeQualityWriter())->writeToolError($e->getMessage()));
+                $output->writeln((new CodeQualityWriter())->writeToolError($e->getMessage()), OutputInterface::OUTPUT_RAW);
             }
             return 2;
         }
@@ -230,9 +230,9 @@ $application->addCommand(new class () extends Command {
         );
 
         try {
-            $output->writeln($this->writerFor($format)->write($report));
+            $output->writeln($this->writerFor($format)->write($report), OutputInterface::OUTPUT_RAW);
         } catch (ToolError $e) {
-            $errorOutput->writeln($e->getMessage());
+            $errorOutput->writeln($e->getMessage(), OutputInterface::OUTPUT_RAW);
             return 2;
         }
 

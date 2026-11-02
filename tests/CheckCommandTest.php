@@ -270,6 +270,36 @@ final class CheckCommandTest extends ProctorTestCase
         }
     }
 
+    public function testTagLikeConstraintReachesTheTextReportLiterally(): void
+    {
+        $appPath = sys_get_temp_dir() . '/proctor-tag-like-' . uniqid('', true);
+        self::assertTrue(is_dir($appPath) || mkdir($appPath, 0777, true));
+        // The star alternative is what makes the constraint unbounded and so
+        // reported; the tag-like token must survive the whole trip to stdout
+        // unchanged, which only happens because the report prints raw.
+        file_put_contents($appPath . '/composer.json', json_encode([
+            'require' => [
+                'php' => '^8.3',
+                'vendor/tag' => '* || <error>*</error>',
+            ],
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+        $lockSource = __DIR__ . '/fixtures/apps/pass-app/composer.lock';
+        if (is_file($lockSource)) {
+            copy($lockSource, $appPath . '/composer.lock');
+        }
+
+        try {
+            $result = $this->runProctor($appPath);
+
+            self::assertStringContainsString('<error>*</error>', $result['stdout']);
+        } finally {
+            @unlink($appPath . '/composer.json');
+            @unlink($appPath . '/composer.lock');
+            @rmdir($appPath);
+        }
+    }
+
     /**
      * The absolute path of the fixture app that has no composer.json.
      */
