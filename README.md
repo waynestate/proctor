@@ -6,7 +6,7 @@
 
 <p>
   <img src="docs/readme/badges/php.svg" alt="php ^8.3">
-  <img src="docs/readme/badges/license.svg" alt="licence MIT">
+  <img src="docs/readme/badges/license.svg" alt="license MIT">
   <img src="docs/readme/badges/exit.svg" alt="exit codes: 0 pass, 1 fail, 2 tripped">
   <a href="https://github.com/waynestate/proctor/actions/workflows/ci.yml"><img src="https://github.com/waynestate/proctor/actions/workflows/ci.yml/badge.svg" alt="GitHub CI"></a>
 </p>
@@ -72,7 +72,7 @@ vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--po
 ## Checks
 
 <div align="center">
-  <img src="docs/readme/report.svg" width="100%" alt="Nine real lines from PROCTOR's text report, one per check shown: FAIL php-floor, WARN unpatched, FAIL unbounded-constraints, PASS lock-committed, WARN portability, WARN mysql56, WARN ci-pipelines, PASS composer-audit, FAIL overrides. Each line is written in words; colour only repeats what the word says.">
+  <img src="docs/readme/report.svg" width="100%" alt="Nine real lines from PROCTOR's text report, one per check shown: FAIL php-floor, WARN unpatched, FAIL unbounded-constraints, PASS lock-committed, WARN portability, WARN mysql56, WARN ci-pipelines, PASS composer-audit, FAIL overrides. Each line is written in words; color only repeats what the word says.">
 </div>
 <div align="center"><sub>Nine of the seventeen checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.</sub></div>
 
@@ -317,7 +317,7 @@ The same works with `php:8.3-cli` in place of `php:8.4-cli`.
 
 Strongly recommended: a git.wayne.edu instance runner.
 
-## Licence
+## License
 
 MIT, Wayne State University, Enterprise Applications.
 

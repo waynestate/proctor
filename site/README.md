@@ -3,8 +3,8 @@
 A static page: `index.html`, `assets/proctor.css`, `assets/proctor.js`. No build step. Serve the `site/` folder from
 anywhere (Citadel, any web server, or `python -m http.server` inside `site/` for a look).
 
-- type: **Young Serif** (display, SIL OFL 1.1, self-hosted in `assets/fonts/`, licence in `OFL-young-serif.txt`) and
-  **Caveat** (the pencil and the red pen, SIL OFL 1.1, licence in `OFL-caveat.txt`); Lato from WayneUI for body text;
+- type: **Young Serif** (display, SIL OFL 1.1, self-hosted in `assets/fonts/`, license in `OFL-young-serif.txt`) and
+  **Caveat** (the pencil and the red pen, SIL OFL 1.1, license in `OFL-caveat.txt`); Lato from WayneUI for body text;
   the system monospace for commands and report lines.
 - base: WayneUI 2.0.8, copied from its static path into `assets/wayne-ui/` (tokens, Lato, the skip link, sr-only),
   then re-papered: ruled exam paper with a red margin line, exam-book cardstock, a Scantron-style sheet in drop-out

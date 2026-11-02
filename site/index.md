@@ -36,7 +36,7 @@ Read these before you turn the page. The proctor will not repeat them.
 2. ### The questions are set by CREED.
    Support dates, the grace window and the audit threshold all come from CREED's policy file. PROCTOR has no rules of its own. If your PHP version isn't in the policy at all, that counts as a failure.
 3. ### Every answer is written in words.
-   Each line starts `PASS`, `INFO`, `WARN` or `FAIL` and the last line says `RESULT`. There's no colour and there are no ANSI codes, so the words carry the meaning.
+   Each line starts `PASS`, `INFO`, `WARN` or `FAIL` and the last line says `RESULT`. There's no color and there are no ANSI codes, so the words carry the meaning.
 4. ### Three ways to leave the room.
    `0` pass, warnings allowed. `1` one or more failures. `2` a tool error: bad options, an unreadable policy, a malformed `composer.json`. Exit 2 means the proctor tripped, not you.
 5. ### Notes from home expire.

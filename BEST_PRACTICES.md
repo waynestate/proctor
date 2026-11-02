@@ -300,7 +300,7 @@ JSON, not from the exit code alone. The threshold must be one of `low`, `medium`
 with a tool error.
 
 ### 4.2 Count an unknown severity as failing
-An advisory with no severity, or one the tool does not recognise, is treated as if it were at the threshold.
+An advisory with no severity, or one the tool does not recognize, is treated as if it were at the threshold.
 
 Why: unknown input must not turn into a pass.
 
@@ -880,7 +880,7 @@ the Composer 2.11 lock check.
 - 6.1: the Semgrep page does not document a tool-error exit code, and Composer's own exit code 2 means something
   else. The PROCTOR design stands; the sources only partly support it.
 - 4.2: the Semgrep page is an analogy for unknown severities, not a source.
-- 4.4: the `audit.ignore` setting is deprecated in favour of `policy.advisories.ignore-id`, and `ignore-severity` and
+- 4.4: the `audit.ignore` setting is deprecated in favor of `policy.advisories.ignore-id`, and `ignore-severity` and
   `ignore-abandoned` also silence results.
 - 4.6: added the Composer 2.10.2 stdout fix, the current stable (2.10.3) and the 2.11.0-RC1 date.
 - 6.4: GitLab uploads report artifacts even when the job fails, so the empty file on exit 2 does reach GitLab.
@@ -913,7 +913,7 @@ All checked on 2026-10-27.
 | Composer 2.10 release (Packagist blog) | https://blog.packagist.com/composer-2-10-release/ |
 | GitLab: Code Quality | https://docs.gitlab.com/ci/testing/code_quality/ |
 | GitLab: CI/CD YAML reference | https://docs.gitlab.com/ci/yaml/ |
-| GitLab: use CI/CD configuration from other files (merge behaviour) | https://docs.gitlab.com/ci/yaml/includes/ |
+| GitLab: use CI/CD configuration from other files (merge behavior) | https://docs.gitlab.com/ci/yaml/includes/ |
 | GitLab: CI/CD components | https://docs.gitlab.com/ci/components/ |
 | GitLab: protected branches | https://docs.gitlab.com/user/project/repository/branches/protected/ |
 | PHP: supported versions | https://www.php.net/supported-versions.php |
