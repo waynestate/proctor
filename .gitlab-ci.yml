@@ -15,13 +15,13 @@ include:
       proctor_command: vendor/bin/proctor check --policy=vendor/waynestate/creed/policy/policy.json --format=codequality
       allow_failure: true
 
-# WayneUI strict copies: PROCTOR runs on the project root so it sees site/assets/wayne-ui/.
+# WayneUI strict copies: the script scans a copy of the root without tests/fixtures.
 # The setting extra.proctor."wayneui.copies" = "fail" in composer.json makes a stale copy fail.
 wayneui-copies:
   image: composer:2.10.3
   script:
     - composer install --working-dir=deploy --no-interaction --no-progress --prefer-dist
-    - deploy/vendor/bin/proctor check --path=. --policy=deploy/vendor/waynestate/creed/policy/policy.json
+    - sh scripts/wayneui-copies-scan.sh
 
 composer-ci:
   image: composer:2.10.3
