@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Fixed: mysql56 no longer warns on HTTP ->json() calls, or on long strings that are not indexed or unique.
+- Changed: composer audit runs with --no-plugins --no-interaction and a minimal explicit environment (PATH plus the variables composer needs to start), so inherited COMPOSER_* switches no longer reach it.
+- Fixed: text output strips terminal control characters from app-supplied strings (finding messages, override reasons and approvers); each one prints as a visible ?.
 
 ## 0.3.0 (2026-11-01)
 
