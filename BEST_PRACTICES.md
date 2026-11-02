@@ -1,6 +1,6 @@
 # PROCTOR best practices
 
-Written against PROCTOR 0.2.7; later changes are in CHANGELOG.md.
+Written against PROCTOR as of 0.3.0; later changes are in CHANGELOG.md.
 Items marked "(second pass)" were added or changed in the second pass; see the section of that name near the end.
 
 ## What this covers
@@ -56,13 +56,11 @@ Why: a gate that the checked party configures is not a gate.
 Sources: [OWASP Top 10 CI/CD Security Risks, CICD-SEC-4 Poisoned Pipeline Execution](https://owasp.org/www-project-top-10-ci-cd-security-risks/);
 [GitLab: how included configuration is merged](https://docs.gitlab.com/ci/yaml/includes/).
 
-**How the stack holds it: Not yet.** `--policy` is required and takes any path. `--today` is accepted on every run.
-Preflight's `proctor_command` input is free text, and the main `.gitlab-ci.yml` of an app overrides included job keys,
-so an app can change both. PROCTOR has bundled CREED's policy since 0.2.1.
-
-Update 0.2.x: `--policy` is optional since 0.2.1: without it PROCTOR resolves the policy from the `PROCTOR_POLICY`
-environment variable, then the app's `vendor/waynestate/creed/policy/policy.json`, then the copy bundled with PROCTOR
-(`src/Creed/policy.json`), and every report names the policy in use.
+**How the stack holds it: Partially.** Since 0.2.1, `--policy` is optional: without it PROCTOR resolves the policy from
+the `PROCTOR_POLICY` environment variable, then the app's `vendor/waynestate/creed/policy/policy.json`, then the copy
+bundled with PROCTOR (`src/Creed/policy.json`), and every report names the policy in use. What remains: `--today` is
+accepted on every run, Preflight's `proctor_command` input is free text, and the main `.gitlab-ci.yml` of an app
+overrides included job keys, so an app can still change the command, the date or the policy.
 
 ### 1.3 Version the policy schema and read newer files without breaking
 A checker should accept a policy file with a newer minor schema or extra fields and ignore what it does not know.
@@ -83,11 +81,8 @@ Why: otherwise the policy file says one thing and the tool does another.
 
 Sources: the stack's version-policy decision.
 
-**How the stack holds it: Not yet.** `UnboundedConstraintsCheck` hard-codes `*` and `dev-` in code. The policy list is
-validated nowhere and read nowhere.
-
-Update 0.2.x: `UnboundedConstraintsCheck` now reads the policy's `rules.banned_constraints` as glob patterns, in
-addition to `*`, `dev-` branches, `@dev` flags and open upper bounds.
+**How the stack holds it: Checked.** `UnboundedConstraintsCheck` reads the policy's `rules.banned_constraints` as glob
+patterns, in addition to `*`, `dev-` branches, `@dev` flags and open upper bounds.
 
 ---
 
@@ -160,12 +155,10 @@ Why: a tool that cannot meet its own rule has no standing to enforce it.
 
 Sources: [PHP supported versions](https://www.php.net/supported-versions.php); the stack's version-policy decision.
 
-**How the stack holds it: Not yet.** PROCTOR requires `php: ^8.3`, and its pipeline tests 8.3, 8.4 and 8.5. PHP 8.3
-is security-only and reaches end of life on 2027-12-31, so the floor must move to `^8.4` before then or the floor
-check fails on PROCTOR itself. PROCTOR's own pipeline does not run the `proctor` component yet.
-
-Update 0.2.x: PROCTOR's own pipeline includes the Preflight proctor component; it checks `deploy/` against CREED's
-policy, currently with `allow_failure` while findings remain.
+**How the stack holds it: Partially.** PROCTOR's own pipeline includes the Preflight `proctor` component; it checks
+`deploy/` against CREED's policy, currently with `allow_failure` while findings remain. What remains: PROCTOR requires
+`php: ^8.3`, and its pipeline tests 8.3, 8.4 and 8.5. PHP 8.3 is security-only and reaches end of life on 2027-12-31,
+so the floor must move to `^8.4` before then or the floor check fails on PROCTOR itself.
 
 ### 2.7 Put the end date in the security-only warning (second pass)
 A warning that says "security-only" gives the owner no deadline. Print the date security support ends and the days left.
@@ -215,9 +208,9 @@ Why: both make the lock file unreproducible or unsafe.
 
 Sources: [Composer config: secure-http](https://getcomposer.org/doc/06-config.md); the stack's one-repo-per-project decision.
 
-**How the stack holds it: Not yet.** The stack's one-repo-per-project decision says Check flags committed `path` repositories. No such check exists.
-
-Update 0.2.x: the `unbounded-constraints` check now warns on committed `path` and `vcs` repositories (rule id `proctor/unbounded-constraints/repository`); a warning, not a failure.
+**How the stack holds it: Partially.** The `unbounded-constraints` check warns on committed `path` and `vcs`
+repositories (rule id `proctor/unbounded-constraints/repository`); a warning, not a failure. What remains: a
+plain-HTTP repository is still not flagged.
 
 ### 3.4 Commit `composer.lock` and install from it
 Applications and libraries both commit the lock so everyone installs the same versions.
@@ -362,14 +355,12 @@ Why: results should depend on the lock and the policy, not on which Composer the
 Sources: [Composer config: audit](https://getcomposer.org/doc/06-config.md);
 [Composer 2.10 release](https://blog.packagist.com/composer-2-10-release/).
 
-**How the stack holds it: Not yet.** PROCTOR runs whichever `composer` it finds first on the PATH and does not report
-the version. (Second pass: the Composer 2.10.2 changelog lists "Fixed `audit` command to output the audit result to
-stdout". PROCTOR reads only stdout, so a Composer older than 2.10.2 is one more reason to set a minimum. Composer
-2.11.0-RC1 was released 2026-10-22 and 2.10.3 is the latest stable in the changelog; check before pinning.)
-
-Update 0.2.x: since 0.2.0, the `composer-version` check fails when the Composer on PATH carries the command-injection
-holes CVE-2024-35241 and CVE-2024-35242 (2.2.x below 2.2.24, or any other 2.x below 2.7.7) or is Composer 1, and warns
-when composer cannot be run; the text report's header line names the composer version used.
+**How the stack holds it: Checked.** Since 0.2.0, the `composer-version` check fails when the Composer on PATH carries
+the command-injection holes CVE-2024-35241 and CVE-2024-35242 (2.2.x below 2.2.24, or any other 2.x below 2.7.7) or is
+Composer 1, and warns when composer cannot be run; the text report's header line names the composer version used.
+(Second pass: the Composer 2.10.2 changelog lists "Fixed `audit` command to output the audit result to stdout".
+PROCTOR reads only stdout, so a Composer older than 2.10.2 is one more reason to set a minimum. Composer 2.11.0-RC1
+was released 2026-10-22 and 2.10.3 is the latest stable in the changelog; check before pinning.)
 
 ### 4.7 Audit again on a schedule
 New advisories appear after code is merged. A weekly scheduled pipeline finds them without a commit.
@@ -405,10 +396,10 @@ Sources: [The Hacker News: Composer Perforce flaws, 2026-04-14](https://thehacke
 [Composer changelog](https://raw.githubusercontent.com/composer/composer/main/CHANGELOG.md). I read the two
 advisory pages through summaries and did not confirm the CVSS scores against NVD.
 
-**How the stack holds it: Not yet.** PROCTOR does not read the Composer version, and the Preflight component installs
-whatever Composer is current at the time.
-
-Update 0.2.x: the composer-version check is described in 4.6.
+**How the stack holds it: Partially.** PROCTOR now reads the Composer version, names it in the text report's header
+line, and the `composer-version` check (see 4.6) fails when the Composer on PATH carries the command-injection holes
+CVE-2024-35241 and CVE-2024-35242 or is Composer 1. What remains: no minimum covers the 2026 Perforce flaws fixed in
+2.9.6 and 2.10.3, and the Preflight component installs whatever Composer is current at the time.
 
 ### 4.9 Report an app that switches the dependency policy off (second pass)
 Look for `config.policy` set to `false`, `policy.malware` or `policy.advisories` set to `false`, and the matching
@@ -423,12 +414,11 @@ Sources: [Composer config: policy](https://getcomposer.org/doc/06-config.md);
 [Composer CLI: environment variables](https://getcomposer.org/doc/03-cli.md);
 [Composer 2.10 release](https://blog.packagist.com/composer-2-10-release/).
 
-**How the stack holds it: Not yet.** This extends 4.4. PROCTOR looks at neither the `config` block nor the process
-environment.
-
-Update 0.2.x: since 0.2.2, the `composer-config` check reads the `config` block of composer.json: it warns when
-`allow-plugins` is `true`, `secure-http` is `false`, `lock` is `false` or `audit.block-insecure` is `false`, and notes
-`require.php` without `config.platform.php`. The process environment is still not read.
+**How the stack holds it: Partially.** Since 0.2.2, the `composer-config` check reads the `config` block of
+composer.json: it warns when `allow-plugins` is `true`, `secure-http` is `false`, `lock` is `false` or
+`audit.block-insecure` is `false`, and notes `require.php` without `config.platform.php`. What remains: the process
+environment is still not read, so `COMPOSER_NO_BLOCKING`, `COMPOSER_NO_AUDIT` and `COMPOSER_AUDIT_ABANDONED` in a CI
+job are not findings.
 
 ### 4.10 Do not trust a clean JSON result when Composer's exit code is non-zero (second pass)
 If the JSON has no advisories but `composer audit` exited 1, treat it as a finding or a tool error. Composer 2.10.0
@@ -561,12 +551,10 @@ the owner fixes the cause instead of finding a red build.
 Sources: [PHPStan: baseline](https://phpstan.org/user-guide/baseline).
 The warning-before-expiry part is my own suggestion and I have no prior-art source for the number of days.
 
-**How the stack holds it: Not yet.** `OverrideApplier` only downgrades failures it finds. `OverridesCheck` reports
-only entries that have already expired.
-
-Update 0.2.x: the near-expiry half is built: since 0.2.3, `OverridesCheck` warns (`proctor/overrides/expiring`) for an
-active entry that expires within 14 days of `--today` (the expiry day counts). An override that targets a check that
-raised no failure is still not reported.
+**How the stack holds it: Partially.** Since 0.2.3, `OverridesCheck` warns (`proctor/overrides/expiring`) for an active
+entry that expires within 14 days of `--today` (the expiry day counts). What remains: an override that targets a check
+that raised no failure is still not reported; `OverrideApplier` only downgrades failures it finds, and `OverridesCheck`
+reports only entries that have already expired or are close to it.
 
 ---
 
@@ -769,11 +757,9 @@ Sources: [SLSA v1.0 build levels](https://slsa.dev/spec/v1.0/levels) (page marke
 [OpenSSF Scorecard: Signed-Releases](https://github.com/ossf/scorecard/blob/main/docs/checks.md);
 [CISA and NSA: Defending CI/CD environments](https://cisa.gov/news-events/alerts/2023/06/28/cisa-and-nsa-release-joint-guidance-defending-continuous-integrationcontinuous-delivery-cicd).
 
-**How the stack holds it: Not yet.** No release is tagged. `Report::VERSION` is a constant in code and must be kept in
-step with the tag by hand.
-
-Update 0.2.x: releases are tagged (0.1.0 through 0.2.7), and since 0.2.4 the reports read the installed
-`waynestate/proctor` version from Composer, with the in-code constant as the fallback.
+**How the stack holds it: Partially.** Releases are tagged (0.1.0 through 0.3.0), and since 0.2.4 the reports read the
+installed `waynestate/proctor` version from Composer, with the in-code constant as the fallback. What remains: no
+release carries a signature or provenance that says where it was built.
 
 ### 8.6 Start Composer with plugins off and a known environment (second pass)
 Run `composer audit` with `--no-plugins` and `--no-interaction`, and pass an explicit environment instead of the
