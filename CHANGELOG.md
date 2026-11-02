@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Fixed: BEST_PRACTICES tags match the code (nine stale "Not yet" tags re-tagged, the pipeline claim in 3.1 corrected).
+- Changed: CI pulls its Docker Hub images through the GitLab Dependency Proxy (the group's CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX), so pipelines no longer hit Docker Hub's anonymous pull limit.
 
 ## 0.3.1 (2026-11-02)
 
