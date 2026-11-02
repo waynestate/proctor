@@ -803,20 +803,20 @@ Practices tagged `Not yet` or `Documented`, each one line. Highest value first.
 5. 3.5: Add a lock-in-sync check (`composer validate --check-lock` or the content hash).
 6. 5.6: Reject an override that targets `overrides` or an unknown check name, and add tests.
 7. 2.6: Raise PROCTOR's own floor before 2027-01-01 and run the `proctor` component in its own pipeline.
-8. 1.4: Read `banned_constraints` from the policy.
+8. 1.4: Done: the `unbounded-constraints` check reads its rules from the policy file, which carries `banned_constraints` (see 1.4).
 9. 3.2: Flag `>=` and other open upper bounds, `@dev` flags and `minimum-stability`.
-10. 4.5: Read malware and abandoned results from `composer audit`.
-11. 4.6: Record the Composer version in the report and pin it in CI.
+10. 4.5: Done: the `composer-audit` check reads the abandoned and malware parts of Composer's audit output; abandoned packages warn (rule id `proctor/composer-audit/abandoned`) (see 4.5).
+11. 4.6: Done: the text report's header line names the Composer version used, and the `composer-version` check fails a vulnerable or end-of-life Composer (see 4.6).
 12. 5.4: Let an override name a package or advisory id.
 13. 5.5: Reject an `expires` date beyond a policy-set maximum.
 14. 5.7: Require an approver who is not the author (needs review rules on the app repo).
 15. 1.3: Accept newer policy schemas with unknown fields.
-16. 3.3: Flag committed `path` and non-HTTPS repositories.
-17. 3.6: Check `allow-plugins`, `secure-http` and `lock` in the `config` block.
-18. 2.4: Ask for `config.platform.php` equal to the floor.
-19. 8.3: Add a timeout to child processes.
-20. 6.4: Write a valid empty report on tool errors.
-21. 4.7: Add a scheduled audit pipeline to the Preflight docs.
+16. 3.3: Done: the `unbounded-constraints` check warns on committed `path` and `vcs` repositories (rule id `proctor/unbounded-constraints/repository`) (see 3.3).
+17. 3.6: Done: the `composer-config` check (0.2.2) warns when `allow-plugins` is `true`, `secure-http` is `false` or `lock` is `false` (see 3.6).
+18. 2.4: Done: the `composer-config` check (0.2.2) notes when `require.php` is set without `config.platform.php` (see 2.4).
+19. 8.3: Done: child processes run under a timeout, so a hung call cannot hold the runner (see 8.3).
+20. 6.4: Done: a tool error still writes a valid report, so the artifact is never an empty file (see 6.4).
+21. 4.7: Done: the Preflight docs carry a scheduled audit pipeline, so new advisories are found without a commit (see 4.7).
 22. 8.5: Tag, sign and publish provenance for releases.
 23. 7.1 and 7.2: Build `proctor gate` with the ratchet, stages and fail-open exit.
 24. 2.5: Check the target image tag once the gate exists.
@@ -825,22 +825,19 @@ Practices tagged `Not yet` or `Documented`, each one line. Highest value first.
 
 Added in the second pass (2026-10-27):
 
-26. 4.8: Set a minimum Composer version (2.10.3, or 2.2.30 on the LTS line) and fail below it. PROCTOR hands Composer
-    files the app controls, and three Composer command-injection CVEs were fixed in 2026. High value, small change.
-27. 4.10 and 4.5: Compare Composer's exit code with the parsed result, and read the abandoned and malware parts of the
-    output. Abandoned packages fail `composer audit` by default, so PROCTOR can pass what Composer fails.
-28. 6.4 (raise priority): Write a valid report on exit 2. GitLab uploads the report even when the job fails, so the
-    empty file is parsed.
+26. 4.8: Done: the `composer-version` check fails the Composer on PATH below the minimum (2.2.x below 2.2.24, any other 2.x below 2.7.7, or Composer 1) (see 4.8).
+27. 4.10 and 4.5: Done: the `composer-audit` check compares Composer's exit code with the parsed result and reads the abandoned and malware parts of the output (rule id `proctor/composer-audit/abandoned`) (see 4.10 and 4.5).
+28. 6.4 (raise priority): Done: a tool error (exit 2) still writes a valid report, so the artifact GitLab uploads parses (see 6.4).
 29. 4.9: Flag `config.policy: false`, a disabled malware or advisory policy, and `COMPOSER_NO_BLOCKING` or
     `COMPOSER_NO_AUDIT` in the job environment.
 30. 8.6: Done: the audit runs with `--no-plugins --no-interaction` and a minimal explicit environment (see 8.6).
 31. 6.8: Done: control characters are replaced with `?` in the text writer and the report is printed raw, so tag-like
     strings reach the log literally; a CLI test pins it (see 6.8).
-32. 5.8: Warn on an override that matches nothing and on one close to expiry.
-33. 2.7: Put the security-end date and days left in the security-only warning.
-34. 3.7: Document "install from the lock, never update" in the Preflight guide, and ask authors not to re-tag.
+32. 5.8: Done: since 0.2.3 the `overrides` check warns (`proctor/overrides/expiring`) for an active entry that expires within 14 days of `--today`, the expiry day counting (see 5.8).
+33. Done: the `php-floor` check prints the security-end date and the days left in the security-only warning (see 2.7).
+34. 3.7: Done: the Preflight guide documents installing from the lock and never running `composer update` in a deploy, and asks authors not to re-tag (see 3.7).
 35. 4.12: Decide in the policy whether `require-dev` packages count, then pass `--no-dev` or not.
-36. 8.7: Name a minimum patched GitLab version in the Preflight guide.
+36. 8.7: Done: the Preflight guide names a minimum patched GitLab version (see 8.7).
 37. 4.11: Re-read the Composer cooldown policy once 2.11 is stable, and decide whether to ask for it.
 38. 6.7 (tagged Enforced by construction): Done: a CLI test asserts the text output carries no escape byte, and a
     writer test feeds an escape sequence through a finding (see 6.7).
