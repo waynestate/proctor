@@ -240,6 +240,19 @@ final class CheckCommandTest extends ProctorTestCase
         self::assertSame('no composer.json, so no constraints to check', $byRule['proctor/unbounded-constraints'][0]['message']);
     }
 
+    public function testTextOutputOfAPassingAndAFailingAppCarriesNoEscapeByte(): void
+    {
+        foreach (['pass-app', 'eol-app'] as $name) {
+            $stdout = $this->runProctor($this->app($name))['stdout'];
+
+            self::assertStringNotContainsString(
+                "\x1b",
+                $stdout,
+                sprintf('an escape byte reached the text output of %s', $name),
+            );
+        }
+    }
+
     public function testMalformedComposerJsonStillExitsTwo(): void
     {
         $appPath = sys_get_temp_dir() . '/proctor-malformed-composer-' . uniqid('', true);
