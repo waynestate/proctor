@@ -14,13 +14,14 @@ use Waynestate\Proctor\ToolError;
 final class ProcessRunner implements ProcessRunnerInterface
 {
     /**
-     * @param list<string> $command executable path followed by its arguments
-     * @param string       $cwd     working directory of the process
-     * @param int          $timeout maximum seconds to wait before killing the process
+     * @param list<string>   $command executable path followed by its arguments
+     * @param string         $cwd     working directory of the process
+     * @param int            $timeout maximum seconds to wait before killing the process
+     * @param array|null     $env     environment for the process; null inherits the caller's
      *
      * @throws ToolError if the process cannot be started or times out
      */
-    public function run(array $command, string $cwd, int $timeout = 300): ProcessResult
+    public function run(array $command, string $cwd, int $timeout = 300, ?array $env = null): ProcessResult
     {
         $descriptors = [
             0 => ['pipe', 'r'],
@@ -28,7 +29,7 @@ final class ProcessRunner implements ProcessRunnerInterface
             2 => ['pipe', 'w'],
         ];
 
-        $process = proc_open($command, $descriptors, $pipes, $cwd);
+        $process = proc_open($command, $descriptors, $pipes, $cwd, $env);
         if (!is_resource($process)) {
             throw new ToolError(sprintf(
                 'Could not start process "%s".',

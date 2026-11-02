@@ -340,7 +340,7 @@ final class WayneUiOutdatedCheckTest extends TestCase
                 private readonly string $stdout,
             ) {}
 
-            public function run(array $command, string $cwd, int $timeout = 300): ProcessResult
+            public function run(array $command, string $cwd, int $timeout = 300, ?array $env = null): ProcessResult
             {
                 $this->commands[] = $command;
                 if (in_array('ls-files', $command, true)) {

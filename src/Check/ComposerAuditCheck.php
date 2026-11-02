@@ -9,8 +9,9 @@ use Waynestate\Proctor\Creed\Policy;
 use Waynestate\Proctor\ToolError;
 
 /**
- * Runs "composer audit --format=json --locked" in the app path and reports
- * the advisories and abandoned packages it finds.
+ * Runs "composer audit --format=json --locked --no-plugins --no-interaction"
+ * in the app path, with a minimal environment of its own, and reports the
+ * advisories and abandoned packages it finds.
  *
  * Composer exits non-zero (1, 2 or 3) when it reports findings; that is
  * expected, so the decision is made from stdout, never from the exit code
@@ -66,9 +67,10 @@ final class ComposerAuditCheck implements CheckInterface
         }
 
         $result = $this->process->run(
-            [$composer, 'audit', '--format=json', '--locked'],
+            [$composer, 'audit', '--format=json', '--locked', '--no-plugins', '--no-interaction'],
             $context->appPath,
             $context->timeout,
+            self::auditEnvironment(),
         );
 
         $decoded = json_decode($result->stdout, true);
@@ -840,5 +842,44 @@ final class ComposerAuditCheck implements CheckInterface
         }
 
         return null;
+    }
+
+    /**
+     * The environment the audit runs with: PATH plus the variables a shell
+     * and composer need to start (HOME, or APPDATA and USERPROFILE on
+     * Windows, COMPOSER_HOME, TEMP/TMP, SystemRoot on Windows), and nothing
+     * else. The caller's COMPOSER_* switches (COMPOSER_NO_AUDIT,
+     * COMPOSER_AUTH, ...) must not reach the audit. Null when none of the
+     * variables exists, so the process inherits the caller's environment
+     * instead of starting with an empty one.
+     *
+     * @return array<string, string>|null
+     */
+    private static function auditEnvironment(): ?array
+    {
+        $isWindows = DIRECTORY_SEPARATOR === '\\';
+
+        // PATH first, read the way findComposer() reads it.
+        $path = getenv('PATH');
+        if ($path === false || $path === '') {
+            $path = getenv('Path');
+        }
+
+        $keys = $isWindows
+            ? ['APPDATA', 'USERPROFILE', 'COMPOSER_HOME', 'TEMP', 'TMP', 'SystemRoot']
+            : ['HOME', 'COMPOSER_HOME', 'TEMP', 'TMP'];
+
+        $env = [];
+        if ($path !== false && $path !== '') {
+            $env['PATH'] = $path;
+        }
+        foreach ($keys as $key) {
+            $value = getenv($key);
+            if ($value !== false && $value !== '') {
+                $env[$key] = $value;
+            }
+        }
+
+        return $env === [] ? null : $env;
     }
 }

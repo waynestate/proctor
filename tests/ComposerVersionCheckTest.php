@@ -74,7 +74,7 @@ final class ComposerVersionCheckTest extends TestCase
         $this->putFakeComposerOnPath();
 
         $check = new ComposerVersionCheck(new class implements ProcessRunnerInterface {
-            public function run(array $command, string $cwd, int $timeout = 300): ProcessResult
+            public function run(array $command, string $cwd, int $timeout = 300, ?array $env = null): ProcessResult
             {
                 return new ProcessResult(0, 'Composer could not be initialized', '');
             }
@@ -116,7 +116,7 @@ final class ComposerVersionCheckTest extends TestCase
         $check = new ComposerVersionCheck(new class ($version) implements ProcessRunnerInterface {
             public function __construct(private readonly string $version) {}
 
-            public function run(array $command, string $cwd, int $timeout = 300): ProcessResult
+            public function run(array $command, string $cwd, int $timeout = 300, ?array $env = null): ProcessResult
             {
                 return new ProcessResult(
                     0,

@@ -323,6 +323,66 @@ final class ComposerAuditCheckTest extends TestCase
         self::assertSame('composer.lock', $findings[0]->path);
     }
 
+    public function testAuditRunsComposerWithPluginsOffAndAMinimalEnvironment(): void
+    {
+        $captured = new class implements ProcessRunnerInterface {
+            /** @var list<string>|null */
+            public ?array $command = null;
+            public bool $envPassed = false;
+            /** @var array<string, string>|null */
+            public ?array $env = null;
+
+            public function run(array $command, string $cwd, int $timeout = 300, ?array $env = null): ProcessResult
+            {
+                $this->command = $command;
+                $this->envPassed = $env !== null;
+                $this->env = $env;
+
+                return new ProcessResult(0, '{"advisories": [], "abandoned": []}', '');
+            }
+        };
+
+        // Composer switches from the job around the check must not reach the audit.
+        putenv('COMPOSER_AUTH={"http-basic": {"repo.example.com": {"username": "u", "password": "p"}}}');
+        putenv('COMPOSER_NO_AUDIT=1');
+
+        try {
+            $this->putFakeComposerOnPath();
+
+            $check = new ComposerAuditCheck($captured);
+            $context = new CheckContext(
+                $this->app('audit-app'),
+                Policy::fromFile(__DIR__ . '/fixtures/policy.json'),
+                new DateTimeImmutable('2026-10-27'),
+            );
+            $check->run($context);
+        } finally {
+            putenv('COMPOSER_AUTH');
+            putenv('COMPOSER_NO_AUDIT');
+        }
+
+        self::assertIsArray($captured->command);
+        $command = $captured->command;
+        self::assertSame('audit', $command[1]);
+        foreach (['--format=json', '--locked', '--no-plugins', '--no-interaction'] as $flag) {
+            self::assertContains($flag, $command);
+        }
+
+        self::assertTrue($captured->envPassed, 'the audit must run with an explicit environment');
+        self::assertIsArray($captured->env);
+        $env = $captured->env;
+
+        self::assertArrayHasKey('PATH', $env);
+        self::assertNotSame('', $env['PATH']);
+        self::assertArrayNotHasKey('COMPOSER_AUTH', $env);
+        self::assertArrayNotHasKey('COMPOSER_NO_AUDIT', $env);
+
+        $allowed = ['PATH', 'HOME', 'APPDATA', 'USERPROFILE', 'COMPOSER_HOME', 'TEMP', 'TMP', 'SystemRoot'];
+        foreach (array_keys($env) as $key) {
+            self::assertContains($key, $allowed, sprintf('unexpected environment variable %s in the audit environment', $key));
+        }
+    }
+
     /**
      * Runs the check on a fixture app with the given audit JSON and returns
      * its findings.
@@ -336,7 +396,7 @@ final class ComposerAuditCheckTest extends TestCase
         $check = new ComposerAuditCheck(new class ($json) implements ProcessRunnerInterface {
             public function __construct(private readonly string $json) {}
 
-            public function run(array $command, string $cwd, int $timeout = 300): ProcessResult
+            public function run(array $command, string $cwd, int $timeout = 300, ?array $env = null): ProcessResult
             {
                 return new ProcessResult(1, $this->json, '');
             }
