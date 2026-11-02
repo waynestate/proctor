@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.1 (2026-11-02)
 
 - Fixed: mysql56 no longer warns on HTTP ->json() calls, or on long strings that are not indexed or unique.
 - Changed: composer audit runs with --no-plugins --no-interaction and a minimal explicit environment (PATH plus the variables composer needs to start), so inherited COMPOSER_* switches no longer reach it.
