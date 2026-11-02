@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Fixed: BEST_PRACTICES tags match the code (nine stale "Not yet" tags re-tagged, the pipeline claim in 3.1 corrected).
+
 ## 0.3.1 (2026-11-02)
 
 - Fixed: mysql56 no longer warns on HTTP ->json() calls, or on long strings that are not indexed or unique.
