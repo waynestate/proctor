@@ -20,6 +20,11 @@ use Waynestate\Proctor\ToolError;
  *   FAIL unbounded-constraints: vendor/a constraint "dev-master" is unbounded
  *   OVERRIDE lock-committed: x (expires 2026-01-01, approved by t)
  *   RESULT: fail (1 failures, 0 warnings)
+ *
+ * Finding messages, override reasons and approvers come from files the app
+ * controls, so they are printed with terminal control characters replaced
+ * by a visible "?": an escape sequence or carriage return in one of them
+ * must not reach the log.
  */
 final class TextWriter implements ReportWriter
 {
@@ -35,7 +40,7 @@ final class TextWriter implements ReportWriter
                 '%s %s: %s',
                 $this->statusLabel($finding->status),
                 $finding->checkId,
-                $finding->message,
+                $this->sanitize($finding->message),
             );
         }
 
@@ -43,9 +48,9 @@ final class TextWriter implements ReportWriter
             $lines[] = sprintf(
                 'OVERRIDE %s: %s (expires %s, approved by %s)',
                 $override->check,
-                $override->reason,
+                $this->sanitize($override->reason),
                 $override->displayDate(),
-                $override->approvedBy,
+                $this->sanitize($override->approvedBy),
             );
         }
 
@@ -94,6 +99,20 @@ final class TextWriter implements ReportWriter
             $report->countByStatus(Finding::STATUS_FAIL),
             $report->countByStatus(Finding::STATUS_WARNING),
         );
+    }
+
+    /**
+     * Replaces terminal control characters with a visible "?": every C0
+     * control except newline and tab, plus DEL and the C1 block.
+     *
+     * The pattern is byte-oriented on purpose. ASCII controls never occur
+     * inside a UTF-8 multibyte sequence, and the C1 code points encode as
+     * 0xC2 0x80 through 0xC2 0x9F, so valid UTF-8 text passes through
+     * unchanged.
+     */
+    private function sanitize(string $text): string
+    {
+        return preg_replace('/[\x00-\x08\x0B\x0C\x0D-\x1F\x7F]|\xC2[\x80-\x9F]/', '?', $text) ?? $text;
     }
 
     private function statusLabel(string $status): string
