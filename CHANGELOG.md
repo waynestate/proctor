@@ -9,6 +9,7 @@
 - Added: composer-config warns when composer.json switches Composer's dependency policy off: `config.policy` set to `false` (rule id `proctor/composer-config/policy-off`), `policy.malware` set to `false` (rule id `proctor/composer-config/policy-malware-off`) or `policy.advisories` set to `false` (rule id `proctor/composer-config/policy-advisories-off`). A warning, never a fail.
 - Added: ci-pipelines warns when the pipeline environment switches Composer's audit or blocking policy off: `COMPOSER_NO_AUDIT` or `COMPOSER_NO_BLOCKING` set to anything but an empty string, `0` or `false`, or `COMPOSER_AUDIT_ABANDONED` set to `ignore` (rule id `proctor/ci-pipelines/composer-audit-off`). A warning, never a fail.
 - Added: the composer-audit ignore-entries count now also reads `config.policy.advisories.ignore-severity` and `config.policy.abandoned.ignore`, plus the legacy fallbacks `config.audit.ignore-severity` and `config.audit.ignore-abandoned` while their matching `config.policy` block is absent (rule id `proctor/composer-audit/ignore-entries`). A warning, never a fail.
+- Added: docs site built from docs/ with generated command and environment reference
 
 ## 0.4.0 (2026-11-03)
 

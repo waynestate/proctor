@@ -26,6 +26,7 @@ passed with `--policy`; PROCTOR itself holds no policy of its own.
 
 Checks: `composer ci` (the same command runs on GitLab and GitHub). Front page: [`site/index.html`](site/index.html).
 On Citadel it is served by the raw-PHP deploy layer in [`deploy/`](deploy/): a Squire kit whose front controller serves `site/` behind HELMET's security headers. For local development, keep serving `site/` directly.
+Documentation: [proctor.apps.wayne.edu/docs](https://proctor.apps.wayne.edu/docs/).
 
 ## Where the code lives
 
@@ -319,6 +320,22 @@ running CREED's `bin/export.php` against `src/Creed/`.
 ## Proof
 
 Proof runs against real Wayne State applications are on a private site, [proof.apps.wayne.edu/proctor](https://proof.apps.wayne.edu/proctor/), behind a Wayne State employee sign-in.
+
+## Docs
+
+The documentation lives at [proctor.apps.wayne.edu/docs](https://proctor.apps.wayne.edu/docs/) and is built from `docs/` by Squire's docs builder:
+
+```
+composer docs
+```
+
+renders the pages into `site/docs/` and fills the generated command and environment reference from the CLI and the source. The pages are committed, so the site stays static. Check without writing:
+
+```
+composer docs:check
+```
+
+which runs as part of `composer ci`.
 
 ## Running the tests in Docker
 

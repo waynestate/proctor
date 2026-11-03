@@ -17,12 +17,14 @@ passed with `--policy`; PROCTOR itself holds no policy of its own.
 
 Checks: `composer ci` (the same command runs on GitLab and GitHub). Front page: [`site/index.html`](https://nougat.snu.gs/enterprise-apps/proctor/blob/HEAD/site/index.html).
 On Citadel it is served by the raw-PHP deploy layer in [`deploy/`](https://nougat.snu.gs/enterprise-apps/proctor/blob/HEAD/deploy/): a Squire kit whose front controller serves `site/` behind HELMET's security headers. For local development, keep serving `site/` directly.
+Documentation: [proctor.apps.wayne.edu/docs](https://proctor.apps.wayne.edu/docs/).
 
 Every page below is Markdown. The HTML pages send the same Markdown to a client that asks for `text/markdown`. Written by Squire's agent-ready kit from the README and the pages; do not edit.
 
 ## Pages
 
 - [PROCTOR: Watches the exam. Doesn't help.](https://proctor.apps.wayne.edu/index.md): PROCTOR checks a PHP app against CREED's version policy from the command line: PHP support, patch levels, Composer constraints, the audit, MySQL 5.6 and CI. It writes text, JSON, GitLab Code Quality or SARIF.
+- [PROCTOR | PROCTOR docs](https://proctor.apps.wayne.edu/docs/index.md): A framework-free PHP CLI that measures a PHP app against the WSU version policy.
 
 ## Prompts
 
