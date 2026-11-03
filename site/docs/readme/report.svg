@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 472" role="img" aria-labelledby="report-title report-desc">
+  <title id="report-title">PROCTOR text report, marked</title>
+  <desc id="report-desc">Nine real lines from PROCTOR's text report, each marked the way the page marks it.</desc>
+  <style>
+    text { font-family: ui-monospace, "SFMono-Regular", Consolas, Menlo, monospace; font-size: 17px; }
+    .st { font-weight: 700; }
+    .st--fail { fill: #9B1C2E; }
+    .st--warn { fill: #8a5a00; }
+    .st--pass { fill: #0C5449; }
+    .st--info { fill: #3d4a57; }
+    .rest { fill: #1f2a33; }
+    .tk path { fill: none; stroke: #0C5449; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 0; }
+    @keyframes ln-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes tk-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+    @media (prefers-reduced-motion: no-preference) {
+      .ln { animation: ln-in .35s both; }
+      .tk path { animation: tk-draw .35s both; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+  <rect x="0" y="0" width="1280" height="472" rx="14" fill="#F4F1EA"/>
+  <line x1="96" y1="0" x2="96" y2="472" stroke="#9B1C2E" stroke-width="2" opacity="0.6"/>
+  <line x1="0" y1="96" x2="1280" y2="96" stroke="rgba(60,90,130,.18)" stroke-width="1"/>
+  <g class="ln" style="animation-delay:0.00s">
+    <text x="120" y="82"><tspan class="st st--fail">FAIL</tspan><tspan class="rest" xml:space="preserve"> php-floor: php floor 7.4 is eol_grace_expired</tspan></text>
+  </g>
+  <line x1="0" y1="136" x2="1280" y2="136" stroke="rgba(60,90,130,.18)" stroke-width="1"/>
+  <g class="ln" style="animation-delay:0.45s">
+    <text x="120" y="122"><tspan class="st st--warn">WARN</tspan><tspan class="rest" xml:space="preserve"> unpatched: laravel 12.1.3 is behind 12.4.7 (checked 2026-10-28); update to the latest patch.</tspan></text>
+  </g>
+  <line x1="0" y1="176" x2="1280" y2="176" stroke="rgba(60,90,130,.18)" stroke-width="1"/>
+  <g class="ln" style="animation-delay:0.90s">
+    <text x="120" y="162"><tspan class="st st--fail">FAIL</tspan><tspan class="rest" xml:space="preserve"> unbounded-constraints: vendor/any constraint &quot;*&quot; is unbounded</tspan></text>
+  </g>
+  <line x1="0" y1="216" x2="1280" y2="216" stroke="rgba(60,90,130,.18)" stroke-width="1"/>
+  <g class="ln" style="animation-delay:1.35s">
+    <text x="120" y="202"><tspan class="st st--pass">PASS</tspan><tspan class="rest" xml:space="preserve"> lock-committed: composer.lock is present</tspan></text>
+  </g>
+  <svg class="tk" x="48" y="185" width="30" height="22" viewBox="0 0 40 30" aria-hidden="true">
+    <path d="M3 16 L14 26 L37 3" pathLength="1" style="animation-delay:1.70s"/>
+  </svg>
+  <line x1="0" y1="256" x2="1280" y2="256" stroke="rgba(60,90,130,.18)" stroke-width="1"/>
+  <g class="ln" style="animation-delay:1.80s">
+    <text x="120" y="242"><tspan class="st st--warn">WARN</tspan><tspan class="rest" xml:space="preserve"> portability: host-path: absolute host path &quot;/var/log/app.log&quot;; read it from env or config</tspan></text>
+  </g>
+  <line x1="0" y1="296" x2="1280" y2="296" stroke="rgba(60,90,130,.18)" stroke-width="1"/>
+  <g class="ln" style="animation-delay:2.25s">
+    <text x="120" y="282"><tspan class="st st--warn">WARN</tspan><tspan class="rest" xml:space="preserve"> mysql56: mysql56-json: JSON columns and JSON queries need MySQL 5.7.8</tspan></text>
+  </g>
+  <line x1="0" y1="336" x2="1280" y2="336" stroke="rgba(60,90,130,.18)" stroke-width="1"/>
+  <g class="ln" style="animation-delay:2.70s">
+    <text x="120" y="322"><tspan class="st st--warn">WARN</tspan><tspan class="rest" xml:space="preserve"> ci-pipelines: ci-pipelines-gitlab-missing: .gitlab-ci.yml is missing; add a GitLab pipeline with a j…</tspan></text>
+  </g>
+  <line x1="0" y1="376" x2="1280" y2="376" stroke="rgba(60,90,130,.18)" stroke-width="1"/>
+  <g class="ln" style="animation-delay:3.15s">
+    <text x="120" y="362"><tspan class="st st--pass">PASS</tspan><tspan class="rest" xml:space="preserve"> composer-audit: no advisories found</tspan></text>
+  </g>
+  <svg class="tk" x="48" y="345" width="30" height="22" viewBox="0 0 40 30" aria-hidden="true">
+    <path d="M3 16 L14 26 L37 3" pathLength="1" style="animation-delay:3.50s"/>
+  </svg>
+  <line x1="0" y1="416" x2="1280" y2="416" stroke="rgba(60,90,130,.18)" stroke-width="1"/>
+  <g class="ln" style="animation-delay:3.60s">
+    <text x="120" y="402"><tspan class="st st--fail">FAIL</tspan><tspan class="rest" xml:space="preserve"> overrides: override for &quot;lock-committed&quot; expired on 2026-01-01</tspan></text>
+  </g>
+</svg>
