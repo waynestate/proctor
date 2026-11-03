@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Fixed: composer-audit no longer passes when Composer's own audit failed: a non-zero exit code with no advisory, ignored-advisory or abandoned finding in the JSON is now a fail (rule id `proctor/composer-audit/exit-code`).
 - Added: preflight-pinned warns when a Preflight component is included at a ref that is not a commit SHA, or when an app overrides the script of an included Preflight job.
 - Added: lock-committed warns when composer.lock content-hash differs from composer.json.
 - Fixed: the report prints raw, so a package name or constraint that looks like a formatting tag is shown as written.

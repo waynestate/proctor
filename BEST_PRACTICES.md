@@ -432,9 +432,12 @@ Why: abandoned packages, malware and custom policies can fail the audit without 
 Sources: [Composer changelog, 2.10.0](https://raw.githubusercontent.com/composer/composer/main/CHANGELOG.md);
 [Composer CLI: audit](https://getcomposer.org/doc/03-cli.md).
 
-**How the stack holds it: Not yet.** `ComposerAuditCheck` ignores the exit code once the output parses as JSON. That
-is what makes the 4.5 gap possible. Note that Composer's own exit code 2 means a dependency-solving error, which is
-not PROCTOR's meaning of 2.
+**How the stack holds it: Checked.** `ComposerAuditCheck` compares the exit code with the parsed result: when the
+audit exits non-zero and the JSON produced no advisory, ignored-advisory or abandoned finding, the check fails with
+one finding (rule id `proctor/composer-audit/exit-code`) instead of passing, so a malware or policy block, or an
+error, cannot hide behind an empty advisory list. Composer's own exit code 2 is a solver error and is reported the
+same way. An exit code of 0 with an empty result still passes, and any exit code with advisories or abandoned
+findings behaves as before (abandoned packages stay warnings).
 
 ### 4.11 Watch the cooldown policy and decide on it later (second pass)
 Composer 2.11.0-RC1 (2026-10-22) adds a `cooldown` policy that withholds newly published versions for a set period. The
@@ -828,7 +831,7 @@ Practices tagged `Not yet` or `Documented`, each one line. Highest value first.
 Added in the second pass (2026-10-27):
 
 26. 4.8: Done: the `composer-version` check fails the Composer on PATH below the minimum (2.2.x below 2.2.24, any other 2.x below 2.7.7, or Composer 1) (see 4.8).
-27. 4.10 and 4.5: Done: the `composer-audit` check compares Composer's exit code with the parsed result and reads the abandoned and malware parts of the output (rule id `proctor/composer-audit/abandoned`) (see 4.10 and 4.5).
+27. 4.10 and 4.5: Done: the `composer-audit` check compares Composer's exit code with the parsed result and reads the abandoned and malware parts of the output (rule ids `proctor/composer-audit/abandoned`, `proctor/composer-audit/exit-code`) (see 4.10 and 4.5).
 28. 6.4 (raise priority): Done: a tool error (exit 2) still writes a valid report, so the artifact GitLab uploads parses (see 6.4).
 29. 4.9: Flag `config.policy: false`, a disabled malware or advisory policy, and `COMPOSER_NO_BLOCKING` or
     `COMPOSER_NO_AUDIT` in the job environment.
