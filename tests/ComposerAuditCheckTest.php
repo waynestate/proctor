@@ -291,6 +291,211 @@ final class ComposerAuditCheckTest extends TestCase
         self::assertStringNotContainsString('GHSA-0000-aaaa-bbbb', $entries[0]->message);
     }
 
+    public function testSeverityAndAbandonedIgnoresAreCountedInTheIgnoreEntriesWarning(): void
+    {
+        // A temporary app whose composer.json keeps two
+        // config.policy.advisories.ignore-severity entries and one
+        // config.policy.abandoned.ignore entry: the check counts all three
+        // in one warning that names none of them.
+        $app = sys_get_temp_dir() . '/proctor-ignore-severity-app-' . uniqid();
+        mkdir($app, 0755, true);
+        file_put_contents($app . '/composer.json', (string) json_encode([
+            'name' => 'vendor/temp',
+            'config' => [
+                'policy' => [
+                    'advisories' => [
+                        'ignore-severity' => ['low', 'medium'],
+                    ],
+                    'abandoned' => [
+                        'ignore' => [
+                            'vendor/old-package' => 'replaced by vendor/new-package',
+                        ],
+                    ],
+                ],
+            ],
+        ]));
+        file_put_contents($app . '/composer.lock', '{}');
+
+        $json = json_encode(['advisories' => [], 'abandoned' => []]);
+        $findings = $this->runAudit($app, (string) $json, 0, true);
+
+        $entries = array_values(array_filter(
+            $findings,
+            static fn(Finding $finding): bool => $finding->ruleId === 'proctor/composer-audit/ignore-entries',
+        ));
+
+        self::assertCount(1, $entries);
+        self::assertSame(Finding::STATUS_WARNING, $entries[0]->status);
+        self::assertSame('composer.json', $entries[0]->path);
+        self::assertSame(1, $entries[0]->line);
+        self::assertStringContainsString('3 ignore entries', $entries[0]->message);
+        self::assertStringNotContainsString('vendor/old-package', $entries[0]->message);
+    }
+
+    public function testLegacyAuditSeverityAndAbandonedIgnoresAreCounted(): void
+    {
+        // A temporary app with no config.policy block keeps one legacy
+        // config.audit.ignore-severity entry and two legacy
+        // config.audit.ignore-abandoned entries: the check counts all
+        // three in one warning that names none of them.
+        $app = sys_get_temp_dir() . '/proctor-audit-fallback-app-' . uniqid();
+        mkdir($app, 0755, true);
+        file_put_contents($app . '/composer.json', (string) json_encode([
+            'name' => 'vendor/temp',
+            'config' => [
+                'audit' => [
+                    'ignore-severity' => ['low'],
+                    'ignore-abandoned' => [
+                        'vendor/old-one' => 'replaced by vendor/new-one',
+                        'vendor/old-two' => null,
+                    ],
+                ],
+            ],
+        ]));
+        file_put_contents($app . '/composer.lock', '{}');
+
+        $json = json_encode(['advisories' => [], 'abandoned' => []]);
+        $findings = $this->runAudit($app, (string) $json, 0, true);
+
+        $entries = array_values(array_filter(
+            $findings,
+            static fn(Finding $finding): bool => $finding->ruleId === 'proctor/composer-audit/ignore-entries',
+        ));
+
+        self::assertCount(1, $entries);
+        self::assertSame(Finding::STATUS_WARNING, $entries[0]->status);
+        self::assertSame('composer.json', $entries[0]->path);
+        self::assertSame(1, $entries[0]->line);
+        self::assertStringContainsString('3 ignore entries', $entries[0]->message);
+        self::assertStringNotContainsString('vendor/old-one', $entries[0]->message);
+        self::assertStringNotContainsString('vendor/old-two', $entries[0]->message);
+    }
+
+    public function testAuditFallbacksAreIgnoredWhenThePolicyBlockExists(): void
+    {
+        // Composer ignores all audit.* keys of a family once the matching
+        // config.policy block exists, so the five legacy
+        // config.audit.ignore-severity entries are not counted next to the
+        // one config.policy.advisories.ignore-severity entry.
+        $app = sys_get_temp_dir() . '/proctor-policy-wins-app-' . uniqid();
+        mkdir($app, 0755, true);
+        file_put_contents($app . '/composer.json', (string) json_encode([
+            'name' => 'vendor/temp',
+            'config' => [
+                'policy' => [
+                    'advisories' => [
+                        'ignore-severity' => ['critical'],
+                    ],
+                ],
+                'audit' => [
+                    'ignore-severity' => ['low', 'medium', 'high', 'critical', 'unknown'],
+                ],
+            ],
+        ]));
+        file_put_contents($app . '/composer.lock', '{}');
+
+        $json = json_encode(['advisories' => [], 'abandoned' => []]);
+        $findings = $this->runAudit($app, (string) $json, 0, true);
+
+        $entries = array_values(array_filter(
+            $findings,
+            static fn(Finding $finding): bool => $finding->ruleId === 'proctor/composer-audit/ignore-entries',
+        ));
+
+        self::assertCount(1, $entries);
+        self::assertSame(Finding::STATUS_WARNING, $entries[0]->status);
+        self::assertSame('composer.json', $entries[0]->path);
+        self::assertSame(1, $entries[0]->line);
+        self::assertStringContainsString('1 ignore entry', $entries[0]->message);
+        self::assertStringNotContainsString('critical', $entries[0]->message);
+    }
+
+    public function testTmpEdgeCasesForIgnoreEntryCounting(): void
+    {
+        // Fallbacks are gated per family: with config.policy.advisories
+        // present the legacy config.audit.ignore-severity is not counted,
+        // but config.audit.ignore-abandoned still is because there is no
+        // config.policy.abandoned block.
+        $app = sys_get_temp_dir() . '/proctor-edge-mixed-app-' . uniqid();
+        mkdir($app, 0755, true);
+        file_put_contents($app . '/composer.json', (string) json_encode([
+            'name' => 'vendor/temp',
+            'config' => [
+                'policy' => [
+                    'advisories' => [
+                        'ignore-severity' => ['low'],
+                    ],
+                ],
+                'audit' => [
+                    'ignore-severity' => ['low', 'medium', 'high', 'critical', 'unknown'],
+                    'ignore-abandoned' => [
+                        'vendor/old-one' => 'replaced by vendor/new-one',
+                    ],
+                ],
+            ],
+        ]));
+        file_put_contents($app . '/composer.lock', '{}');
+
+        $findings = $this->runAudit($app, (string) json_encode(['advisories' => [], 'abandoned' => []]), 0, true);
+        $entries = array_values(array_filter(
+            $findings,
+            static fn(Finding $finding): bool => $finding->ruleId === 'proctor/composer-audit/ignore-entries',
+        ));
+        self::assertCount(1, $entries);
+        self::assertStringContainsString('2 ignore entries', $entries[0]->message);
+
+        // The map shape of ignore-severity and the list shape of
+        // abandoned.ignore both count their entries.
+        $app = sys_get_temp_dir() . '/proctor-edge-map-app-' . uniqid();
+        mkdir($app, 0755, true);
+        file_put_contents($app . '/composer.json', (string) json_encode([
+            'name' => 'vendor/temp',
+            'config' => [
+                'policy' => [
+                    'advisories' => [
+                        'ignore-severity' => [
+                            'low' => 'accepted risk',
+                            'medium' => null,
+                        ],
+                    ],
+                    'abandoned' => [
+                        'ignore' => ['vendor/old-package'],
+                    ],
+                ],
+            ],
+        ]));
+        file_put_contents($app . '/composer.lock', '{}');
+
+        $findings = $this->runAudit($app, (string) json_encode(['advisories' => [], 'abandoned' => []]), 0, true);
+        $entries = array_values(array_filter(
+            $findings,
+            static fn(Finding $finding): bool => $finding->ruleId === 'proctor/composer-audit/ignore-entries',
+        ));
+        self::assertCount(1, $entries);
+        self::assertStringContainsString('3 ignore entries', $entries[0]->message);
+
+        // Non-array settings are not counted and do not crash the check.
+        $app = sys_get_temp_dir() . '/proctor-edge-scalar-app-' . uniqid();
+        mkdir($app, 0755, true);
+        file_put_contents($app . '/composer.json', (string) json_encode([
+            'name' => 'vendor/temp',
+            'config' => [
+                'policy' => [
+                    'advisories' => [
+                        'ignore-severity' => 'low',
+                    ],
+                ],
+                'audit' => 'weird',
+            ],
+        ]));
+        file_put_contents($app . '/composer.lock', '{}');
+
+        $findings = $this->runAudit($app, (string) json_encode(['advisories' => [], 'abandoned' => []]), 0, true);
+        foreach ($findings as $finding) {
+            self::assertNotSame('proctor/composer-audit/ignore-entries', $finding->ruleId);
+        }
+    }
+
     public function testNoIgnoreEntriesGivesNoIgnoreEntriesFinding(): void
     {
         // The clean fixture app keeps no ignore entries, so the count
