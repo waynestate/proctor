@@ -197,8 +197,11 @@ Why: the same risk as 3.1 with different spelling.
 Sources: [Composer: versions and constraints](https://getcomposer.org/doc/articles/versions.md);
 [Composer basic usage: stability](https://getcomposer.org/doc/01-basic-usage.md).
 
-**How the stack holds it: Not yet.** A token that does not start with `dev-` and is not `*` passes. `>=`, `@dev`,
-`minimum-stability` and the `dev-main` form in `require-dev` are not looked at.
+**How the stack holds it: Checked.** `unbounded-constraints` fails for each `require` entry whose constraint is `*`,
+names a `dev-` branch, carries an `@dev` flag, has a lower bound with no upper bound (`>=1.0`), or matches one of the
+policy's `banned_constraints` patterns. A `minimum-stability` below stable (`dev`, `alpha`, `beta` or `rc`) is a
+warning (`proctor/unbounded-constraints/minimum-stability`), because every package may then resolve to a pre-release.
+`require-dev` is still not looked at.
 
 ### 3.3 Reject path and non-HTTPS repositories in committed files
 A `path` repository points at a local folder that other machines and CI do not have. A plain-HTTP repository can be
@@ -809,7 +812,7 @@ Practices tagged `Not yet` or `Documented`, each one line. Highest value first.
 6. 5.6: Reject an override that targets `overrides` or an unknown check name, and add tests.
 7. 2.6: Raise PROCTOR's own floor before 2027-01-01 and run the `proctor` component in its own pipeline.
 8. 1.4: Done: the `unbounded-constraints` check reads its rules from the policy file, which carries `banned_constraints` (see 1.4).
-9. 3.2: Flag `>=` and other open upper bounds, `@dev` flags and `minimum-stability`.
+9. 3.2: Done: the `unbounded-constraints` check fails on open upper bounds and `@dev` flags, and warns when `minimum-stability` is below stable (rule ids `proctor/unbounded-constraints/unbounded`, `proctor/unbounded-constraints/minimum-stability`) (see 3.2).
 10. 4.5: Done: the `composer-audit` check reads the abandoned and malware parts of Composer's audit output; abandoned packages warn (rule id `proctor/composer-audit/abandoned`) (see 4.5).
 11. 4.6: Done: the text report's header line names the Composer version used, and the `composer-version` check fails a vulnerable or end-of-life Composer (see 4.6).
 12. 5.4: Let an override name a package or advisory id.

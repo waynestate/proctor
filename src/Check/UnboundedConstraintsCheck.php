@@ -15,7 +15,9 @@ use Waynestate\Proctor\ToolError;
  * require-dev is not checked; php, ext-*, lib-*, composer-plugin-api and
  * composer-runtime-api are not packages.
  *
- * A path or vcs repository in composer.json is a warning, not a failure.
+ * A path or vcs repository in composer.json is a warning, not a failure, and
+ * so is a minimum-stability below stable (dev, alpha, beta, rc): every
+ * package may then resolve to a pre-release.
  */
 final class UnboundedConstraintsCheck implements CheckInterface
 {
@@ -68,11 +70,16 @@ final class UnboundedConstraintsCheck implements CheckInterface
                     Finding::STATUS_FAIL,
                     sprintf('%s constraint "%s" is unbounded', $package, $constraint),
                     'composer.json',
-                    $this->lineOfPackage($raw, $package),
+                    $this->lineOfKey($raw, $package),
                     null,
                     'unbounded',
                 );
             }
+        }
+
+        $stabilityWarning = $this->minimumStabilityWarning($raw, $data);
+        if ($stabilityWarning !== null) {
+            $findings[] = $stabilityWarning;
         }
 
         foreach ($this->repositoryWarnings($data) as $warning) {
@@ -211,6 +218,36 @@ final class UnboundedConstraintsCheck implements CheckInterface
     }
 
     /**
+     * One warning finding when minimum-stability is below stable, or null
+     * when it is stable or absent.
+     *
+     * @param array<string, mixed> $data
+     */
+    private function minimumStabilityWarning(string $raw, array $data): ?Finding
+    {
+        $stability = $data['minimum-stability'] ?? null;
+        if (!is_string($stability)) {
+            return null;
+        }
+        if (!in_array(strtolower($stability), ['dev', 'alpha', 'beta', 'rc'], true)) {
+            return null;
+        }
+
+        return new Finding(
+            $this->id(),
+            Finding::STATUS_WARNING,
+            sprintf(
+                'minimum-stability is "%s": every package may resolve to a pre-release; set it to stable and name a stability only where one package needs it',
+                $stability,
+            ),
+            'composer.json',
+            $this->lineOfKey($raw, 'minimum-stability'),
+            null,
+            'minimum-stability',
+        );
+    }
+
+    /**
      * One warning finding per path or vcs repository in composer.json.
      *
      * @param array<string, mixed> $data
@@ -247,12 +284,12 @@ final class UnboundedConstraintsCheck implements CheckInterface
     }
 
     /**
-     * The 1-based line of the package's key in the raw composer.json text,
-     * or 1 when the key cannot be found.
+     * The 1-based line of the key in the raw composer.json text, or 1 when
+     * the key cannot be found.
      */
-    private function lineOfPackage(string $raw, string $package): int
+    private function lineOfKey(string $raw, string $key): int
     {
-        $pattern = '/"' . preg_quote($package, '/') . '"\s*:/';
+        $pattern = '/"' . preg_quote($key, '/') . '"\s*:/';
         if (preg_match($pattern, $raw, $matches, PREG_OFFSET_CAPTURE) !== 1) {
             return 1;
         }

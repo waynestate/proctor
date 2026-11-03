@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added: unbounded-constraints warns when composer.json sets minimum-stability below stable (dev, alpha, beta or rc), because every package may then resolve to a pre-release (rule id `proctor/unbounded-constraints/minimum-stability`). A warning, never a fail.
 - Fixed: composer-audit no longer passes when Composer's own audit failed: a non-zero exit code with no advisory, ignored-advisory or abandoned finding in the JSON is now a fail (rule id `proctor/composer-audit/exit-code`).
 - Added: preflight-pinned warns when a Preflight component is included at a ref that is not a commit SHA, or when an app overrides the script of an included Preflight job.
 - Added: lock-committed warns when composer.lock content-hash differs from composer.json.

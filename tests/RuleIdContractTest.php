@@ -44,6 +44,7 @@ final class RuleIdContractTest extends ProctorTestCase
         // unbounded-constraints
         'proctor/unbounded-constraints/unbounded',
         'proctor/unbounded-constraints/repository',
+        'proctor/unbounded-constraints/minimum-stability',
         // composer-config
         'proctor/composer-config/allow-plugins-all',
         'proctor/composer-config/secure-http-off',
