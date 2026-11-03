@@ -348,8 +348,11 @@ red `composer audit` and, today, a green PROCTOR.)
 Sources: [Composer 2.10 release](https://blog.packagist.com/composer-2-10-release/);
 [Composer CLI: audit](https://getcomposer.org/doc/03-cli.md).
 
-**How the stack holds it: Not yet.** PROCTOR reads only the `advisories` key. A run can pass in PROCTOR while Composer's
-own exit code is 1.
+**How the stack holds it: Checked.** `ComposerAuditCheck` reads `advisories`, `ignored-advisories` and `abandoned` from
+Composer's JSON; abandoned packages are warnings (rule id `proctor/composer-audit/abandoned`). Malware entries are not
+parsed by name; they are caught by the exit-code finding, which fails (rule id `proctor/composer-audit/exit-code`) when
+Composer exits non-zero and the JSON carries nothing readable, as a malware hit or a policy block does. Tests:
+`tests/ComposerAuditCheckTest.php` (`testAbandonedPackagesAreWarnings`, `testNonZeroExitWithNothingReadableFails`).
 
 ### 4.6 Pin the Composer version that does the audit
 Defaults have changed between Composer releases (the abandoned-package default moved in 2.7, and 2.10 added
@@ -382,7 +385,8 @@ from the project. Give each schedule a named team owner and have a Maintainer ta
 GitLab's built-in Dependency Scanning page lists "Tier: Ultimate" and does not mention PHP or Composer, so do not
 assume it covers this job on a Free or Community instance.
 
-**How the stack holds it: Not yet.** No Preflight or PROCTOR document asks for a scheduled run.
+**How the stack holds it: Documented.** Preflight's README has a "Run it on a schedule" section with the weekly pipeline
+schedule steps. A document, not a gate: nothing fails if an app skips it.
 
 ### 4.8 Run a patched Composer, because PROCTOR feeds it files the app controls (second pass)
 Set a minimum Composer version for the job that runs PROCTOR, and fail with a clear message below it.
@@ -526,14 +530,17 @@ Sources: the stack's deploy-gate decision.
 valid date.
 
 ### 5.6 Do not let an override waive the override check, and reject unknown check names
-**Reading the code:** an active override whose `check` is `overrides` turns an expired entry's failure into a warning.
-An override naming a check that does not exist is accepted and does nothing.
+An active override cannot turn a fail of the `overrides` check into a warning, and an override naming a check nobody
+runs is a tool error (exit 2) that names the valid ids.
 
 Why: the expiry rule is only as strong as the rule that enforces it.
 
 Sources: [OWASP CICD-SEC-1, Insufficient Flow Control Mechanisms](https://owasp.org/www-project-top-10-ci-cd-security-risks/).
 
-**How the stack holds it: Not yet.** No test covers either case. Both are visible in the output, which limits the harm.
+**How the stack holds it: Checked.** `OverrideApplier` never downgrades a fail of the `overrides` check, and an
+override naming a check nobody runs is a tool error (exit 2) that names the valid ids. Tests:
+`tests/OverrideGuardsTest.php` (`testUnknownCheckTargetIsAToolErrorNamingTheIdAndTheValidOnes`,
+`testTheApplierStillNeverDowngradesTheOverridesCheck`).
 
 ### 5.7 Have someone other than the author approve an override
 `approved_by` is a free-text string. The file sits in the app repo and its author can edit it.
@@ -616,13 +623,13 @@ Why: an empty file turns a clear tool error into a second parse error in the mer
 
 Sources: [GitLab Code Quality: report requirements](https://docs.gitlab.com/ci/testing/code_quality/).
 
-**How the stack holds it: Not yet.** Tool errors go to stderr and stdout stays empty, so the Preflight redirect leaves an
-empty artifact.
+**How the stack holds it: Checked.** `bin/proctor` catches `ToolError` and, for the codequality format, writes
+`CodeQualityWriter::writeToolError` (one issue naming the error) to stdout, so the artifact is never an empty file.
+Test: `tests/CodeQualityShapeTest.php` (`testToolErrorInCodeQualityFormatListsTheErrorAsOneIssue`).
 
-Second pass: this is worse than it looks. GitLab says artifacts under `artifacts:reports` are "always uploaded,
-regardless of the job results", and the Preflight component sets `artifacts:when: always`. So the empty file does reach
-GitLab on exit 2 and is parsed there. The GitLab Code Quality page does not say what GitLab does with an empty file, so
-the exact failure in the merge request is unverified.
+Second pass: this matters because GitLab says artifacts under `artifacts:reports` are "always uploaded, regardless of
+the job results", and the Preflight component sets `artifacts:when: always`, so the report written on exit 2 does
+reach GitLab and is parsed there.
 
 ### 6.5 Offer an interchange format when a second consumer needs it
 SARIF 2.1.0 is the OASIS standard for static-analysis results. GitLab Code Quality is enough for merge requests today.
@@ -738,11 +745,10 @@ Why: a stuck advisory call otherwise burns runner time and hides the real fault.
 
 Sources: [GitLab CI: `timeout`](https://docs.gitlab.com/ci/yaml/).
 
-**How the stack holds it: Not yet.** `ProcessRunner` waits with `stream_get_contents` and has no limit.
-(Second pass: it reads all of stdout, then all of stderr. A child that fills the stderr pipe while PROCTOR is still
-reading stdout can block both sides. This is a well-known `proc_open` trap, but I did not reproduce it here and did
-not check the PHP manual for it. GitLab's `timeout` keyword would stop the job in the end, which is a poor failure
-mode, so a limit and non-blocking reads belong in the tool.)
+**How the stack holds it: Checked.** `ProcessRunner` runs every child under a deadline (default 300 s, settable with
+`--timeout`), reads stdout and stderr with `stream_select`, and kills the child and reports it when the deadline
+passes, so a hung `composer audit` cannot hold the runner. Test: `tests/ProcessRunnerTest.php`
+(`testChildProcessOverTimeoutIsKilledAndReported`).
 
 ### 8.4 Test every exit path with a fixture app
 Each result a user can see needs a fixture that produces it.
