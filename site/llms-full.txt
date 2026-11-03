@@ -8,7 +8,7 @@ The README and the Markdown twin of every page, joined. The index is https://pro
 
 ## README
 
-Source: https://github.com/waynestate/proctor/blob/HEAD/README.md
+Source: https://nougat.snu.gs/enterprise-apps/proctor/blob/HEAD/README.md
 
 ## PROCTOR
 
@@ -25,12 +25,14 @@ passed with `--policy`; PROCTOR itself holds no policy of its own.
 > [!NOTE]
 > **Not to be confused with:** code style is Pinstripe, CI is Preflight. PROCTOR grades an app against CREED's rules.
 
-Checks: `composer ci` (the same command runs on GitLab and GitHub). Front page: [`site/index.html`](https://github.com/waynestate/proctor/blob/HEAD/site/index.html).
-On Citadel it is served by the raw-PHP deploy layer in [`deploy/`](https://github.com/waynestate/proctor/blob/HEAD/deploy/): a Squire kit whose front controller serves `site/` behind HELMET's security headers. For local development, keep serving `site/` directly.
+Checks: `composer ci` (the same command runs on GitLab and GitHub). Front page: [`site/index.html`](https://nougat.snu.gs/enterprise-apps/proctor/blob/HEAD/site/index.html).
+On Citadel it is served by the raw-PHP deploy layer in [`deploy/`](https://nougat.snu.gs/enterprise-apps/proctor/blob/HEAD/deploy/): a Squire kit whose front controller serves `site/` behind HELMET's security headers. For local development, keep serving `site/` directly.
 
-> [!NOTE]
-> This repository is published from Wayne State University's internal GitLab and mirrored here. Changes land there
-> first; Wayne State developers open issues and merge requests on the internal project.
+### Where the code lives
+
+The canonical repository is on nougat: [enterprise-apps/proctor](https://nougat.snu.gs/enterprise-apps/proctor). git.wayne.edu and GitHub ([waynestate/proctor](https://github.com/waynestate/proctor)) are read-only mirrors of it.
+Open issues and merge requests on nougat, not on the mirrors.
+This moves to git.wayne.edu once it has CI runners. Your proctor keeps one answer sheet, and this is it; the mirrors hold photocopies.
 
 ### Install
 
@@ -299,7 +301,7 @@ Proof runs against real Wayne State applications are on a private site, [proof.a
 
 ### Running the tests in Docker
 
-Maintainers: how to build, test and release this project, and where its data comes from, is in [MAINTAINING.md](https://github.com/waynestate/proctor/blob/HEAD/MAINTAINING.md).
+Maintainers: how to build, test and release this project, and where its data comes from, is in [MAINTAINING.md](https://nougat.snu.gs/enterprise-apps/proctor/blob/HEAD/MAINTAINING.md).
 
 No PHP is needed on the host:
 
