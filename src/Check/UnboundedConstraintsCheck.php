@@ -17,7 +17,9 @@ use Waynestate\Proctor\ToolError;
  *
  * A path or vcs repository in composer.json is a warning, not a failure, and
  * so is a minimum-stability below stable (dev, alpha, beta, rc): every
- * package may then resolve to a pre-release.
+ * package may then resolve to a pre-release. A repository URL served over
+ * plain http is a warning too, because a network attacker can change what
+ * Composer downloads.
  */
 final class UnboundedConstraintsCheck implements CheckInterface
 {
@@ -248,7 +250,8 @@ final class UnboundedConstraintsCheck implements CheckInterface
     }
 
     /**
-     * One warning finding per path or vcs repository in composer.json.
+     * One warning finding per path or vcs repository in composer.json, and
+     * one more per repository URL that is served over plain http.
      *
      * @param array<string, mixed> $data
      *
@@ -276,6 +279,23 @@ final class UnboundedConstraintsCheck implements CheckInterface
                     1,
                     null,
                     'repository',
+                );
+            }
+            $url = $repository['url'] ?? null;
+            if (is_string($url) && stripos($url, 'http://') === 0) {
+                $host = parse_url($url, PHP_URL_HOST);
+                $name = is_string($host) && $host !== '' ? $host : 'a repository';
+                $findings[] = new Finding(
+                    $this->id(),
+                    Finding::STATUS_WARNING,
+                    sprintf(
+                        'repository "%s" is served over plain http, so a network attacker can change what Composer downloads; use https',
+                        $name,
+                    ),
+                    'composer.json',
+                    1,
+                    null,
+                    'insecure-url',
                 );
             }
         }
