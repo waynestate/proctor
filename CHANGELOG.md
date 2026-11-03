@@ -10,6 +10,7 @@
 - Added: ci-pipelines warns when the pipeline environment switches Composer's audit or blocking policy off: `COMPOSER_NO_AUDIT` or `COMPOSER_NO_BLOCKING` set to anything but an empty string, `0` or `false`, or `COMPOSER_AUDIT_ABANDONED` set to `ignore` (rule id `proctor/ci-pipelines/composer-audit-off`). A warning, never a fail.
 - Added: the composer-audit ignore-entries count now also reads `config.policy.advisories.ignore-severity` and `config.policy.abandoned.ignore`, plus the legacy fallbacks `config.audit.ignore-severity` and `config.audit.ignore-abandoned` while their matching `config.policy` block is absent (rule id `proctor/composer-audit/ignore-entries`). A warning, never a fail.
 - Added: docs site built from docs/ with generated command and environment reference
+- Added: a composer-audit override can name the one advisory or package it covers with the optional `advisory` and `package` fields of policy-overrides.json (case-insensitive, `*` wildcard on the package, both present means both must match), so a scoped override downgrades only the matching failures; on any other check, or with a value that is not a non-empty string, the file is rejected (exit 2), and a scoped override that matches no failure earns the unused warning with its scope in the text.
 
 ## 0.4.0 (2026-11-03)
 

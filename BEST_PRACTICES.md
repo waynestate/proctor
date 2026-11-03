@@ -537,8 +537,12 @@ Why: a check-wide override also hides every new problem of that kind during the 
 
 Sources: [Composer config: ignores can carry a reason and scope](https://getcomposer.org/doc/06-config.md).
 
-**How the stack holds it: Not yet.** An active override for `composer-audit` turns every audit failure into a warning,
-including advisories published after the override was written.
+**How the stack holds it: Checked.** A `composer-audit` override may carry an optional `advisory` (an advisory id or
+CVE, matched case-insensitively against the finding's advisory id or CVE) and an optional `package` (a package name,
+`*` wildcard allowed, matched case-insensitively against the audited package); both present means both must match the
+same advisory, and a scoped override never covers a fail that carries no advisory data. On any other check, or with a
+value that is not a non-empty string, the entry is a tool error (exit 2). Other checks stay check-wide, and a scoped
+override that matches no failure earns the unused warning with its scope in the text. Tests: `tests/ScopedOverrideTest.php`.
 
 ### 5.5 Cap how long an override can run
 The expiry should not be later than the related forced-upgrade deadline.
@@ -847,7 +851,7 @@ Practices tagged `Not yet` or `Documented`, each one line. Highest value first.
 9. 3.2: Done: the `unbounded-constraints` check fails on open upper bounds and `@dev` flags, and warns when `minimum-stability` is below stable (rule ids `proctor/unbounded-constraints/unbounded`, `proctor/unbounded-constraints/minimum-stability`) (see 3.2).
 10. 4.5: Done: the `composer-audit` check reads the abandoned and malware parts of Composer's audit output; abandoned packages warn (rule id `proctor/composer-audit/abandoned`) (see 4.5).
 11. 4.6: Done: the text report's header line names the Composer version used, and the `composer-version` check fails a vulnerable or end-of-life Composer (see 4.6).
-12. 5.4: Let an override name a package or advisory id.
+12. 5.4: Done: a composer-audit override can name the one advisory or package it covers with the optional `advisory` and `package` fields, so a scoped override downgrades only the matching failures (see 5.4).
 13. 5.5: Reject an `expires` date beyond a policy-set maximum.
 14. 5.7: Require an approver who is not the author (needs review rules on the app repo).
 15. 1.3: Done: the policy reader accepts a newer `schema_version` and ignores unknown keys, so a pinned older checker still reads a newer policy file (see 1.3).
