@@ -1,21 +1,108 @@
 {
-    "title": "PROCTOR",
-    "tagline": "Policy Rules Of Code, Tested On Release.",
-    "items": [
+  "title": "PROCTOR",
+  "tagline": "Policy Rules Of Code, Tested On Release.",
+  "items": [
+    {
+      "title": "Getting Started",
+      "items": [
         {
-            "title": "Overview",
-            "path": "index"
-        }
-    ],
-    "source": "https://nougat.snu.gs/enterprise-apps/proctor",
-    "mirrors": [
-        {
-            "title": "git.wayne.edu",
-            "url": "https://git.wayne.edu/enterprise-apps/proctor"
+          "title": "Overview",
+          "path": "index"
         },
         {
-            "title": "GitHub",
-            "url": "https://github.com/waynestate/proctor"
+          "title": "Install",
+          "path": "install"
+        },
+        {
+          "title": "Quick start",
+          "path": "guides/quick-start"
         }
-    ]
+      ]
+    },
+    {
+      "title": "Guides",
+      "items": [
+        {
+          "title": "Checks",
+          "path": "guides/checks-overview"
+        },
+        {
+          "title": "Composer checks",
+          "path": "guides/check-composer"
+        },
+        {
+          "title": "PHP checks",
+          "path": "guides/check-php"
+        },
+        {
+          "title": "CI checks",
+          "path": "guides/check-ci"
+        },
+        {
+          "title": "WayneUI checks",
+          "path": "guides/check-wayneui"
+        },
+        {
+          "title": "Overrides",
+          "path": "guides/overrides"
+        },
+        {
+          "title": "Policy",
+          "path": "guides/policy"
+        },
+        {
+          "title": "Formats",
+          "path": "guides/formats"
+        },
+        {
+          "title": "GitHub code scanning",
+          "path": "guides/github-code-scanning"
+        }
+      ]
+    },
+    {
+      "title": "Reference",
+      "items": [
+        {
+          "title": "Commands",
+          "path": "reference/commands"
+        },
+        {
+          "title": "Exit codes",
+          "path": "reference/exit-codes"
+        },
+        {
+          "title": "Rule ids",
+          "path": "reference/rule-ids"
+        },
+        {
+          "title": "Configuration",
+          "path": "reference/configuration"
+        },
+        {
+          "title": "Proof",
+          "path": "reference/proof"
+        }
+      ]
+    },
+    {
+      "title": "Troubleshooting",
+      "path": "troubleshooting"
+    },
+    {
+      "title": "Upgrading",
+      "path": "upgrading"
+    }
+  ],
+  "source": "https://nougat.snu.gs/enterprise-apps/proctor",
+  "mirrors": [
+    {
+      "title": "git.wayne.edu",
+      "url": "https://git.wayne.edu/enterprise-apps/proctor"
+    },
+    {
+      "title": "GitHub",
+      "url": "https://github.com/waynestate/proctor"
+    }
+  ]
 }
