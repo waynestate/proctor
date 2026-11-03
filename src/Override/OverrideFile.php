@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Waynestate\Proctor\Override;
 
 use DateTimeImmutable;
+use Waynestate\Proctor\Check\ComposerAuditCheck;
 use Waynestate\Proctor\Check\OverridesCheck;
 use Waynestate\Proctor\ToolError;
 
@@ -13,6 +14,12 @@ use Waynestate\Proctor\ToolError;
  *
  * The file is a JSON array of objects:
  * {"check": string, "reason": string, "expires": "YYYY-MM-DD", "approved_by": string}
+ *
+ * A composer-audit entry may also carry the optional strings "advisory"
+ * (an advisory id or CVE) and "package" (a package name, a star may
+ * wildcard), scoping the override to the failures they match. On any other
+ * check, or with a value that is not a non-empty string, the entry is a
+ * tool error (exit 2).
  *
  * An absent file is not an error: it simply means the app has no overrides.
  * A present but malformed file or entry is a tool error (exit 2).
@@ -140,7 +147,46 @@ final class OverrideFile
             throw new ToolError(sprintf('%s is missing an "approved_by" string.', $where));
         }
 
-        return new Override($check, $reason, self::parseDate($expires), $approvedBy);
+        // The scope fields name the one advisory or package a composer-audit
+        // override covers; on any other check they would silently do nothing
+        // for some failures and hide others, so they are rejected here.
+        $advisory = self::parseScopeField($entry['advisory'] ?? null, 'advisory', $check, $where);
+        $package = self::parseScopeField($entry['package'] ?? null, 'package', $check, $where);
+
+        return new Override($check, $reason, self::parseDate($expires), $approvedBy, $advisory, $package);
+    }
+
+    /**
+     * One optional scope field of a composer-audit entry: absent stays
+     * null, present must be a non-empty string, and the field is only valid
+     * when the entry targets the composer-audit check.
+     *
+     * @param mixed $value the raw value of the field, or null when absent
+     *
+     * @throws ToolError naming the entry and the field
+     */
+    private static function parseScopeField(mixed $value, string $field, string $check, string $where): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+        if ($check !== ComposerAuditCheck::ID) {
+            throw new ToolError(sprintf(
+                '%s: "%s" is only valid for the %s check.',
+                $where,
+                $field,
+                ComposerAuditCheck::ID,
+            ));
+        }
+        if (!is_string($value) || trim($value) === '') {
+            throw new ToolError(sprintf(
+                '%s: "%s" must be a non-empty string.',
+                $where,
+                $field,
+            ));
+        }
+
+        return $value;
     }
 
     /**

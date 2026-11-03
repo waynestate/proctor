@@ -74,6 +74,7 @@ final class JsonShapeTest extends ProctorTestCase
                     null,
                     'advisory',
                     [[
+                        'package' => 'laravel/framework',
                         'id' => 'CVE-2024-52301',
                         'cve' => 'CVE-2024-52301',
                         'title' => 'Laravel environment manipulation via query string',
@@ -103,6 +104,7 @@ final class JsonShapeTest extends ProctorTestCase
         );
         self::assertSame([
             [
+                'package' => 'laravel/framework',
                 'id' => 'CVE-2024-52301',
                 'cve' => 'CVE-2024-52301',
                 'title' => 'Laravel environment manipulation via query string',
