@@ -254,6 +254,56 @@ final class ComposerAuditCheckTest extends TestCase
         ]);
     }
 
+    public function testIgnoreEntriesInComposerJsonAreReportedAsOneWarningWithoutNamingThem(): void
+    {
+        // A temporary app whose composer.json keeps two legacy
+        // config.audit.ignore entries: the check reports one warning that
+        // counts them and names none of them, even when no advisory
+        // matched.
+        $app = sys_get_temp_dir() . '/proctor-ignore-entries-app';
+        if (!is_dir($app)) {
+            mkdir($app, 0755, true);
+        }
+        file_put_contents($app . '/composer.json', (string) json_encode([
+            'name' => 'vendor/temp',
+            'config' => [
+                'audit' => [
+                    'ignore' => ['CVE-1999-0001', 'GHSA-0000-aaaa-bbbb'],
+                ],
+            ],
+        ]));
+        file_put_contents($app . '/composer.lock', '{}');
+
+        $json = json_encode(['advisories' => [], 'abandoned' => []]);
+        $findings = $this->runAudit($app, (string) $json, 0, true);
+
+        $entries = array_values(array_filter(
+            $findings,
+            static fn(Finding $finding): bool => $finding->ruleId === 'proctor/composer-audit/ignore-entries',
+        ));
+
+        self::assertCount(1, $entries);
+        self::assertSame(Finding::STATUS_WARNING, $entries[0]->status);
+        self::assertSame('composer.json', $entries[0]->path);
+        self::assertSame(1, $entries[0]->line);
+        self::assertStringContainsString('2 ignore entries', $entries[0]->message);
+        self::assertStringNotContainsString('CVE-1999-0001', $entries[0]->message);
+        self::assertStringNotContainsString('GHSA-0000-aaaa-bbbb', $entries[0]->message);
+    }
+
+    public function testNoIgnoreEntriesGivesNoIgnoreEntriesFinding(): void
+    {
+        // The clean fixture app keeps no ignore entries, so the count
+        // warning stays away.
+        $json = json_encode(['advisories' => [], 'abandoned' => []]);
+
+        $findings = $this->runAudit($this->app('audit-app'), (string) $json, 0, true);
+
+        foreach ($findings as $finding) {
+            self::assertNotSame('proctor/composer-audit/ignore-entries', $finding->ruleId);
+        }
+    }
+
     public function testAdvisoriesComposerAlreadyMovedToIgnoredAreWarnings(): void
     {
         // Whatever the app's own config says, an advisory in composer's
@@ -402,11 +452,14 @@ final class ComposerAuditCheckTest extends TestCase
 
     /**
      * Runs the check on a fixture app with the given audit JSON and returns
-     * its findings.
+     * its findings. Unless $keepIgnoreEntries is set, the
+     * proctor/composer-audit/ignore-entries warning is dropped first, so
+     * the existing tests assert the same findings they did before the
+     * warning existed.
      *
      * @return list<Finding>
      */
-    private function runAudit(string $app, string $json, int $exitCode = 1): array
+    private function runAudit(string $app, string $json, int $exitCode = 1, bool $keepIgnoreEntries = false): array
     {
         $this->putFakeComposerOnPath();
 
@@ -428,7 +481,15 @@ final class ComposerAuditCheckTest extends TestCase
             new DateTimeImmutable('2026-10-27'),
         );
 
-        return $check->run($context);
+        $findings = $check->run($context);
+        if (!$keepIgnoreEntries) {
+            $findings = array_values(array_filter(
+                $findings,
+                static fn(Finding $finding): bool => $finding->ruleId !== 'proctor/composer-audit/ignore-entries',
+            ));
+        }
+
+        return $findings;
     }
 
     /**

@@ -29,7 +29,10 @@ use Waynestate\Proctor\ToolError;
  * custom policy, abandoned packages, missing packages), so a non-zero exit
  * with no advisory, ignored-advisory or abandoned finding in the JSON is
  * itself a fail (rule `proctor/composer-audit/exit-code`), and only an
- * exit code of 0 with an empty result passes.
+ * exit code of 0 with an empty result passes. A warning (rule
+ * `proctor/composer-audit/ignore-entries`) also reports the number of
+ * ignore entries the app keeps in its own composer.json, so they move to
+ * the dated override file.
  */
 final class ComposerAuditCheck implements CheckInterface
 {
@@ -94,6 +97,7 @@ final class ComposerAuditCheck implements CheckInterface
 
         $threshold = $this->threshold($context->policy);
         $ignored = $this->ignoredAdvisories($context);
+        $ignoreEntry = $this->ignoreEntryFinding($context);
         $versions = $this->lockedVersions($context);
 
         $findings = [];
@@ -156,7 +160,7 @@ final class ComposerAuditCheck implements CheckInterface
 
         if ($findings === []) {
             if ($result->exitCode !== 0) {
-                return [new Finding(
+                $findings[] = new Finding(
                     $this->id(),
                     Finding::STATUS_FAIL,
                     sprintf(
@@ -167,15 +171,19 @@ final class ComposerAuditCheck implements CheckInterface
                     1,
                     null,
                     'exit-code',
-                )];
+                );
+            } else {
+                $findings[] = new Finding(
+                    $this->id(),
+                    Finding::STATUS_PASS,
+                    'no advisories found',
+                    'composer.lock',
+                );
             }
+        }
 
-            return [new Finding(
-                $this->id(),
-                Finding::STATUS_PASS,
-                'no advisories found',
-                'composer.lock',
-            )];
+        if ($ignoreEntry !== null) {
+            $findings[] = $ignoreEntry;
         }
 
         return $findings;
@@ -479,6 +487,71 @@ final class ComposerAuditCheck implements CheckInterface
         }
 
         return ['ids' => $ids, 'packages' => $packages, 'constrained' => []];
+    }
+
+    /**
+     * A warning for the ignore entries the app keeps in its own
+     * composer.json (config.policy.advisories.ignore-id,
+     * config.policy.advisories.ignore or the legacy config.audit.ignore),
+     * which have no expiry and are invisible to the override file. The
+     * message counts the entries and names none of them. Null when the
+     * file is unreadable, not an array, or carries no ignore entries.
+     */
+    private function ignoreEntryFinding(CheckContext $context): ?Finding
+    {
+        $file = $context->appPath . '/composer.json';
+        $raw = file_get_contents($file);
+        if ($raw === false) {
+            return null;
+        }
+
+        $data = json_decode($raw, true);
+        if (!is_array($data)) {
+            return null;
+        }
+
+        $config = $data['config'] ?? null;
+        if (!is_array($config)) {
+            return null;
+        }
+
+        $total = 0;
+
+        $advisories = $config['policy']['advisories'] ?? null;
+        if (is_array($advisories)) {
+            foreach (['ignore-id', 'ignore'] as $key) {
+                $setting = $advisories[$key] ?? null;
+                if (is_array($setting)) {
+                    $total += count($setting);
+                }
+            }
+        }
+
+        $audit = $config['audit'] ?? null;
+        if (is_array($audit)) {
+            $setting = $audit['ignore'] ?? null;
+            if (is_array($setting)) {
+                $total += count($setting);
+            }
+        }
+
+        if ($total === 0) {
+            return null;
+        }
+
+        return new Finding(
+            $this->id(),
+            Finding::STATUS_WARNING,
+            sprintf(
+                'composer.json silences audit results with %d ignore %s; move them to policy-overrides.json so they expire',
+                $total,
+                $total === 1 ? 'entry' : 'entries',
+            ),
+            'composer.json',
+            1,
+            null,
+            'ignore-entries',
+        );
     }
 
     /*
