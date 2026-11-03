@@ -495,11 +495,19 @@ final class ComposerAuditCheck implements CheckInterface
 
     /**
      * A warning for the ignore entries the app keeps in its own
-     * composer.json (config.policy.advisories.ignore-id,
-     * config.policy.advisories.ignore or the legacy config.audit.ignore),
-     * which have no expiry and are invisible to the override file. The
-     * message counts the entries and names none of them. Null when the
-     * file is unreadable, not an array, or carries no ignore entries.
+     * composer.json: config.policy.advisories.ignore-id,
+     * config.policy.advisories.ignore, config.policy.advisories.ignore-severity,
+     * config.policy.abandoned.ignore, or the legacy fallbacks
+     * config.audit.ignore, config.audit.ignore-severity and
+     * config.audit.ignore-abandoned. Composer ignores all audit.* keys of a
+     * family once the matching config.policy block exists, so the
+     * config.audit.ignore-severity fallback only counts when
+     * config.policy.advisories is not an array, and
+     * config.audit.ignore-abandoned only counts when
+     * config.policy.abandoned is not an array. The entries have no expiry
+     * and are invisible to the override file. The message counts the
+     * entries and names none of them. Null when the file is unreadable,
+     * not an array, or carries no ignore entries.
      */
     private function ignoreEntryFinding(CheckContext $context): ?Finding
     {
@@ -522,8 +530,9 @@ final class ComposerAuditCheck implements CheckInterface
         $total = 0;
 
         $advisories = $config['policy']['advisories'] ?? null;
+        $abandoned = $config['policy']['abandoned'] ?? null;
         if (is_array($advisories)) {
-            foreach (['ignore-id', 'ignore'] as $key) {
+            foreach (['ignore-id', 'ignore', 'ignore-severity'] as $key) {
                 $setting = $advisories[$key] ?? null;
                 if (is_array($setting)) {
                     $total += count($setting);
@@ -531,11 +540,30 @@ final class ComposerAuditCheck implements CheckInterface
             }
         }
 
-        $audit = $config['audit'] ?? null;
-        if (is_array($audit)) {
-            $setting = $audit['ignore'] ?? null;
+        if (is_array($abandoned)) {
+            $setting = $abandoned['ignore'] ?? null;
             if (is_array($setting)) {
                 $total += count($setting);
+            }
+        }
+
+        $audit = $config['audit'] ?? null;
+        if (is_array($audit)) {
+            // Composer ignores all audit.* keys of a family once the
+            // matching config.policy block exists, so each fallback only
+            // counts while its policy block is absent.
+            $fallbacks = ['ignore'];
+            if (!is_array($advisories)) {
+                $fallbacks[] = 'ignore-severity';
+            }
+            if (!is_array($abandoned)) {
+                $fallbacks[] = 'ignore-abandoned';
+            }
+            foreach ($fallbacks as $key) {
+                $setting = $audit[$key] ?? null;
+                if (is_array($setting)) {
+                    $total += count($setting);
+                }
             }
         }
 
