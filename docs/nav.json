@@ -1,0 +1,21 @@
+{
+    "title": "PROCTOR",
+    "tagline": "Policy Rules Of Code, Tested On Release.",
+    "items": [
+        {
+            "title": "Overview",
+            "path": "index"
+        }
+    ],
+    "source": "https://nougat.snu.gs/enterprise-apps/proctor",
+    "mirrors": [
+        {
+            "title": "git.wayne.edu",
+            "url": "https://git.wayne.edu/enterprise-apps/proctor"
+        },
+        {
+            "title": "GitHub",
+            "url": "https://github.com/waynestate/proctor"
+        }
+    ]
+}

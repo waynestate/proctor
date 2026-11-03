@@ -1,0 +1,24 @@
+{
+    "blocks": {
+        "commands": {
+            "type": "symfony-commands",
+            "run": "php bin/proctor",
+            "cli": "proctor",
+            "level": 3
+        },
+        "env": {
+            "type": "env",
+            "scan": [
+                "src",
+                "bin"
+            ],
+            "prefix": "PROCTOR_",
+            "describe": {
+                "PROCTOR_POLICY": [
+                    "Path to a CREED-format policy file; tried before the app's vendor copy and the bundled copy when --policy is absent",
+                    "none"
+                ]
+            }
+        }
+    }
+}
