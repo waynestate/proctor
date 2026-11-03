@@ -315,12 +315,29 @@ final class ComposerAuditCheckTest extends TestCase
     {
         $json = json_encode(['advisories' => [], 'abandoned' => []]);
 
-        $findings = $this->runAudit($this->app('audit-app'), (string) $json);
+        $findings = $this->runAudit($this->app('audit-app'), (string) $json, 0);
 
         self::assertCount(1, $findings);
         self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
         self::assertSame('no advisories found', $findings[0]->message);
         self::assertSame('composer.lock', $findings[0]->path);
+    }
+
+    public function testNonZeroExitWithNothingReadableFails(): void
+    {
+        $json = json_encode(['advisories' => [], 'abandoned' => []]);
+
+        $findings = $this->runAudit($this->app('audit-app'), (string) $json, 1);
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_FAIL, $findings[0]->status);
+        self::assertStringStartsWith(
+            'composer audit exited 1 but listed nothing PROCTOR can read',
+            $findings[0]->message,
+        );
+        self::assertSame('proctor/composer-audit/exit-code', $findings[0]->ruleId);
+        self::assertSame('composer.lock', $findings[0]->path);
+        self::assertSame(1, $findings[0]->line);
     }
 
     public function testAuditRunsComposerWithPluginsOffAndAMinimalEnvironment(): void
@@ -389,16 +406,19 @@ final class ComposerAuditCheckTest extends TestCase
      *
      * @return list<Finding>
      */
-    private function runAudit(string $app, string $json): array
+    private function runAudit(string $app, string $json, int $exitCode = 1): array
     {
         $this->putFakeComposerOnPath();
 
-        $check = new ComposerAuditCheck(new class ($json) implements ProcessRunnerInterface {
-            public function __construct(private readonly string $json) {}
+        $check = new ComposerAuditCheck(new class ($json, $exitCode) implements ProcessRunnerInterface {
+            public function __construct(
+                private readonly string $json,
+                private readonly int $exitCode,
+            ) {}
 
             public function run(array $command, string $cwd, int $timeout = 300, ?array $env = null): ProcessResult
             {
-                return new ProcessResult(1, $this->json, '');
+                return new ProcessResult($this->exitCode, $this->json, '');
             }
         });
 
