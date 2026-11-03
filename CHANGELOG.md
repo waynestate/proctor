@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Changed: the front-page deploy layer pins HELMET ^0.3, PROCTOR ^0.4 and CREED ^0.1 (lock: HELMET 0.3.0, PROCTOR 0.4.0, CREED 0.1.6).
+- Changed: CI pins Preflight 0.1.4 (GitLab component includes and the GitHub reusable workflow at its tag commit); the deploy layer sets minimum-stability to stable.
+
 - Added: composer-config warns when composer.json switches Composer's dependency policy off: `config.policy` set to `false` (rule id `proctor/composer-config/policy-off`), `policy.malware` set to `false` (rule id `proctor/composer-config/policy-malware-off`) or `policy.advisories` set to `false` (rule id `proctor/composer-config/policy-advisories-off`). A warning, never a fail.
 
 ## 0.4.0 (2026-11-03)
