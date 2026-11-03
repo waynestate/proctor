@@ -1,0 +1,10 @@
+# A pipeline whose top-level variables switch Composer's blocking policy off.
+variables:
+  COMPOSER_NO_BLOCKING:
+    value: "true"
+    description: let composer install without the blocking policy
+composer-ci:
+  image: composer:2.10.3
+  script:
+    - composer install --no-interaction --no-progress --prefer-dist
+    - composer ci

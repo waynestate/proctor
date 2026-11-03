@@ -316,6 +316,74 @@ YAML,
         }
     }
 
+    public function testGitlabJobVariableNoAuditWarns(): void
+    {
+        $findings = (new CiPipelinesCheck())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/ci-pipelines-env-gitlab-job-no-audit-app'),
+        );
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertSame('proctor/ci-pipelines/composer-audit-off', $findings[0]->ruleId);
+        self::assertStringContainsString('COMPOSER_NO_AUDIT', $findings[0]->message);
+    }
+
+    public function testGitlabTopLevelNoBlockingWarns(): void
+    {
+        $findings = (new CiPipelinesCheck())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/ci-pipelines-env-gitlab-top-level-no-blocking-app'),
+        );
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertSame('proctor/ci-pipelines/composer-audit-off', $findings[0]->ruleId);
+        self::assertStringContainsString('COMPOSER_NO_BLOCKING', $findings[0]->message);
+    }
+
+    public function testGithubStepEnvNoAuditWarns(): void
+    {
+        $findings = (new CiPipelinesCheck())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/ci-pipelines-env-github-step-no-audit-app'),
+        );
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertSame('proctor/ci-pipelines/composer-audit-off', $findings[0]->ruleId);
+        self::assertStringContainsString('COMPOSER_NO_AUDIT', $findings[0]->message);
+        self::assertSame('.github/workflows/ci.yml', (string) $findings[0]->path);
+    }
+
+    public function testAuditAbandonedIgnoreWarnsButReportWarnDoesNot(): void
+    {
+        $warns = (new CiPipelinesCheck())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/ci-pipelines-env-abandoned-ignore-app'),
+        );
+
+        self::assertCount(1, $warns);
+        self::assertSame(Finding::STATUS_WARNING, $warns[0]->status);
+        self::assertSame('proctor/ci-pipelines/composer-audit-off', $warns[0]->ruleId);
+        self::assertStringContainsString('COMPOSER_AUDIT_ABANDONED', $warns[0]->message);
+
+        $doesNotWarn = (new CiPipelinesCheck())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/ci-pipelines-env-abandoned-report-app'),
+        );
+
+        self::assertCount(1, $doesNotWarn);
+        self::assertSame(Finding::STATUS_PASS, $doesNotWarn[0]->status);
+        self::assertSame('gitlab pipeline runs composer ci', $doesNotWarn[0]->message);
+    }
+
+    public function testNoAuditZeroDoesNotWarn(): void
+    {
+        $findings = (new CiPipelinesCheck())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/ci-pipelines-env-no-audit-zero-app'),
+        );
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+        self::assertSame('gitlab pipeline runs composer ci', $findings[0]->message);
+    }
+
     /**
      * A temp app whose composer.json names it a stack package. When
      * $githubMirror is not null, extra.proctor.github-mirror carries that

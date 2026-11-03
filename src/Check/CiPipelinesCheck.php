@@ -21,7 +21,10 @@ use Symfony\Component\Yaml\Yaml;
  *
  * The files are parsed as YAML, not grepped: a `composer ci` that only
  * appears in a comment is not a script line, and a GitLab job is a
- * top-level map with a `script` key, the way GitLab defines it.
+ * top-level map with a `script` key, the way GitLab defines it. A
+ * pipeline that sets COMPOSER_NO_AUDIT or COMPOSER_NO_BLOCKING in its
+ * environment, or COMPOSER_AUDIT_ABANDONED to ignore, warns
+ * (proctor/ci-pipelines/composer-audit-off), whatever the project kind.
  */
 final class CiPipelinesCheck implements CheckInterface
 {
@@ -126,7 +129,8 @@ final class CiPipelinesCheck implements CheckInterface
     /**
      * The findings for .gitlab-ci.yml: a fail (stack packages) or a
      * warning (other projects) when the file is missing, unparseable, or
-     * no job's script runs composer ci.
+     * no job's script runs composer ci, plus the composer-audit-off
+     * warnings for the environment it sets.
      *
      * @return list<Finding>
      */
@@ -162,6 +166,8 @@ final class CiPipelinesCheck implements CheckInterface
             )];
         }
 
+        $findings = $this->composerAuditOffFindings($data, $absolutePath, self::GITLAB_CI, true);
+
         foreach ($data as $job) {
             // A GitLab job is a top-level map with a script key.
             if (!is_array($job) || !isset($job['script'])) {
@@ -169,12 +175,12 @@ final class CiPipelinesCheck implements CheckInterface
             }
             foreach ($this->scriptLines($job['script']) as $line) {
                 if ($this->lineRunsComposerCi($line)) {
-                    return [];
+                    return $findings;
                 }
             }
         }
 
-        return [new Finding(
+        $findings[] = new Finding(
             $this->id(),
             $status,
             'ci-pipelines-gitlab-no-ci: no job in .gitlab-ci.yml runs composer ci; add a job whose script runs composer ci',
@@ -182,7 +188,9 @@ final class CiPipelinesCheck implements CheckInterface
             1,
             null,
             'gitlab-no-ci',
-        )];
+        );
+
+        return $findings;
     }
 
     /**
@@ -195,7 +203,9 @@ final class CiPipelinesCheck implements CheckInterface
      * present one gets the warning-only rules plus a github-private
      * warning. For other projects the file is optional: a missing file
      * gives no finding, and the same rules apply as warnings. A uses:
-     * ref that is not a 40-hex commit SHA is a warning either way.
+     * ref that is not a 40-hex commit SHA is a warning either way. The
+     * composer-audit-off warnings for the environment it sets are added
+     * too.
      *
      * @return list<Finding>
      */
@@ -249,6 +259,11 @@ final class CiPipelinesCheck implements CheckInterface
 
             return $findings;
         }
+
+        $findings = array_merge(
+            $this->composerAuditOffFindings($data, $absolutePath, self::GITHUB_CI, false),
+            $findings,
+        );
 
         $runsComposerCi = false;
         $jobs = $data['jobs'] ?? null;
@@ -342,6 +357,133 @@ final class CiPipelinesCheck implements CheckInterface
             null,
             'unpinned-uses',
         );
+    }
+
+    /**
+     * The warnings for the pipeline environment settings that switch
+     * Composer's audit or blocking policy off: COMPOSER_NO_AUDIT and
+     * COMPOSER_NO_BLOCKING set to anything but an empty string, 0 or
+     * false (compared string-cast, case-insensitively), and
+     * COMPOSER_AUDIT_ABANDONED set to ignore. One warning per variable
+     * name per file, whatever the project kind: a warning, never a fail.
+     * GitLab settings come from the top-level variables: and each job's
+     * variables:, where a value is a scalar or a map with a value key;
+     * GitHub's from the top-level env:, each job's env: and each step's
+     * env:. A file that fails to parse gets none of these.
+     *
+     * @param array<string, mixed> $data the parsed pipeline map
+     *
+     * @return list<Finding>
+     */
+    private function composerAuditOffFindings(array $data, string $absolutePath, string $relativePath, bool $gitlab): array
+    {
+        $settings = [];
+        if ($gitlab) {
+            $this->recordEnvBlock($data['variables'] ?? null, $settings);
+            foreach ($data as $job) {
+                if (is_array($job)) {
+                    $this->recordEnvBlock($job['variables'] ?? null, $settings);
+                }
+            }
+        } else {
+            $this->recordEnvBlock($data['env'] ?? null, $settings);
+            $jobs = $data['jobs'] ?? null;
+            if (is_array($jobs)) {
+                foreach ($jobs as $job) {
+                    if (!is_array($job)) {
+                        continue;
+                    }
+                    $this->recordEnvBlock($job['env'] ?? null, $settings);
+                    $steps = $job['steps'] ?? null;
+                    if (is_array($steps)) {
+                        foreach ($steps as $step) {
+                            if (is_array($step)) {
+                                $this->recordEnvBlock($step['env'] ?? null, $settings);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        $findings = [];
+        foreach ($settings as $name => $values) {
+            $offending = false;
+            foreach ($values as $value) {
+                if ($this->switchesComposerAuditOff($name, $value)) {
+                    $offending = true;
+                    break;
+                }
+            }
+            if (!$offending) {
+                continue;
+            }
+            $findings[] = new Finding(
+                $this->id(),
+                Finding::STATUS_WARNING,
+                sprintf(
+                    'ci-pipelines-composer-audit-off: %s is set in the pipeline, so Composer\'s audit or blocking policy is switched off',
+                    $name,
+                ),
+                $relativePath,
+                $this->lineOf($name, $absolutePath),
+                null,
+                'composer-audit-off',
+            );
+        }
+
+        return $findings;
+    }
+
+    /**
+     * Records the settings of one variables or env block in $settings:
+     * every value seen for a name, string-cast, in first-seen order. A
+     * value is a scalar, or a map with a value key (the GitLab shape);
+     * anything else is skipped.
+     *
+     * @param mixed                          $block
+     * @param array<string, list<string>>    $settings
+     */
+    private function recordEnvBlock(mixed $block, array &$settings): void
+    {
+        if (!is_array($block)) {
+            return;
+        }
+        foreach ($block as $name => $value) {
+            if (!is_string($name)) {
+                continue;
+            }
+            if (is_array($value)) {
+                if (!array_key_exists('value', $value)) {
+                    continue;
+                }
+                $value = $value['value'];
+            }
+            if (!is_scalar($value)) {
+                continue;
+            }
+            $settings[$name][] = (string) $value;
+        }
+    }
+
+    /**
+     * Whether a pipeline environment setting switches Composer's audit
+     * or blocking policy off: COMPOSER_NO_AUDIT and COMPOSER_NO_BLOCKING
+     * set to anything but an empty string, 0 or false (compared
+     * string-cast, case-insensitively), and COMPOSER_AUDIT_ABANDONED set
+     * to ignore.
+     */
+    private function switchesComposerAuditOff(string $name, string $value): bool
+    {
+        $value = strtolower($value);
+        if ($name === 'COMPOSER_NO_AUDIT' || $name === 'COMPOSER_NO_BLOCKING') {
+            return !in_array($value, ['', '0', 'false'], true);
+        }
+        if ($name === 'COMPOSER_AUDIT_ABANDONED') {
+            return $value === 'ignore';
+        }
+
+        return false;
     }
 
     /**

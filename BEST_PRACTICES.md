@@ -431,14 +431,18 @@ Sources: [Composer config: policy](https://getcomposer.org/doc/06-config.md);
 [Composer CLI: environment variables](https://getcomposer.org/doc/03-cli.md);
 [Composer 2.10 release](https://blog.packagist.com/composer-2-10-release/).
 
-**How the stack holds it: Partially.** Since 0.2.2, the `composer-config` check reads the `config` block of
+**How the stack holds it: Checked.** Since 0.2.2, the `composer-config` check reads the `config` block of
 composer.json: it warns when `allow-plugins` is `true`, `secure-http` is `false`, `lock` is `false` or
 `audit.block-insecure` is `false`, when `config.policy` is `false` (rule id `proctor/composer-config/policy-off`) or
 when `policy.malware` or `policy.advisories` is the boolean `false` (rule ids
 `proctor/composer-config/policy-malware-off` and `proctor/composer-config/policy-advisories-off`; an object value for
-`policy.advisories` with ignore lists is not a finding), and notes `require.php` without `config.platform.php`. What
-remains: the process environment is still not read, so `COMPOSER_NO_BLOCKING`, `COMPOSER_NO_AUDIT` and
-`COMPOSER_AUDIT_ABANDONED` in a CI job are not findings.
+`policy.advisories` with ignore lists is not a finding), and notes `require.php` without `config.platform.php`.
+The `ci-pipelines` check reads the pipeline environment: it warns (rule id
+`proctor/ci-pipelines/composer-audit-off`) when `.gitlab-ci.yml` or `.github/workflows/ci.yml` sets
+`COMPOSER_NO_AUDIT` or `COMPOSER_NO_BLOCKING` to anything but an empty string, `0` or `false`, or
+`COMPOSER_AUDIT_ABANDONED` to `ignore`, in the GitLab top-level or job `variables:` (a scalar or a map with a
+`value` key) or the GitHub top-level, job or step `env:`. A warning, never a fail, for stack packages and other
+projects alike.
 
 ### 4.10 Do not trust a clean JSON result when Composer's exit code is non-zero (second pass)
 If the JSON has no advisories but `composer audit` exited 1, treat it as a finding or a tool error. Composer 2.10.0
@@ -858,7 +862,7 @@ Added in the second pass (2026-10-27):
 26. 4.8: Done: the `composer-version` check fails the Composer on PATH below the minimum (2.2.x below 2.2.24, any other 2.x below 2.7.7, or Composer 1) (see 4.8).
 27. 4.10 and 4.5: Done: the `composer-audit` check compares Composer's exit code with the parsed result and reads the abandoned and malware parts of the output (rule ids `proctor/composer-audit/abandoned`, `proctor/composer-audit/exit-code`) (see 4.10 and 4.5).
 28. 6.4 (raise priority): Done: a tool error (exit 2) still writes a valid report, so the artifact GitLab uploads parses (see 6.4).
-29. 4.9: Partly done: the `composer-config` check warns when `config.policy` is `false` (rule id `proctor/composer-config/policy-off`) or when `policy.malware` or `policy.advisories` is the boolean `false` (rule ids `proctor/composer-config/policy-malware-off`, `proctor/composer-config/policy-advisories-off`); `COMPOSER_NO_BLOCKING` and `COMPOSER_NO_AUDIT` in the job environment are still not findings (see 4.9).
+29. 4.9: Done: the `composer-config` check warns when `config.policy` is `false` (rule id `proctor/composer-config/policy-off`) or when `policy.malware` or `policy.advisories` is the boolean `false` (rule ids `proctor/composer-config/policy-malware-off`, `proctor/composer-config/policy-advisories-off`), and the `ci-pipelines` check warns when the pipeline environment sets `COMPOSER_NO_AUDIT` or `COMPOSER_NO_BLOCKING`, or `COMPOSER_AUDIT_ABANDONED` to `ignore` (rule id `proctor/ci-pipelines/composer-audit-off`) (see 4.9).
 30. 8.6: Done: the audit runs with `--no-plugins --no-interaction` and a minimal explicit environment (see 8.6).
 31. 6.8: Done: control characters are replaced with `?` in the text writer and the report is printed raw, so tag-like
     strings reach the log literally; a CLI test pins it (see 6.8).

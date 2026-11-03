@@ -1,0 +1,8 @@
+# A pipeline that tells Composer to ignore abandoned packages.
+variables:
+  COMPOSER_AUDIT_ABANDONED: ignore
+composer-ci:
+  image: composer:2.10.3
+  script:
+    - composer install --no-interaction --no-progress --prefer-dist
+    - composer ci

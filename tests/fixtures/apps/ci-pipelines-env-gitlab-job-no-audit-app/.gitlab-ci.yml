@@ -1,0 +1,8 @@
+# A pipeline that runs composer ci, but its job environment switches Composer's audit off.
+composer-ci:
+  image: composer:2.10.3
+  variables:
+    COMPOSER_NO_AUDIT: 1
+  script:
+    - composer install --no-interaction --no-progress --prefer-dist
+    - composer ci
