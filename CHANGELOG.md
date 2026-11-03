@@ -13,6 +13,7 @@
 - Fixed: the BEST_PRACTICES gap list marks the items already built.
 - Fixed: BEST_PRACTICES tags for 4.5, 4.7, 5.6, 6.4 and 8.3 match the code.
 - Changed: docs and package metadata name nougat as the canonical repository, with git.wayne.edu and GitHub as read-only mirrors, until git.wayne.edu has CI runners.
+- Fixed: BEST_PRACTICES tags for 1.3 and 8.1 match the code.
 
 ## 0.3.1 (2026-11-02)
 

@@ -71,8 +71,12 @@ Why: the stack's version policy says older checkers must still read newer policy
 Sources: the stack's version-policy decision; [GitLab Code Quality format: only the listed fields are processed](https://docs.gitlab.com/ci/testing/code_quality/)
 (an example of a reader that ignores extras).
 
-**How the stack holds it: Not yet.** `Policy::fromFile()` (the generated `Waynestate\Proctor\Creed\Policy`) fails with "unsupported schema_version" unless the value is
-exactly `1`. That is the opposite of what the stack's version policy asks for.
+**How the stack holds it: Checked.** `Policy::__construct` (the generated `Waynestate\Proctor\Creed\Policy`) only
+requires `schema_version` to be present, takes any value, reads `components`, `tools` and `rules`, and ignores every
+other key, so a pinned older checker still reads a newer policy file and the check runs normally. A policy with no
+`schema_version` is still refused. Tests: `tests/PolicyVersionTest.php` (`testOlderReaderAcceptsNewerSchemaVersionAndUnknownKeys`,
+`testCheckRunsNormallyWithNewerPolicy`) load `tests/fixtures/policy-newer.json` (schema_version 2 plus unknown keys)
+and pass.
 
 ### 1.4 Read the banned-constraint list from the policy
 The policy has `rules.banned_constraints`. The check must use it, so a change to the rule needs no PROCTOR release.
@@ -725,9 +729,12 @@ check never runs.
 Sources: [OWASP CICD-SEC-4 Poisoned Pipeline Execution](https://owasp.org/www-project-top-10-ci-cd-security-risks/);
 [Composer CLI: `--no-plugins`, `--no-scripts`](https://getcomposer.org/doc/03-cli.md); the stack's deploy-gate decision.
 
-**How the stack holds it: Not yet.** The README tells apps to `composer require waynestate/proctor --dev`, and the
-`proctor` component runs `composer install` on the app first. That also adds `symfony/console` and `composer/semver`
-to the app's own dependency tree.
+**How the stack holds it: Partially.** PROCTOR builds as a single-file PHAR: `scripts/build-phar.ps1` and
+`scripts/build-phar.sh` produce `build/proctor.phar`, and the README has a "Single-file download" section.
+Preflight's `proctor` component (`templates/proctor/template.yml`) runs `composer install --no-interaction
+--no-progress --no-plugins --no-scripts` on the app first, so the app's plugins and scripts no longer run in that
+job. What remains: the PHAR is not published (there is no release step for it), the job still installs the app's
+dependencies, and the README still tells apps to `composer require waynestate/proctor --dev`.
 
 ### 8.2 Start child processes without a shell
 Pass arguments as an array so a path or value cannot become a command.
@@ -811,7 +818,7 @@ version.
 Practices tagged `Not yet` or `Documented`, each one line. Highest value first.
 
 1. 1.2: Bundle CREED's policy, and refuse `--policy` and `--today` in CI unless a trusted job sets them.
-2. 8.1: Run PROCTOR from its own install without `composer install` on the app (PHAR or separate install).
+2. 8.1: Partly done: the PHAR build exists and the Preflight job installs the app with `--no-plugins --no-scripts`; the PHAR is not published, the job still installs the app's dependencies, and the README still says `composer require` (see 8.1).
 3. 4.4: Report any `audit`/`policy` ignore entry in `composer.json` as a finding, and move ignores to the override file.
 4. 4.3: Make a skipped or failed audit a failure in CI, with a `not audited` message.
 5. 3.5: Done: the `lock-committed` check warns when the lock's `content-hash` differs from composer.json (rule id `proctor/lock-committed/out-of-sync`) (see 3.5).
@@ -824,7 +831,7 @@ Practices tagged `Not yet` or `Documented`, each one line. Highest value first.
 12. 5.4: Let an override name a package or advisory id.
 13. 5.5: Reject an `expires` date beyond a policy-set maximum.
 14. 5.7: Require an approver who is not the author (needs review rules on the app repo).
-15. 1.3: Accept newer policy schemas with unknown fields.
+15. 1.3: Done: the policy reader accepts a newer `schema_version` and ignores unknown keys, so a pinned older checker still reads a newer policy file (see 1.3).
 16. 3.3: Done: the `unbounded-constraints` check warns on committed `path` and `vcs` repositories (rule id `proctor/unbounded-constraints/repository`) and on a repository URL that is plain http (rule id `proctor/unbounded-constraints/insecure-url`) (see 3.3).
 17. 3.6: Done: the `composer-config` check (0.2.2) warns when `allow-plugins` is `true`, `secure-http` is `false` or `lock` is `false` (see 3.6).
 18. 2.4: Done: the `composer-config` check (0.2.2) notes when `require.php` is set without `config.platform.php` (see 2.4).
