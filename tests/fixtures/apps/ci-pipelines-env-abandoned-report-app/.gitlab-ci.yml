@@ -1,0 +1,8 @@
+# A pipeline that keeps the default abandoned handling (report).
+variables:
+  COMPOSER_AUDIT_ABANDONED: report
+composer-ci:
+  image: composer:2.10.3
+  script:
+    - composer install --no-interaction --no-progress --prefer-dist
+    - composer ci

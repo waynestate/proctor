@@ -6,6 +6,7 @@
 - Changed: CI pins Preflight 0.1.4 (GitLab component includes and the GitHub reusable workflow at its tag commit); the deploy layer sets minimum-stability to stable.
 
 - Added: composer-config warns when composer.json switches Composer's dependency policy off: `config.policy` set to `false` (rule id `proctor/composer-config/policy-off`), `policy.malware` set to `false` (rule id `proctor/composer-config/policy-malware-off`) or `policy.advisories` set to `false` (rule id `proctor/composer-config/policy-advisories-off`). A warning, never a fail.
+- Added: ci-pipelines warns when the pipeline environment switches Composer's audit or blocking policy off: `COMPOSER_NO_AUDIT` or `COMPOSER_NO_BLOCKING` set to anything but an empty string, `0` or `false`, or `COMPOSER_AUDIT_ABANDONED` set to `ignore` (rule id `proctor/ci-pipelines/composer-audit-off`). A warning, never a fail.
 
 ## 0.4.0 (2026-11-03)
 
