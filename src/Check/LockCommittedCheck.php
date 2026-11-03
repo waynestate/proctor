@@ -130,6 +130,11 @@ final class LockCommittedCheck implements CheckInterface
         }
         ksort($content);
 
-        return md5(json_encode($content));
+        $json = json_encode($content);
+        if ($json === false) {
+            return null;
+        }
+
+        return md5($json);
     }
 }
