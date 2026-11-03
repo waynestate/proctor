@@ -67,6 +67,7 @@ final class ComposerAuditCheckTest extends TestCase
         self::assertSame(1, $high->line);
         self::assertSame([
             [
+                'package' => 'laravel/framework',
                 'id' => 'CVE-2024-52301',
                 'cve' => 'CVE-2024-52301',
                 'title' => 'Laravel environment manipulation via query string',

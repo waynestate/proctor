@@ -13,15 +13,18 @@ use Waynestate\Proctor\Override\OverrideFile;
  * Applies active overrides to the findings of a run.
  *
  * An active override (expires on or after --today) for check id X turns X's
- * fail findings into warning findings, with "(overridden: <reason>)"
- * appended to the message.
+ * matching fail findings into warning findings, with "(overridden: <reason>)"
+ * appended to the message. An override with no scope matches every fail of
+ * its check; a scoped one (an advisory and/or package field) matches only
+ * the fails whose advisory data satisfies the scope.
  *
  * Exception (the stack's version policy: "EOL + 90 days: fail; no override"): an override
  * NEVER downgrades a fail whose state is eol_grace_expired. That exception
  * lives in apply(), in the isOverridable() guard below.
  *
- * An active override whose check raised no failure at all earns a warning of
- * its own (unusedWarnings()), so a stale approval is removed instead of rotting.
+ * An active override that matched no fail finding earns a warning of its own
+ * (unusedWarnings()), so a stale approval is removed instead of rotting. For
+ * a scoped override the warning names the scope.
  */
 final class OverrideApplier
 {
@@ -43,7 +46,7 @@ final class OverrideApplier
         $result = [];
         foreach ($findings as $finding) {
             if ($finding->status === Finding::STATUS_FAIL) {
-                $override = $this->activeOverrideFor($finding->checkId);
+                $override = $this->activeOverrideFor($finding);
                 if ($override !== null && $this->isOverridable($finding)) {
                     $result[] = new Finding(
                         $finding->checkId,
@@ -67,9 +70,11 @@ final class OverrideApplier
      * One warning per active override that matched no fail finding.
      *
      * $findings must be the findings BEFORE apply(): a fail that an override
-     * downgrades still counts as matched, while an active override whose check
-     * raised no failure at all is stale clutter. Expired overrides are not
-     * reported here; the overrides check already fails on them.
+     * downgrades still counts as matched, while an active override that
+     * matches no fail of its check is stale clutter. A scoped override
+     * counts as matched only when some fail finding of its check satisfies
+     * its scope, and the warning then names the scope. Expired overrides are
+     * not reported here; the overrides check already fails on them.
      *
      * @param list<Finding> $findings the findings before apply()
      *
@@ -84,7 +89,7 @@ final class OverrideApplier
             }
             $matched = false;
             foreach ($findings as $finding) {
-                if ($finding->checkId === $override->check && $finding->status === Finding::STATUS_FAIL) {
+                if ($finding->checkId === $override->check && $finding->status === Finding::STATUS_FAIL && $override->matches($finding)) {
                     $matched = true;
                     break;
                 }
@@ -96,8 +101,8 @@ final class OverrideApplier
                 OverridesCheck::ID,
                 Finding::STATUS_WARNING,
                 sprintf(
-                    'override for "%s" matched no failure; remove it if the problem is fixed',
-                    $override->check,
+                    'override for %s matched no failure; remove it if the problem is fixed',
+                    $this->overrideLabel($override),
                 ),
                 OverrideFile::FILENAME,
                 1,
@@ -122,16 +127,37 @@ final class OverrideApplier
     }
 
     /**
-     * The first active override for the check id, or null.
+     * The first active override for the finding's check that matches the
+     * finding, or null.
      */
-    private function activeOverrideFor(string $checkId): ?Override
+    private function activeOverrideFor(Finding $finding): ?Override
     {
         foreach ($this->overrides as $override) {
-            if ($override->check === $checkId && !$override->isExpired($this->today)) {
+            if ($override->check === $finding->checkId && !$override->isExpired($this->today) && $override->matches($finding)) {
                 return $override;
             }
         }
 
         return null;
+    }
+
+    /**
+     * The override's name in the unused warning: the quoted check id, plus
+     * its scope in parentheses when the override carries one.
+     */
+    private function overrideLabel(Override $override): string
+    {
+        $scope = [];
+        if ($override->advisory !== null) {
+            $scope[] = 'advisory ' . $override->advisory;
+        }
+        if ($override->package !== null) {
+            $scope[] = 'package ' . $override->package;
+        }
+        if ($scope === []) {
+            return sprintf('"%s"', $override->check);
+        }
+
+        return sprintf('"%s" (%s)', $override->check, implode(', ', $scope));
     }
 }

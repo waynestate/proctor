@@ -40,6 +40,8 @@ use Waynestate\Proctor\ToolError;
  */
 final class ComposerAuditCheck implements CheckInterface
 {
+    public const ID = 'composer-audit';
+
     private const SEVERITIES = ['low', 'medium', 'high', 'critical'];
 
     public function __construct(
@@ -48,7 +50,7 @@ final class ComposerAuditCheck implements CheckInterface
 
     public function id(): string
     {
-        return 'composer-audit';
+        return self::ID;
     }
 
     public function run(CheckContext $context): array
@@ -139,7 +141,7 @@ final class ComposerAuditCheck implements CheckInterface
                         1,
                         null,
                         'advisory',
-                        [$this->advisoryData($entry)],
+                        [$this->advisoryData((string) $package, $entry)],
                     );
                 }
             }
@@ -377,13 +379,14 @@ final class ComposerAuditCheck implements CheckInterface
     }
 
     /**
-     * The machine-readable form of the advisory for the JSON report.
+     * The machine-readable form of the advisory for the JSON report, with
+     * the audited package name so a scoped override can match it.
      *
      * @param array<string, mixed> $entry
      *
-     * @return array{id: string, cve: string|null, title: string, link: string|null, severity: string|null}
+     * @return array{package: string, id: string, cve: string|null, title: string, link: string|null, severity: string|null}
      */
-    private function advisoryData(array $entry): array
+    private function advisoryData(string $package, array $entry): array
     {
         $cve = $entry['cve'] ?? null;
         $title = $entry['title'] ?? null;
@@ -391,6 +394,7 @@ final class ComposerAuditCheck implements CheckInterface
         $severity = $entry['severity'] ?? null;
 
         return [
+            'package' => $package,
             'id' => $this->advisoryId($entry),
             'cve' => is_string($cve) && $cve !== '' ? $cve : null,
             'title' => is_string($title) ? $title : '',
