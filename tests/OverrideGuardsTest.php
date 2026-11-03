@@ -133,6 +133,44 @@ final class OverrideGuardsTest extends ProctorTestCase
         }
     }
 
+    public function testExpiredOverrideGetsNoUnusedWarning(): void
+    {
+        // The override expired on 2026-01-01, so the overrides check fails
+        // on it; it must not also earn an unused warning.
+        $result = $this->runProctor($this->app('expired-override-app'));
+
+        self::assertStringContainsString(
+            'FAIL overrides: override for "lock-committed" expired on 2026-01-01',
+            $result['stdout'],
+        );
+        self::assertStringNotContainsString('matched no failure', $result['stdout']);
+    }
+
+    public function testOverrideOnItsExpiryDayIsStillActiveAndWarnsAsUnused(): void
+    {
+        // The expiry day itself is still active (expired means expires <
+        // today), so the override passes the check and warns as unused.
+        $result = $this->runProctor($this->app('override-expiring-app'), 'text', null, null, '2026-11-10');
+
+        self::assertSame(0, $result['exit']);
+        self::assertSame([], $this->failCheckIds($result['stdout']));
+        self::assertStringContainsString(
+            'WARN overrides: override for "lock-committed" matched no failure; remove it if the problem is fixed',
+            $result['stdout'],
+        );
+    }
+
+    public function testOverrideTheDayAfterItsExpiryFailsAndGetsNoUnusedWarning(): void
+    {
+        // One day past the expiry the override is expired: the overrides
+        // check fails on it and it gets no unused warning.
+        $result = $this->runProctor($this->app('override-expiring-app'), 'text', null, null, '2026-11-11');
+
+        self::assertNotSame(0, $result['exit']);
+        self::assertContains('overrides', $this->failCheckIds($result['stdout']));
+        self::assertStringNotContainsString('matched no failure', $result['stdout']);
+    }
+
     public function testUnusedWarningsAreOnePerUnmatchedActiveOverrideAndSkipExpiredOnes(): void
     {
         $applier = new OverrideApplier(
