@@ -22,6 +22,7 @@ use Waynestate\Proctor\Check\OverridesCheck;
 use Waynestate\Proctor\Check\PhpFloorCheck;
 use Waynestate\Proctor\Check\PolicyAgeCheck;
 use Waynestate\Proctor\Check\PortabilityCheck;
+use Waynestate\Proctor\Check\PreflightPinnedCheck;
 use Waynestate\Proctor\Check\RepoUrlCredentialsCheck;
 use Waynestate\Proctor\Check\UnboundedConstraintsCheck;
 use Waynestate\Proctor\Check\UnpatchedCheck;
@@ -179,6 +180,7 @@ $application->addCommand(new class () extends Command {
                 new Mysql56Check(),
                 new DestructiveDeployCheck(),
                 new CiPipelinesCheck(),
+                new PreflightPinnedCheck(),
                 new ComposerAuditCheck(),
                 $composerVersionCheck,
                 new RepoUrlCredentialsCheck(),
