@@ -321,9 +321,11 @@ Why: a green run that audited nothing is worse than a red one.
 Sources: [Composer CLI: audit (`--ignore-unreachable`)](https://getcomposer.org/doc/03-cli.md);
 [OpenSSF Scorecard: Vulnerabilities](https://github.com/ossf/scorecard/blob/main/docs/checks.md).
 
-**How the stack holds it: Not yet.** A missing `composer` or lock gives an `info` finding, and unparsable output gives a
-`warning`. Both exit 0. Preflight's `composer-audit` job covers part of this because it fails on Composer's own exit
-code.
+**How the stack holds it: Partially.** Unparsable audit output fails (rule id `proctor/composer-audit/could-not-run`)
+with a message that starts with `not audited:` and carries the first stderr line, so a run whose audit produced nothing
+readable is red instead of green. What remains: a missing `composer` or lock still gives an `info` finding that exits
+0, and the owner cannot choose otherwise in CI. Preflight's `composer-audit` job covers part of this because it fails
+on Composer's own exit code.
 
 ### 4.4 Keep advisory ignores out of `composer.json`
 Composer lets an app silence advisories in its own `composer.json` (`config.audit.ignore`, or in Composer 2.10
@@ -833,7 +835,7 @@ Practices tagged `Not yet` or `Documented`, each one line. Highest value first.
 1. 1.2: Bundle CREED's policy, and refuse `--policy` and `--today` in CI unless a trusted job sets them.
 2. 8.1: Partly done: the PHAR build exists and the Preflight job installs the app with `--no-plugins --no-scripts`; the PHAR is not published, the job still installs the app's dependencies, and the README still says `composer require` (see 8.1).
 3. 4.4: Partly done: a count warning (rule id `proctor/composer-audit/ignore-entries`) reports the ignore entries in `composer.json` without naming them, and an ignore that matches still downgrades the advisory to a warning; `ignore-severity` and `ignore-abandoned` are not read, and the entries are reported, not moved or expired (see 4.4).
-4. 4.3: Make a skipped or failed audit a failure in CI, with a `not audited` message.
+4. 4.3: Partly done: unparsable audit output fails with a message that starts with `not audited:` (rule id `proctor/composer-audit/could-not-run`); a missing composer or lock is still an info note that exits 0, and the owner cannot choose otherwise in CI (see 4.3).
 5. 3.5: Done: the `lock-committed` check warns when the lock's `content-hash` differs from composer.json (rule id `proctor/lock-committed/out-of-sync`) (see 3.5).
 6. 5.6: Reject an override that targets `overrides` or an unknown check name, and add tests.
 7. 2.6: Raise PROCTOR's own floor before 2027-01-01 and run the `proctor` component in its own pipeline.
