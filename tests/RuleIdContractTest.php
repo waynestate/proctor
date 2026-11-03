@@ -51,6 +51,9 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/composer-config/secure-http-off',
         'proctor/composer-config/lock-off',
         'proctor/composer-config/audit-blocking-off',
+        'proctor/composer-config/policy-off',
+        'proctor/composer-config/policy-malware-off',
+        'proctor/composer-config/policy-advisories-off',
         'proctor/composer-config/platform-php-unset',
         // portability
         'proctor/portability/host-path',

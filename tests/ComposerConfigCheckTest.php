@@ -77,4 +77,60 @@ final class ComposerConfigCheckTest extends TestCase
         self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
         self::assertNull($findings[0]->rule);
     }
+
+    public function testPolicyFalseWarns(): void
+    {
+        $findings = (new ComposerConfigCheck())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/composer-config-policy-false-app'),
+        );
+
+        self::assertCount(1, $findings);
+        self::assertSame('policy-off', $findings[0]->rule);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertSame(
+            'policy is false, so Composer enforces no dependency policy',
+            $findings[0]->message,
+        );
+        self::assertSame('composer.json', $findings[0]->path);
+        self::assertSame(1, $findings[0]->line);
+    }
+
+    public function testMalwareAndAdvisoriesOffWarn(): void
+    {
+        $findings = (new ComposerConfigCheck())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/composer-config-policy-off-app'),
+        );
+
+        self::assertCount(2, $findings);
+        self::assertSame('policy-malware-off', $findings[0]->rule);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertSame(
+            'policy.malware is false, so malware results are not enforced',
+            $findings[0]->message,
+        );
+        self::assertSame('policy-advisories-off', $findings[1]->rule);
+        self::assertSame(Finding::STATUS_WARNING, $findings[1]->status);
+        self::assertSame(
+            'policy.advisories is false, so advisories are not enforced',
+            $findings[1]->message,
+        );
+        foreach ($findings as $finding) {
+            self::assertSame('composer.json', $finding->path);
+            self::assertSame(1, $finding->line);
+        }
+    }
+
+    public function testAdvisoriesIgnoreObjectDoesNotWarn(): void
+    {
+        // config.policy.advisories is an object (an ignore list), not the
+        // boolean false, so no policy finding may fire for it.
+        $findings = (new ComposerConfigCheck())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/audit-app-policy-ignore-id'),
+        );
+
+        $rules = array_map(fn(Finding $finding) => $finding->rule, $findings);
+        self::assertNotContains('policy-off', $rules);
+        self::assertNotContains('policy-malware-off', $rules);
+        self::assertNotContains('policy-advisories-off', $rules);
+    }
 }

@@ -106,6 +106,45 @@ final class ComposerConfigCheck implements CheckInterface
             );
         }
 
+        $policy = $config['policy'] ?? null;
+        if ($policy === false) {
+            $findings[] = new Finding(
+                $this->id(),
+                Finding::STATUS_WARNING,
+                'policy is false, so Composer enforces no dependency policy',
+                'composer.json',
+                1,
+                null,
+                'policy-off',
+            );
+        }
+
+        if (is_array($policy)) {
+            if (($policy['malware'] ?? null) === false) {
+                $findings[] = new Finding(
+                    $this->id(),
+                    Finding::STATUS_WARNING,
+                    'policy.malware is false, so malware results are not enforced',
+                    'composer.json',
+                    1,
+                    null,
+                    'policy-malware-off',
+                );
+            }
+
+            if (($policy['advisories'] ?? null) === false) {
+                $findings[] = new Finding(
+                    $this->id(),
+                    Finding::STATUS_WARNING,
+                    'policy.advisories is false, so advisories are not enforced',
+                    'composer.json',
+                    1,
+                    null,
+                    'policy-advisories-off',
+                );
+            }
+        }
+
         if ($this->hasRequirePhp($data) && !$this->hasPlatformPhp($config)) {
             $findings[] = new Finding(
                 $this->id(),
