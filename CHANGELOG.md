@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added: preflight-pinned warns when a Preflight component is included at a ref that is not a commit SHA, or when an app overrides the script of an included Preflight job.
 - Added: lock-committed warns when composer.lock content-hash differs from composer.json.
 - Fixed: the report prints raw, so a package name or constraint that looks like a formatting tag is shown as written.
 - Fixed: BEST_PRACTICES tags match the code (nine stale "Not yet" tags re-tagged, the pipeline claim in 3.1 corrected).
