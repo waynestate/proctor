@@ -131,7 +131,7 @@ final class UnboundedConstraintsCheckTest extends TestCase
         self::assertSame('proctor/unbounded-constraints', $findings[0]->ruleId);
     }
 
-    public function testTmpEdgeCasesForInsecureUrl(): void
+    public function testInsecureUrlEdgeCases(): void
     {
         // Uppercase scheme is caught too (case-insensitive), host kept as written.
         $this->writeComposerJson([
