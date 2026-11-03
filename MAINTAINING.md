@@ -17,9 +17,7 @@ it enforces. No phones during the exam, including ours.
 
 ## Where it lives
 
-Development happens on Wayne State's GitLab. This GitHub repository is a read-only release mirror: `main` and tags are
-copied here automatically, and changes, issues and merge requests go to GitLab first. Nobody pushes to GitHub
-directly.
+Development happens on nougat, the canonical repository: [enterprise-apps/proctor](https://nougat.snu.gs/enterprise-apps/proctor). This GitHub repository and git.wayne.edu are read-only mirrors: `main` and tags are copied automatically, and changes, issues and merge requests go to nougat. Nobody pushes to the mirrors.
 
 ## Build and test
 
@@ -75,7 +73,7 @@ checkout, so run it by hand after each refresh. Commit the copy with the CREED c
    `## Unreleased`.
 2. `composer ci` green locally, then on both pipelines for that commit. Refresh the CREED copy first if CREED moved.
 3. Run a secrets scan of the history and check that nothing internal (server names, people, IDs) is in the tree.
-4. Tag `X.Y.Z` (no `v`) on GitLab. The mirror carries the tag to GitHub, and Packagist picks it up from there.
+4. Tag `X.Y.Z` (no `v`) on nougat. The mirror carries the tag to GitHub, and Packagist picks it up from there.
 5. A release needs a maintainer's approval. Never move or delete a published tag.
 6. Consumers pin `^0.x`, so a pre-1.0 minor (0.2 to 0.3) is opt-in for them; tell them in the CHANGELOG.
 
