@@ -570,10 +570,12 @@ the owner fixes the cause instead of finding a red build.
 Sources: [PHPStan: baseline](https://phpstan.org/user-guide/baseline).
 The warning-before-expiry part is my own suggestion and I have no prior-art source for the number of days.
 
-**How the stack holds it: Partially.** Since 0.2.3, `OverridesCheck` warns (`proctor/overrides/expiring`) for an active
-entry that expires within 14 days of `--today` (the expiry day counts). What remains: an override that targets a check
-that raised no failure is still not reported; `OverrideApplier` only downgrades failures it finds, and `OverridesCheck`
-reports only entries that have already expired or are close to it.
+**How the stack holds it: Checked.** `OverridesCheck` warns (`proctor/overrides/expiring`) for an active entry that
+expires within 14 days of `--today` (the expiry day counts), and `OverrideApplier::unusedWarnings()` warns
+(`proctor/overrides/unused`) for an active entry whose check raised no failure, so a stale approval is visible
+instead of silent. Both are warnings; neither changes the exit code. Tests: `tests/OverrideGuardsTest.php`
+(`testExpiringOverrideWarnsButStillPasses`, `testActiveOverrideThatMatchesNoFailureWarns`,
+`testOverrideThatDowngradesAFailureIsNotReportedAsUnused`).
 
 ---
 
@@ -854,7 +856,7 @@ Added in the second pass (2026-10-27):
 30. 8.6: Done: the audit runs with `--no-plugins --no-interaction` and a minimal explicit environment (see 8.6).
 31. 6.8: Done: control characters are replaced with `?` in the text writer and the report is printed raw, so tag-like
     strings reach the log literally; a CLI test pins it (see 6.8).
-32. 5.8: Done: since 0.2.3 the `overrides` check warns (`proctor/overrides/expiring`) for an active entry that expires within 14 days of `--today`, the expiry day counting (see 5.8).
+32. 5.8: Done: the `overrides` check warns (`proctor/overrides/expiring`) for an active entry that expires within 14 days of `--today`, the expiry day counting, and the applier warns (`proctor/overrides/unused`) for an active entry that matched no failure (see 5.8).
 33. Done: the `php-floor` check prints the security-end date and the days left in the security-only warning (see 2.7).
 34. 3.7: Done: the Preflight guide documents installing from the lock and never running `composer update` in a deploy, and asks authors not to re-tag (see 3.7).
 35. 4.12: Decide in the policy whether `require-dev` packages count, then pass `--no-dev` or not.

@@ -7,6 +7,7 @@ namespace Waynestate\Proctor\Check;
 use DateTimeImmutable;
 use Waynestate\Proctor\Creed\State;
 use Waynestate\Proctor\Override\Override;
+use Waynestate\Proctor\Override\OverrideFile;
 
 /**
  * Applies active overrides to the findings of a run.
@@ -18,6 +19,9 @@ use Waynestate\Proctor\Override\Override;
  * Exception (the stack's version policy: "EOL + 90 days: fail; no override"): an override
  * NEVER downgrades a fail whose state is eol_grace_expired. That exception
  * lives in apply(), in the isOverridable() guard below.
+ *
+ * An active override whose check raised no failure at all earns a warning of
+ * its own (unusedWarnings()), so a stale approval is removed instead of rotting.
  */
 final class OverrideApplier
 {
@@ -57,6 +61,52 @@ final class OverrideApplier
         }
 
         return $result;
+    }
+
+    /**
+     * One warning per active override that matched no fail finding.
+     *
+     * $findings must be the findings BEFORE apply(): a fail that an override
+     * downgrades still counts as matched, while an active override whose check
+     * raised no failure at all is stale clutter. Expired overrides are not
+     * reported here; the overrides check already fails on them.
+     *
+     * @param list<Finding> $findings the findings before apply()
+     *
+     * @return list<Finding>
+     */
+    public function unusedWarnings(array $findings): array
+    {
+        $warnings = [];
+        foreach ($this->overrides as $override) {
+            if ($override->isExpired($this->today)) {
+                continue;
+            }
+            $matched = false;
+            foreach ($findings as $finding) {
+                if ($finding->checkId === $override->check && $finding->status === Finding::STATUS_FAIL) {
+                    $matched = true;
+                    break;
+                }
+            }
+            if ($matched) {
+                continue;
+            }
+            $warnings[] = new Finding(
+                OverridesCheck::ID,
+                Finding::STATUS_WARNING,
+                sprintf(
+                    'override for "%s" matched no failure; remove it if the problem is fixed',
+                    $override->check,
+                ),
+                OverrideFile::FILENAME,
+                1,
+                null,
+                'unused',
+            );
+        }
+
+        return $warnings;
     }
 
     /**
