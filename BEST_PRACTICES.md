@@ -211,9 +211,9 @@ Why: both make the lock file unreproducible or unsafe.
 
 Sources: [Composer config: secure-http](https://getcomposer.org/doc/06-config.md); the stack's one-repo-per-project decision.
 
-**How the stack holds it: Partially.** The `unbounded-constraints` check warns on committed `path` and `vcs`
-repositories (rule id `proctor/unbounded-constraints/repository`); a warning, not a failure. What remains: a
-plain-HTTP repository is still not flagged.
+**How the stack holds it: Checked.** The `unbounded-constraints` check warns on committed `path` and `vcs`
+repositories (rule id `proctor/unbounded-constraints/repository`) and on a repository URL that is plain http
+(rule id `proctor/unbounded-constraints/insecure-url`); warnings, not failures.
 
 ### 3.4 Commit `composer.lock` and install from it
 Applications and libraries both commit the lock so everyone installs the same versions.
@@ -825,7 +825,7 @@ Practices tagged `Not yet` or `Documented`, each one line. Highest value first.
 13. 5.5: Reject an `expires` date beyond a policy-set maximum.
 14. 5.7: Require an approver who is not the author (needs review rules on the app repo).
 15. 1.3: Accept newer policy schemas with unknown fields.
-16. 3.3: Done: the `unbounded-constraints` check warns on committed `path` and `vcs` repositories (rule id `proctor/unbounded-constraints/repository`) (see 3.3).
+16. 3.3: Done: the `unbounded-constraints` check warns on committed `path` and `vcs` repositories (rule id `proctor/unbounded-constraints/repository`) and on a repository URL that is plain http (rule id `proctor/unbounded-constraints/insecure-url`) (see 3.3).
 17. 3.6: Done: the `composer-config` check (0.2.2) warns when `allow-plugins` is `true`, `secure-http` is `false` or `lock` is `false` (see 3.6).
 18. 2.4: Done: the `composer-config` check (0.2.2) notes when `require.php` is set without `config.platform.php` (see 2.4).
 19. 8.3: Done: child processes run under a timeout, so a hung call cannot hold the runner (see 8.3).
