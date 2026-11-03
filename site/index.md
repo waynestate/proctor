@@ -164,7 +164,7 @@ Pick the copy your reader needs with `--format`. The findings are the same in al
 White copy · for people · `--format=text` (the default)
 
 ```
-proctor 0.3.1 | composer: 2.10.3
+proctor 0.4.0 | composer: 2.10.3
 Policy: bundled (/app/src/Creed/policy.json), refreshed 2026-10-29, 0 days ago
 PASS php-floor: php floor 8.4 is active
 FAIL unbounded-constraints: vendor/dev constraint "dev-master" is unbounded
@@ -188,7 +188,7 @@ Canary copy · for scripts · `--format=json`
 ```
 {
     "tool": "proctor",
-    "version": "0.3.1",
+    "version": "0.4.0",
     "path": "tests/fixtures/apps/unbounded-app",
     "today": "2026-10-29",
     "result": "fail",
@@ -259,7 +259,7 @@ Gold copy · for GitHub code scanning · `--format=sarif`
     "version": "2.1.0",
     "runs": [
         {
-            "tool": { "driver": { "name": "proctor", "version": "0.3.1", … } },
+            "tool": { "driver": { "name": "proctor", "version": "0.4.0", … } },
             "results": [
                 {
                     "ruleId": "proctor/unbounded-constraints/unbounded",

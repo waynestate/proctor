@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.4.0 (2026-11-03)
+
+- This is a pre-1.0 minor: consumers that pin `^0.3` stay on 0.3.x until they move their constraint to `^0.4`. The new checks warn and never fail.
+
 - Added: composer-audit warns when composer.json carries audit ignore entries, reporting only their count so they move to the dated override file (rule id `proctor/composer-audit/ignore-entries`). A warning, never a fail.
 - Added: overrides warns when an active entry in policy-overrides.json matches no failure (rule id `proctor/overrides/unused`), so a stale approval is removed instead of rotting. A warning, never a fail.
 - Added: unbounded-constraints warns on a repository URL that is plain http, because a network attacker can then change what Composer downloads (rule id `proctor/unbounded-constraints/insecure-url`). A warning, never a fail.
