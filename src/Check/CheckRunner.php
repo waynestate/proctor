@@ -56,14 +56,16 @@ final class CheckRunner
             $this->timeout,
             $this->phpRuntime,
         );
-        $findings = [];
+        $unapplied = [];
         foreach ($this->checks as $check) {
             foreach ($check->run($context) as $finding) {
-                $findings[] = $finding;
+                $unapplied[] = $finding;
             }
         }
 
-        return (new OverrideApplier($this->overrides, $this->today))->apply($findings);
+        $applier = new OverrideApplier($this->overrides, $this->today);
+
+        return array_merge($applier->apply($unapplied), $applier->unusedWarnings($unapplied));
     }
 
     /**

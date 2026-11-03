@@ -97,6 +97,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/wayneui-outdated/skipped',
         // overrides
         'proctor/overrides/expiring',
+        'proctor/overrides/unused',
     ];
 
     public function testEveryFindingCarriesAKnownRuleId(): void

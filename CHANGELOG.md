@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added: overrides warns when an active entry in policy-overrides.json matches no failure (rule id `proctor/overrides/unused`), so a stale approval is removed instead of rotting. A warning, never a fail.
 - Added: unbounded-constraints warns on a repository URL that is plain http, because a network attacker can then change what Composer downloads (rule id `proctor/unbounded-constraints/insecure-url`). A warning, never a fail.
 - Added: unbounded-constraints warns when composer.json sets minimum-stability below stable (dev, alpha, beta or rc), because every package may then resolve to a pre-release (rule id `proctor/unbounded-constraints/minimum-stability`). A warning, never a fail.
 - Fixed: composer-audit no longer passes when Composer's own audit failed: a non-zero exit code with no advisory, ignored-advisory or abandoned finding in the JSON is now a fail (rule id `proctor/composer-audit/exit-code`).
