@@ -24,9 +24,13 @@ use Waynestate\Proctor\ToolError;
  * applies to audit (its on-audit flag is not false) and, for a package rule
  * carrying a constraint, when the locked version satisfies it. Abandoned
  * packages are warnings. When the composer executable or composer.lock is
- * missing, the check reports one info finding and nothing else. Since
- * Composer 2.10 the audit exits 1 when anything failed it (malware, a
- * custom policy, abandoned packages, missing packages), so a non-zero exit
+ * missing, the check reports one info finding and nothing else. When the
+ * audit runs but its stdout is not parseable JSON, the check fails (rule
+ * `proctor/composer-audit/could-not-run`) with a message that starts with
+ * `not audited:` and carries the first stderr line, because a green run
+ * that audited nothing is worse than a red one. Since Composer 2.10 the
+ * audit exits 1 when anything failed it (malware, a custom policy,
+ * abandoned packages, missing packages), so a non-zero exit
  * with no advisory, ignored-advisory or abandoned finding in the JSON is
  * itself a fail (rule `proctor/composer-audit/exit-code`), and only an
  * exit code of 0 with an empty result passes. A warning (rule
@@ -86,8 +90,8 @@ final class ComposerAuditCheck implements CheckInterface
             $firstLine = $result->firstStderrLine();
             return [new Finding(
                 $this->id(),
-                Finding::STATUS_WARNING,
-                'composer audit could not run: ' . ($firstLine !== '' ? $firstLine : 'no error output'),
+                Finding::STATUS_FAIL,
+                'not audited: composer audit could not run: ' . ($firstLine !== '' ? $firstLine : 'no error output'),
                 'composer.lock',
                 1,
                 null,

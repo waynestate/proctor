@@ -390,6 +390,36 @@ final class ComposerAuditCheckTest extends TestCase
         self::assertSame(1, $findings[0]->line);
     }
 
+    public function testUnparseableAuditOutputFailsAsNotAudited(): void
+    {
+        // The audit runs but prints nothing parseable, so the check fails
+        // with a message that starts with "not audited:" and carries the
+        // first stderr line.
+        $findings = $this->runAudit($this->app('audit-app'), 'not json', 2, false, 'boom');
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_FAIL, $findings[0]->status);
+        self::assertSame('proctor/composer-audit/could-not-run', $findings[0]->ruleId);
+        self::assertStringStartsWith('not audited:', $findings[0]->message);
+        self::assertStringContainsString('boom', $findings[0]->message);
+        self::assertSame('composer.lock', $findings[0]->path);
+        self::assertSame(1, $findings[0]->line);
+    }
+
+    public function testEmptyOutputGivesNoErrorOutputText(): void
+    {
+        // With no stderr at all the message falls back to "no error
+        // output" instead of the error line.
+        $findings = $this->runAudit($this->app('audit-app'), '', 2);
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_FAIL, $findings[0]->status);
+        self::assertSame(
+            'not audited: composer audit could not run: no error output',
+            $findings[0]->message,
+        );
+    }
+
     public function testAuditRunsComposerWithPluginsOffAndAMinimalEnvironment(): void
     {
         $captured = new class implements ProcessRunnerInterface {
@@ -459,19 +489,20 @@ final class ComposerAuditCheckTest extends TestCase
      *
      * @return list<Finding>
      */
-    private function runAudit(string $app, string $json, int $exitCode = 1, bool $keepIgnoreEntries = false): array
+    private function runAudit(string $app, string $json, int $exitCode = 1, bool $keepIgnoreEntries = false, string $stderr = ''): array
     {
         $this->putFakeComposerOnPath();
 
-        $check = new ComposerAuditCheck(new class ($json, $exitCode) implements ProcessRunnerInterface {
+        $check = new ComposerAuditCheck(new class ($json, $exitCode, $stderr) implements ProcessRunnerInterface {
             public function __construct(
                 private readonly string $json,
                 private readonly int $exitCode,
+                private readonly string $stderr,
             ) {}
 
             public function run(array $command, string $cwd, int $timeout = 300, ?array $env = null): ProcessResult
             {
-                return new ProcessResult($this->exitCode, $this->json, '');
+                return new ProcessResult($this->exitCode, $this->json, $this->stderr);
             }
         });
 
