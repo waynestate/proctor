@@ -73,7 +73,7 @@ It notes, as an info finding, when `require.php` is set without `config.platform
 
 When the audit runs but its stdout is not parseable JSON, the check fails (`proctor/composer-audit/could-not-run`) with a message that starts with `not audited:` and carries the first stderr line, because a green run that audited nothing is worse than a red one. Since Composer 2.10 the audit exits 1 when anything failed it, so a non-zero exit whose JSON lists nothing PROCTOR can read (a malware or policy block, or an error) is itself a fail (`proctor/composer-audit/exit-code`), and only a clean exit with a clean result passes.
 
-A package pattern in `config.policy.advisories.ignore` may use `*`, matched the way composer does, case-insensitively. A warning (`proctor/composer-audit/ignore-entries`) reports the number of ignore entries in composer.json: `config.policy.advisories.ignore-id`, `config.policy.advisories.ignore`, `config.policy.advisories.ignore-severity`, `config.policy.abandoned.ignore`, or the legacy `config.audit.ignore`, `config.audit.ignore-severity` and `config.audit.ignore-abandoned` (the two legacy fallbacks count only while their matching `config.policy` block is absent), so they move to the dated override file ([Overrides](overrides.md)). The proctor checks the invigilator's mark against its own answer sheet, and refuses to sign a green for a red pen.
+A package pattern in `config.policy.advisories.ignore` may use `*`, matched the way composer does, case-insensitively. A warning (`proctor/composer-audit/ignore-entries`) reports the number of ignore entries in composer.json: `config.policy.advisories.ignore-id`, `config.policy.advisories.ignore`, `config.policy.advisories.ignore-severity`, `config.policy.abandoned.ignore`, or the legacy `config.audit.ignore`, `config.audit.ignore-severity` and `config.audit.ignore-abandoned` (the two legacy fallbacks count only while their matching `config.policy` block is absent), so they move to the dated override file ([Overrides](overrides.md)). An ignore entry that no active `composer-audit` override in policy-overrides.json backs is a fail of its own (`proctor/composer-audit/unbacked-ignore`), because an ignore without a dated approval never expires: an override backs the entry when its `advisory` field equals the entry's advisory id case-insensitively, its `package` field matches the entry's package the way composer matches patterns, or it carries no scope at all, and an entry that names neither an id nor a package (an ignore-severity level) is backed by an unscoped override only. The proctor checks the invigilator's mark against its own answer sheet, and refuses to sign a green for a red pen.
 
 | Check | Rule id |
 | --- | --- |
@@ -84,6 +84,7 @@ A package pattern in `config.policy.advisories.ignore` may use `*`, matched the 
 | `composer-audit` | `proctor/composer-audit/could-not-run` |
 | `composer-audit` | `proctor/composer-audit/exit-code` |
 | `composer-audit` | `proctor/composer-audit/ignore-entries` |
+| `composer-audit` | `proctor/composer-audit/unbacked-ignore` |
 
 ## composer-version
 

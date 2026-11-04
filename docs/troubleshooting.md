@@ -75,6 +75,13 @@ Rule id `proctor/composer-audit/exit-code`. Since Composer 2.10 the audit exits 
 - Fix: address what Composer blocked: the block is real, not a PROCTOR misread.
 - Check: run with `--format=json` and read the finding.
 
+### composer-audit fails because an ignore entry has no matching override
+
+Rule id `proctor/composer-audit/unbacked-ignore`. The message reads `ignore entry "<entry>" in composer.json has no matching override; record it in policy-overrides.json with a reason and an expiry`: the app silences an audit result in its own composer.json, and no active `composer-audit` override in policy-overrides.json backs that entry. An ignore without a dated approval never expires, so each unbacked entry fails instead of warning.
+
+- Fix: record an active `composer-audit` override in policy-overrides.json that backs the entry: its `advisory` field equals the entry's advisory id case-insensitively, its `package` field matches the entry's package, or the override carries no scope at all (the only shape that backs an ignore-severity level). Remove the ignore entry from composer.json when the override expires.
+- Check: rerun; the entry earns no `unbacked-ignore` fail, the count warning (`proctor/composer-audit/ignore-entries`) still reports it, and the backing override is not flagged `proctor/overrides/unused`.
+
 ### lock-committed fails
 
 `composer.lock` is missing from the app path.
