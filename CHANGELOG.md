@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.5.0 (2026-11-03)
+
+- This is a pre-1.0 minor: consumers that pin `^0.4` stay on 0.4.x until they move their constraint to `^0.5`. One check that used to pass now fails: composer-audit fails when the audit produced no parseable output (see the first Changed entry below).
+
 - Changed: the front-page deploy layer pins HELMET ^0.3, PROCTOR ^0.4 and CREED ^0.1 (lock: HELMET 0.3.0, PROCTOR 0.4.0, CREED 0.1.6).
 - Changed: CI pins Preflight 0.1.4 (GitLab component includes and the GitHub reusable workflow at its tag commit); the deploy layer sets minimum-stability to stable.
 - Changed: composer-audit fails when the audit runs but its stdout is not parseable JSON (rule id `proctor/composer-audit/could-not-run`), with a message that starts with `not audited:` and carries the first stderr line; a green run that audited nothing is worse than a red one.
