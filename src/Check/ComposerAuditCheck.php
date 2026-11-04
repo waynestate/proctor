@@ -6,6 +6,7 @@ namespace Waynestate\Proctor\Check;
 
 use Composer\Semver\Semver;
 use Waynestate\Proctor\Creed\Policy;
+use Waynestate\Proctor\Override\Override;
 use Waynestate\Proctor\ToolError;
 
 /**
@@ -38,7 +39,10 @@ use Waynestate\Proctor\ToolError;
  * exit code of 0 with an empty result passes. A warning (rule
  * `proctor/composer-audit/ignore-entries`) also reports the number of
  * ignore entries the app keeps in its own composer.json, so they move to
- * the dated override file.
+ * the dated override file. Each entry that no active composer-audit
+ * override backs is a fail of its own (rule
+ * `proctor/composer-audit/unbacked-ignore`), because an ignore without a
+ * dated approval never expires.
  */
 final class ComposerAuditCheck implements CheckInterface
 {
@@ -194,6 +198,10 @@ final class ComposerAuditCheck implements CheckInterface
             $findings[] = $ignoreEntry;
         }
 
+        foreach ($this->unbackedIgnoreFindings($context) as $finding) {
+            $findings[] = $finding;
+        }
+
         return $findings;
     }
 
@@ -276,19 +284,12 @@ final class ComposerAuditCheck implements CheckInterface
 
     /**
      * True when a package ignore pattern from composer's config matches the
-     * package. Names compare case-insensitively, and a star matches any run
-     * of characters, including slashes and none, the way composer does. A
-     * pattern without a star must equal the package name.
+     * package, matched with the same rule a scoped override uses (see
+     * Override::packagePatternMatches).
      */
     private function packageMatches(string $pattern, string $package): bool
     {
-        if (!str_contains($pattern, '*')) {
-            return strcasecmp($pattern, $package) === 0;
-        }
-
-        $regex = '/^' . str_replace('\*', '.*', preg_quote($pattern, '/')) . '$/i';
-
-        return preg_match($regex, $package) === 1;
+        return Override::packagePatternMatches($pattern, $package);
     }
 
     /**
@@ -488,7 +489,7 @@ final class ComposerAuditCheck implements CheckInterface
 
         $ids = [];
         $packages = [];
-        foreach ($this->ignoreEntries($config['audit']['ignore'] ?? null) as $entry) {
+        foreach (self::ignoreEntries($config['audit']['ignore'] ?? null) as $entry) {
             if (str_contains($entry, '/')) {
                 $packages[] = $entry;
             } else {
@@ -497,6 +498,93 @@ final class ComposerAuditCheck implements CheckInterface
         }
 
         return ['ids' => $ids, 'packages' => $packages, 'constrained' => []];
+    }
+
+    /**
+     * The structured ignore entries of the app's composer.json, with the
+     * same sources and gating as the ignore-entries count: one entry per
+     * distinct named element, carrying the advisory id, the package, or
+     * neither (an ignore-severity level), plus the label the report shows.
+     *
+     * config.policy.advisories.ignore-id names advisory ids,
+     * config.policy.advisories.ignore and config.policy.abandoned.ignore
+     * name packages, and config.policy.advisories.ignore-severity names
+     * severity levels. The legacy fallbacks apply while their matching
+     * config.policy block is absent: config.audit.ignore (ids or
+     * "vendor/package" strings, split on the slash the way composer does),
+     * config.audit.ignore-severity and config.audit.ignore-abandoned.
+     *
+     * @return list<array{id: string|null, package: string|null, label: string}>
+     */
+    public static function composerJsonIgnoreEntries(string $appPath): array
+    {
+        $composerJson = $appPath . '/composer.json';
+        if (!is_file($composerJson)) {
+            return [];
+        }
+
+        $raw = file_get_contents($composerJson);
+        if ($raw === false) {
+            return [];
+        }
+
+        $data = json_decode($raw, true);
+        if (!is_array($data)) {
+            return [];
+        }
+
+        $config = $data['config'] ?? null;
+        if (!is_array($config)) {
+            return [];
+        }
+
+        $entries = [];
+
+        $advisories = $config['policy']['advisories'] ?? null;
+        $abandoned = $config['policy']['abandoned'] ?? null;
+        if (is_array($advisories)) {
+            foreach (self::ignoreEntries($advisories['ignore-id'] ?? null) as $name) {
+                $entries[] = ['id' => $name, 'package' => null, 'label' => $name];
+            }
+            foreach (self::ignoreEntries($advisories['ignore'] ?? null) as $name) {
+                $entries[] = ['id' => null, 'package' => $name, 'label' => $name];
+            }
+            foreach (self::ignoreEntries($advisories['ignore-severity'] ?? null) as $name) {
+                $entries[] = ['id' => null, 'package' => null, 'label' => $name];
+            }
+        }
+
+        if (is_array($abandoned)) {
+            foreach (self::ignoreEntries($abandoned['ignore'] ?? null) as $name) {
+                $entries[] = ['id' => null, 'package' => $name, 'label' => $name];
+            }
+        }
+
+        $audit = $config['audit'] ?? null;
+        if (is_array($audit)) {
+            // Composer ignores all audit.* keys of a family once the
+            // matching config.policy block exists, so each fallback only
+            // applies while its policy block is absent.
+            foreach (self::ignoreEntries($audit['ignore'] ?? null) as $name) {
+                if (str_contains($name, '/')) {
+                    $entries[] = ['id' => null, 'package' => $name, 'label' => $name];
+                } else {
+                    $entries[] = ['id' => $name, 'package' => null, 'label' => $name];
+                }
+            }
+            if (!is_array($advisories)) {
+                foreach (self::ignoreEntries($audit['ignore-severity'] ?? null) as $name) {
+                    $entries[] = ['id' => null, 'package' => null, 'label' => $name];
+                }
+            }
+            if (!is_array($abandoned)) {
+                foreach (self::ignoreEntries($audit['ignore-abandoned'] ?? null) as $name) {
+                    $entries[] = ['id' => null, 'package' => $name, 'label' => $name];
+                }
+            }
+        }
+
+        return $entries;
     }
 
     /**
@@ -590,6 +678,61 @@ final class ComposerAuditCheck implements CheckInterface
             null,
             'ignore-entries',
         );
+    }
+
+    /**
+     * One fail per ignore entry no active composer-audit override backs
+     * (rule `proctor/composer-audit/unbacked-ignore`). An entry is backed
+     * by an override whose scope names it: the advisory field equals the
+     * entry's advisory id case-insensitively, the package field matches the
+     * entry's package, or the override carries no scope at all. An entry
+     * that names neither (an ignore-severity level) is backed by an
+     * unscoped override only, and an expired override backs nothing. The
+     * advisory downgrade and the ignore-entries count warning are
+     * untouched.
+     *
+     * @return list<Finding>
+     */
+    private function unbackedIgnoreFindings(CheckContext $context): array
+    {
+        $entries = self::composerJsonIgnoreEntries($context->appPath);
+        if ($entries === []) {
+            return [];
+        }
+
+        $backing = [];
+        foreach ($context->overrides as $override) {
+            if ($override->check === self::ID && !$override->isExpired($context->today)) {
+                $backing[] = $override;
+            }
+        }
+
+        $findings = [];
+        foreach ($entries as $entry) {
+            $backed = false;
+            foreach ($backing as $override) {
+                if ($override->backsIgnoreEntry($entry['id'], $entry['package'])) {
+                    $backed = true;
+                    break;
+                }
+            }
+            if (!$backed) {
+                $findings[] = new Finding(
+                    $this->id(),
+                    Finding::STATUS_FAIL,
+                    sprintf(
+                        'ignore entry "%s" in composer.json has no matching override; record it in policy-overrides.json with a reason and an expiry',
+                        $entry['label'],
+                    ),
+                    'composer.json',
+                    1,
+                    null,
+                    'unbacked-ignore',
+                );
+            }
+        }
+
+        return $findings;
     }
 
     /*
@@ -887,13 +1030,13 @@ final class ComposerAuditCheck implements CheckInterface
     }
 
     /**
-     * The values of an ignore setting in either of composer's two shapes:
-     * a list of ids (plain strings, or objects carrying an id) or a map of
-     * id to reason.
+     * The names of an ignore setting in either of composer's two shapes:
+     * a list of names (plain strings, or objects carrying an id) or a map
+     * keyed by name.
      *
      * @return list<string>
      */
-    private function ignoreEntries(mixed $setting): array
+    private static function ignoreEntries(mixed $setting): array
     {
         if (!is_array($setting) || $setting === []) {
             return [];

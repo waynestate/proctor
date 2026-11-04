@@ -12,6 +12,7 @@ use Waynestate\Proctor\Check\Finding;
 use Waynestate\Proctor\Check\ProcessResult;
 use Waynestate\Proctor\Check\ProcessRunnerInterface;
 use Waynestate\Proctor\Creed\Policy;
+use Waynestate\Proctor\Override\OverrideFile;
 
 /**
  * Tests the ComposerAuditCheck with a stub ProcessRunner, so advisory
@@ -691,7 +692,9 @@ final class ComposerAuditCheckTest extends TestCase
      * its findings. Unless $keepIgnoreEntries is set, the
      * proctor/composer-audit/ignore-entries warning is dropped first, so
      * the existing tests assert the same findings they did before the
-     * warning existed.
+     * warning existed. The app's policy-overrides.json, when present, is
+     * loaded into the context, so an ignore entry an active override backs
+     * earns no unbacked-ignore fail.
      *
      * @return list<Finding>
      */
@@ -716,6 +719,7 @@ final class ComposerAuditCheckTest extends TestCase
             $app,
             Policy::fromFile(__DIR__ . '/fixtures/policy.json'),
             new DateTimeImmutable('2026-10-27'),
+            OverrideFile::load($app),
         );
 
         $findings = $check->run($context);

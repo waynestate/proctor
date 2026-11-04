@@ -95,6 +95,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/composer-audit/could-not-run',
         'proctor/composer-audit/exit-code',
         'proctor/composer-audit/ignore-entries',
+        'proctor/composer-audit/unbacked-ignore',
         // composer-version
         'proctor/composer-version/not-found',
         'proctor/composer-version/could-not-determine',

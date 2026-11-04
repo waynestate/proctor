@@ -1,0 +1,13 @@
+{
+    "require": {
+        "php": "^8.4",
+        "laravel/framework": "^9.0"
+    },
+    "config": {
+        "audit": {
+            "ignore": [
+                "CVE-2024-52301"
+            ]
+        }
+    }
+}

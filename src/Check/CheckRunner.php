@@ -63,7 +63,11 @@ final class CheckRunner
             }
         }
 
-        $applier = new OverrideApplier($this->overrides, $this->today);
+        $applier = new OverrideApplier(
+            $this->overrides,
+            $this->today,
+            ComposerAuditCheck::composerJsonIgnoreEntries($this->appPath),
+        );
 
         return array_merge($applier->apply($unapplied), $applier->unusedWarnings($unapplied));
     }

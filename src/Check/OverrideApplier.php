@@ -30,10 +30,14 @@ final class OverrideApplier
 {
     /**
      * @param list<Override> $overrides all of the app's overrides
+     * @param list<array{id: string|null, package: string|null}> $ignoreEntries the app's composer.json ignore
+     *                                                                          entries, so an override that backs one
+     *                                                                          is not reported unused
      */
     public function __construct(
         private readonly array $overrides,
         private readonly DateTimeImmutable $today,
+        private readonly array $ignoreEntries = [],
     ) {}
 
     /**
@@ -73,8 +77,10 @@ final class OverrideApplier
      * downgrades still counts as matched, while an active override that
      * matches no fail of its check is stale clutter. A scoped override
      * counts as matched only when some fail finding of its check satisfies
-     * its scope, and the warning then names the scope. Expired overrides are
-     * not reported here; the overrides check already fails on them.
+     * its scope, and the warning then names the scope. An active
+     * composer-audit override also counts as matched when it backs one of
+     * the app's composer.json ignore entries. Expired overrides are not
+     * reported here; the overrides check already fails on them.
      *
      * @param list<Finding> $findings the findings before apply()
      *
@@ -92,6 +98,17 @@ final class OverrideApplier
                 if ($finding->checkId === $override->check && $finding->status === Finding::STATUS_FAIL && $override->matches($finding)) {
                     $matched = true;
                     break;
+                }
+            }
+            // An override that backs one of the app's composer.json ignore
+            // entries is doing its job even though no finding carries the
+            // scope, so it is not unused either.
+            if (!$matched && $override->check === 'composer-audit') {
+                foreach ($this->ignoreEntries as $entry) {
+                    if ($override->backsIgnoreEntry($entry['id'], $entry['package'])) {
+                        $matched = true;
+                        break;
+                    }
                 }
             }
             if ($matched) {

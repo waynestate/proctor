@@ -1,0 +1,9 @@
+[
+    {
+        "check": "composer-audit",
+        "reason": "fixture: scopes a package, not the severity level",
+        "expires": "2027-01-01",
+        "approved_by": "tester",
+        "package": "laravel/framework"
+    }
+]

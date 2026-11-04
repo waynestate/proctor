@@ -1,0 +1,8 @@
+[
+    {
+        "check": "composer-audit",
+        "reason": "fixture: backs every composer.json ignore entry",
+        "expires": "2027-01-01",
+        "approved_by": "tester"
+    }
+]

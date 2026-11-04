@@ -10,8 +10,8 @@ use Waynestate\Proctor\Check\Finding;
 /**
  * A single entry of an app's policy-overrides.json file.
  *
- * Value object: immutable, no behavior beyond the expiry comparison and
- * the scope match.
+ * Value object: immutable, no behavior beyond the expiry comparison, the
+ * scope match and the ignore-entry backing test.
  */
 final class Override
 {
@@ -47,6 +47,50 @@ final class Override
     public function displayDate(): string
     {
         return $this->expires->format('Y-m-d');
+    }
+
+    /**
+     * Whether this override backs an ignore entry of the app's composer.json,
+     * so the entry does not earn the unbacked-ignore fail and the override
+     * does not rot as unused.
+     *
+     * An override with no scope backs every entry. A scoped one backs the
+     * entry when its advisory field equals the entry's advisory id
+     * case-insensitively, or its package field matches the entry's package
+     * with the same star wildcard composer uses. An entry that carries
+     * neither an id nor a package (an ignore-severity level) is backed by an
+     * unscoped override only.
+     */
+    public function backsIgnoreEntry(?string $id, ?string $package): bool
+    {
+        if ($this->advisory === null && $this->package === null) {
+            return true;
+        }
+
+        if ($id !== null && $this->advisory !== null && strcasecmp($this->advisory, $id) === 0) {
+            return true;
+        }
+
+        return $package !== null && $this->package !== null
+            && self::packagePatternMatches((string) $this->package, $package);
+    }
+
+    /**
+     * Whether a package pattern matches a package name: names compare
+     * case-insensitively, and a star matches any run of characters,
+     * including slashes and none, the way composer does. A pattern without
+     * a star must equal the package name. Shared with ComposerAuditCheck,
+     * which matches the app's own ignore patterns the same way.
+     */
+    public static function packagePatternMatches(string $pattern, string $package): bool
+    {
+        if (!str_contains($pattern, '*')) {
+            return strcasecmp($pattern, $package) === 0;
+        }
+
+        $regex = '/^' . str_replace('\*', '.*', preg_quote($pattern, '/')) . '$/i';
+
+        return preg_match($regex, $package) === 1;
     }
 
     /**
@@ -108,13 +152,6 @@ final class Override
             return false;
         }
 
-        $pattern = (string) $this->package;
-        if (!str_contains($pattern, '*')) {
-            return strcasecmp($pattern, $package) === 0;
-        }
-
-        $regex = '/^' . str_replace('\*', '.*', preg_quote($pattern, '/')) . '$/i';
-
-        return preg_match($regex, $package) === 1;
+        return self::packagePatternMatches((string) $this->package, $package);
     }
 }

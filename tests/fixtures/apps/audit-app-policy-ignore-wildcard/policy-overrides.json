@@ -1,0 +1,9 @@
+[
+    {
+        "check": "composer-audit",
+        "reason": "fixture: backs the composer.json ignore entry",
+        "expires": "2027-01-01",
+        "approved_by": "tester",
+        "package": "laravel/*"
+    }
+]
