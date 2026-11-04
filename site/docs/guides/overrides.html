@@ -52,6 +52,19 @@
 ]
 </code></pre>
 <p>An entry needs a <code>check</code>, a <code>reason</code>, an <code>expires</code> date and an <code>approved_by</code>; a file missing any of them is rejected (exit 2). Remove the entry when the audit can run again, so the approval does not rot.</p>
+<h2 id="backing-an-audit-ignore-entry">Backing an audit ignore entry<a class="docs-heading-link" aria-label="Link to this section" href="#backing-an-audit-ignore-entry">#</a></h2>
+<p><code>composer-audit</code> fails each ignore entry in composer.json that no active <code>composer-audit</code> override backs (<code>proctor/composer-audit/unbacked-ignore</code>), because an ignore without a dated approval never expires. An override backs the entry when its <code>advisory</code> field equals the entry's advisory id case-insensitively, its <code>package</code> field matches the entry's package the way composer matches patterns, or it carries no scope at all; an entry that names neither an id nor a package (an ignore-severity level) is backed by an unscoped override only. An override that backs an entry is not reported unused. To back an <code>ignore-id</code> entry for CVE-2024-52301:</p>
+<pre><code class="language-json">[
+    {
+        &quot;check&quot;: &quot;composer-audit&quot;,
+        &quot;advisory&quot;: &quot;CVE-2024-52301&quot;,
+        &quot;reason&quot;: &quot;patch lands with the next framework release&quot;,
+        &quot;expires&quot;: &quot;2026-12-01&quot;,
+        &quot;approved_by&quot;: &quot;tester&quot;
+    }
+]
+</code></pre>
+<p>Remove the ignore entry from composer.json when the override expires, so the approval and the silence end on the same date.</p>
 <h2 id="verify-the-date-window">Verify the date window<a class="docs-heading-link" aria-label="Link to this section" href="#verify-the-date-window">#</a></h2>
 <p>Use <code>--today=YYYY-MM-DD</code> to make the 14-day warning window deterministic. For example, an entry that expires on the same day as <code>--today</code> is still inside the window, because the expiry day counts.</p>
 <p>Run the check against the app path:</p>
@@ -89,7 +102,7 @@
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../../docs/guides/check-wayneui.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">WayneUI checks</span></a><a class="docs-pager__link docs-pager__link--next" href="../../docs/guides/policy.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">Policy</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#how-overrides-work">How overrides work</a></li><li class="docs-toc__item"><a href="#when-the-audit-cannot-run">When the audit cannot run</a></li><li class="docs-toc__item"><a href="#verify-the-date-window">Verify the date window</a></li><li class="docs-toc__item"><a href="#rule-ids">Rule ids</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#how-overrides-work">How overrides work</a></li><li class="docs-toc__item"><a href="#when-the-audit-cannot-run">When the audit cannot run</a></li><li class="docs-toc__item"><a href="#backing-an-audit-ignore-entry">Backing an audit ignore entry</a></li><li class="docs-toc__item"><a href="#verify-the-date-window">Verify the date window</a></li><li class="docs-toc__item"><a href="#rule-ids">Rule ids</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.5.0</span></span>

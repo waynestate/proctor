@@ -154,7 +154,7 @@
 <li>When the composer executable is not on PATH or the app has no composer.lock, the check fails with a message that starts with <code>not audited:</code> (<code>proctor/composer-audit/skipped</code>), because a green run that audited nothing is worse than a red one. Install Composer, commit the lock, or record an active <code>composer-audit</code> override in policy-overrides.json with a reason and an expiry to downgrade the fail to a warning (<a href="overrides.html">Overrides</a>).</li>
 </ul>
 <p>When the audit runs but its stdout is not parseable JSON, the check fails (<code>proctor/composer-audit/could-not-run</code>) with a message that starts with <code>not audited:</code> and carries the first stderr line, because a green run that audited nothing is worse than a red one. Since Composer 2.10 the audit exits 1 when anything failed it, so a non-zero exit whose JSON lists nothing PROCTOR can read (a malware or policy block, or an error) is itself a fail (<code>proctor/composer-audit/exit-code</code>), and only a clean exit with a clean result passes.</p>
-<p>A package pattern in <code>config.policy.advisories.ignore</code> may use <code>*</code>, matched the way composer does, case-insensitively. A warning (<code>proctor/composer-audit/ignore-entries</code>) reports the number of ignore entries in composer.json: <code>config.policy.advisories.ignore-id</code>, <code>config.policy.advisories.ignore</code>, <code>config.policy.advisories.ignore-severity</code>, <code>config.policy.abandoned.ignore</code>, or the legacy <code>config.audit.ignore</code>, <code>config.audit.ignore-severity</code> and <code>config.audit.ignore-abandoned</code> (the two legacy fallbacks count only while their matching <code>config.policy</code> block is absent), so they move to the dated override file (<a href="overrides.html">Overrides</a>). The proctor checks the invigilator's mark against its own answer sheet, and refuses to sign a green for a red pen.</p>
+<p>A package pattern in <code>config.policy.advisories.ignore</code> may use <code>*</code>, matched the way composer does, case-insensitively. A warning (<code>proctor/composer-audit/ignore-entries</code>) reports the number of ignore entries in composer.json: <code>config.policy.advisories.ignore-id</code>, <code>config.policy.advisories.ignore</code>, <code>config.policy.advisories.ignore-severity</code>, <code>config.policy.abandoned.ignore</code>, or the legacy <code>config.audit.ignore</code>, <code>config.audit.ignore-severity</code> and <code>config.audit.ignore-abandoned</code> (the two legacy fallbacks count only while their matching <code>config.policy</code> block is absent), so they move to the dated override file (<a href="overrides.html">Overrides</a>). An ignore entry that no active <code>composer-audit</code> override in policy-overrides.json backs is a fail of its own (<code>proctor/composer-audit/unbacked-ignore</code>), because an ignore without a dated approval never expires: an override backs the entry when its <code>advisory</code> field equals the entry's advisory id case-insensitively, its <code>package</code> field matches the entry's package the way composer matches patterns, or it carries no scope at all, and an entry that names neither an id nor a package (an ignore-severity level) is backed by an unscoped override only. The proctor checks the invigilator's mark against its own answer sheet, and refuses to sign a green for a red pen.</p>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
 <thead>
 <tr>
@@ -190,6 +190,10 @@
 <tr>
 <td><code>composer-audit</code></td>
 <td><code>proctor/composer-audit/ignore-entries</code></td>
+</tr>
+<tr>
+<td><code>composer-audit</code></td>
+<td><code>proctor/composer-audit/unbacked-ignore</code></td>
 </tr>
 </tbody>
 </table></div>

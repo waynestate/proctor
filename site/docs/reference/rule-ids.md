@@ -76,6 +76,7 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `composer-audit` | `proctor/composer-audit/could-not-run` |
 | `composer-audit` | `proctor/composer-audit/exit-code` |
 | `composer-audit` | `proctor/composer-audit/ignore-entries` |
+| `composer-audit` | `proctor/composer-audit/unbacked-ignore` |
 | `composer-version` | `proctor/composer-version` |
 | `composer-version` | `proctor/composer-version/not-found` |
 | `composer-version` | `proctor/composer-version/could-not-determine` |

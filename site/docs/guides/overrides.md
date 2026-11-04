@@ -42,6 +42,24 @@ An expired override fails the run. Renew it or delete it before the expiry date.
 
 An entry needs a `check`, a `reason`, an `expires` date and an `approved_by`; a file missing any of them is rejected (exit 2). Remove the entry when the audit can run again, so the approval does not rot.
 
+## Backing an audit ignore entry[#](https://proctor.apps.wayne.edu/docs/guides/overrides.html#backing-an-audit-ignore-entry)
+
+`composer-audit` fails each ignore entry in composer.json that no active `composer-audit` override backs (`proctor/composer-audit/unbacked-ignore`), because an ignore without a dated approval never expires. An override backs the entry when its `advisory` field equals the entry's advisory id case-insensitively, its `package` field matches the entry's package the way composer matches patterns, or it carries no scope at all; an entry that names neither an id nor a package (an ignore-severity level) is backed by an unscoped override only. An override that backs an entry is not reported unused. To back an `ignore-id` entry for CVE-2024-52301:
+
+```json
+[
+    {
+        "check": "composer-audit",
+        "advisory": "CVE-2024-52301",
+        "reason": "patch lands with the next framework release",
+        "expires": "2026-12-01",
+        "approved_by": "tester"
+    }
+]
+```
+
+Remove the ignore entry from composer.json when the override expires, so the approval and the silence end on the same date.
+
 ## Verify the date window[#](https://proctor.apps.wayne.edu/docs/guides/overrides.html#verify-the-date-window)
 
 Use `--today=YYYY-MM-DD` to make the 14-day warning window deterministic. For example, an entry that expires on the same day as `--today` is still inside the window, because the expiry day counts.
