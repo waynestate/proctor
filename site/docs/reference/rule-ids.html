@@ -323,6 +323,7 @@
 </tr>
 </tbody>
 </table></div>
+<p><code>proctor/composer-audit/skipped</code> is a failure, not an info finding: it fires when the composer executable is not on PATH or the app has no composer.lock, its message starts with <code>not audited:</code>, and an active <code>composer-audit</code> override downgrades it to a warning.</p>
 <h2 id="kept-in-step">Kept in step<a class="docs-heading-link" aria-label="Link to this section" href="#kept-in-step">#</a></h2>
 <p><code>tests/RuleIdContractTest.php</code> keeps this table in step with the checks: a rule id that is emitted but not listed here fails the suite. The proctor stamps each id in pencil so small only the head office can read it, and it never smudges.</p>
 <h2 id="related">Related<a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></h2>

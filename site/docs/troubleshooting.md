@@ -57,6 +57,20 @@ Rule id `proctor/composer-audit/could-not-run`. The audit ran but its stdout was
 - Fix: read the stderr line in the message and fix what composer reported. Composer audit runs with `--no-plugins --no-interaction` and a minimal explicit environment (PATH plus the variables composer needs to start), so inherited `COMPOSER_*` switches no longer reach it.
 - Check: rerun the check; only a clean audit with a clean result passes.
 
+### composer-audit fails with `not audited:` because composer is missing[#](https://proctor.apps.wayne.edu/docs/troubleshooting.html#composer-audit-fails-with-not-audited-because-composer-is-missing)
+
+Rule id `proctor/composer-audit/skipped`. The message reads `not audited: composer executable not found on PATH; install Composer or record an override`: there is no composer executable on PATH, so the audit could not run at all. A skipped audit must never look like a pass.
+
+- Fix: install Composer on the runner, or record an active `composer-audit` override in policy-overrides.json with a reason and an expiry to downgrade the fail to a warning.
+- Check: rerun; once composer is found, the audit runs and is graded as usual.
+
+### composer-audit fails with `not audited:` because the lock is missing[#](https://proctor.apps.wayne.edu/docs/troubleshooting.html#composer-audit-fails-with-not-audited-because-the-lock-is-missing)
+
+Rule id `proctor/composer-audit/skipped`. The message reads `not audited: no composer.lock in the app path; commit the lock or record an override`: the app path has no composer.lock, so `composer audit --locked` has nothing to audit.
+
+- Fix: commit the lock file (`composer update --lock` regenerates it), or record an active `composer-audit` override in policy-overrides.json with a reason and an expiry to downgrade the fail to a warning.
+- Check: rerun; with the lock present, the audit runs and is graded as usual.
+
 ### composer-audit fails with no advisory listed[#](https://proctor.apps.wayne.edu/docs/troubleshooting.html#composer-audit-fails-with-no-advisory-listed)
 
 Rule id `proctor/composer-audit/exit-code`. Since Composer 2.10 the audit exits 1 when anything failed it, so a non-zero exit whose JSON lists nothing PROCTOR can read (a malware or policy block, or an error) is itself a fail, and only a clean exit with a clean result passes.

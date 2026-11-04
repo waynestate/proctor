@@ -321,11 +321,12 @@ Why: a green run that audited nothing is worse than a red one.
 Sources: [Composer CLI: audit (`--ignore-unreachable`)](https://getcomposer.org/doc/03-cli.md);
 [OpenSSF Scorecard: Vulnerabilities](https://github.com/ossf/scorecard/blob/main/docs/checks.md).
 
-**How the stack holds it: Partially.** Unparsable audit output fails (rule id `proctor/composer-audit/could-not-run`)
+**How the stack holds it: Checked.** Unparsable audit output fails (rule id `proctor/composer-audit/could-not-run`)
 with a message that starts with `not audited:` and carries the first stderr line, so a run whose audit produced nothing
-readable is red instead of green. What remains: a missing `composer` or lock still gives an `info` finding that exits
-0, and the owner cannot choose otherwise in CI. Preflight's `composer-audit` job covers part of this because it fails
-on Composer's own exit code.
+readable is red instead of green. A missing `composer` or a missing lock fails the same way (rule id
+`proctor/composer-audit/skipped`, message `not audited: ...`). The owner chooses otherwise by recording a
+`composer-audit` entry in `policy-overrides.json` with a reason and an expiry, which turns the failure into a warning
+until it expires (Adam's decision of 2026-11-03). Preflight's `composer-audit` job also fails on Composer's own exit code.
 
 ### 4.4 Keep advisory ignores out of `composer.json`
 Composer lets an app silence advisories in its own `composer.json` (`config.audit.ignore`, or in Composer 2.10

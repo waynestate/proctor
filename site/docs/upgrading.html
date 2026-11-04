@@ -28,9 +28,14 @@
     <main id="main">
       <article class="docs-article"><h1 id="upgrading">Upgrading<a class="docs-heading-link" aria-label="Link to this section" href="#upgrading">#</a></h1>
 <p>PROCTOR is the invigilator, so upgrading it is a seat change, not a new exam: same hall, fresher pen. This page tells you how to move an app from one PROCTOR release to the next and which changes affect your runs. Start with the release that has a break, then work down to the additive ones.</p>
+<h2 id="unreleased">Unreleased<a class="docs-heading-link" aria-label="Link to this section" href="#unreleased">#</a></h2>
+<h3 id="breaking">Breaking<a class="docs-heading-link" aria-label="Link to this section" href="#breaking">#</a></h3>
+<ul>
+<li><code>composer-audit</code> fails when the composer executable is not on PATH or the app has no composer.lock (rule id <code>proctor/composer-audit/skipped</code>, message starting with <code>not audited:</code>). An app whose audit could not run used to pass with an info line; it now exits non-zero until Composer is installed, the lock is committed, or an active <code>composer-audit</code> override with a reason and an expiry downgrades the fail to a warning.</li>
+</ul>
 <h2 id="0-5-0">0.5.0<a class="docs-heading-link" aria-label="Link to this section" href="#0-5-0">#</a></h2>
 <p>Released 2026-11-03. This is a pre-1.0 minor: consumers that pin <code>^0.4</code> stay on 0.4.x until they move their constraint to <code>^0.5</code>. Most of what is new warns and never fails, but one check can now turn a passing run into a failing one.</p>
-<h3 id="breaking">Breaking<a class="docs-heading-link" aria-label="Link to this section" href="#breaking">#</a></h3>
+<h3 id="breaking-1">Breaking<a class="docs-heading-link" aria-label="Link to this section" href="#breaking-1">#</a></h3>
 <ul>
 <li><code>composer-audit</code> fails when <code>composer audit</code> runs but its output is not parseable JSON (rule id <code>proctor/composer-audit/could-not-run</code>, message starting <code>not audited:</code>). A run that audited nothing used to pass quietly; it now exits non-zero, so an app whose audit cannot run will go red until the audit is fixed.</li>
 <li>Consumers that pin <code>^0.4</code> stay on 0.4.x until they move their constraint to <code>^0.5</code>.</li>
@@ -68,7 +73,7 @@
 </ul>
 <h2 id="0-4-0">0.4.0<a class="docs-heading-link" aria-label="Link to this section" href="#0-4-0">#</a></h2>
 <p>Released 2026-11-03. This is a pre-1.0 minor: consumers that pin <code>^0.3</code> stay on 0.3.x until they move their constraint to <code>^0.4</code>. The new checks warn and never fail.</p>
-<h3 id="breaking-1">Breaking<a class="docs-heading-link" aria-label="Link to this section" href="#breaking-1">#</a></h3>
+<h3 id="breaking-2">Breaking<a class="docs-heading-link" aria-label="Link to this section" href="#breaking-2">#</a></h3>
 <ul>
 <li>Consumers that pin <code>^0.3</code> stay on 0.3.x until they move their constraint to <code>^0.4</code>. That constraint move is the only break in this release.</li>
 </ul>
@@ -121,7 +126,7 @@
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../docs/troubleshooting.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">Troubleshooting</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#0-5-0">0.5.0</a></li><li class="docs-toc__item--sub"><a href="#breaking">Breaking</a></li><li class="docs-toc__item--sub"><a href="#deprecated">Deprecated</a></li><li class="docs-toc__item--sub"><a href="#steps">Steps</a></li><li class="docs-toc__item--sub"><a href="#how-to-verify">How to verify</a></li><li class="docs-toc__item"><a href="#0-4-0">0.4.0</a></li><li class="docs-toc__item--sub"><a href="#breaking-1">Breaking</a></li><li class="docs-toc__item--sub"><a href="#deprecated-1">Deprecated</a></li><li class="docs-toc__item--sub"><a href="#steps-1">Steps</a></li><li class="docs-toc__item--sub"><a href="#how-to-verify-1">How to verify</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#unreleased">Unreleased</a></li><li class="docs-toc__item--sub"><a href="#breaking">Breaking</a></li><li class="docs-toc__item"><a href="#0-5-0">0.5.0</a></li><li class="docs-toc__item--sub"><a href="#breaking-1">Breaking</a></li><li class="docs-toc__item--sub"><a href="#deprecated">Deprecated</a></li><li class="docs-toc__item--sub"><a href="#steps">Steps</a></li><li class="docs-toc__item--sub"><a href="#how-to-verify">How to verify</a></li><li class="docs-toc__item"><a href="#0-4-0">0.4.0</a></li><li class="docs-toc__item--sub"><a href="#breaking-2">Breaking</a></li><li class="docs-toc__item--sub"><a href="#deprecated-1">Deprecated</a></li><li class="docs-toc__item--sub"><a href="#steps-1">Steps</a></li><li class="docs-toc__item--sub"><a href="#how-to-verify-1">How to verify</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.5.0</span></span>

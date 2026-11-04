@@ -85,7 +85,7 @@ vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--po
 - `destructive-deploy`: fails when a deploy script runs an artisan command that drops or rebuilds the database (`migrate:fresh`, `migrate:refresh`, `migrate:reset`, `db:wipe`), which erases production data on every deploy. Scans `.sh` and `.php` files under a top-level `deployments/`, `deploy_scripts/`, `deploy/` or `scripts/` directory, the top-level `build.sh`, `release.sh` and `.gitlab-ci.yml`, and the `scripts` section of composer.json; shell comments are ignored. Fix by running plain `php artisan migrate --force` in the deploy.
 - `ci-pipelines`: for stack packages (composer.json `name` starting with `waynestate/`), fails when `.gitlab-ci.yml` or `.github/workflows/ci.yml` is missing or runs no `composer ci`; for any other project, a missing or incomplete `.gitlab-ci.yml` is a warning and `.github/workflows/ci.yml` is optional. A private stack package that sets `extra.proctor.github-mirror` to `false` in composer.json must never be on GitHub: a missing `.github/workflows/ci.yml` then gives no finding, and a present one warns (`proctor/ci-pipelines/github-private`) along with the warning-only rules. Warns when a GitHub `uses:` ref is not a 40-hex commit SHA. Warns (`proctor/ci-pipelines/composer-audit-off`) when the pipeline environment switches Composer's audit or blocking policy off: `COMPOSER_NO_AUDIT` or `COMPOSER_NO_BLOCKING` set to anything but an empty string, `0` or `false`, or `COMPOSER_AUDIT_ABANDONED` set to `ignore`, in the GitLab top-level or job `variables:` (a scalar or a map with a `value` key) or the GitHub top-level, job or step `env:`. A warning, never a fail, for stack packages and other projects alike. The proctor fails the stack's own exam halls, and only leaves a note for everyone else's.
 - `preflight-pinned`: warns, never fails, when an app includes a Preflight component at a moving ref or re-declares what an included Preflight job runs. A Preflight include is an `include:` entry whose `component:` path contains `/preflight/`; when the ref after the last `@` is not a 40-lowercase-hex commit SHA it warns (`proctor/preflight-pinned/unpinned`), and a tag, a branch, `~latest` or no `@` at all all count as moving. Pin the commit SHA of the release tag; the tag itself can ride in a trailing comment. When the app declares one of the Preflight job names (`proctor`, `php-test`, `composer-audit`, `sbom`, `pint`, `phpstan`, `eslint`, `renovate`, `package-publish`) with `script`, `before_script` or `after_script` while a Preflight component is included, it warns (`proctor/preflight-pinned/script-override`). With nothing to flag it passes: `Preflight includes are pinned`, or `no Preflight components included` when there is no pipeline, a parse error or no Preflight include. The proctor checks the boarding pass against the manifest, so the app cannot board a different flight mid-run.
-- `composer-audit`: fails for advisories at or above the policy's `audit_severity_threshold`, warns for lower ones, and reports info when composer or the lock file is absent. When the audit runs but its stdout is not parseable JSON, the check fails (rule id `proctor/composer-audit/could-not-run`) with a message that starts with `not audited:` and carries the first stderr line, because a green run that audited nothing is worse than a red one. Each finding names the package, the version locked in composer.lock, the advisory's CVE (or its advisory id when there is no CVE), its title and its severity. An advisory the app ignores in its own composer.json (`config.policy.advisories.ignore-id`, `config.policy.advisories.ignore`, or the legacy `config.audit.ignore`) is a warning, not a fail, and so is anything composer has already moved to its ignored section; abandoned packages are warnings too. A package pattern in `config.policy.advisories.ignore` may use `*`, matched the way composer does, case-insensitively. Since Composer 2.10 the audit exits 1 when anything failed it, so a non-zero exit whose JSON lists nothing PROCTOR can read (a malware or policy block, or an error) is itself a fail (`proctor/composer-audit/exit-code`), and only a clean exit with a clean result passes. A warning (`proctor/composer-audit/ignore-entries`) reports the number of ignore entries in composer.json: `config.policy.advisories.ignore-id`, `config.policy.advisories.ignore`, `config.policy.advisories.ignore-severity`, `config.policy.abandoned.ignore`, or the legacy `config.audit.ignore`, `config.audit.ignore-severity` and `config.audit.ignore-abandoned` (the two legacy fallbacks count only while their matching `config.policy` block is absent), so they move to the dated override file. The proctor checks the invigilator's mark against its own answer sheet, and refuses to sign a green for a red pen.
+- `composer-audit`: fails for advisories at or above the policy's `audit_severity_threshold`, warns for lower ones, and fails with a message that starts with `not audited:` when the composer executable is not on PATH or the app has no composer.lock (rule id `proctor/composer-audit/skipped`): install Composer, commit the lock, or record an active `composer-audit` override in policy-overrides.json with a reason and an expiry to downgrade the fail to a warning. When the audit runs but its stdout is not parseable JSON, the check fails (rule id `proctor/composer-audit/could-not-run`) with a message that starts with `not audited:` and carries the first stderr line, because a green run that audited nothing is worse than a red one. Each finding names the package, the version locked in composer.lock, the advisory's CVE (or its advisory id when there is no CVE), its title and its severity. An advisory the app ignores in its own composer.json (`config.policy.advisories.ignore-id`, `config.policy.advisories.ignore`, or the legacy `config.audit.ignore`) is a warning, not a fail, and so is anything composer has already moved to its ignored section; abandoned packages are warnings too. A package pattern in `config.policy.advisories.ignore` may use `*`, matched the way composer does, case-insensitively. Since Composer 2.10 the audit exits 1 when anything failed it, so a non-zero exit whose JSON lists nothing PROCTOR can read (a malware or policy block, or an error) is itself a fail (`proctor/composer-audit/exit-code`), and only a clean exit with a clean result passes. A warning (`proctor/composer-audit/ignore-entries`) reports the number of ignore entries in composer.json: `config.policy.advisories.ignore-id`, `config.policy.advisories.ignore`, `config.policy.advisories.ignore-severity`, `config.policy.abandoned.ignore`, or the legacy `config.audit.ignore`, `config.audit.ignore-severity` and `config.audit.ignore-abandoned` (the two legacy fallbacks count only while their matching `config.policy` block is absent), so they move to the dated override file. The proctor checks the invigilator's mark against its own answer sheet, and refuses to sign a green for a red pen.
 - `composer-version`: fails when the Composer on PATH carries the command-injection holes CVE-2024-35241 and CVE-2024-35242 (2.2.x below 2.2.24, or any other 2.x below 2.7.7) or is Composer 1, which is end of life; warns when composer cannot be run. The invigilator checks its own pen: [GHSA-47f6-5gq3-vx9c](https://github.com/advisories/GHSA-47f6-5gq3-vx9c) and [GHSA-v9qv-c7wm-wgmf](https://github.com/advisories/GHSA-v9qv-c7wm-wgmf).
 - `repo-url-credentials`: warns when a credential is written into a package source URL: a deploy token in the userinfo of a composer.json repository URL or a composer.lock source/dist URL (`https://gitlab+deploy-token-12:***@host/group/lib.git`), a bare token user of 20+ characters, a `private_token`, `access_token`, `token` or `password` query parameter, or a `.npmrc` line that sets `_authToken`, `_auth` or `_password` to a literal value (`${SOME_VAR}` is fine). The secret is masked as `***` in the message, so the report itself is safe to hand back. Warning, not failure. Fix by moving the token to `auth.json`, which is gitignored, or a CI variable, and using one registry URL without credentials. The proctor spots the answer key taped inside the desk before the student does.
 - `instant-client-committed`: warns when Oracle Instant Client is committed to the repo: an `instantclient*.zip` or `instantclient*.rpm` archive, any file under a directory named `instantclient` or `instantclient_*` (an unzipped install), or a loose client library such as `libclntsh.so`, `libociei.so` or `oci.dll`. Only committed files count: the git-tracked files when the app path sits in a git repository and git can be run, otherwise the files on disk. Skipped at any depth: `vendor/`, `node_modules/` and `.git/`. One warning per match: the archive, the topmost matching directory, or the loose file, each reported with its total size in MB. Warning, not failure: Citadel's images already include Instant Client, and the WSU Sail and Docker images will too. Fix by deleting it, running `git rm -r --cached` on the path PROCTOR reports, and adding that path to .gitignore. The proctor takes the 60-to-126-MB textbook off the student's desk: the exam hall already keeps a copy on the shelf.
@@ -1077,7 +1077,7 @@ It notes, as an info finding, when `require.php` is set without `config.platform
 - Advisories at or above the policy's `audit_severity_threshold` fail; lower ones warn (`proctor/composer-audit/advisory`). Each finding names the package, the version locked in composer.lock, the advisory's CVE (or its advisory id when there is no CVE), its title and its severity.
 - An advisory the app ignores in its own composer.json (`config.policy.advisories.ignore-id`, `config.policy.advisories.ignore`, or the legacy `config.audit.ignore`) is a warning, not a fail, and so is anything composer has already moved to its ignored section.
 - Abandoned packages are warnings too (`proctor/composer-audit/abandoned`).
-- When composer or the lock file is absent the check reports info (`proctor/composer-audit/skipped`) instead of failing.
+- When the composer executable is not on PATH or the app has no composer.lock, the check fails with a message that starts with `not audited:` (`proctor/composer-audit/skipped`), because a green run that audited nothing is worse than a red one. Install Composer, commit the lock, or record an active `composer-audit` override in policy-overrides.json with a reason and an expiry to downgrade the fail to a warning ([Overrides](https://proctor.apps.wayne.edu/docs/guides/overrides.html)).
 
 When the audit runs but its stdout is not parseable JSON, the check fails (`proctor/composer-audit/could-not-run`) with a message that starts with `not audited:` and carries the first stderr line, because a green run that audited nothing is worse than a red one. Since Composer 2.10 the audit exits 1 when anything failed it, so a non-zero exit whose JSON lists nothing PROCTOR can read (a malware or policy block, or an error) is itself a fail (`proctor/composer-audit/exit-code`), and only a clean exit with a clean result passes.
 
@@ -1505,6 +1505,23 @@ This page explains how an app carries a `policy-overrides.json` file next to its
 Warning
 
 An expired override fails the run. Renew it or delete it before the expiry date.
+
+### When the audit cannot run[#](https://proctor.apps.wayne.edu/docs/guides/overrides.html#when-the-audit-cannot-run)
+
+`composer-audit` fails (`proctor/composer-audit/skipped`) with a message that starts with `not audited:` in two cases: the composer executable is not on PATH, and the app path has no composer.lock. Until Composer is installed or the lock is committed, an active `composer-audit` entry downgrades those fails to warnings:
+
+```json
+[
+    {
+        "check": "composer-audit",
+        "reason": "no lock yet, ticket in progress",
+        "expires": "2026-12-01",
+        "approved_by": "tester"
+    }
+]
+```
+
+An entry needs a `check`, a `reason`, an `expires` date and an `approved_by`; a file missing any of them is rejected (exit 2). Remove the entry when the audit can run again, so the approval does not rot.
 
 ### Verify the date window[#](https://proctor.apps.wayne.edu/docs/guides/overrides.html#verify-the-date-window)
 
@@ -2078,6 +2095,8 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `wayneui-outdated` | `proctor/wayneui-outdated/skipped` |
 | `policy-age` | `proctor/policy-age` |
 
+`proctor/composer-audit/skipped` is a failure, not an info finding: it fires when the composer executable is not on PATH or the app has no composer.lock, its message starts with `not audited:`, and an active `composer-audit` override downgrades it to a warning.
+
 ### Kept in step[#](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html#kept-in-step)
 
 `tests/RuleIdContractTest.php` keeps this table in step with the checks: a rule id that is emitted but not listed here fails the suite. The proctor stamps each id in pencil so small only the head office can read it, and it never smudges.
@@ -2142,6 +2161,20 @@ Rule id `proctor/composer-audit/could-not-run`. The audit ran but its stdout was
 
 - Fix: read the stderr line in the message and fix what composer reported. Composer audit runs with `--no-plugins --no-interaction` and a minimal explicit environment (PATH plus the variables composer needs to start), so inherited `COMPOSER_*` switches no longer reach it.
 - Check: rerun the check; only a clean audit with a clean result passes.
+
+#### composer-audit fails with `not audited:` because composer is missing[#](https://proctor.apps.wayne.edu/docs/troubleshooting.html#composer-audit-fails-with-not-audited-because-composer-is-missing)
+
+Rule id `proctor/composer-audit/skipped`. The message reads `not audited: composer executable not found on PATH; install Composer or record an override`: there is no composer executable on PATH, so the audit could not run at all. A skipped audit must never look like a pass.
+
+- Fix: install Composer on the runner, or record an active `composer-audit` override in policy-overrides.json with a reason and an expiry to downgrade the fail to a warning.
+- Check: rerun; once composer is found, the audit runs and is graded as usual.
+
+#### composer-audit fails with `not audited:` because the lock is missing[#](https://proctor.apps.wayne.edu/docs/troubleshooting.html#composer-audit-fails-with-not-audited-because-the-lock-is-missing)
+
+Rule id `proctor/composer-audit/skipped`. The message reads `not audited: no composer.lock in the app path; commit the lock or record an override`: the app path has no composer.lock, so `composer audit --locked` has nothing to audit.
+
+- Fix: commit the lock file (`composer update --lock` regenerates it), or record an active `composer-audit` override in policy-overrides.json with a reason and an expiry to downgrade the fail to a warning.
+- Check: rerun; with the lock present, the audit runs and is graded as usual.
 
 #### composer-audit fails with no advisory listed[#](https://proctor.apps.wayne.edu/docs/troubleshooting.html#composer-audit-fails-with-no-advisory-listed)
 
@@ -2256,11 +2289,17 @@ Source: https://proctor.apps.wayne.edu/docs/upgrading.html
 
 PROCTOR is the invigilator, so upgrading it is a seat change, not a new exam: same hall, fresher pen. This page tells you how to move an app from one PROCTOR release to the next and which changes affect your runs. Start with the release that has a break, then work down to the additive ones.
 
+### Unreleased[#](https://proctor.apps.wayne.edu/docs/upgrading.html#unreleased)
+
+#### Breaking[#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking)
+
+- `composer-audit` fails when the composer executable is not on PATH or the app has no composer.lock (rule id `proctor/composer-audit/skipped`, message starting with `not audited:`). An app whose audit could not run used to pass with an info line; it now exits non-zero until Composer is installed, the lock is committed, or an active `composer-audit` override with a reason and an expiry downgrades the fail to a warning.
+
 ### 0.5.0[#](https://proctor.apps.wayne.edu/docs/upgrading.html#0-5-0)
 
 Released 2026-11-03. This is a pre-1.0 minor: consumers that pin `^0.4` stay on 0.4.x until they move their constraint to `^0.5`. Most of what is new warns and never fails, but one check can now turn a passing run into a failing one.
 
-#### Breaking[#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking)
+#### Breaking[#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-1)
 
 - `composer-audit` fails when `composer audit` runs but its output is not parseable JSON (rule id `proctor/composer-audit/could-not-run`, message starting `not audited:`). A run that audited nothing used to pass quietly; it now exits non-zero, so an app whose audit cannot run will go red until the audit is fixed.
 - Consumers that pin `^0.4` stay on 0.4.x until they move their constraint to `^0.5`.
@@ -2293,7 +2332,7 @@ Released 2026-11-03. This is a pre-1.0 minor: consumers that pin `^0.4` stay on 
 
 Released 2026-11-03. This is a pre-1.0 minor: consumers that pin `^0.3` stay on 0.3.x until they move their constraint to `^0.4`. The new checks warn and never fail.
 
-#### Breaking[#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-1)
+#### Breaking[#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-2)
 
 - Consumers that pin `^0.3` stay on 0.3.x until they move their constraint to `^0.4`. That constraint move is the only break in this release.
 

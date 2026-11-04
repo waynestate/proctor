@@ -25,6 +25,23 @@ Warning
 
 An expired override fails the run. Renew it or delete it before the expiry date.
 
+## When the audit cannot run[#](https://proctor.apps.wayne.edu/docs/guides/overrides.html#when-the-audit-cannot-run)
+
+`composer-audit` fails (`proctor/composer-audit/skipped`) with a message that starts with `not audited:` in two cases: the composer executable is not on PATH, and the app path has no composer.lock. Until Composer is installed or the lock is committed, an active `composer-audit` entry downgrades those fails to warnings:
+
+```json
+[
+    {
+        "check": "composer-audit",
+        "reason": "no lock yet, ticket in progress",
+        "expires": "2026-12-01",
+        "approved_by": "tester"
+    }
+]
+```
+
+An entry needs a `check`, a `reason`, an `expires` date and an `approved_by`; a file missing any of them is rejected (exit 2). Remove the entry when the audit can run again, so the approval does not rot.
+
 ## Verify the date window[#](https://proctor.apps.wayne.edu/docs/guides/overrides.html#verify-the-date-window)
 
 Use `--today=YYYY-MM-DD` to make the 14-day warning window deterministic. For example, an entry that expires on the same day as `--today` is still inside the window, because the expiry day counts.
