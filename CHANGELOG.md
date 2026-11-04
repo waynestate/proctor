@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Changed: `--policy` and `--today` are refused in CI (any of `CI`, `GITLAB_CI` or `GITHUB_ACTIONS` set to a value other than `0` or `false`) with a tool error (exit 2) unless the job sets `PROCTOR_ALLOW_OVERRIDES=1`: in CI the policy and the date must come from the stack, not from the app being checked, so a pipeline that could pass its own policy or date could grade itself. Pre-1.0 behavior change for consumers on ^0.5 whose pipelines pass these options: set `PROCTOR_ALLOW_OVERRIDES: "1"` in a trusted job (a protected or group-level CI variable, not the app's .gitlab-ci.yml), or drop the option and name the policy with `PROCTOR_POLICY`, which stays allowed in CI.
+
 ## 0.5.0 (2026-11-03)
 
 - This is a pre-1.0 minor: consumers that pin `^0.4` stay on 0.4.x until they move their constraint to `^0.5`. One check that used to pass now fails: composer-audit fails when the audit produced no parseable output (see the first Changed entry below).

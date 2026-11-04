@@ -61,6 +61,20 @@ A vendor copy that cannot be read or parsed is skipped with a note on stderr and
 > [!WARNING]
 > An explicit source (`--policy` or `PROCTOR_POLICY`) that points at a missing or invalid file is still an error (exit 2). Only the vendor copy is skipped quietly.
 
+## Policy and date in CI
+
+In CI (any of `CI`, `GITLAB_CI` or `GITHUB_ACTIONS` set to a value other than `0` or `false`), `--policy` and `--today` are refused with a tool error (exit 2): in CI the policy and the date must come from the stack, not from the app being checked, so a pipeline that could pass its own policy or date in its own `.gitlab-ci.yml` could grade itself. The refusal message names the option or options that were given.
+
+The `PROCTOR_POLICY` environment variable stays allowed in CI; it is how a trusted job names a policy. A trusted job (a protected or group-level CI variable, never the app's own `.gitlab-ci.yml`) can allow the two options by setting `PROCTOR_ALLOW_OVERRIDES` to exactly `1`:
+
+```yaml
+# Group Settings > CI/CD > Variables: name PROCTOR_ALLOW_OVERRIDES, value 1,
+# type Variable, scope Protected. Never in the app's own .gitlab-ci.yml.
+PROCTOR_ALLOW_OVERRIDES: "1"
+```
+
+Outside CI nothing changes: both options work as described above.
+
 ## What the report says
 
 Every report names the policy it used: origin (`option`, `env`, `vendor` or `bundled`), path, `refreshed_on` and the age in days. The age is whole days since the refresh: zero on the refresh day, positive after it, negative when the date is in the future, and absent when the policy carries no `refreshed_on`.

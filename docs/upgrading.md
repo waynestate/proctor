@@ -7,6 +7,33 @@ description: How to upgrade PROCTOR to a newer release and note the changes that
 
 PROCTOR is the invigilator, so upgrading it is a seat change, not a new exam: same hall, fresher pen. This page tells you how to move an app from one PROCTOR release to the next and which changes affect your runs. Start with the release that has a break, then work down to the additive ones.
 
+## Unreleased
+
+Not released yet. This is a pre-1.0 behavior change for consumers on `^0.5`: everything keeps working, except that one refusal can turn a passing pipeline into a failing one.
+
+### Breaking
+
+- **Refused `--policy` and `--today` in CI.** In CI (any of `CI`, `GITLAB_CI` or `GITHUB_ACTIONS` set to a value other than `0` or `false`), `proctor check` now refuses `--policy` and `--today` with a tool error (exit 2) unless the job sets `PROCTOR_ALLOW_OVERRIDES=1`. In CI the policy and the date must come from the stack, not from the app being checked: a pipeline that could pass its own policy or date could grade itself. Pipelines that pass these options must either set `PROCTOR_ALLOW_OVERRIDES: "1"` as a variable of a trusted job (a protected or group-level CI variable, never the app's own `.gitlab-ci.yml`) or drop the option: name the policy with the `PROCTOR_POLICY` environment variable instead of `--policy` (it stays allowed in CI), and drop `--today` or let the trusted job allow it. Outside CI nothing changes.
+
+### Deprecated
+
+- None recorded so far.
+
+### Steps
+
+1. Re-run the check in CI and read any `Refused:` message first:
+
+   ```bash
+   vendor/bin/proctor check
+   ```
+
+2. For each refused option, either set `PROCTOR_ALLOW_OVERRIDES` to `1` on the trusted job (GitLab: group Settings, CI/CD, Variables, scope Protected), or drop the option and name the policy with `PROCTOR_POLICY`.
+
+### How to verify
+
+- Run `vendor/bin/proctor check` in CI: the run reaches the checks when no refused option is present, or the trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`.
+- Confirm the refusal names only the option or options that were given (`Refused: --policy is not accepted in CI, ...`, `Refused: --today is not accepted in CI, ...`, or both named together).
+
 ## 0.5.0
 
 Released 2026-11-03. This is a pre-1.0 minor: consumers that pin `^0.4` stay on 0.4.x until they move their constraint to `^0.5`. Most of what is new warns and never fails, but one check can now turn a passing run into a failing one.

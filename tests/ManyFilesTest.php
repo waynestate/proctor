@@ -44,9 +44,12 @@ final class ManyFilesTest extends TestCase
             '--policy=' . __DIR__ . '/fixtures/policy.json',
             '--today=2026-10-27',
         ];
+        // The CI markers and PROCTOR_ALLOW_OVERRIDES must not leak in from the host: with them set, bin/proctor
+        // would refuse --policy and --today.
+        $scrubbed = ['PATH', 'PROCTOR_POLICY', 'CI', 'GITLAB_CI', 'GITHUB_ACTIONS', 'PROCTOR_ALLOW_OVERRIDES'];
         $env = getenv();
         foreach (array_keys($env) as $key) {
-            if (strcasecmp((string) $key, 'PATH') === 0 || strcasecmp((string) $key, 'PROCTOR_POLICY') === 0) {
+            if (in_array(strtoupper((string) $key), $scrubbed, true)) {
                 unset($env[$key]);
             }
         }
