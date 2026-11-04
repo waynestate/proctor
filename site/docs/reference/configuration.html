@@ -18,7 +18,7 @@
   <a class="docs-header__brand" href="../../docs/index.html">PROCTOR</a>
   <span><a class="docs-header__home" rel="noopener" href="https://nougat.snu.gs/enterprise-apps/proctor">Source</a> <a class="docs-header__home" href="../../index.html">Back to PROCTOR</a></span>
 </header>
-<div class="docs-layout">
+<div class="docs-layout docs-layout--toc">
   <details class="docs-menu">
     <summary>Menu</summary>
     <nav class="docs-nav" aria-label="Documentation"><ul class="docs-nav__list"><li class="docs-nav__group"><span class="docs-nav__label">Getting Started</span><ul><li><a href="../../docs/index.html">Overview</a></li><li><a href="../../docs/install.html">Install</a></li><li><a href="../../docs/guides/quick-start.html">Quick start</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Guides</span><ul><li><a href="../../docs/guides/checks-overview.html">Checks</a></li><li><a href="../../docs/guides/check-composer.html">Composer checks</a></li><li><a href="../../docs/guides/check-php.html">PHP checks</a></li><li><a href="../../docs/guides/check-ci.html">CI checks</a></li><li><a href="../../docs/guides/check-wayneui.html">WayneUI checks</a></li><li><a href="../../docs/guides/overrides.html">Overrides</a></li><li><a href="../../docs/guides/policy.html">Policy</a></li><li><a href="../../docs/guides/formats.html">Formats</a></li><li><a href="../../docs/guides/github-code-scanning.html">GitHub code scanning</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Reference</span><ul><li><a href="../../docs/reference/commands.html">Commands</a></li><li><a href="../../docs/reference/exit-codes.html">Exit codes</a></li><li><a href="../../docs/reference/rule-ids.html">Rule ids</a></li><li><a href="../../docs/reference/configuration.html" aria-current="page">Configuration</a></li><li><a href="../../docs/reference/proof.html">Proof</a></li></ul></li><li><a href="../../docs/troubleshooting.html">Troubleshooting</a></li><li><a href="../../docs/upgrading.html">Upgrading</a></li></ul></nav>
@@ -27,6 +27,7 @@
   <div class="docs-content">
     <main id="main">
       <article class="docs-article"><h1 id="configuration">Configuration<a class="docs-heading-link" aria-label="Link to this section" href="#configuration">#</a></h1>
+<p>This page lists every setting PROCTOR reads: the policy file and how it is found, the <code>extra.proctor</code> keys in composer.json, and the <code>policy-overrides.json</code> file an app can carry next to it. The environment table is generated from the source, so it stays in step with the code. The proctor keeps the answer sheet sealed; these are the only dials it has. If a run trips or fails, go to <a href="../troubleshooting.html">Troubleshooting</a>.</p>
 <!-- generated:env -->
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
 <thead>
@@ -47,11 +48,78 @@
 </tbody>
 </table></div>
 <!-- /generated -->
-<p>STUB: this page is written in a later batch.</p>
+<aside class="docs-callout docs-callout--warning" role="note"><p class="docs-callout__label">Warning</p><p>None of the settings on this page take a secret. PROCTOR reads paths, dates and flags; it never asks for a token, password or key. The one nearby place credentials leak is a package source URL: a deploy token in the userinfo of a composer.json repository URL or a composer.lock source/dist URL, a <code>private_token</code>, <code>access_token</code>, <code>token</code> or <code>password</code> query parameter, or a <code>.npmrc</code> line that sets <code>_authToken</code>, <code>_auth</code> or <code>_password</code> to a literal value. The <code>repo-url-credentials</code> check warns when it sees one (the secret is masked as <code>***</code> in the message), and the fix is moving the token to <code>auth.json</code>, which is gitignored, or a CI variable, and using one registry URL without credentials.</p></aside>
+<h2 id="the-policy-file">The policy file<a class="docs-heading-link" aria-label="Link to this section" href="#the-policy-file">#</a></h2>
+<p><code>--policy</code> takes a CREED-format policy file: schema_version 1, component versions with released, active_until and security_until dates, and rules (audit_severity_threshold, banned_constraints, eol_grace_days).</p>
+<p>Without <code>--policy</code>, PROCTOR resolves the policy in this order (first match wins):</p>
+<ol>
+<li>the <code>PROCTOR_POLICY</code> environment variable, naming a policy file;</li>
+<li><code>&lt;app&gt;/vendor/waynestate/creed/policy/policy.json</code>, when it exists and is at least as fresh as the bundled copy (same or newer <code>refreshed_on</code>);</li>
+<li>the policy bundled with PROCTOR (<code>src/Creed/policy.json</code>).</li>
+</ol>
+<p>An app that installs CREED gets its policy automatically:</p>
+<pre><code>composer require waynestate/creed --dev
+</code></pre>
+<p>A vendor copy that cannot be read or parsed is skipped with a note on stderr and the run continues with the next source; a vendor copy older than the bundled one is skipped the same way. An explicit source (<code>--policy</code> or <code>PROCTOR_POLICY</code>) that points at a missing or invalid file is still an error (exit 2).</p>
+<p>Every report names the policy it used: origin (<code>option</code>, <code>env</code>, <code>vendor</code> or <code>bundled</code>), path, <code>refreshed_on</code> and the age in days. The <code>policy-age</code> check warns when the policy is more than 60 days old, or when a non-bundled policy has no <code>refreshed_on</code> date, so a stopped CREED refresh is visible instead of silent.</p>
+<p>PROCTOR carries a generated copy of the CREED reader under <code>src/Creed/</code> (namespace <code>Waynestate\Proctor\Creed</code>), so it never depends on the CREED package at runtime. <code>composer creed-copy:check</code> verifies the copy against the CREED checkout named by <code>CREED_PATH</code> (default <code>../creed</code>); refresh it by running CREED's <code>bin/export.php</code> against <code>src/Creed/</code>.</p>
+<h2 id="extra-proctor-in-composer-json">extra.proctor in composer.json<a class="docs-heading-link" aria-label="Link to this section" href="#extra-proctor-in-composer-json">#</a></h2>
+<p>An app sets PROCTOR-specific switches under <code>extra.proctor</code> in its own composer.json. The two keys PROCTOR reads:</p>
+<div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Values</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>github-mirror</code></td>
+<td><code>false</code></td>
+<td>Marks a private stack package that must never be on GitHub: a missing <code>.github/workflows/ci.yml</code> then gives no finding, and a present one warns (<code>proctor/ci-pipelines/github-private</code>) along with the warning-only rules.</td>
+</tr>
+<tr>
+<td><code>wayneui.copies</code></td>
+<td><code>warn</code> (default), <code>fail</code></td>
+<td>In <code>fail</code> mode a behind committed copy of WayneUI is a failure, with a sentence naming the setting appended to its message, while findings from composer.lock and package-lock.json stay warnings. Only committed copies are affected by the setting, and an offline run never fails in either mode, because an unknown latest is always just the info skipped finding.</td>
+</tr>
+</tbody>
+</table></div>
+<p>PROCTOR's own composer.json sets <code>wayneui.copies</code> to <code>fail</code>: the proctor fails the stack's own exam halls.</p>
+<h2 id="policy-overrides-json">policy-overrides.json<a class="docs-heading-link" aria-label="Link to this section" href="#policy-overrides-json">#</a></h2>
+<p>An app can carry a <code>policy-overrides.json</code> file next to its composer.json:</p>
+<pre><code class="language-json">[
+    {
+        &quot;check&quot;: &quot;lock-committed&quot;,
+        &quot;reason&quot;: &quot;lock is generated by CI and not committed&quot;,
+        &quot;expires&quot;: &quot;2027-01-31&quot;,
+        &quot;approved_by&quot;: &quot;jane@example.wayne.edu&quot;
+    }
+]
+</code></pre>
+<p>A <code>composer-audit</code> override may name the one thing it covers with two optional fields:</p>
+<ul>
+<li><code>advisory</code> is an advisory id or CVE, matched case-insensitively against the finding's advisory id or CVE.</li>
+<li><code>package</code> is a package name, with <code>*</code> matching any run of characters the way composer does, matched case-insensitively against the audited package.</li>
+</ul>
+<p>When both are present, both must match the same advisory. Without either field the override covers every fail of the check, as before. The fields are only valid on <code>composer-audit</code>: on any other check, or with a value that is not a non-empty string, PROCTOR rejects the file (exit 2). A scoped override never covers a fail that carries no advisory data (such as the exit-code fail), and a scoped override that matches no failure earns the <code>proctor/overrides/unused</code> warning with its scope in the text.</p>
+<p>An expired override fails the <code>overrides</code> check. An active override turns the matching fail findings of its check into warnings. An override never waives a failure whose state is EOL plus grace (eol_grace_expired); that failure stands (the stack's version policy decision).</p>
+<p>PROCTOR rejects the file (exit 2) when an entry names a check that is not registered in the run, or names the <code>overrides</code> check itself: an override cannot exempt the check that polices overrides, and an entry for a check that does not exist would silently do nothing. The list of valid check ids is built from the checks PROCTOR runs, so a new check needs no change to the guard. An active override that expires within 14 days of <code>--today</code> (the expiry day counts) gets a warning finding (<code>proctor/overrides/expiring</code>) instead of lapsing without a trace, and an active override whose check raised no failure gets a warning finding (<code>proctor/overrides/unused</code>) so a stale approval is removed instead of rotting. A warning never changes the exit code.</p>
+<h2 id="related">Related<a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></h2>
+<ul>
+<li><a href="commands.html">Commands</a></li>
+<li><a href="exit-codes.html">Exit codes</a></li>
+<li><a href="rule-ids.html">Rule ids</a></li>
+<li><a href="../guides/overrides.html">Overrides</a></li>
+<li><a href="../guides/policy.html">Policy</a></li>
+<li><a href="../troubleshooting.html">Troubleshooting</a></li>
+</ul>
 </article>
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../../docs/reference/rule-ids.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">Rule ids</span></a><a class="docs-pager__link docs-pager__link--next" href="../../docs/reference/proof.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">Proof</span></a></nav>
   </div>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#the-policy-file">The policy file</a></li><li class="docs-toc__item"><a href="#extra-proctor-in-composer-json">extra.proctor in composer.json</a></li><li class="docs-toc__item"><a href="#policy-overrides-json">policy-overrides.json</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.4.0</span></span>

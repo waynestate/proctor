@@ -29,10 +29,7 @@
       <article class="docs-article"><h1 id="overview">Overview<a class="docs-heading-link" aria-label="Link to this section" href="#overview">#</a></h1>
 <p><img src="readme/hero.jpg" alt="PROCTOR's front page: a green examination book sealed with PROCTOR's eye mark, beside the headline 'Watches the exam. Doesn't help.'" /></p>
 <p>PROCTOR: Policy Rules Of Code, Tested On Release. It is the proctor your composer.lock didn't know it needed: a framework-free PHP CLI that measures a PHP application against the WSU version policy. No phones, no EOL PHP. It reads the app's composer.json and composer.lock, decides the support state of the app's PHP floor from a policy file, and reports each check as pass, warning, info or fail. The checks and their rules come from the stack's version policy decision and from the policy file passed with <code>--policy</code>; PROCTOR itself holds no policy of its own.</p>
-<blockquote>
-<p>[!NOTE]
-<strong>Not to be confused with:</strong> code style is Pinstripe, CI is Preflight. PROCTOR grades an app against CREED's rules.</p>
-</blockquote>
+<aside class="docs-callout docs-callout--note" role="note"><p class="docs-callout__label">Note</p><p><strong>Not to be confused with:</strong> code style is Pinstripe, CI is Preflight. PROCTOR grades an app against CREED's rules.</p></aside>
 <h2 id="install-and-first-run">Install and first run<a class="docs-heading-link" aria-label="Link to this section" href="#install-and-first-run">#</a></h2>
 <p>Add PROCTOR to the app as a dev dependency:</p>
 <pre><code>composer require waynestate/proctor --dev

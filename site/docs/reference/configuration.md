@@ -1,0 +1,87 @@
+---
+title: "Configuration | PROCTOR docs"
+description: "Every setting PROCTOR reads, from the --policy option and the PROCTOR_POLICY variable to the extra.proctor keys in composer.json."
+url: https://proctor.apps.wayne.edu/docs/reference/configuration.html
+llms: https://proctor.apps.wayne.edu/llms.txt
+generator: Squire agent-ready
+---
+
+# Configuration[#](https://proctor.apps.wayne.edu/docs/reference/configuration.html#configuration)
+
+This page lists every setting PROCTOR reads: the policy file and how it is found, the `extra.proctor` keys in composer.json, and the `policy-overrides.json` file an app can carry next to it. The environment table is generated from the source, so it stays in step with the code. The proctor keeps the answer sheet sealed; these are the only dials it has. If a run trips or fails, go to [Troubleshooting](https://proctor.apps.wayne.edu/docs/troubleshooting.html).
+
+| Variable | Meaning | Default | Read in |
+| --- | --- | --- | --- |
+| PROCTOR_POLICY | Path to a CREED-format policy file; tried before the app's vendor copy and the bundled copy when --policy is absent | none | src/Policy/PolicyResolver.php |
+
+Warning
+
+None of the settings on this page take a secret. PROCTOR reads paths, dates and flags; it never asks for a token, password or key. The one nearby place credentials leak is a package source URL: a deploy token in the userinfo of a composer.json repository URL or a composer.lock source/dist URL, a `private_token`, `access_token`, `token` or `password` query parameter, or a `.npmrc` line that sets `_authToken`, `_auth` or `_password` to a literal value. The `repo-url-credentials` check warns when it sees one (the secret is masked as `***` in the message), and the fix is moving the token to `auth.json`, which is gitignored, or a CI variable, and using one registry URL without credentials.
+
+## The policy file[#](https://proctor.apps.wayne.edu/docs/reference/configuration.html#the-policy-file)
+
+`--policy` takes a CREED-format policy file: schema_version 1, component versions with released, active_until and security_until dates, and rules (audit_severity_threshold, banned_constraints, eol_grace_days).
+
+Without `--policy`, PROCTOR resolves the policy in this order (first match wins):
+
+1. the `PROCTOR_POLICY` environment variable, naming a policy file;
+2. `<app>/vendor/waynestate/creed/policy/policy.json`, when it exists and is at least as fresh as the bundled copy (same or newer `refreshed_on`);
+3. the policy bundled with PROCTOR (`src/Creed/policy.json`).
+
+An app that installs CREED gets its policy automatically:
+
+```
+composer require waynestate/creed --dev
+```
+
+A vendor copy that cannot be read or parsed is skipped with a note on stderr and the run continues with the next source; a vendor copy older than the bundled one is skipped the same way. An explicit source (`--policy` or `PROCTOR_POLICY`) that points at a missing or invalid file is still an error (exit 2).
+
+Every report names the policy it used: origin (`option`, `env`, `vendor` or `bundled`), path, `refreshed_on` and the age in days. The `policy-age` check warns when the policy is more than 60 days old, or when a non-bundled policy has no `refreshed_on` date, so a stopped CREED refresh is visible instead of silent.
+
+PROCTOR carries a generated copy of the CREED reader under `src/Creed/` (namespace `Waynestate\Proctor\Creed`), so it never depends on the CREED package at runtime. `composer creed-copy:check` verifies the copy against the CREED checkout named by `CREED_PATH` (default `../creed`); refresh it by running CREED's `bin/export.php` against `src/Creed/`.
+
+## extra.proctor in composer.json[#](https://proctor.apps.wayne.edu/docs/reference/configuration.html#extra-proctor-in-composer-json)
+
+An app sets PROCTOR-specific switches under `extra.proctor` in its own composer.json. The two keys PROCTOR reads:
+
+| Key | Values | Effect |
+| --- | --- | --- |
+| `github-mirror` | `false` | Marks a private stack package that must never be on GitHub: a missing `.github/workflows/ci.yml` then gives no finding, and a present one warns (`proctor/ci-pipelines/github-private`) along with the warning-only rules. |
+| `wayneui.copies` | `warn` (default), `fail` | In `fail` mode a behind committed copy of WayneUI is a failure, with a sentence naming the setting appended to its message, while findings from composer.lock and package-lock.json stay warnings. Only committed copies are affected by the setting, and an offline run never fails in either mode, because an unknown latest is always just the info skipped finding. |
+
+PROCTOR's own composer.json sets `wayneui.copies` to `fail`: the proctor fails the stack's own exam halls.
+
+## policy-overrides.json[#](https://proctor.apps.wayne.edu/docs/reference/configuration.html#policy-overrides-json)
+
+An app can carry a `policy-overrides.json` file next to its composer.json:
+
+```json
+[
+    {
+        "check": "lock-committed",
+        "reason": "lock is generated by CI and not committed",
+        "expires": "2027-01-31",
+        "approved_by": "jane@example.wayne.edu"
+    }
+]
+```
+
+A `composer-audit` override may name the one thing it covers with two optional fields:
+
+- `advisory` is an advisory id or CVE, matched case-insensitively against the finding's advisory id or CVE.
+- `package` is a package name, with `*` matching any run of characters the way composer does, matched case-insensitively against the audited package.
+
+When both are present, both must match the same advisory. Without either field the override covers every fail of the check, as before. The fields are only valid on `composer-audit`: on any other check, or with a value that is not a non-empty string, PROCTOR rejects the file (exit 2). A scoped override never covers a fail that carries no advisory data (such as the exit-code fail), and a scoped override that matches no failure earns the `proctor/overrides/unused` warning with its scope in the text.
+
+An expired override fails the `overrides` check. An active override turns the matching fail findings of its check into warnings. An override never waives a failure whose state is EOL plus grace (eol_grace_expired); that failure stands (the stack's version policy decision).
+
+PROCTOR rejects the file (exit 2) when an entry names a check that is not registered in the run, or names the `overrides` check itself: an override cannot exempt the check that polices overrides, and an entry for a check that does not exist would silently do nothing. The list of valid check ids is built from the checks PROCTOR runs, so a new check needs no change to the guard. An active override that expires within 14 days of `--today` (the expiry day counts) gets a warning finding (`proctor/overrides/expiring`) instead of lapsing without a trace, and an active override whose check raised no failure gets a warning finding (`proctor/overrides/unused`) so a stale approval is removed instead of rotting. A warning never changes the exit code.
+
+## Related[#](https://proctor.apps.wayne.edu/docs/reference/configuration.html#related)
+
+- [Commands](https://proctor.apps.wayne.edu/docs/reference/commands.html)
+- [Exit codes](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html)
+- [Rule ids](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html)
+- [Overrides](https://proctor.apps.wayne.edu/docs/guides/overrides.html)
+- [Policy](https://proctor.apps.wayne.edu/docs/guides/policy.html)
+- [Troubleshooting](https://proctor.apps.wayne.edu/docs/troubleshooting.html)

@@ -39,10 +39,7 @@
 <li>A warning never changes the exit code.</li>
 <li>When the app has no <code>policy-overrides.json</code>, the check produces no findings at all: it passes and prints nothing. Every override, active or expired, is printed as an OVERRIDE line by the CLI in addition to these findings.</li>
 </ul>
-<blockquote>
-<p>[!WARNING]
-An expired override fails the run. Renew it or delete it before the expiry date.</p>
-</blockquote>
+<aside class="docs-callout docs-callout--warning" role="note"><p class="docs-callout__label">Warning</p><p>An expired override fails the run. Renew it or delete it before the expiry date.</p></aside>
 <h2 id="verify-the-date-window">Verify the date window<a class="docs-heading-link" aria-label="Link to this section" href="#verify-the-date-window">#</a></h2>
 <p>Use <code>--today=YYYY-MM-DD</code> to make the 14-day warning window deterministic. For example, an entry that expires on the same day as <code>--today</code> is still inside the window, because the expiry day counts.</p>
 <p>Run the check against the app path:</p>

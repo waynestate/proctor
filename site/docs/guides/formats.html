@@ -18,7 +18,7 @@
   <a class="docs-header__brand" href="../../docs/index.html">PROCTOR</a>
   <span><a class="docs-header__home" rel="noopener" href="https://nougat.snu.gs/enterprise-apps/proctor">Source</a> <a class="docs-header__home" href="../../index.html">Back to PROCTOR</a></span>
 </header>
-<div class="docs-layout">
+<div class="docs-layout docs-layout--toc">
   <details class="docs-menu">
     <summary>Menu</summary>
     <nav class="docs-nav" aria-label="Documentation"><ul class="docs-nav__list"><li class="docs-nav__group"><span class="docs-nav__label">Getting Started</span><ul><li><a href="../../docs/index.html">Overview</a></li><li><a href="../../docs/install.html">Install</a></li><li><a href="../../docs/guides/quick-start.html">Quick start</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Guides</span><ul><li><a href="../../docs/guides/checks-overview.html">Checks</a></li><li><a href="../../docs/guides/check-composer.html">Composer checks</a></li><li><a href="../../docs/guides/check-php.html">PHP checks</a></li><li><a href="../../docs/guides/check-ci.html">CI checks</a></li><li><a href="../../docs/guides/check-wayneui.html">WayneUI checks</a></li><li><a href="../../docs/guides/overrides.html">Overrides</a></li><li><a href="../../docs/guides/policy.html">Policy</a></li><li><a href="../../docs/guides/formats.html" aria-current="page">Formats</a></li><li><a href="../../docs/guides/github-code-scanning.html">GitHub code scanning</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Reference</span><ul><li><a href="../../docs/reference/commands.html">Commands</a></li><li><a href="../../docs/reference/exit-codes.html">Exit codes</a></li><li><a href="../../docs/reference/rule-ids.html">Rule ids</a></li><li><a href="../../docs/reference/configuration.html">Configuration</a></li><li><a href="../../docs/reference/proof.html">Proof</a></li></ul></li><li><a href="../../docs/troubleshooting.html">Troubleshooting</a></li><li><a href="../../docs/upgrading.html">Upgrading</a></li></ul></nav>
@@ -27,11 +27,99 @@
   <div class="docs-content">
     <main id="main">
       <article class="docs-article"><h1 id="formats">Formats<a class="docs-heading-link" aria-label="Link to this section" href="#formats">#</a></h1>
-<p>STUB: this page is written in a later batch.</p>
+<p>This page describes the four formats PROCTOR writes with <code>--format</code>: <code>text</code>, <code>json</code>, <code>codequality</code> and <code>sarif</code>. Pick the format your consumer reads, run the check once, and point the report where the consumer looks. One exam, four ways to file the mark sheet.</p>
+<h2 id="choosing-a-format">Choosing a format<a class="docs-heading-link" aria-label="Link to this section" href="#choosing-a-format">#</a></h2>
+<p>The default is <code>text</code>. Choose another with <code>--format</code>:</p>
+<pre><code class="language-bash">vendor/bin/proctor check --format=json
+</code></pre>
+<div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
+<thead>
+<tr>
+<th>Format</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>text</code></td>
+<td>A header line with the tool and the versions of the external tools used (composer), then one line naming the policy in use (origin, path, refresh date), then one line per finding, then one line per override, then a RESULT line.</td>
+</tr>
+<tr>
+<td><code>json</code></td>
+<td>One machine-readable object with tool, version, path, today, result, exit, tools, policy, findings and overrides.</td>
+</tr>
+<tr>
+<td><code>codequality</code></td>
+<td>GitLab's Code Quality JSON: a single array of findings, so a merge request shows them.</td>
+</tr>
+<tr>
+<td><code>sarif</code></td>
+<td>A SARIF 2.1.0 log: one run, one rule per check, one result per non-pass finding, so GitHub code scanning and other SARIF viewers show them.</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="text">text<a class="docs-heading-link" aria-label="Link to this section" href="#text">#</a></h2>
+<p>The default human-readable format: a header line with the tool and the versions of the external tools used, then one line per finding in check order, then one line per override, then a summary line:</p>
+<pre><code>proctor 0.1.0 | composer: 2.10.3
+Policy: option (/app/policy.json), refreshed 2026-10-20, 7 days ago
+PASS php-floor: php floor 8.4 is active
+FAIL unbounded-constraints: vendor/a constraint &quot;dev-master&quot; is unbounded
+OVERRIDE lock-committed: x (expires 2026-01-01, approved by t)
+RESULT: fail (1 failures, 0 warnings)
+</code></pre>
+<p><img src="../readme/report.svg" alt="Nine real lines from PROCTOR's text report, one per check shown: FAIL php-floor, WARN unpatched, FAIL unbounded-constraints, PASS lock-committed, WARN portability, WARN mysql56, WARN ci-pipelines, PASS composer-audit, FAIL overrides. Each line is written in words; color only repeats what the word says." /></p>
+<p>The parts of a report:</p>
+<ul>
+<li>The header line is <code>proctor &lt;version&gt; | &lt;tool&gt;: &lt;version&gt;</code>, one part per external tool joined with <code>|</code>, and <code>unknown</code> for a tool whose version could not be determined. It is printed only when the run used external tools.</li>
+<li>The policy line is <code>Policy: &lt;origin&gt; (&lt;path&gt;), refreshed &lt;date&gt;, &lt;n&gt; days ago</code>, or <code>Policy: &lt;origin&gt; (&lt;path&gt;), no refresh date</code> when the policy carries no <code>refreshed_on</code>. See <a href="policy.html">Policy</a> for where the policy comes from.</li>
+<li>Each finding is one line: <code>&lt;status&gt; &lt;check id&gt;: &lt;message&gt;</code>, where the status is <code>PASS</code>, <code>INFO</code>, <code>WARN</code> or <code>FAIL</code>.</li>
+<li>Each override is one line: <code>OVERRIDE &lt;check&gt;: &lt;reason&gt; (expires &lt;date&gt;, approved by &lt;approver&gt;)</code>.</li>
+<li>The summary is <code>RESULT: pass</code>, or <code>RESULT: fail (&lt;failures&gt; failures, &lt;warnings&gt; warnings)</code>.</li>
+</ul>
+<p>Finding messages, override reasons and approvers come from files the app controls, so they are printed with terminal control characters replaced by a visible <code>?</code>: an escape sequence or carriage return in one of them must not reach the log.</p>
+<h2 id="json">json<a class="docs-heading-link" aria-label="Link to this section" href="#json">#</a></h2>
+<p>One machine-readable object, pretty-printed on stdout. Slashes and Unicode are left unescaped, so the output stays readable.</p>
+<ul>
+<li>Top level: <code>tool</code>, <code>version</code>, <code>path</code>, <code>today</code> (a <code>YYYY-MM-DD</code> date), <code>result</code> (<code>pass</code> or <code>fail</code>), <code>exit</code> (0 or 1), <code>tools</code>, <code>policy</code>, <code>findings</code>, <code>overrides</code>.</li>
+<li><code>policy</code> holds <code>origin</code>, <code>path</code>, <code>refreshed_on</code> and <code>age_days</code>.</li>
+<li>Each finding in <code>findings</code> holds <code>check_id</code>, <code>rule_id</code>, <code>status</code>, <code>message</code>, <code>path</code> and <code>line</code>. An advisory finding carries an <code>advisories</code> array with one entry per advisory (package, id, cve, title, link, severity); other findings have no such key.</li>
+<li>Each entry in <code>overrides</code> holds <code>check</code>, <code>reason</code>, <code>expires</code>, <code>approved_by</code> and <code>expired</code>, computed from <code>today</code>.</li>
+</ul>
+<p>When the report cannot be encoded, PROCTOR fails the run with a tool error (exit 2): <code>Could not encode the JSON report: &lt;reason&gt;</code>.</p>
+<h2 id="codequality">codequality<a class="docs-heading-link" aria-label="Link to this section" href="#codequality">#</a></h2>
+<p>GitLab's Code Quality JSON: a single array of findings on stdout, so a merge request shows them. One object per non-pass finding, each with:</p>
+<ul>
+<li><code>description</code>: the finding message.</li>
+<li><code>check_name</code>: the rule id.</li>
+<li><code>fingerprint</code>: the stable identity of the finding (below).</li>
+<li><code>severity</code>: <code>major</code> for a fail, <code>minor</code> for a warning, <code>info</code> for an info.</li>
+<li><code>location</code>: <code>path</code> and <code>lines.begin</code>; the path falls back to <code>composer.json</code> when the finding has none.</li>
+</ul>
+<p>When the run itself fails before a report exists, PROCTOR still writes one item: severity <code>blocker</code>, check name <code>proctor</code>, line 1, so the merge request shows why the run stopped instead of an empty array.</p>
+<h2 id="sarif">sarif<a class="docs-heading-link" aria-label="Link to this section" href="#sarif">#</a></h2>
+<p>A SARIF 2.1.0 log: one run, one rule per check, one result per non-pass finding, so GitHub code scanning and other SARIF viewers show them. See <a href="github-code-scanning.html">GitHub code scanning</a> for the workflow that uploads the log.</p>
+<ul>
+<li>The driver block names the tool <code>proctor</code>, its version, and the repository's information URI.</li>
+<li>The rules list holds one entry per distinct rule id in the report, in first-seen order, each with a short description carrying the id.</li>
+<li>Each result holds <code>ruleId</code>, <code>level</code>, <code>message.text</code> and one location. The level maps <code>fail</code> to <code>error</code>, <code>warning</code> to <code>warning</code>, and any other non-pass status to <code>note</code>.</li>
+<li>The location uses the finding's path (backslashes normalized to forward slashes) and its line as <code>region.startLine</code>; a finding without a path points at the app's <code>composer.json</code>.</li>
+<li>Each result also carries <code>partialFingerprints</code> with the finding's fingerprint under <code>proctorFingerprint/v1</code>.</li>
+</ul>
+<h2 id="the-fingerprint">The fingerprint<a class="docs-heading-link" aria-label="Link to this section" href="#the-fingerprint">#</a></h2>
+<p>Both <code>codequality</code> and <code>sarif</code> identify a finding with the same fingerprint, its stable identity: the lower-case hex SHA-256 of the rule id, a newline, the path (an empty string when the finding has none), a newline, and the message.</p>
+<h2 id="related">Related<a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></h2>
+<ul>
+<li><a href="quick-start.html">Quick start</a></li>
+<li><a href="policy.html">Policy</a></li>
+<li><a href="github-code-scanning.html">GitHub code scanning</a></li>
+<li><a href="../reference/rule-ids.html">Rule ids</a></li>
+<li><a href="../reference/exit-codes.html">Exit codes</a></li>
+</ul>
 </article>
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../../docs/guides/policy.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">Policy</span></a><a class="docs-pager__link docs-pager__link--next" href="../../docs/guides/github-code-scanning.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">GitHub code scanning</span></a></nav>
   </div>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#choosing-a-format">Choosing a format</a></li><li class="docs-toc__item"><a href="#text">text</a></li><li class="docs-toc__item"><a href="#json">json</a></li><li class="docs-toc__item"><a href="#codequality">codequality</a></li><li class="docs-toc__item"><a href="#sarif">sarif</a></li><li class="docs-toc__item"><a href="#the-fingerprint">The fingerprint</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.4.0</span></span>

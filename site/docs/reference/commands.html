@@ -27,6 +27,7 @@
   <div class="docs-content">
     <main id="main">
       <article class="docs-article"><h1 id="commands">Commands<a class="docs-heading-link" aria-label="Link to this section" href="#commands">#</a></h1>
+<p>Every command PROCTOR ships, with the options each one accepts. The table is generated from the CLI, so it stays in step with the code; a proctor reads the rules aloud before the exam, it does not take the exam for you. If you have not run a check yet, start with the <a href="../guides/quick-start.html">Quick start</a>.</p>
 <!-- generated:commands -->
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
 <thead>
@@ -103,7 +104,7 @@
 <tbody>
 <tr>
 <td><code>-h</code>, <code>--help</code></td>
-<td>Display help for the given command. When no command is given display help for the <info>list</info> command</td>
+<td>Display help for the given command. When no command is given display help for the list command</td>
 <td></td>
 </tr>
 <tr>
@@ -139,12 +140,29 @@
 </tbody>
 </table></div>
 <!-- /generated -->
-<p>STUB: this page is written in a later batch.</p>
+<h2 id="examples">Examples<a class="docs-heading-link" aria-label="Link to this section" href="#examples">#</a></h2>
+<p>Run the check against an application:</p>
+<pre><code>vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--policy=&lt;file&gt;] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z]
+</code></pre>
+<ul>
+<li><code>--path</code>: path to the application to check (default <code>.</code>).</li>
+<li><code>--format</code>: output format: <code>text</code> (default), <code>json</code>, <code>codequality</code>, or <code>sarif</code>.</li>
+<li><code>--policy</code>: path to the CREED-format policy file. Optional: without it, PROCTOR resolves the policy from the <code>PROCTOR_POLICY</code> environment variable, then the app's <code>vendor/waynestate/creed/policy/policy.json</code>, then the copy bundled with PROCTOR (see <a href="../guides/policy.html">Policy</a>).</li>
+<li><code>--today</code>: override today's date (YYYY-MM-DD) so runs are deterministic.</li>
+<li><code>--php-runtime</code>: the PHP version that will serve the app (X.Y.Z), used by the <code>unpatched</code> check. CI should pass the deploy image's PHP, not the runner's.</li>
+</ul>
+<h2 id="related">Related<a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></h2>
+<ul>
+<li><a href="exit-codes.html">Exit codes</a></li>
+<li><a href="rule-ids.html">Rule ids</a></li>
+<li><a href="../troubleshooting.html">Troubleshooting</a></li>
+<li><a href="../guides/quick-start.html">Quick start</a></li>
+</ul>
 </article>
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../../docs/guides/github-code-scanning.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">GitHub code scanning</span></a><a class="docs-pager__link docs-pager__link--next" href="../../docs/reference/exit-codes.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">Exit codes</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item--sub"><a href="#proctor-check">proctor check</a></li><li class="docs-toc__item--sub"><a href="#options-every-command-accepts">Options every command accepts</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item--sub"><a href="#proctor-check">proctor check</a></li><li class="docs-toc__item--sub"><a href="#options-every-command-accepts">Options every command accepts</a></li><li class="docs-toc__item"><a href="#examples">Examples</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.4.0</span></span>

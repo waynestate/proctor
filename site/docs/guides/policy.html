@@ -18,7 +18,7 @@
   <a class="docs-header__brand" href="../../docs/index.html">PROCTOR</a>
   <span><a class="docs-header__home" rel="noopener" href="https://nougat.snu.gs/enterprise-apps/proctor">Source</a> <a class="docs-header__home" href="../../index.html">Back to PROCTOR</a></span>
 </header>
-<div class="docs-layout">
+<div class="docs-layout docs-layout--toc">
   <details class="docs-menu">
     <summary>Menu</summary>
     <nav class="docs-nav" aria-label="Documentation"><ul class="docs-nav__list"><li class="docs-nav__group"><span class="docs-nav__label">Getting Started</span><ul><li><a href="../../docs/index.html">Overview</a></li><li><a href="../../docs/install.html">Install</a></li><li><a href="../../docs/guides/quick-start.html">Quick start</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Guides</span><ul><li><a href="../../docs/guides/checks-overview.html">Checks</a></li><li><a href="../../docs/guides/check-composer.html">Composer checks</a></li><li><a href="../../docs/guides/check-php.html">PHP checks</a></li><li><a href="../../docs/guides/check-ci.html">CI checks</a></li><li><a href="../../docs/guides/check-wayneui.html">WayneUI checks</a></li><li><a href="../../docs/guides/overrides.html">Overrides</a></li><li><a href="../../docs/guides/policy.html" aria-current="page">Policy</a></li><li><a href="../../docs/guides/formats.html">Formats</a></li><li><a href="../../docs/guides/github-code-scanning.html">GitHub code scanning</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Reference</span><ul><li><a href="../../docs/reference/commands.html">Commands</a></li><li><a href="../../docs/reference/exit-codes.html">Exit codes</a></li><li><a href="../../docs/reference/rule-ids.html">Rule ids</a></li><li><a href="../../docs/reference/configuration.html">Configuration</a></li><li><a href="../../docs/reference/proof.html">Proof</a></li></ul></li><li><a href="../../docs/troubleshooting.html">Troubleshooting</a></li><li><a href="../../docs/upgrading.html">Upgrading</a></li></ul></nav>
@@ -27,11 +27,59 @@
   <div class="docs-content">
     <main id="main">
       <article class="docs-article"><h1 id="policy">Policy<a class="docs-heading-link" aria-label="Link to this section" href="#policy">#</a></h1>
-<p>STUB: this page is written in a later batch.</p>
+<p>This page explains which CREED-format policy file PROCTOR checks against, and how to point it at a different one. Pick the source that fits the app (an explicit file, an environment variable, the CREED package, or the bundled copy), then confirm in the report which policy the run actually used. The proctor grades against the school's answer key, not its own memory, and it always says which key it used.</p>
+<h2 id="what-a-policy-file-contains">What a policy file contains<a class="docs-heading-link" aria-label="Link to this section" href="#what-a-policy-file-contains">#</a></h2>
+<p><code>--policy</code> takes a CREED-format policy file: schema_version 1, component versions with released, active_until and security_until dates, and rules (audit_severity_threshold, banned_constraints, eol_grace_days). The policy-file wiring to <code>waynestate/creed</code> is described in <a href="#the-creed-reader-copy">The CREED reader copy</a> below.</p>
+<h2 id="resolution-order">Resolution order<a class="docs-heading-link" aria-label="Link to this section" href="#resolution-order">#</a></h2>
+<p>PROCTOR resolves the policy in this order, first match wins:</p>
+<ol>
+<li>The <code>--policy</code> option, naming a policy file (origin <code>option</code>).</li>
+<li>The <code>PROCTOR_POLICY</code> environment variable, naming a policy file (origin <code>env</code>).</li>
+<li><code>&lt;app&gt;/vendor/waynestate/creed/policy/policy.json</code>, when it exists, is readable, and is at least as fresh as the bundled copy (origin <code>vendor</code>).</li>
+<li>The policy bundled with PROCTOR, <code>src/Creed/policy.json</code> (origin <code>bundled</code>).</li>
+</ol>
+<p>Name the policy explicitly:</p>
+<pre><code class="language-bash">vendor/bin/proctor check --policy=policy.json
+</code></pre>
+<p>Or set the environment variable for the shell:</p>
+<pre><code class="language-sh">export PROCTOR_POLICY=/path/to/policy.json
+vendor/bin/proctor check
+</code></pre>
+<pre><code class="language-powershell">$env:PROCTOR_POLICY = 'C:\path\to\policy.json'
+vendor/bin/proctor check
+</code></pre>
+<aside class="docs-callout docs-callout--note" role="note"><p class="docs-callout__label">Note</p><p>The resolver reads each candidate's top-level <code>refreshed_on</code> date from the raw JSON and treats it as a date only when it is an ISO date (<code>YYYY-MM-DD</code>). A value that is absent or not one is treated as absent.</p></aside>
+<h2 id="the-vendor-copy">The vendor copy<a class="docs-heading-link" aria-label="Link to this section" href="#the-vendor-copy">#</a></h2>
+<p>An app that installs CREED gets its policy automatically:</p>
+<pre><code class="language-bash">composer require waynestate/creed --dev
+</code></pre>
+<p>The vendor copy wins over the bundled one only when it is at least as fresh: its <code>refreshed_on</code> is the same as or newer than the bundled copy's (ISO dates compare as strings), or the bundled copy has no <code>refreshed_on</code> date at all.</p>
+<p>A vendor copy that cannot be read or parsed is skipped with a note on stderr and the run continues with the next source; a vendor copy older than the bundled one is skipped the same way. The notes PROCTOR can print:</p>
+<ul>
+<li><code>Skipping vendor policy &lt;path&gt;: the file could not be read.</code></li>
+<li><code>Skipping vendor policy &lt;path&gt;: invalid JSON (&lt;reason&gt;).</code></li>
+<li><code>Skipping vendor policy &lt;path&gt;: &lt;reason&gt;.</code> when the CREED reader rejects the file</li>
+<li><code>Using the bundled policy: the vendor copy at &lt;path&gt; (refreshed &lt;date&gt;) is older than the bundled copy (refreshed &lt;date&gt;).</code> When a copy has no date, its slot reads <code>without a refreshed_on date</code> instead.</li>
+</ul>
+<aside class="docs-callout docs-callout--warning" role="note"><p class="docs-callout__label">Warning</p><p>An explicit source (<code>--policy</code> or <code>PROCTOR_POLICY</code>) that points at a missing or invalid file is still an error (exit 2). Only the vendor copy is skipped quietly.</p></aside>
+<h2 id="what-the-report-says">What the report says<a class="docs-heading-link" aria-label="Link to this section" href="#what-the-report-says">#</a></h2>
+<p>Every report names the policy it used: origin (<code>option</code>, <code>env</code>, <code>vendor</code> or <code>bundled</code>), path, <code>refreshed_on</code> and the age in days. The age is whole days since the refresh: zero on the refresh day, positive after it, negative when the date is in the future, and absent when the policy carries no <code>refreshed_on</code>.</p>
+<p>The <code>policy-age</code> check warns when the policy is more than 60 days old, or when a non-bundled policy has no <code>refreshed_on</code> date, so a stopped CREED refresh is visible instead of silent.</p>
+<h2 id="the-creed-reader-copy">The CREED reader copy<a class="docs-heading-link" aria-label="Link to this section" href="#the-creed-reader-copy">#</a></h2>
+<p>PROCTOR carries a generated copy of the CREED reader under <code>src/Creed/</code> (namespace <code>Waynestate\Proctor\Creed</code>), so it never depends on the CREED package at runtime. <code>composer creed-copy:check</code> verifies the copy against the CREED checkout named by <code>CREED_PATH</code> (default <code>../creed</code>); refresh it by running CREED's <code>bin/export.php</code> against <code>src/Creed/</code>.</p>
+<h2 id="related">Related<a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></h2>
+<ul>
+<li><a href="overrides.html">Overrides</a></li>
+<li><a href="formats.html">Formats</a></li>
+<li><a href="github-code-scanning.html">GitHub code scanning</a></li>
+<li><a href="../reference/rule-ids.html">Rule ids</a></li>
+<li><a href="../reference/exit-codes.html">Exit codes</a></li>
+</ul>
 </article>
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../../docs/guides/overrides.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">Overrides</span></a><a class="docs-pager__link docs-pager__link--next" href="../../docs/guides/formats.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">Formats</span></a></nav>
   </div>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#what-a-policy-file-contains">What a policy file contains</a></li><li class="docs-toc__item"><a href="#resolution-order">Resolution order</a></li><li class="docs-toc__item"><a href="#the-vendor-copy">The vendor copy</a></li><li class="docs-toc__item"><a href="#what-the-report-says">What the report says</a></li><li class="docs-toc__item"><a href="#the-creed-reader-copy">The CREED reader copy</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.4.0</span></span>

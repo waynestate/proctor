@@ -18,7 +18,7 @@
   <a class="docs-header__brand" href="../../docs/index.html">PROCTOR</a>
   <span><a class="docs-header__home" rel="noopener" href="https://nougat.snu.gs/enterprise-apps/proctor">Source</a> <a class="docs-header__home" href="../../index.html">Back to PROCTOR</a></span>
 </header>
-<div class="docs-layout">
+<div class="docs-layout docs-layout--toc">
   <details class="docs-menu">
     <summary>Menu</summary>
     <nav class="docs-nav" aria-label="Documentation"><ul class="docs-nav__list"><li class="docs-nav__group"><span class="docs-nav__label">Getting Started</span><ul><li><a href="../../docs/index.html">Overview</a></li><li><a href="../../docs/install.html">Install</a></li><li><a href="../../docs/guides/quick-start.html">Quick start</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Guides</span><ul><li><a href="../../docs/guides/checks-overview.html">Checks</a></li><li><a href="../../docs/guides/check-composer.html">Composer checks</a></li><li><a href="../../docs/guides/check-php.html">PHP checks</a></li><li><a href="../../docs/guides/check-ci.html">CI checks</a></li><li><a href="../../docs/guides/check-wayneui.html">WayneUI checks</a></li><li><a href="../../docs/guides/overrides.html">Overrides</a></li><li><a href="../../docs/guides/policy.html">Policy</a></li><li><a href="../../docs/guides/formats.html">Formats</a></li><li><a href="../../docs/guides/github-code-scanning.html" aria-current="page">GitHub code scanning</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Reference</span><ul><li><a href="../../docs/reference/commands.html">Commands</a></li><li><a href="../../docs/reference/exit-codes.html">Exit codes</a></li><li><a href="../../docs/reference/rule-ids.html">Rule ids</a></li><li><a href="../../docs/reference/configuration.html">Configuration</a></li><li><a href="../../docs/reference/proof.html">Proof</a></li></ul></li><li><a href="../../docs/troubleshooting.html">Troubleshooting</a></li><li><a href="../../docs/upgrading.html">Upgrading</a></li></ul></nav>
@@ -27,11 +27,51 @@
   <div class="docs-content">
     <main id="main">
       <article class="docs-article"><h1 id="github-code-scanning">GitHub code scanning<a class="docs-heading-link" aria-label="Link to this section" href="#github-code-scanning">#</a></h1>
-<p>STUB: this page is written in a later batch.</p>
+<p>The <code>sarif</code> format feeds GitHub code scanning on the GitHub mirror. This page adds the workflow that uploads the log with the official action, pinned to a full commit SHA. Run the check with <code>--format=sarif</code>, and let the scanner show the findings on the files. PROCTOR now files the mark sheet in the format the head office already reads; no more translating the exam results by hand.</p>
+<h2 id="the-workflow">The workflow<a class="docs-heading-link" aria-label="Link to this section" href="#the-workflow">#</a></h2>
+<p>Add this workflow to the mirror. It sets up PHP, installs PROCTOR, runs the check against the app's CREED policy file, and uploads the resulting log:</p>
+<pre><code class="language-yaml">name: proctor
+on: [push, pull_request]
+permissions:
+  security-events: write
+jobs:
+  proctor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+      - run: composer require waynestate/proctor --dev
+      # policy.json is the CREED policy file
+      - run: vendor/bin/proctor check --format=sarif --policy=policy.json &gt; proctor.sarif
+      - uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          sarif_file: proctor.sarif
+</code></pre>
+<p>The <code>--policy=policy.json</code> argument names the app's CREED policy file; see <a href="policy.html">Policy</a> for how PROCTOR finds one when you do not name it.</p>
+<h2 id="what-the-log-contains">What the log contains<a class="docs-heading-link" aria-label="Link to this section" href="#what-the-log-contains">#</a></h2>
+<p>The uploaded <code>proctor.sarif</code> is a SARIF 2.1.0 log: one run, one rule per check, one result per non-pass finding.</p>
+<ul>
+<li>The driver block names the tool <code>proctor</code>, its version, and the repository's information URI.</li>
+<li>The rules list holds one entry per distinct rule id in the report, in first-seen order, each with a short description carrying the id.</li>
+<li>Each result holds <code>ruleId</code>, <code>level</code>, <code>message.text</code> and one location. The level maps <code>fail</code> to <code>error</code>, <code>warning</code> to <code>warning</code>, and any other non-pass status to <code>note</code>.</li>
+<li>The location uses the finding's path (backslashes normalized to forward slashes) and its line as <code>region.startLine</code>; a finding without a path points at the app's <code>composer.json</code>.</li>
+<li>Each result also carries <code>partialFingerprints</code> with the finding's fingerprint under <code>proctorFingerprint/v1</code>, the stable identity of the finding.</li>
+</ul>
+<p>See <a href="formats.html">Formats</a> for the shape of every format.</p>
+<h2 id="related">Related<a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></h2>
+<ul>
+<li><a href="formats.html">Formats</a></li>
+<li><a href="policy.html">Policy</a></li>
+<li><a href="check-ci.html">CI checks</a></li>
+<li><a href="../reference/rule-ids.html">Rule ids</a></li>
+</ul>
 </article>
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../../docs/guides/formats.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">Formats</span></a><a class="docs-pager__link docs-pager__link--next" href="../../docs/reference/commands.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">Commands</span></a></nav>
   </div>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#the-workflow">The workflow</a></li><li class="docs-toc__item"><a href="#what-the-log-contains">What the log contains</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.4.0</span></span>

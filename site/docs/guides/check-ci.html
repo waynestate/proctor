@@ -162,10 +162,7 @@
 </table></div>
 <h2 id="destructive-deploy">destructive-deploy<a class="docs-heading-link" aria-label="Link to this section" href="#destructive-deploy">#</a></h2>
 <p><code>destructive-deploy</code> fails when a deploy script runs an artisan command that drops or rebuilds the database (<code>migrate:fresh</code>, <code>migrate:refresh</code>, <code>migrate:reset</code>, <code>db:wipe</code>), which erases production data on every deploy.</p>
-<blockquote>
-<p>[!DANGER]
-A drop-and-rebuild command in a deploy script wipes the live database on every release. Replace it with a plain migration.</p>
-</blockquote>
+<aside class="docs-callout docs-callout--danger" role="note"><p class="docs-callout__label">Danger</p><p>A drop-and-rebuild command in a deploy script wipes the live database on every release. Replace it with a plain migration.</p></aside>
 <p>It scans <code>.sh</code> and <code>.php</code> files under a top-level <code>deployments/</code>, <code>deploy_scripts/</code>, <code>deploy/</code> or <code>scripts/</code> directory, the top-level <code>build.sh</code>, <code>release.sh</code> and <code>.gitlab-ci.yml</code>, and the <code>scripts</code> section of composer.json. Shell comments are ignored.</p>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
 <thead>
@@ -185,10 +182,7 @@ A drop-and-rebuild command in a deploy script wipes the live database on every r
 <h2 id="instant-client-committed">instant-client-committed<a class="docs-heading-link" aria-label="Link to this section" href="#instant-client-committed">#</a></h2>
 <p><code>instant-client-committed</code> warns when Oracle Instant Client is committed to the repo: an <code>instantclient*.zip</code> or <code>instantclient*.rpm</code> archive, any file under a directory named <code>instantclient</code> or <code>instantclient_*</code> (an unzipped install), or a loose client library such as <code>libclntsh.so</code>, <code>libociei.so</code> or <code>oci.dll</code>.</p>
 <p>Only committed files count: the git-tracked files when the app path sits in a git repository and git can be run, otherwise the files on disk. Skipped at any depth: <code>vendor/</code>, <code>node_modules/</code> and <code>.git/</code>. One warning per match: the archive, the topmost matching directory, or the loose file, each reported with its total size in MB.</p>
-<blockquote>
-<p>[!NOTE]
-This is a warning, not a failure: Citadel's images already include Instant Client, and the WSU Sail and Docker images will too.</p>
-</blockquote>
+<aside class="docs-callout docs-callout--note" role="note"><p class="docs-callout__label">Note</p><p>This is a warning, not a failure: Citadel's images already include Instant Client, and the WSU Sail and Docker images will too.</p></aside>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
 <thead>
 <tr>

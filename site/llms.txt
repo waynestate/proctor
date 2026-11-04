@@ -24,7 +24,25 @@ Every page below is Markdown. The HTML pages send the same Markdown to a client 
 ## Pages
 
 - [PROCTOR: Watches the exam. Doesn't help.](https://proctor.apps.wayne.edu/index.md): PROCTOR checks a PHP app against CREED's version policy from the command line: PHP support, patch levels, Composer constraints, the audit, MySQL 5.6 and CI. It writes text, JSON, GitLab Code Quality or SARIF.
-- [PROCTOR | PROCTOR docs](https://proctor.apps.wayne.edu/docs/index.md): A framework-free PHP CLI that measures a PHP app against the WSU version policy.
+- [CI checks | PROCTOR docs](https://proctor.apps.wayne.edu/docs/guides/check-ci.md): The checks that verify CI pipelines run composer ci and that Preflight includes are pinned to a commit SHA.
+- [Composer checks | PROCTOR docs](https://proctor.apps.wayne.edu/docs/guides/check-composer.md): The checks that read composer.json and composer.lock, from unbounded constraints and the committed lock to audit results and the Composer version on PATH.
+- [PHP checks | PROCTOR docs](https://proctor.apps.wayne.edu/docs/guides/check-php.md): The checks that grade the PHP floor, patch currency, platform portability, MySQL 5.6 compatibility and deploy scripts.
+- [WayneUI checks | PROCTOR docs](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.md): The checks that flag forked copies of WayneUI views and an installed WayneUI that is behind the latest release.
+- [Checks | PROCTOR docs](https://proctor.apps.wayne.edu/docs/guides/checks-overview.md): An overview of every check PROCTOR runs and how each reports pass, warning, info or fail.
+- [Formats | PROCTOR docs](https://proctor.apps.wayne.edu/docs/guides/formats.md): The four output formats PROCTOR writes: text, json, codequality and sarif.
+- [GitHub code scanning | PROCTOR docs](https://proctor.apps.wayne.edu/docs/guides/github-code-scanning.md): How the sarif format feeds GitHub code scanning on the GitHub mirror through the official upload action.
+- [Overrides | PROCTOR docs](https://proctor.apps.wayne.edu/docs/guides/overrides.md): How an app carries a policy-overrides.json file to waive a check's fail findings until an expiry date.
+- [Policy | PROCTOR docs](https://proctor.apps.wayne.edu/docs/guides/policy.md): How PROCTOR finds the CREED-format policy file it grades with, from --policy through the bundled copy.
+- [Quick start | PROCTOR docs](https://proctor.apps.wayne.edu/docs/guides/quick-start.md): Run PROCTOR against an app and read its pass, warning, info or fail report.
+- [Overview | PROCTOR docs](https://proctor.apps.wayne.edu/docs/index.md): A framework-free PHP CLI that measures a PHP app against the WSU version policy.
+- [Install | PROCTOR docs](https://proctor.apps.wayne.edu/docs/install.md): Install PROCTOR as a Composer dev dependency so the command is available as vendor/bin/proctor.
+- [Commands | PROCTOR docs](https://proctor.apps.wayne.edu/docs/reference/commands.md): The PROCTOR commands and their options, starting with proctor check and the options every command accepts.
+- [Configuration | PROCTOR docs](https://proctor.apps.wayne.edu/docs/reference/configuration.md): Every setting PROCTOR reads, from the --policy option and the PROCTOR_POLICY variable to the extra.proctor keys in composer.json.
+- [Exit codes | PROCTOR docs](https://proctor.apps.wayne.edu/docs/reference/exit-codes.md): What each PROCTOR exit code means: 0 for pass, 1 for one or more failures and 2 for a tool error.
+- [Proof | PROCTOR docs](https://proctor.apps.wayne.edu/docs/reference/proof.md): Where to see PROCTOR's proof runs against real Wayne State applications, behind a Wayne State employee sign-in.
+- [Rule ids | PROCTOR docs](https://proctor.apps.wayne.edu/docs/reference/rule-ids.md): The stable, namespaced rule id that every finding carries, grouped by check.
+- [Troubleshooting | PROCTOR docs](https://proctor.apps.wayne.edu/docs/troubleshooting.md): How to work through a PROCTOR run that trips, warns or fails, and how to read the report to fix the finding.
+- [Upgrading | PROCTOR docs](https://proctor.apps.wayne.edu/docs/upgrading.md): How to upgrade PROCTOR to a newer release and note the changes that affect your runs.
 
 ## Prompts
 
