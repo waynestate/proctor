@@ -5,6 +5,8 @@ description: The PROCTOR commands and their options, starting with proctor check
 
 # Commands
 
+Every command PROCTOR ships, with the options each one accepts. The table is generated from the CLI, so it stays in step with the code; a proctor reads the rules aloud before the exam, it does not take the exam for you. If you have not run a check yet, start with the [Quick start](../guides/quick-start.md).
+
 <!-- generated:commands -->
 | Command | What it does |
 | --- | --- |
@@ -39,4 +41,23 @@ Usage: `proctor check [--path PATH] [--format FORMAT] [--policy POLICY] [--today
 | `-n`, `--no-interaction` | Do not ask any interactive question |  |
 <!-- /generated -->
 
-STUB: this page is written in a later batch.
+## Examples
+
+Run the check against an application:
+
+```
+vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--policy=<file>] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z]
+```
+
+- `--path`: path to the application to check (default `.`).
+- `--format`: output format: `text` (default), `json`, `codequality`, or `sarif`.
+- `--policy`: path to the CREED-format policy file. Optional: without it, PROCTOR resolves the policy from the `PROCTOR_POLICY` environment variable, then the app's `vendor/waynestate/creed/policy/policy.json`, then the copy bundled with PROCTOR (see [Policy](../guides/policy.md)).
+- `--today`: override today's date (YYYY-MM-DD) so runs are deterministic.
+- `--php-runtime`: the PHP version that will serve the app (X.Y.Z), used by the `unpatched` check. CI should pass the deploy image's PHP, not the runner's.
+
+## Related
+
+- [Exit codes](exit-codes.md)
+- [Rule ids](rule-ids.md)
+- [Troubleshooting](../troubleshooting.md)
+- [Quick start](../guides/quick-start.md)
