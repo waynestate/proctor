@@ -1,0 +1,8 @@
+[
+    {
+        "check": "composer-audit",
+        "reason": "no lock yet, ticket in progress",
+        "expires": "2026-12-01",
+        "approved_by": "tester"
+    }
+]

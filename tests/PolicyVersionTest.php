@@ -40,9 +40,10 @@ final class PolicyVersionTest extends ProctorTestCase
     {
         $result = $this->runProctor($this->app('pass-app'), 'text', $this->newerPolicy());
 
-        // The check runs to completion (no policy error) and passes.
-        self::assertSame(0, $result['exit']);
-        self::assertSame([], $this->failCheckIds($result['stdout']));
+        // The check runs to completion (no policy error); only the audit
+        // fails, because the CLI tests run with a PATH that finds no composer.
+        self::assertSame(1, $result['exit']);
+        self::assertSame(['composer-audit'], $this->failCheckIds($result['stdout']));
         self::assertMatchesRegularExpression('/^PASS php-floor: /m', $result['stdout']);
         self::assertStringNotContainsString('schema_version', $result['stderr']);
     }

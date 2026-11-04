@@ -10,12 +10,12 @@ namespace Waynestate\Proctor\Tests;
  */
 final class CheckCommandTest extends ProctorTestCase
 {
-    public function testPassAppExitsZeroWithNoFailures(): void
+    public function testPassAppFailsOnlyTheMissingComposerAudit(): void
     {
         $result = $this->runProctor($this->app('pass-app'));
 
-        self::assertSame(0, $result['exit']);
-        self::assertSame([], $this->failCheckIds($result['stdout']));
+        self::assertSame(1, $result['exit']);
+        self::assertSame(['composer-audit'], $this->failCheckIds($result['stdout']));
     }
 
     public function testPassAppPassesFloorUnboundedAndLock(): void
@@ -27,19 +27,49 @@ final class CheckCommandTest extends ProctorTestCase
         self::assertMatchesRegularExpression('/^PASS lock-committed: /m', $stdout);
     }
 
-    public function testPassAppReportsInfoForComposerAudit(): void
+    public function testPassAppFailsComposerAuditWhenComposerIsMissing(): void
     {
         $stdout = $this->runProctor($this->app('pass-app'))['stdout'];
 
-        self::assertMatchesRegularExpression('/^INFO composer-audit: /m', $stdout);
+        self::assertMatchesRegularExpression(
+            '/^FAIL composer-audit: not audited: composer executable not found on PATH; install Composer or record an override$/m',
+            $stdout,
+        );
     }
 
-    public function testEolAppExitsOneAndFailsOnlyPhpFloor(): void
+    public function testNoLockAppFailsComposerAuditWithoutAnOverride(): void
+    {
+        // The fake composer on PATH lets the check reach the lock branch.
+        $result = $this->runProctor($this->app('audit-no-lock-app'), 'text', null, null, null, $this->fakeComposerPath());
+
+        self::assertSame(1, $result['exit']);
+        self::assertStringContainsString(
+            'FAIL composer-audit: not audited: no composer.lock in the app path; commit the lock or record an override',
+            $result['stdout'],
+        );
+    }
+
+    public function testNoLockAppOverrideDowngradesTheComposerAuditFailToAWarning(): void
+    {
+        // The fake composer on PATH lets the check reach the lock branch.
+        $result = $this->runProctor($this->app('audit-no-lock-override-app'), 'text', null, null, null, $this->fakeComposerPath());
+
+        self::assertStringContainsString(
+            'WARN composer-audit: not audited: no composer.lock in the app path; commit the lock or record an override (overridden: no lock yet, ticket in progress)',
+            $result['stdout'],
+        );
+        self::assertStringContainsString(' (overridden: no lock yet', $result['stdout']);
+        // The override downgrades the audit fail to a warning; the run still
+        // fails on the missing lock, never on composer-audit.
+        self::assertNotContains('composer-audit', $this->failCheckIds($result['stdout']));
+    }
+
+    public function testEolAppFailsPhpFloorAndTheMissingComposerAudit(): void
     {
         $result = $this->runProctor($this->app('eol-app'));
 
         self::assertSame(1, $result['exit']);
-        self::assertSame(['php-floor'], $this->failCheckIds($result['stdout']));
+        self::assertSame(['php-floor', 'composer-audit'], $this->failCheckIds($result['stdout']));
     }
 
     public function testUnboundedAppFailsUnboundedConstraintsForDevMasterAndStar(): void
@@ -48,7 +78,7 @@ final class CheckCommandTest extends ProctorTestCase
 
         self::assertSame(1, $result['exit']);
         self::assertSame(
-            ['unbounded-constraints', 'unbounded-constraints'],
+            ['unbounded-constraints', 'unbounded-constraints', 'composer-audit'],
             $this->failCheckIds($result['stdout']),
         );
         self::assertStringContainsString('vendor/dev constraint "dev-master" is unbounded', $result['stdout']);
@@ -61,7 +91,7 @@ final class CheckCommandTest extends ProctorTestCase
 
         self::assertSame(1, $result['exit']);
         self::assertSame(
-            ['unbounded-constraints', 'unbounded-constraints'],
+            ['unbounded-constraints', 'unbounded-constraints', 'composer-audit'],
             $this->failCheckIds($result['stdout']),
         );
         self::assertStringContainsString('vendor/open constraint ">=1.0" is unbounded', $result['stdout']);
@@ -81,7 +111,7 @@ final class CheckCommandTest extends ProctorTestCase
         $result = $this->runProctor($this->app('expired-override-app'));
 
         self::assertSame(1, $result['exit']);
-        self::assertSame(['overrides'], $this->failCheckIds($result['stdout']));
+        self::assertSame(['composer-audit', 'overrides'], $this->failCheckIds($result['stdout']));
         self::assertMatchesRegularExpression(
             '/^OVERRIDE lock-committed: fixture: expired \(expires 2026-01-01, approved by tester\)$/m',
             $result['stdout'],
@@ -99,84 +129,84 @@ final class CheckCommandTest extends ProctorTestCase
         );
     }
 
-    public function testCiPipelinesGoodAppExitsZeroAndPassesCiPipelines(): void
+    public function testCiPipelinesGoodAppPassesCiPipelinesAndFailsOnlyTheMissingComposerAudit(): void
     {
         $result = $this->runProctor($this->app('ci-pipelines-good-app'));
 
-        self::assertSame(0, $result['exit']);
-        self::assertSame([], $this->failCheckIds($result['stdout']));
+        self::assertSame(1, $result['exit']);
+        self::assertSame(['composer-audit'], $this->failCheckIds($result['stdout']));
         self::assertMatchesRegularExpression(
             '/^PASS ci-pipelines: both pipelines run composer ci$/m',
             $result['stdout'],
         );
     }
 
-    public function testCiPipelinesMissingGitlabAppExitsZeroAndWarns(): void
+    public function testCiPipelinesMissingGitlabAppWarnsAndFailsOnlyTheMissingComposerAudit(): void
     {
         $result = $this->runProctor($this->app('ci-pipelines-missing-gitlab-app'));
 
-        self::assertSame(0, $result['exit']);
-        self::assertSame([], $this->failCheckIds($result['stdout']));
+        self::assertSame(1, $result['exit']);
+        self::assertSame(['composer-audit'], $this->failCheckIds($result['stdout']));
         self::assertMatchesRegularExpression(
             '/^WARN ci-pipelines: ci-pipelines-gitlab-missing: /m',
             $result['stdout'],
         );
     }
 
-    public function testCiPipelinesMissingGithubAppExitsZeroAndPasses(): void
+    public function testCiPipelinesMissingGithubAppPassesAndFailsOnlyTheMissingComposerAudit(): void
     {
         $result = $this->runProctor($this->app('ci-pipelines-missing-github-app'));
 
-        self::assertSame(0, $result['exit']);
-        self::assertSame([], $this->failCheckIds($result['stdout']));
+        self::assertSame(1, $result['exit']);
+        self::assertSame(['composer-audit'], $this->failCheckIds($result['stdout']));
         self::assertMatchesRegularExpression(
             '/^PASS ci-pipelines: gitlab pipeline runs composer ci$/m',
             $result['stdout'],
         );
     }
 
-    public function testCiPipelinesGitlabNoCiAppExitsZeroAndWarns(): void
+    public function testCiPipelinesGitlabNoCiAppWarnsAndFailsOnlyTheMissingComposerAudit(): void
     {
         $result = $this->runProctor($this->app('ci-pipelines-gitlab-no-ci-app'));
 
-        self::assertSame(0, $result['exit']);
-        self::assertSame([], $this->failCheckIds($result['stdout']));
+        self::assertSame(1, $result['exit']);
+        self::assertSame(['composer-audit'], $this->failCheckIds($result['stdout']));
         self::assertMatchesRegularExpression(
             '/^WARN ci-pipelines: ci-pipelines-gitlab-no-ci: /m',
             $result['stdout'],
         );
     }
 
-    public function testCiPipelinesAcmeAppExitsZeroAndWarnsAboutTheMissingGitlabPipeline(): void
+    public function testCiPipelinesAcmeAppWarnsAboutTheMissingGitlabPipelineAndFailsOnlyTheMissingComposerAudit(): void
     {
         $result = $this->runProctor($this->app('ci-pipelines-acme-app'));
 
-        self::assertSame(0, $result['exit']);
-        self::assertSame([], $this->failCheckIds($result['stdout']));
+        self::assertSame(1, $result['exit']);
+        self::assertSame(['composer-audit'], $this->failCheckIds($result['stdout']));
         self::assertMatchesRegularExpression(
             '/^WARN ci-pipelines: ci-pipelines-gitlab-missing: /m',
             $result['stdout'],
         );
     }
 
-    public function testCiPipelinesAcmeGitlabOnlyAppExitsZeroAndPasses(): void
+    public function testCiPipelinesAcmeGitlabOnlyAppPassesAndFailsOnlyTheMissingComposerAudit(): void
     {
         $result = $this->runProctor($this->app('ci-pipelines-acme-gitlab-only-app'));
 
-        self::assertSame(0, $result['exit']);
-        self::assertSame([], $this->failCheckIds($result['stdout']));
+        self::assertSame(1, $result['exit']);
+        self::assertSame(['composer-audit'], $this->failCheckIds($result['stdout']));
         self::assertMatchesRegularExpression(
             '/^PASS ci-pipelines: gitlab pipeline runs composer ci$/m',
             $result['stdout'],
         );
     }
 
-    public function testCiPipelinesGithubMainAppExitsZeroAndWarnsOnTheUnpinnedRef(): void
+    public function testCiPipelinesGithubMainAppWarnsOnTheUnpinnedRefAndFailsOnlyTheMissingComposerAudit(): void
     {
         $result = $this->runProctor($this->app('ci-pipelines-github-main-app'));
 
-        self::assertSame(0, $result['exit']);
-        self::assertSame([], $this->failCheckIds($result['stdout']));
+        self::assertSame(1, $result['exit']);
+        self::assertSame(['composer-audit'], $this->failCheckIds($result['stdout']));
         self::assertMatchesRegularExpression(
             '/^WARN ci-pipelines: ci-pipelines-unpinned-uses: uses "waynestate\/preflight\/.github\/workflows\/php-package\.yml@main" is not pinned to a 40-hex commit SHA; pin it to a commit SHA$/m',
             $result['stdout'],
@@ -190,7 +220,7 @@ final class CheckCommandTest extends ProctorTestCase
         self::assertSame(1, $result['exit']);
         // No exception and no tool error: stderr stays empty.
         self::assertSame('', $result['stderr']);
-        self::assertSame(['php-floor', 'lock-committed'], $this->failCheckIds($result['stdout']));
+        self::assertSame(['php-floor', 'lock-committed', 'composer-audit'], $this->failCheckIds($result['stdout']));
         self::assertMatchesRegularExpression(
             '/^FAIL php-floor: no composer\.json: the app declares no PHP version$/m',
             $result['stdout'],

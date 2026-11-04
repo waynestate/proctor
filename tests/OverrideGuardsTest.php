@@ -29,12 +29,12 @@ final class OverrideGuardsTest extends ProctorTestCase
         self::assertStringContainsString('overrides', $result['stderr']);
     }
 
-    public function testExpiringOverrideWarnsButStillPasses(): void
+    public function testExpiringOverrideWarnsAndOnlyTheMissingComposerAuditFails(): void
     {
         $result = $this->runProctor($this->app('override-expiring-app'));
 
-        self::assertSame(0, $result['exit']);
-        self::assertSame([], $this->failCheckIds($result['stdout']));
+        self::assertSame(1, $result['exit']);
+        self::assertSame(['composer-audit'], $this->failCheckIds($result['stdout']));
         self::assertMatchesRegularExpression(
             '/^WARN overrides: override for "lock-committed" expires on 2026-11-10 \(14 days left\)$/m',
             $result['stdout'],
@@ -45,7 +45,7 @@ final class OverrideGuardsTest extends ProctorTestCase
     {
         $result = $this->runProctor($this->app('override-expiring-app'), 'json');
 
-        self::assertSame(0, $result['exit']);
+        self::assertSame(1, $result['exit']);
         $data = json_decode($result['stdout'], true);
         self::assertIsArray($data);
 
@@ -67,8 +67,8 @@ final class OverrideGuardsTest extends ProctorTestCase
         // override still matches no failure, so it warns as unused instead.
         $result = $this->runProctor($this->app('override-expiring-app'), 'text', null, null, '2026-10-26');
 
-        self::assertSame(0, $result['exit']);
-        self::assertSame([], $this->failCheckIds($result['stdout']));
+        self::assertSame(1, $result['exit']);
+        self::assertSame(['composer-audit'], $this->failCheckIds($result['stdout']));
         self::assertDoesNotMatchRegularExpression(
             '/^WARN overrides: override for "lock-committed" expires on/m',
             $result['stdout'],
@@ -84,7 +84,7 @@ final class OverrideGuardsTest extends ProctorTestCase
     {
         $result = $this->runProctor($this->app('override-expiring-app'));
 
-        self::assertSame(0, $result['exit']);
+        self::assertSame(1, $result['exit']);
         self::assertMatchesRegularExpression(
             '/^WARN overrides: override for "lock-committed" matched no failure; remove it if the problem is fixed$/m',
             $result['stdout'],
@@ -95,7 +95,7 @@ final class OverrideGuardsTest extends ProctorTestCase
     {
         $result = $this->runProctor($this->app('override-expiring-app'), 'json');
 
-        self::assertSame(0, $result['exit']);
+        self::assertSame(1, $result['exit']);
         $data = json_decode($result['stdout'], true);
         self::assertIsArray($data);
 
@@ -152,8 +152,8 @@ final class OverrideGuardsTest extends ProctorTestCase
         // today), so the override passes the check and warns as unused.
         $result = $this->runProctor($this->app('override-expiring-app'), 'text', null, null, '2026-11-10');
 
-        self::assertSame(0, $result['exit']);
-        self::assertSame([], $this->failCheckIds($result['stdout']));
+        self::assertSame(1, $result['exit']);
+        self::assertSame(['composer-audit'], $this->failCheckIds($result['stdout']));
         self::assertStringContainsString(
             'WARN overrides: override for "lock-committed" matched no failure; remove it if the problem is fixed',
             $result['stdout'],

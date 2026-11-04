@@ -83,6 +83,8 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `wayneui-outdated` | `proctor/wayneui-outdated/skipped` |
 | `policy-age` | `proctor/policy-age` |
 
+`proctor/composer-audit/skipped` is a failure, not an info finding: it fires when the composer executable is not on PATH or the app has no composer.lock, its message starts with `not audited:`, and an active `composer-audit` override downgrades it to a warning.
+
 ## Kept in step
 
 `tests/RuleIdContractTest.php` keeps this table in step with the checks: a rule id that is emitted but not listed here fails the suite. The proctor stamps each id in pencil so small only the head office can read it, and it never smudges.

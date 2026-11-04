@@ -24,11 +24,13 @@ use Waynestate\Proctor\ToolError;
  * applies to audit (its on-audit flag is not false) and, for a package rule
  * carrying a constraint, when the locked version satisfies it. Abandoned
  * packages are warnings. When the composer executable or composer.lock is
- * missing, the check reports one info finding and nothing else. When the
- * audit runs but its stdout is not parseable JSON, the check fails (rule
+ * missing, the check fails (rule `proctor/composer-audit/skipped`) with a
+ * message that starts with `not audited:` and names the fix, installing
+ * Composer or committing the lock, or recording a dated override, because a
+ * green run that audited nothing is worse than a red one. When the audit
+ * runs but its stdout is not parseable JSON, the check fails (rule
  * `proctor/composer-audit/could-not-run`) with a message that starts with
- * `not audited:` and carries the first stderr line, because a green run
- * that audited nothing is worse than a red one. Since Composer 2.10 the
+ * `not audited:` and carries the first stderr line. Since Composer 2.10 the
  * audit exits 1 when anything failed it (malware, a custom policy,
  * abandoned packages, missing packages), so a non-zero exit
  * with no advisory, ignored-advisory or abandoned finding in the JSON is
@@ -59,8 +61,8 @@ final class ComposerAuditCheck implements CheckInterface
         if ($composer === null) {
             return [new Finding(
                 $this->id(),
-                Finding::STATUS_INFO,
-                'composer executable not found on PATH; composer audit skipped',
+                Finding::STATUS_FAIL,
+                'not audited: composer executable not found on PATH; install Composer or record an override',
                 null,
                 1,
                 null,
@@ -71,8 +73,8 @@ final class ComposerAuditCheck implements CheckInterface
         if (!is_file($context->appPath . '/composer.lock')) {
             return [new Finding(
                 $this->id(),
-                Finding::STATUS_INFO,
-                'no composer.lock in the app path; composer audit skipped',
+                Finding::STATUS_FAIL,
+                'not audited: no composer.lock in the app path; commit the lock or record an override',
                 null,
                 1,
                 null,

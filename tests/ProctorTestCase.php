@@ -34,10 +34,11 @@ abstract class ProctorTestCase extends TestCase
      * @param string|null $policy     an optional policy file; defaults to the fixture policy
      * @param string|null $phpRuntime an optional --php-runtime value (X.Y.Z)
      * @param string|null $today      an optional --today value (YYYY-MM-DD); defaults to self::TODAY
+     * @param string|null $path       the PATH the child process uses; defaults to a directory that finds no tools
      *
      * @return array{exit: int, stdout: string, stderr: string}
      */
-    protected function runProctor(string $app, string $format = 'text', ?string $policy = null, ?string $phpRuntime = null, ?string $today = null): array
+    protected function runProctor(string $app, string $format = 'text', ?string $policy = null, ?string $phpRuntime = null, ?string $today = null, ?string $path = null): array
     {
         $cmd = [
             PHP_BINARY,
@@ -52,7 +53,7 @@ abstract class ProctorTestCase extends TestCase
             $cmd[] = '--php-runtime=' . $phpRuntime;
         }
 
-        return $this->runCommand($cmd);
+        return $this->runCommand($cmd, null, $path);
     }
 
     /**
@@ -87,12 +88,12 @@ abstract class ProctorTestCase extends TestCase
     }
 
     /**
-     * Runs bin/proctor with a PATH that finds no tools, and returns the
-     * exit code, stdout and stderr.
+     * Runs bin/proctor with a PATH that finds no tools (unless $path gives
+     * one), and returns the exit code, stdout and stderr.
      *
      * @param list<string> $cmd
      */
-    private function runCommand(array $cmd, ?string $envPolicy = null): array
+    private function runCommand(array $cmd, ?string $envPolicy = null, ?string $path = null): array
     {
         // The CLI tests must not depend on whether composer is installed (the CI runner has it, the php:*-cli
         // images do not), so bin/proctor runs with a PATH that finds no tools.
@@ -102,7 +103,7 @@ abstract class ProctorTestCase extends TestCase
                 unset($env[$key]);
             }
         }
-        $env['PATH'] = __DIR__ . '/fixtures/no-tools';
+        $env['PATH'] = $path ?? __DIR__ . '/fixtures/no-tools';
         if ($envPolicy !== null) {
             $env['PROCTOR_POLICY'] = $envPolicy;
         }
@@ -119,6 +120,25 @@ abstract class ProctorTestCase extends TestCase
         $exit = proc_close($process);
 
         return ['exit' => $exit, 'stdout' => (string) $stdout, 'stderr' => (string) $stderr];
+    }
+
+    /**
+     * A PATH directory holding a stub composer executable, for tests that
+     * must reach the audit step even though the CLI runs normally with a
+     * PATH that finds no tools. The stub exits 0 with empty output, so
+     * ComposerVersionCheck warns instead of failing.
+     */
+    protected function fakeComposerPath(): string
+    {
+        $dir = sys_get_temp_dir() . '/proctor-fake-composer';
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+        $composer = $dir . '/composer';
+        file_put_contents($composer, "#!/bin/sh\nexit 0\n");
+        chmod($composer, 0755);
+
+        return $dir;
     }
 
     /**

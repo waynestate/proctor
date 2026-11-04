@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Changed: composer-audit fails when the composer executable is not on PATH or the app has no composer.lock (rule id `proctor/composer-audit/skipped`, message starting with `not audited:`); an active `composer-audit` override in policy-overrides.json with a reason and an expiry downgrades those fails to warnings.
+- Note: this is a pre-1.0 behavior change: consumers on `^0.5` that have no lock, or run where Composer is not on PATH, will now fail until the audit can run or an override is recorded.
+
 ## 0.5.0 (2026-11-03)
 
 - This is a pre-1.0 minor: consumers that pin `^0.4` stay on 0.4.x until they move their constraint to `^0.5`. One check that used to pass now fails: composer-audit fails when the audit produced no parseable output (see the first Changed entry below).
