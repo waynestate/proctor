@@ -481,6 +481,8 @@ Sources: [Composer changelog, 2.11.0-RC1](https://raw.githubusercontent.com/comp
 The claim that most compromises are found within days is mine and is not backed by a source I read.
 
 **How the stack holds it: Not yet.** Do not require it until 2.11 is stable and the base images ship it.
+Decision (Adam, 2026-11-03): when Composer 2.11 is stable and in the base images, Sourdough apps set a 3-day cooldown and
+PROCTOR warns when an app has none. Nothing is built before then.
 
 ### 4.12 Decide whether dev dependencies count (second pass)
 `composer audit --locked` audits `require-dev` packages too. Composer offers `--no-dev`, and `--direct` from
