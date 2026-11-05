@@ -380,6 +380,8 @@ composer docs:check
 
 which runs as part of `composer ci`.
 
+The docs pages wear the front page: the same masthead and main menu, ruled paper, Young Serif titles under a red pen stroke, the install slab for commands and the green footer band, in light and dark. That look lives in two files, `docs/_header.html` (the masthead) and `docs/theme/proctor.css` (the palette and type, mapped onto the kit's `--dk-*` tokens), named by the `theme` key in `docs/docs.json`. Edit those, never the vendored kit (`bin/docs-site.php`, `site/assets/docs.css`, `site/assets/docs.js`), which comes from Squire with `--sync-to`.
+
 ### Running the tests in Docker
 
 Maintainers: how to build, test and release this project, and where its data comes from, is in [MAINTAINING.md](https://nougat.snu.gs/enterprise-apps/proctor/blob/HEAD/MAINTAINING.md).
