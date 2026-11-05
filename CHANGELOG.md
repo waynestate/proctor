@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Fixed: on the front page, a command or printout too wide for its box (the install command, the report carbons, the notes and the hall examples) takes a tab stop while it scrolls sideways, so keyboard users can scroll it, with a gold focus ring on the dark slabs (axe `scrollable-region-focusable`).
+- Changed: the docs site wears PROCTOR's brand: the front page masthead and main menu (Docs marked current), ruled paper, Young Serif titles, the install slab with the gold Copy tab, answer-sheet tables, note slips for callouts and the green footer band, with a derived dark mode and motion only when reduced motion is off (`docs/_header.html`, `docs/theme/proctor.css` and a `theme` key in `docs/docs.json`).
+- Changed: the vendored docs builder and kit are synced from Squire's unified builder (theme hook, callouts, code tabs, task-list labels, a working Copy button, keyboard-reachable scrolling code blocks).
 - Changed: updated the Symfony packages in composer.lock to patched releases (symfony/yaml and symfony/filesystem security advisories, 2026-11-04).
 - Changed: composer-audit warns (instead of failing) for advisories on packages that composer.lock lists only in packages-dev, marking the message with ` [dev dependency]`; a name in both lists counts as runtime and still fails at or above the threshold.
 - Added: `release-phar` GitLab job, tag-triggered only: it builds `build/proctor.phar` in the pinned `composer:2.10.3` image without Docker-in-Docker, verifies it with `php build/proctor.phar --version`, writes `build/proctor.phar.sha256`, uploads both files to the project's generic package registry under the tag (refusing to overwrite an existing file), and attaches them as asset links to the GitLab Release for the tag via curl and the GitLab API. The phar is published on every release from the next one on.

@@ -11,6 +11,26 @@
   root.classList.add("js");
   var motion = root.classList.contains("motion");
 
+  /* ------------------------------------------- scrolling code, by keyboard */
+  // A printout or command too wide for its box scrolls sideways; it takes a
+  // tab stop then (and only then), so keyboard users can scroll it too. A box
+  // in a hidden tab measures 0, so it keeps whatever it had until it shows.
+  var scrollers = document.querySelectorAll(".cmd__code, .carbon__pre, .slip__pre, .hall__pre, .term");
+  function markScrollers() {
+    scrollers.forEach(function (el) {
+      if (!el.clientWidth) return;
+      if (el.scrollWidth > el.clientWidth + 1) el.setAttribute("tabindex", "0");
+      else el.removeAttribute("tabindex");
+    });
+  }
+  markScrollers();
+  window.addEventListener("resize", markScrollers);
+  ["click", "keyup"].forEach(function (type) {
+    document.addEventListener(type, function (e) {
+      if (e.target.closest && e.target.closest('[role="tab"]')) requestAnimationFrame(markScrollers);
+    });
+  });
+
   /* ---------------------------------------------------------------- toast */
   var toast = document.querySelector(".toast");
   var toastTimer = 0;

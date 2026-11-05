@@ -333,6 +333,10 @@ body {
   translate: 0 2px;
 }
 
+.docs-menu {
+  margin-block-end: 1.5rem;
+}
+
 .docs-menu[open] > .docs-nav {
   padding: 0.25rem 0.25rem 0.75rem;
 }
@@ -766,7 +770,7 @@ body {
   align-items: baseline;
   padding-block: 2rem;
   padding-inline: var(--dk-gap);
-  color: var(--p-cream);
+  color: #f4f1ea;
   background: var(--p-green);
   border-top: 0;
   box-shadow: 0 0 0 100vmax var(--p-green);
@@ -790,6 +794,7 @@ body {
   :root:not([data-theme="light"]) {
     --p-heading: #f1ecdf;
     --p-pen: #ff8fa0;
+    --p-margin: rgba(255, 143, 160, 0.3);
     --p-desk: #162925;
     --p-stock: #132623;
     --p-white: #11231f;
@@ -822,6 +827,7 @@ body {
 :root[data-theme="dark"] {
   --p-heading: #f1ecdf;
   --p-pen: #ff8fa0;
+  --p-margin: rgba(255, 143, 160, 0.3);
   --p-desk: #162925;
   --p-stock: #132623;
   --p-white: #11231f;
@@ -981,8 +987,7 @@ body {
   /* The red double margin line of exam paper, down the left of the answer. */
   .docs-content {
     padding-inline-start: 1.6rem;
-    border-inline-start: 1px solid var(--p-margin);
-    box-shadow: inset 5px 0 0 -4px var(--p-margin);
+    background: linear-gradient(to right, var(--p-margin) 0 1px, transparent 1px 4px, var(--p-margin) 4px 5px, transparent 5px) left top / 5px 100% no-repeat;
   }
 }
 
@@ -1102,8 +1107,7 @@ body {
   }
 
   .docs-content {
-    border: 0;
-    box-shadow: none;
+    background: none;
     padding-inline-start: 0;
   }
 

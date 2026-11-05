@@ -241,6 +241,9 @@ a:hover { color: var(--crimson); }
 }
 .cmd__code { flex: 1; min-width: 0; padding: 14px 16px; color: var(--cream); font-size: .9rem; overflow-x: auto; white-space: nowrap; }
 .cmd__ps { color: var(--gold); margin-right: .5em; }
+/* A command that scrolls takes a tab stop (proctor.js): gold ring, inside the slab. */
+.cmd__code:focus-visible, .term:focus-visible { outline-color: var(--gold); outline-offset: -3px; }
+.carbon__pre:focus-visible, .slip__pre:focus-visible, .hall__pre:focus-visible { outline-offset: -3px; }
 .copy {
   flex: 0 0 auto; border: 0; cursor: pointer; padding: 0 18px;
   background: var(--gold); color: var(--ink); font: 700 .88rem var(--f-body);
