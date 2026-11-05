@@ -1,0 +1,25 @@
+<!--
+  The docs pages wear the front page's masthead (site/index.html): the exam book's desk strip, the seal, the name in
+  Young Serif and the form number. The docs builder puts the header element below in place of its generic one on every
+  page, rewrites the relative links (written as if from site/) to the page's depth, fills the version placeholder and
+  marks the Docs link aria-current. Styles: docs/theme/proctor.css.
+  Keep the links in step with the front page's masthead nav. No peeking at the answer key from here.
+-->
+<header class="masthead">
+  <div class="masthead__row">
+    <a class="masthead__brand" href="index.html">
+      <img class="masthead__mark" src="brand/proctor-avatar-256.png" width="34" height="34" alt="">
+      <span class="masthead__name">PROCTOR</span>
+      <span class="masthead__form">Form {{version}}</span>
+    </a>
+    <nav class="masthead__nav" aria-label="Site">
+      <a href="index.html#questions">Questions</a>
+      <a href="index.html#sheet-title">Answer sheet</a>
+      <a href="index.html#reports-title">Reports</a>
+      <a href="index.html#start-title">Quick start</a>
+      <a href="index.html#agents-title">Agents</a>
+      <a href="docs/index.html">Docs</a>
+      <a href="https://proof.apps.wayne.edu/proctor/">Proof</a>
+    </nav>
+  </div>
+</header>
