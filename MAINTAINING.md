@@ -31,7 +31,7 @@ You need PHP 8.3 or newer and Composer, or only Docker.
 | Build the phar (needs Docker), Windows | `.\scripts\build-phar.ps1` |
 | Build the phar (needs Docker), Linux and macOS | `scripts/build-phar.sh` |
 
-Both phar scripts write `build/proctor.phar` (gitignored). The phar is not published anywhere yet.
+Both phar scripts write `build/proctor.phar` (gitignored). From the next release, the phar is published on every tag by the `release-phar` job (see below).
 
 With only Docker (the same line works in PowerShell and sh):
 
@@ -47,6 +47,33 @@ docker run --rm -v "${PWD}:/app" -w /app php:8.5-cli vendor/bin/phpunit
 - **GitLab:** Preflight's `php-test` (PHP 8.3, 8.4, 8.5) and `composer-audit` components, plus a `composer-ci` job.
 - **GitHub:** `.github/workflows/ci.yml` calls Preflight's reusable workflow with `composer ci`.
 - Green means `composer ci` passed on all three PHP versions on both.
+
+## The release-phar job
+
+The GitLab pipeline defines a `release-phar` job that runs on tags only
+(`rules: if: $CI_COMMIT_TAG`); the lead cuts the tag, and the job does the
+rest. On a tag it:
+
+1. installs the dependencies in the pinned `composer:2.10.3` image (adding
+   curl first, which the image may lack),
+2. builds `build/proctor.phar` inside that container, the way
+   `scripts/build-phar.sh` does but without Docker-in-Docker: the runtime
+   sources (src, bin, composer.json, composer.lock, box.json.dist) go to a
+   temp dir, get a no-dev install with `--optimize-autoloader`, and Box
+   compiles the phar against that copy,
+3. verifies it runs with `php build/proctor.phar --version`,
+4. writes `build/proctor.phar.sha256` with `sha256sum`,
+5. uploads the phar and the checksum to the project's generic package registry
+   under the tag with curl and the `CI_JOB_TOKEN`, refusing to overwrite: if
+   the file for the tag already exists (HTTP 200 on a HEAD request) the job
+   exits 1,
+6. creates the GitLab Release for the tag with curl (`POST` to
+   `/projects/:id/releases` with JSON `name`, `tag_name` and `assets.links`),
+   or, when the release already exists, adds the two asset links with one
+   `POST` to `/projects/:id/releases/:tag/assets/links` per file.
+
+There is no release tooling on the arm64 runner; curl and the GitLab API are
+the whole mechanism.
 
 ## Refreshing the CREED copy
 
@@ -74,8 +101,15 @@ checkout, so run it by hand after each refresh. Commit the copy with the CREED c
 2. `composer ci` green locally, then on both pipelines for that commit. Refresh the CREED copy first if CREED moved.
 3. Run a secrets scan of the history and check that nothing internal (server names, people, IDs) is in the tree.
 4. Tag `X.Y.Z` (no `v`) on nougat. The mirror carries the tag to GitHub, and Packagist picks it up from there.
-5. A release needs a maintainer's approval. Never move or delete a published tag.
-6. Consumers pin `^0.x`, so a pre-1.0 minor (0.2 to 0.3) is opt-in for them; tell them in the CHANGELOG.
+5. Wait for the `release-phar` job: it builds the phar on the tag, uploads
+   `proctor.phar` and `proctor.phar.sha256` to the generic package registry,
+   and attaches both as asset links on the GitLab Release. Check the release
+   page for the tag: both files must be listed, and the sha256 file must
+   match the phar. If the job fails, fix it and re-run the job; if the
+   package upload refuses because the file already exists, the tag was
+   already released once and must not be overwritten.
+6. A release needs a maintainer's approval. Never move or delete a published tag.
+7. Consumers pin `^0.x`, so a pre-1.0 minor (0.2 to 0.3) is opt-in for them; tell them in the CHANGELOG.
 
 ## The front page
 

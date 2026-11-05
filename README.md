@@ -44,21 +44,30 @@ The command is then `vendor/bin/proctor`.
 
 ## Single-file download
 
-PROCTOR can also be built as a single-file PHAR, so Preflight and apps without
-Composer access can run it as one file. Build it with the script for your OS
-(both need Docker, and no PHP or Composer on the host):
+The single-file PHAR is how Preflight and apps without Composer access run
+PROCTOR as one file, and from the next release it is attached to each GitLab
+Release with its `proctor.phar.sha256` checksum file. Both files come from the
+`release-phar` job in `.gitlab-ci.yml`; the lead tags, and no tag means no
+release. The `composer require` install above stays the current method; the
+phar is the one-file alternative.
 
-Windows (PowerShell):
+Download both files for the tag you want, verify the checksum, then run it.
+Replace `<release>` with the base URL of the release's asset links (the
+release page lists both files).
 
-    .\scripts\build-phar.ps1
+Linux / macOS (sh), one line:
 
-Linux / macOS:
+    curl -fsSL -o proctor.phar "<release>/proctor.phar" -o proctor.phar.sha256 "<release>/proctor.phar.sha256" && sha256sum -c proctor.phar.sha256 && php proctor.phar --version
 
-    scripts/build-phar.sh
+Windows (PowerShell), one line, no bash needed:
 
-Each script writes `build/proctor.phar` and verifies it by printing PROCTOR's
-version. The phar is not published yet (there is no release step), so build it
-from a checkout rather than downloading it.
+    Invoke-WebRequest "<release>/proctor.phar" -OutFile proctor.phar; Invoke-WebRequest "<release>/proctor.phar.sha256" -OutFile proctor.phar.sha256; if ((Get-FileHash proctor.phar -Algorithm SHA256).Hash -ne (Get-Content proctor.phar.sha256 -TotalCount 1).Trim().Split(' ')[0]) { throw "sha256 mismatch" }; php proctor.phar --version
+
+Until the first tagged release that runs the job, build it from a checkout
+with the script for your OS (both need Docker, and no PHP or Composer on the
+host): `.\scripts\build-phar.ps1` on Windows, `scripts/build-phar.sh` on
+Linux / macOS. Each script writes `build/proctor.phar` and verifies it by
+printing PROCTOR's version.
 
 ## Usage
 
