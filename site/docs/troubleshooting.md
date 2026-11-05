@@ -27,6 +27,13 @@ The run named an option the command does not accept, or a value it cannot read.
 - Fix: correct the option against the [Commands](https://proctor.apps.wayne.edu/docs/reference/commands.html) page.
 - Check: `vendor/bin/proctor check --help` lists what the command accepts.
 
+### The message starts with `Refused:` [#](https://proctor.apps.wayne.edu/docs/troubleshooting.html#the-message-starts-with-refused)
+
+In CI (any of `CI`, `GITLAB_CI` or `GITHUB_ACTIONS` set to a value other than `0` or `false`), `--policy` and `--today` are refused (exit 2) unless the job sets `PROCTOR_ALLOW_OVERRIDES=1`: in CI the policy and the date must come from the stack, not from the app being checked, so a pipeline that could pass its own policy or date could grade itself. The message names the option or options that were given.
+
+- Fix: drop `--policy` and let the policy resolve from the `PROCTOR_POLICY` variable (which stays allowed in CI), then the app's `vendor/waynestate/creed/policy/policy.json`, then the bundled copy; drop `--today`, or move the option to a trusted job that sets `PROCTOR_ALLOW_OVERRIDES: "1"` as a protected or group-level CI variable, never in the app's own `.gitlab-ci.yml`.
+- Check: rerun in CI; the run reaches the checks when no refused option is present, or the trusted job allows them. Outside CI the same command runs unchanged.
+
 ### The message names a policy file[#](https://proctor.apps.wayne.edu/docs/troubleshooting.html#the-message-names-a-policy-file)
 
 An explicit source (`--policy` or `PROCTOR_POLICY`) that points at a missing or invalid file is an error (exit 2). A vendor copy that cannot be read or parsed, or that is older than the bundled one, is not an error: it is skipped with a note on stderr and the run continues with the next source.
