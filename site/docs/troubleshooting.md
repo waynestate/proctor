@@ -133,6 +133,13 @@ The pipeline environment switches Composer's audit or blocking policy off: `COMP
 
 - Fix: remove the switch from the pipeline environment. A warning, never a fail, for stack packages and other projects alike.
 
+### A dev-dependency advisory is only a warning[#](https://proctor.apps.wayne.edu/docs/troubleshooting.html#a-dev-dependency-advisory-is-only-a-warning)
+
+An advisory whose package composer.lock lists only in `packages-dev` is a warning at any severity, with the message ending in ` [dev dependency]`. It still needs fixing: dev tools run in CI, and a vulnerable test runner is a real attack surface even though it is not in the deployed image.
+
+- Fix: update the dev dependency the way you would any other (`composer update vendor/package --with-dependencies`), or record a dated `composer-audit` override in policy-overrides.json if the upgrade is blocked.
+- Check: open `composer.lock` and look for the package name under `packages-dev`; if it also appears under `packages`, it counts as runtime and the advisory fails at or above the threshold as usual.
+
 ### portability warnings from bootstrap/cache/[#](https://proctor.apps.wayne.edu/docs/troubleshooting.html#portability-warnings-from-bootstrap-cache)
 
 In a Laravel app (an `artisan` file at the project root) the top-level `bootstrap/cache/` is skipped, so the files `php artisan optimize` writes there (`config.php`, `routes-v7.php`, `services.php`, `packages.php`, `events.php`) do not raise warnings and hide real findings. If you still see them, the app has no `artisan` at the root: a raw-PHP app that keeps its own `bootstrap/cache/` folder is scanned as before.

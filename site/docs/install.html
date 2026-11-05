@@ -31,16 +31,30 @@
 <ul>
 <li>PHP <code>^8.3</code>. composer.json pins the platform to <code>8.3.0</code>, so the package resolves against 8.3 and runs on anything newer.</li>
 <li>No PHP extensions. composer.json declares no <code>ext-*</code> requirement; the runtime libraries (<code>symfony/console</code>, <code>symfony/yaml</code>, <code>composer/semver</code>, <code>nikic/php-parser</code>) arrive as Composer packages.</li>
-<li>Composer, for the main install path below. The single-file PHAR route needs Docker instead, and no PHP or Composer on the host.</li>
+<li>Composer, for the main install path below. The single-file PHAR route needs only a PHP CLI and a download from the GitLab Release.</li>
 </ul>
 <p>Where the code lives: the canonical repository is on nougat, <a rel="noopener" href="https://nougat.snu.gs/enterprise-apps/proctor">enterprise-apps/proctor</a>. git.wayne.edu and GitHub (<a rel="noopener" href="https://github.com/waynestate/proctor">waynestate/proctor</a>) are read-only mirrors of it. Open issues and merge requests on nougat, not on the mirrors. Your proctor keeps one answer sheet, and this is it; the mirrors hold photocopies.</p>
-<h3 id="single-file-download">Single-file download<a class="docs-heading-link" aria-label="Link to this section" href="#single-file-download">#</a></h3>
-<p>PROCTOR can also be built as a single-file PHAR, so Preflight and apps without Composer access can run it as one file. Build it with the script for your OS:</p>
-<pre><code class="language-powershell">.\scripts\build-phar.ps1
+<h2 id="single-file-phar">Single-file PHAR<a class="docs-heading-link" aria-label="Link to this section" href="#single-file-phar">#</a></h2>
+<p>The single-file PHAR is how Preflight and apps without Composer access run
+PROCTOR as one file, and from the next release it is attached to each GitLab
+Release with its <code>proctor.phar.sha256</code> checksum file. Both files come from the
+<code>release-phar</code> job in <code>.gitlab-ci.yml</code>; the lead tags, and no tag means no
+release. The <code>composer require</code> install below stays the current method; the
+phar is the one-file alternative.</p>
+<p>Download both files for the tag you want, verify the checksum, then run it.
+Replace <code>&lt;release&gt;</code> with the base URL of the release's asset links (the
+release page lists both files).</p>
+<p>Linux / macOS (sh), one line:</p>
+<pre><code class="language-sh">curl -fsSL -o proctor.phar &quot;&lt;release&gt;/proctor.phar&quot; -o proctor.phar.sha256 &quot;&lt;release&gt;/proctor.phar.sha256&quot; &amp;&amp; sha256sum -c proctor.phar.sha256 &amp;&amp; php proctor.phar --version
 </code></pre>
-<pre><code class="language-sh">scripts/build-phar.sh
+<p>Windows (PowerShell), one line, no bash needed:</p>
+<pre><code class="language-powershell">Invoke-WebRequest &quot;&lt;release&gt;/proctor.phar&quot; -OutFile proctor.phar; Invoke-WebRequest &quot;&lt;release&gt;/proctor.phar.sha256&quot; -OutFile proctor.phar.sha256; if ((Get-FileHash proctor.phar -Algorithm SHA256).Hash -ne (Get-Content proctor.phar.sha256 -TotalCount 1).Trim().Split(' ')[0]) { throw &quot;sha256 mismatch&quot; }; php proctor.phar --version
 </code></pre>
-<p>Each script writes <code>build/proctor.phar</code> and verifies it by printing PROCTOR's version. The phar is not published yet (there is no release step), so build it from a checkout rather than downloading it.</p>
+<p>Until the first tagged release that runs the job, build it from a checkout
+with the script for your OS (both need Docker, and no PHP or Composer on the
+host): <code>.\scripts\build-phar.ps1</code> on Windows, <code>scripts/build-phar.sh</code> on
+Linux / macOS. Each script writes <code>build/proctor.phar</code> and verifies it by
+printing PROCTOR's version.</p>
 <h2 id="install-1">Install<a class="docs-heading-link" aria-label="Link to this section" href="#install-1">#</a></h2>
 <pre><code>composer require waynestate/proctor --dev
 </code></pre>
@@ -59,7 +73,7 @@
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../docs/index.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">Overview</span></a><a class="docs-pager__link docs-pager__link--next" href="../docs/guides/quick-start.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">Quick start</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#requirements">Requirements</a></li><li class="docs-toc__item--sub"><a href="#single-file-download">Single-file download</a></li><li class="docs-toc__item"><a href="#install-1">Install</a></li><li class="docs-toc__item"><a href="#verify">Verify</a></li><li class="docs-toc__item"><a href="#next-steps">Next steps</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#requirements">Requirements</a></li><li class="docs-toc__item"><a href="#single-file-phar">Single-file PHAR</a></li><li class="docs-toc__item"><a href="#install-1">Install</a></li><li class="docs-toc__item"><a href="#verify">Verify</a></li><li class="docs-toc__item"><a href="#next-steps">Next steps</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.5.0</span></span>
