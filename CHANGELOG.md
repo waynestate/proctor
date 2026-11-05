@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Changed: updated the Symfony packages in composer.lock to patched releases (symfony/yaml and symfony/filesystem security advisories, 2026-11-04).
 - Changed: composer-audit warns (instead of failing) for advisories on packages that composer.lock lists only in packages-dev, marking the message with ` [dev dependency]`; a name in both lists counts as runtime and still fails at or above the threshold.
 - Added: `release-phar` GitLab job, tag-triggered only: it builds `build/proctor.phar` in the pinned `composer:2.10.3` image without Docker-in-Docker, verifies it with `php build/proctor.phar --version`, writes `build/proctor.phar.sha256`, uploads both files to the project's generic package registry under the tag (refusing to overwrite an existing file), and attaches them as asset links to the GitLab Release for the tag via curl and the GitLab API. The phar is published on every release from the next one on.
 - Changed: composer-audit fails when the composer executable is not on PATH or the app has no composer.lock (rule id `proctor/composer-audit/skipped`, message starting with `not audited:`); an active `composer-audit` override in policy-overrides.json with a reason and an expiry downgrades those fails to warnings.
