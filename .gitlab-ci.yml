@@ -3,6 +3,13 @@
 # Pinned to PREFLIGHT 0.1.4. Never use ~latest.
 # PROCTOR requires PHP ^8.3, so the test matrix starts at 8.3.
 # Docker Hub images go through the GitLab Dependency Proxy to avoid the anonymous pull limit.
+# This is the repo's own trusted pipeline: PROCTOR refuses --policy and --today in CI unless
+# PROCTOR_ALLOW_OVERRIDES is exactly 1, and the proctor job below passes --policy=. An app must
+# not do this in its own .gitlab-ci.yml; there the variable belongs to a protected or group-level
+# CI variable of a trusted job.
+variables:
+  PROCTOR_ALLOW_OVERRIDES: "1"
+
 include:
   - component: $CI_SERVER_FQDN/enterprise-apps/preflight/php-test@0.1.4
     inputs:

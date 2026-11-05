@@ -29,16 +29,17 @@ abstract class ProctorTestCase extends TestCase
      * Runs bin/proctor check on the given app and returns the exit code,
      * stdout and stderr.
      *
-     * @param string      $app        a fixture app name
-     * @param string      $format     the report format
-     * @param string|null $policy     an optional policy file; defaults to the fixture policy
-     * @param string|null $phpRuntime an optional --php-runtime value (X.Y.Z)
-     * @param string|null $today      an optional --today value (YYYY-MM-DD); defaults to self::TODAY
-     * @param string|null $path       the PATH the child process uses; defaults to a directory that finds no tools
+     * @param string                $app        a fixture app name
+     * @param string                $format     the report format
+     * @param string|null           $policy     an optional policy file; defaults to the fixture policy
+     * @param string|null           $phpRuntime an optional --php-runtime value (X.Y.Z)
+     * @param string|null           $today      an optional --today value (YYYY-MM-DD); defaults to self::TODAY
+     * @param string|null           $path       the PATH the child process uses; defaults to a directory that finds no tools
+     * @param array<string, string> $extraEnv   environment variables for the child, merged last
      *
      * @return array{exit: int, stdout: string, stderr: string}
      */
-    protected function runProctor(string $app, string $format = 'text', ?string $policy = null, ?string $phpRuntime = null, ?string $today = null, ?string $path = null): array
+    protected function runProctor(string $app, string $format = 'text', ?string $policy = null, ?string $phpRuntime = null, ?string $today = null, ?string $path = null, array $extraEnv = []): array
     {
         $cmd = [
             PHP_BINARY,
@@ -53,7 +54,7 @@ abstract class ProctorTestCase extends TestCase
             $cmd[] = '--php-runtime=' . $phpRuntime;
         }
 
-        return $this->runCommand($cmd, null, $path);
+        return $this->runCommand($cmd, null, $path, $extraEnv);
     }
 
     /**
@@ -91,21 +92,30 @@ abstract class ProctorTestCase extends TestCase
      * Runs bin/proctor with a PATH that finds no tools (unless $path gives
      * one), and returns the exit code, stdout and stderr.
      *
-     * @param list<string> $cmd
+     * The CI markers (CI, GITLAB_CI, GITHUB_ACTIONS) and PROCTOR_ALLOW_OVERRIDES
+     * never leak in from the host; pass them with $extraEnv.
+     *
+     * @param list<string>          $cmd
+     * @param string|null           $envPolicy the PROCTOR_POLICY value, or null
+     * @param array<string, string> $extraEnv  environment variables for the child, merged last
      */
-    private function runCommand(array $cmd, ?string $envPolicy = null, ?string $path = null): array
+    private function runCommand(array $cmd, ?string $envPolicy = null, ?string $path = null, array $extraEnv = []): array
     {
         // The CLI tests must not depend on whether composer is installed (the CI runner has it, the php:*-cli
         // images do not), so bin/proctor runs with a PATH that finds no tools.
+        $scrubbed = ['PATH', 'PROCTOR_POLICY', 'CI', 'GITLAB_CI', 'GITHUB_ACTIONS', 'PROCTOR_ALLOW_OVERRIDES'];
         $env = getenv();
         foreach (array_keys($env) as $key) {
-            if (strcasecmp((string) $key, 'PATH') === 0 || strcasecmp((string) $key, 'PROCTOR_POLICY') === 0) {
+            if (in_array(strtoupper((string) $key), $scrubbed, true)) {
                 unset($env[$key]);
             }
         }
         $env['PATH'] = $path ?? __DIR__ . '/fixtures/no-tools';
         if ($envPolicy !== null) {
             $env['PROCTOR_POLICY'] = $envPolicy;
+        }
+        foreach ($extraEnv as $key => $value) {
+            $env[(string) $key] = (string) $value;
         }
 
         $process = proc_open($cmd, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, null, $env);

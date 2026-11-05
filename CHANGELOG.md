@@ -9,6 +9,7 @@
 - Note: this is a pre-1.0 behavior change: consumers on `^0.5` that have no lock, or run where Composer is not on PATH, will now fail until the audit can run or an override is recorded.
 - Changed: composer-audit fails each ignore entry in composer.json that no active `composer-audit` override backs (rule id `proctor/composer-audit/unbacked-ignore`); an override backs the entry when its `advisory` field equals the entry's advisory id case-insensitively, its `package` field matches the entry's package, or it carries no scope at all, and a backing override is not reported unused.
 - Note: this is a pre-1.0 behavior change: consumers on `^0.5` that carry audit ignore entries in composer.json without matching overrides will now fail until each entry is backed.
+- Changed: `--policy` and `--today` are refused in CI (any of `CI`, `GITLAB_CI` or `GITHUB_ACTIONS` set to a value other than `0` or `false`) with a tool error (exit 2) unless the job sets `PROCTOR_ALLOW_OVERRIDES=1`: in CI the policy and the date must come from the stack, not from the app being checked, so a pipeline that could pass its own policy or date could grade itself. Pre-1.0 behavior change for consumers on ^0.5 whose pipelines pass these options: set `PROCTOR_ALLOW_OVERRIDES: "1"` in a trusted job (a protected or group-level CI variable, not the app's .gitlab-ci.yml), or drop the option and name the policy with `PROCTOR_POLICY`, which stays allowed in CI.
 
 ## 0.5.0 (2026-11-03)
 

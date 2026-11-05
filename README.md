@@ -77,8 +77,8 @@ vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--po
 
 - `--path`: path to the application to check (default `.`).
 - `--format`: output format: `text` (default), `json`, `codequality`, or `sarif`.
-- `--policy`: path to the CREED-format policy file. Optional: without it, PROCTOR resolves the policy from the `PROCTOR_POLICY` environment variable, then the app's `vendor/waynestate/creed/policy/policy.json`, then the copy bundled with PROCTOR (see [Policy](#policy)).
-- `--today`: override today's date (YYYY-MM-DD) so runs are deterministic.
+- `--policy`: path to the CREED-format policy file. Optional: without it, PROCTOR resolves the policy from the `PROCTOR_POLICY` environment variable, then the app's `vendor/waynestate/creed/policy/policy.json`, then the copy bundled with PROCTOR (see [Policy](#policy)). In CI this option is refused unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`.
+- `--today`: override today's date (YYYY-MM-DD) so runs are deterministic. In CI this option is refused unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`.
 - `--php-runtime`: the PHP version that will serve the app (X.Y.Z), used by the `unpatched` check. CI should pass the deploy image's PHP, not the runner's.
 
 ## Checks
@@ -342,6 +342,21 @@ and the run continues with the next source; a vendor copy older than the
 bundled one is skipped the same way. An explicit source (`--policy` or
 `PROCTOR_POLICY`) that points at a missing or invalid file is still an error
 (exit 2).
+
+In CI (any of `CI`, `GITLAB_CI` or `GITHUB_ACTIONS` set to a value other than
+`0` or `false`), `--policy` and `--today` are refused with a tool error (exit
+2): in CI the policy and the date must come from the stack, not from the app
+being checked, so a pipeline that could pass its own policy or date could
+grade itself. The `PROCTOR_POLICY` environment variable stays allowed in CI;
+it is how a trusted job names a policy. A trusted job (a protected or
+group-level CI variable, never the app's own `.gitlab-ci.yml`) can allow the
+options by setting `PROCTOR_ALLOW_OVERRIDES` to exactly `1`:
+
+```yaml
+# Group Settings > CI/CD > Variables: name PROCTOR_ALLOW_OVERRIDES, value 1,
+# type Variable, scope Protected. Never in the app's own .gitlab-ci.yml.
+PROCTOR_ALLOW_OVERRIDES: "1"
+```
 
 Every report names the policy it used: origin (`option`, `env`, `vendor` or
 `bundled`), path, `refreshed_on` and the age in days. The `policy-age` check
