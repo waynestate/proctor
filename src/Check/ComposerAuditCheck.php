@@ -18,7 +18,11 @@ use Waynestate\Proctor\ToolError;
  * expected, so the decision is made from stdout, never from the exit code
  * alone. Each advisory finding names the package, the locked version, the
  * advisory's CVE (or advisory id), its title and its severity. An advisory
- * the app ignores in its composer.json (config.policy.advisories.ignore-id,
+ * on a package that composer.lock lists only in packages-dev is a warning
+ * at any severity, with the message ending in " [dev dependency]"; a name
+ * in both lists counts as runtime, and a name the lock does not list at all
+ * is graded as runtime too. An advisory the app ignores in its
+ * composer.json (config.policy.advisories.ignore-id,
  * config.policy.advisories.ignore or the legacy config.audit.ignore) is a
  * warning, not a fail, and so is anything composer has already moved to its
  * ignored-advisories section. A detailed ignore rule only counts when it
@@ -110,7 +114,9 @@ final class ComposerAuditCheck implements CheckInterface
         $threshold = $this->threshold($context->policy);
         $ignored = $this->ignoredAdvisories($context);
         $ignoreEntry = $this->ignoreEntryFinding($context);
-        $versions = $this->lockedVersions($context);
+        $lockInfo = $this->lockInfo($context);
+        $versions = $lockInfo['versions'];
+        $devOnly = $lockInfo['devOnly'];
 
         $findings = [];
 
@@ -131,23 +137,26 @@ final class ComposerAuditCheck implements CheckInterface
                         continue;
                     }
                     $severity = $entry['severity'] ?? null;
+                    $packageName = (string) $package;
+                    $isDevOnly = isset($devOnly[$packageName]);
                     $findings[] = new Finding(
                         $this->id(),
                         $this->advisoryStatus(
-                            (string) $package,
-                            $versions[(string) $package] ?? null,
+                            $packageName,
+                            $versions[$packageName] ?? null,
                             $entry,
                             $severity,
                             $threshold,
                             $ignored,
                             $alreadyIgnored,
+                            $isDevOnly,
                         ),
-                        $this->advisoryMessage((string) $package, $versions[(string) $package] ?? null, $entry, $severity),
+                        $this->advisoryMessage($packageName, $versions[$packageName] ?? null, $entry, $severity, $isDevOnly),
                         'composer.lock',
                         1,
                         null,
                         'advisory',
-                        [$this->advisoryData((string) $package, $entry)],
+                        [$this->advisoryData($packageName, $entry)],
                     );
                 }
             }
@@ -225,10 +234,10 @@ final class ComposerAuditCheck implements CheckInterface
     }
 
     /**
-     * The status of an advisory: a warning when the app ignores it, or when
-     * composer has already moved it to the ignored section, otherwise a
-     * fail when its severity is at or above the threshold and a warning
-     * below it.
+     * The status of an advisory: a warning when the package is dev-only,
+     * when the app ignores it, or when composer has already moved it to the
+     * ignored section, otherwise a fail when its severity is at or above
+     * the threshold and a warning below it.
      *
      * @param array<string, mixed> $entry
      * @param array{ids: list<string>, packages: list<string>, constrained: list<array{package: string, constraint: string}>} $ignored
@@ -241,8 +250,9 @@ final class ComposerAuditCheck implements CheckInterface
         string $threshold,
         array $ignored,
         bool $alreadyIgnored,
+        bool $devOnly,
     ): string {
-        if ($alreadyIgnored || $this->isIgnored($package, $version, $entry, $ignored)) {
+        if ($devOnly || $alreadyIgnored || $this->isIgnored($package, $version, $entry, $ignored)) {
             return Finding::STATUS_WARNING;
         }
 
@@ -360,11 +370,13 @@ final class ComposerAuditCheck implements CheckInterface
 
     /**
      * The finding's text: "<package> <version>: <id> <title> (<severity>)",
-     * naming the locked version when composer.lock records one.
+     * naming the locked version when composer.lock records one. A dev-only
+     * advisory ends with " [dev dependency]" after the severity in
+     * parentheses.
      *
      * @param array<string, mixed> $entry
      */
-    private function advisoryMessage(string $package, ?string $version, array $entry, mixed $severity): string
+    private function advisoryMessage(string $package, ?string $version, array $entry, mixed $severity, bool $devOnly = false): string
     {
         $head = $version !== null && $version !== ''
             ? $package . ' ' . ltrim($version, 'v')
@@ -372,12 +384,15 @@ final class ComposerAuditCheck implements CheckInterface
 
         $title = $entry['title'] ?? null;
 
+        $suffix = $devOnly ? ' [dev dependency]' : '';
+
         return sprintf(
-            '%s: %s %s (%s)',
+            '%s: %s %s (%s)%s',
             $head,
             $this->advisoryId($entry),
             is_string($title) && $title !== '' ? $title : 'no title',
             is_string($severity) && $severity !== '' ? $severity : 'unknown',
+            $suffix,
         );
     }
 
@@ -407,29 +422,36 @@ final class ComposerAuditCheck implements CheckInterface
     }
 
     /**
-     * The versions composer.lock pins, keyed by package name.
+     * What composer.lock records: the pinned versions keyed by package name
+     * and the set of names that appear only in packages-dev. A name in both
+     * lists counts as runtime, so it stays out of the dev-only set. The lock
+     * is read once here and not again per advisory.
      *
-     * @return array<string, string>
+     * @return array{versions: array<string, string>, devOnly: array<string, true>}
      */
-    private function lockedVersions(CheckContext $context): array
+    private function lockInfo(CheckContext $context): array
     {
         $file = $context->appPath . '/composer.lock';
         $raw = file_get_contents($file);
         if ($raw === false) {
-            return [];
+            return ['versions' => [], 'devOnly' => []];
         }
 
         $lock = json_decode($raw, true);
         if (!is_array($lock)) {
-            return [];
+            return ['versions' => [], 'devOnly' => []];
         }
 
         $versions = [];
+        $runtimeNames = [];
+        $devNames = [];
+
         foreach (['packages', 'packages-dev'] as $section) {
             $packages = $lock[$section] ?? [];
             if (!is_array($packages)) {
                 continue;
             }
+            $isDev = $section === 'packages-dev';
             foreach ($packages as $package) {
                 if (!is_array($package)) {
                     continue;
@@ -439,10 +461,24 @@ final class ComposerAuditCheck implements CheckInterface
                 if (is_string($name) && $name !== '' && is_string($version) && $version !== '') {
                     $versions[$name] = $version;
                 }
+                if (is_string($name) && $name !== '') {
+                    if ($isDev) {
+                        $devNames[$name] = true;
+                    } else {
+                        $runtimeNames[$name] = true;
+                    }
+                }
             }
         }
 
-        return $versions;
+        $devOnly = [];
+        foreach ($devNames as $name => $present) {
+            if (!isset($runtimeNames[$name])) {
+                $devOnly[$name] = true;
+            }
+        }
+
+        return ['versions' => $versions, 'devOnly' => $devOnly];
     }
 
     /**

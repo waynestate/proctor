@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Changed: composer-audit warns (instead of failing) for advisories on packages that composer.lock lists only in packages-dev, marking the message with ` [dev dependency]`; a name in both lists counts as runtime and still fails at or above the threshold.
 - Changed: composer-audit fails when the composer executable is not on PATH or the app has no composer.lock (rule id `proctor/composer-audit/skipped`, message starting with `not audited:`); an active `composer-audit` override in policy-overrides.json with a reason and an expiry downgrades those fails to warnings.
 - Note: this is a pre-1.0 behavior change: consumers on `^0.5` that have no lock, or run where Composer is not on PATH, will now fail until the audit can run or an override is recorded.
 - Changed: composer-audit fails each ignore entry in composer.json that no active `composer-audit` override backs (rule id `proctor/composer-audit/unbacked-ignore`); an override backs the entry when its `advisory` field equals the entry's advisory id case-insensitively, its `package` field matches the entry's package, or it carries no scope at all, and a backing override is not reported unused.

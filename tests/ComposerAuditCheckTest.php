@@ -627,6 +627,62 @@ final class ComposerAuditCheckTest extends TestCase
         );
     }
 
+    public function testDevOnlyAdvisoryIsAWarningWithTheDevDependencySuffix(): void
+    {
+        // laravel/framework is listed only in packages-dev, so every
+        // advisory of it warns at any severity and the message ends with
+        // the dev-dependency marker.
+        $app = sys_get_temp_dir() . '/proctor-dev-only-app-' . uniqid();
+        mkdir($app, 0755, true);
+        file_put_contents($app . '/composer.json', (string) json_encode([
+            'name' => 'vendor/dev-only',
+            'require-dev' => ['laravel/framework' => '^9.0'],
+        ]));
+        file_put_contents($app . '/composer.lock', (string) json_encode([
+            'packages' => [],
+            'packages-dev' => [
+                ['name' => 'laravel/framework', 'version' => '9.0.0'],
+            ],
+        ]));
+
+        $findings = $this->runAudit($app, $this->capturedAudit());
+
+        self::assertCount(3, $findings);
+        foreach ($findings as $index => $finding) {
+            self::assertSame(Finding::STATUS_WARNING, $finding->status, sprintf('finding %d status', $index + 1));
+            self::assertSame(self::MESSAGES[$index] . ' [dev dependency]', $finding->message, sprintf('finding %d message', $index + 1));
+        }
+    }
+
+    public function testPackageInBothListsStillFails(): void
+    {
+        // laravel/framework appears in both packages and packages-dev, so
+        // it counts as runtime and the high advisory still fails.
+        $app = sys_get_temp_dir() . '/proctor-both-lists-app-' . uniqid();
+        mkdir($app, 0755, true);
+        file_put_contents($app . '/composer.json', (string) json_encode([
+            'name' => 'vendor/both-lists',
+            'require' => ['laravel/framework' => '^9.0'],
+            'require-dev' => ['laravel/framework' => '^9.0'],
+        ]));
+        file_put_contents($app . '/composer.lock', (string) json_encode([
+            'packages' => [
+                ['name' => 'laravel/framework', 'version' => '9.0.0'],
+            ],
+            'packages-dev' => [
+                ['name' => 'laravel/framework', 'version' => '9.0.0'],
+            ],
+        ]));
+
+        $findings = $this->runAudit($app, $this->capturedAudit());
+
+        $this->assertFindings($findings, [
+            Finding::STATUS_FAIL,
+            Finding::STATUS_WARNING,
+            Finding::STATUS_FAIL,
+        ]);
+    }
+
     public function testAuditRunsComposerWithPluginsOffAndAMinimalEnvironment(): void
     {
         $captured = new class implements ProcessRunnerInterface {
