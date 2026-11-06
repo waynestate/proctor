@@ -47,7 +47,7 @@ final class AgentReadyKit
 
     public const FILES = [
         'assets/agent-ready.css' => 'be9bf22d00b10ab07774db1abe7fb6c4c282b4b6a9a0fe91191ee0a49e83de71',
-        'assets/agent-ready.js' => '17b4c83f48264f96b846102f0e0183d9317b800644e6cf6f0c8219f9960f1cb5',
+        'assets/agent-ready.js' => '7077fa5a37b0d4ec50a78564421155b57ef7a158dd033ebfb8825c0d5df9dbd2',
     ];
 
     /** The stack's agent entry points, listed in every llms.txt except their own. */
@@ -78,7 +78,7 @@ final class AgentReadyPage
 final class AgentReadyMarkdown
 {
     private const SKIP = ['script', 'style', 'template', 'svg', 'nav', 'form', 'button', 'input', 'select',
-        'textarea', 'option', 'label', 'iframe', 'canvas', 'video', 'audio', 'object', 'head', 'link', 'meta'];
+        'textarea', 'option', 'iframe', 'canvas', 'video', 'audio', 'object', 'head', 'link', 'meta'];
 
     private const BLOCK = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'pre', 'blockquote', 'table', 'dl',
         'hr', 'figure', 'section', 'article', 'div', 'header', 'footer', 'main', 'aside', 'details', 'summary',
@@ -242,6 +242,7 @@ final class AgentReadyMarkdown
                 continue;
             }
             $marker = $ordered ? ($n++).'. ' : '- ';
+            $box = $this->taskBox($li);
             $pad = str_repeat(' ', strlen($marker));
             $parts = [];
             $inline = '';
@@ -271,10 +272,69 @@ final class AgentReadyMarkdown
             }
             $item = implode("\n", $parts);
             $item = str_replace("\n", "\n".$pad, $item);
-            $lines[] = $marker.$item;
+            $lines[] = $marker.$box.$item;
         }
 
         return implode("\n", $lines);
+    }
+
+    /**
+     * The task-list box for an item that opens with a checkbox input: "[x] " when the input carries a checked
+     * attribute, "[ ] " otherwise, "" when the item does not open with a checkbox.
+     */
+    private function taskBox(DOMElement $li): string
+    {
+        $checkbox = $this->taskCheckbox($li);
+
+        return $checkbox === null ? '' : ($checkbox->hasAttribute('checked') ? '[x] ' : '[ ] ');
+    }
+
+    /**
+     * The checkbox that opens a task-list item, when the item's first content is one: the input itself, or the
+     * first input of a label or paragraph that starts the item. Null when the item does not open with a checkbox,
+     * so the item keeps rendering as plain text.
+     */
+    private function taskCheckbox(DOMElement $li): ?DOMElement
+    {
+        $first = $this->openingElement($li);
+        if ($first !== null && $this->isCheckbox($first)) {
+            return $first;
+        }
+        $tag = $first === null ? '' : strtolower($first->tagName);
+        if ($tag !== 'label' && $tag !== 'p') {
+            return null;
+        }
+        $inner = $this->openingElement($first);
+
+        return $inner !== null && $this->isCheckbox($inner) ? $inner : null;
+    }
+
+    /**
+     * The first element of a list item, or of the label or paragraph that opens one, past whitespace and
+     * comments. Null when text comes first, because then the item does not open with a checkbox.
+     */
+    private function openingElement(DOMElement $el): ?DOMElement
+    {
+        foreach ($el->childNodes as $child) {
+            if ($child instanceof DOMText) {
+                if (trim($child->data) !== '') {
+                    return null;
+                }
+
+                continue;
+            }
+            if ($child instanceof DOMElement) {
+                return $child;
+            }
+        }
+
+        return null;
+    }
+
+    /** Whether an element is the checkbox input of a task-list item. */
+    private function isCheckbox(DOMElement $el): bool
+    {
+        return strtolower($el->tagName) === 'input' && strtolower((string) $el->getAttribute('type')) === 'checkbox';
     }
 
     /** @return list<string> */
