@@ -1275,6 +1275,8 @@ Fix by deleting the folder and running `git rm -r --cached` on it; if you change
 
 It reads the installed version from composer.lock (`waynestate/wayne-ui`), package-lock.json (`@waynestate/wayne-ui-css`, `@waynestate/wayne-ui-vue`) and committed copies of `wayne-ui.css` (the version in the banner of the first 400 bytes). It asks composer once per run for the release list (`composer show waynestate/wayne-ui --all --format=json --no-interaction`), and warns, per source, when the installed version is behind the highest stable release of the same major. Pre-releases (-dev, alpha, beta, RC) and other majors are ignored.
 
+The release list is whatever Composer can install in that app: it follows the app's own `repositories` and the Composer mirror, not git tags on any one host. So "behind" always means "behind a version this app could really install".
+
 A locked WayneUI 1.x (`cit-web-infra/wayne-ui`) gets its own warning with no lookup: 1.x is Bootstrap 3 and predates the comparison.
 
 Only committed files count as copies: the git-tracked files when the app path sits in a git repository and git can be run, otherwise the files on disk; skipped at any depth: `node_modules/` and `.git/`, and the top-level `vendor/`.
