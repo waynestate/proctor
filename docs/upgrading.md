@@ -7,9 +7,9 @@ description: How to upgrade PROCTOR to a newer release and note the changes that
 
 PROCTOR is the invigilator, so upgrading it is a seat change, not a new exam: same hall, fresher pen. This page tells you how to move an app from one PROCTOR release to the next and which changes affect your runs. Start with the release that has a break, then work down to the additive ones.
 
-## Unreleased
+## 0.6.0
 
-Not released yet. This is a pre-1.0 behavior change for consumers on `^0.5`: everything keeps working, except that one refusal can turn a passing pipeline into a failing one.
+Released 2026-11-05. This is a pre-1.0 minor: consumers that pin `^0.5` stay on 0.5.x until they move their constraint to `^0.6`. Most of what is new is additive, but three changes can turn a passing run into a failing one.
 
 ### Breaking
 
@@ -27,17 +27,19 @@ Not released yet. This is a pre-1.0 behavior change for consumers on `^0.5`: eve
 
 ### Steps
 
-1. Re-run the check in CI and read any `Refused:` message first:
+1. Move the PROCTOR constraint in your composer.json from `^0.5` to `^0.6`, then apply it with `composer require waynestate/proctor --dev`.
+2. Re-run the check in CI and read any `Refused:` message first:
 
    ```bash
    vendor/bin/proctor check
    ```
 
-2. For each refused option, either set `PROCTOR_ALLOW_OVERRIDES` to `1` on the trusted job (GitLab: group Settings, CI/CD, Variables, scope Protected), or drop the option and name the policy with `PROCTOR_POLICY`.
-3. Make sure Composer and composer.lock are present where the check runs, or record a composer-audit override.
+3. For each refused option, either set `PROCTOR_ALLOW_OVERRIDES` to `1` on the trusted job (GitLab: group Settings, CI/CD, Variables, scope Protected), or drop the option and name the policy with `PROCTOR_POLICY`.
+4. Make sure Composer and composer.lock are present where the check runs, or record a composer-audit override.
 
 ### How to verify
 
+- Run `vendor/bin/proctor check --format=json` and confirm the `version` field reads `0.6.0`.
 - Run `vendor/bin/proctor check` in CI: the run reaches the checks when no refused option is present, or the trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`.
 - Confirm the refusal names only the option or options that were given (`Refused: --policy is not accepted in CI, ...`, `Refused: --today is not accepted in CI, ...`, or both named together).
 
