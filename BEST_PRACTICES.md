@@ -1029,3 +1029,26 @@ declares one of the Preflight job names (`proctor`, `php-test`, `composer-audit`
 `renovate`, `package-publish`) with `script`, `before_script` or `after_script` while a Preflight component is
 included (`proctor/preflight-pinned/script-override`). `PreflightPinnedCheckTest` pins the fixture outcomes for
 pinned and unpinned includes and for overridden jobs.
+
+## Framework lines
+
+### The laravel-eol check
+CREED's handbook asks an app to run a Laravel release that still gets security fixes. The policy already records each
+Laravel line's active and security dates, and the reader can classify a version against them; what was missing was a
+check that applies the verdict to the lock.
+
+**How the stack holds it: Checked.** The `laravel-eol` check classifies the locked `laravel/framework` version against
+the policy as of `--today`: active passes, security-only warns naming the end date and the days left, eol fails, and a
+line past the security end date plus the grace window fails as `eol_grace_expired` (rule id `proctor/laravel-eol`). An
+active override downgrades the eol fail, never the grace-expired one. No finding without `laravel/framework` in
+composer.lock. `LaravelEolCheckTest` pins the fixture outcomes for every state and for the override.
+
+### The laravel-php check
+CREED's handbook asks an app to match its framework release to a PHP version it supports. The policy records each
+Laravel major's PHP range; what was missing was a check that compares the range with the app's declared floor.
+
+**How the stack holds it: Checked.** The `laravel-php` check fails when composer.json's `require.php` allows a PHP
+version outside the policy range for the locked Laravel major, and passes when the constraint fits (rule id
+`proctor/laravel-php`). No finding without `laravel/framework` in composer.lock, without a recorded range, or without a
+`require.php`: php-floor owns the missing-constraint verdict. `LaravelPhpCheckTest` pins the fixture outcomes for the
+pass, both out-of-range directions, the override and the skips.

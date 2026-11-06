@@ -1,0 +1,8 @@
+[
+    {
+        "check": "laravel-eol",
+        "reason": "fixture: upgrade to Laravel 12 scheduled for the next release",
+        "expires": "2026-12-31",
+        "approved_by": "tester"
+    }
+]

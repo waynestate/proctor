@@ -1,0 +1,8 @@
+[
+    {
+        "check": "laravel-php",
+        "reason": "fixture: PHP 8.1 still runs on the staging container",
+        "expires": "2026-12-31",
+        "approved_by": "tester"
+    }
+]

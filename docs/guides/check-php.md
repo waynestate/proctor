@@ -1,11 +1,11 @@
 ---
 title: PHP checks
-description: The checks that grade the PHP floor, patch currency, platform portability, MySQL 5.6 compatibility and deploy scripts.
+description: The checks that grade the PHP floor, the locked Laravel line, patch currency, MySQL 5.6 compatibility and the age of the policy in use.
 ---
 
 # PHP checks
 
-This page covers the four PROCTOR checks that grade the PHP an app runs on and the database it talks to: the PHP floor, patch currency, MySQL 5.6 compatibility, and the age of the policy in use. Run `vendor/bin/proctor check` against the app path, then fix the finding the report names. The proctor grades the ink before it grades the handwriting.
+This page covers the six PROCTOR checks that grade the PHP an app runs on, the Laravel it locks, and the database it talks to: the PHP floor, the Laravel line's state and PHP range, patch currency, MySQL 5.6 compatibility, and the age of the policy in use. Run `vendor/bin/proctor check` against the app path, then fix the finding the report names. The proctor grades the ink before it grades the handwriting.
 
 The other two checks that read PHP and deploy scripts, `portability` and `destructive-deploy`, are covered on the [CI checks](check-ci.md) page.
 
@@ -34,6 +34,33 @@ CI should pass the deploy image's PHP, not the runner's.
 | Check | Rule id |
 | --- | --- |
 | `unpatched` | `proctor/unpatched` |
+
+## laravel-eol
+
+`laravel-eol` classifies the locked `laravel/framework` version against the policy as of `--today`. It reads the version from composer.lock (`packages`, then `packages-dev`); a leading `v` is stripped, and a version that is not plain numeric (a dev alias) earns no finding, because the reader does not guess.
+
+- An active line passes, naming the line's end date when it has one.
+- A line in security-only support warns, naming the end date and the days left (`ends today`, `1 day left`, or `N days left`), the same midnight-to-midnight comparison php-floor uses.
+- A line past its security end date fails as `eol`; past the end date plus the policy's grace window it fails as `eol_grace_expired`. Both name the security end date when the line has one.
+
+An active `laravel-eol` override downgrades the `eol` fail to a warning; it never downgrades `eol_grace_expired`. There is no finding when composer.lock has no `laravel/framework` or the version resolves to no policy line.
+
+| Check | Rule id |
+| --- | --- |
+| `laravel-eol` | `proctor/laravel-eol` |
+
+## laravel-php
+
+`laravel-php` checks that composer.json's `require.php` stays inside the PHP range the policy records for the locked Laravel major. It reads the version from composer.lock and the range from the policy's `requires` block for that major's line, then asks whether every PHP version the constraint allows is one the major can run on. The range's max counts as supported, so a max of `8.5` admits everything below `8.6`.
+
+- A constraint inside the range passes; the message names the app's constraint, the policy range and the Laravel major.
+- A constraint that allows a PHP version outside the range fails: the app would not boot on PHP it declares.
+
+An active `laravel-php` override downgrades the fail to a warning. There is no finding when composer.lock has no `laravel/framework`, the line has no recorded range, or composer.json declares no `require.php`: php-floor owns the missing-constraint verdict. A present `require.php` that is not a valid version constraint is a tool error.
+
+| Check | Rule id |
+| --- | --- |
+| `laravel-php` | `proctor/laravel-php` |
 
 ## mysql56
 

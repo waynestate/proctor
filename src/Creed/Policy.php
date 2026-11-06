@@ -475,6 +475,56 @@ final class Policy
     }
 
     /**
+     * The requires object of a version line, as an array.
+     *
+     * What the release needs to run: a PHP range under php, and the minimum
+     * MySQL and MariaDB versions. Null when the line has no requires object,
+     * or the component or version is unknown, because the field is optional
+     * and the reader does not guess.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function requires(string $component, string $version): ?array
+    {
+        $versions = $this->components[$component]['versions'] ?? null;
+        if ($versions === null) {
+            return null;
+        }
+        if (!array_key_exists($version, $versions)) {
+            return null;
+        }
+        $requires = $versions[$version]['requires'] ?? null;
+        return is_array($requires) ? $requires : null;
+    }
+
+    /**
+     * The PHP range a version line records, as ['min' => ..., 'max' => ...].
+     *
+     * Both bounds are strings, as in the JSON. Null when the line has no
+     * requires object, or its php range has no min and max, or the component
+     * or version is unknown.
+     *
+     * @return array{min: string, max: string}|null
+     */
+    public function phpRange(string $component, string $version): ?array
+    {
+        $requires = $this->requires($component, $version);
+        if ($requires === null) {
+            return null;
+        }
+        $php = $requires['php'] ?? null;
+        if (!is_array($php)) {
+            return null;
+        }
+        $min = $php['min'] ?? null;
+        $max = $php['max'] ?? null;
+        if (!is_string($min) || !is_string($max)) {
+            return null;
+        }
+        return ['min' => $min, 'max' => $max];
+    }
+
+    /**
      * Whole days until a version's security_until date.
      *
      * Zero on that day, positive before it, negative after it. Null when the

@@ -1,0 +1,10 @@
+{
+    "packages": [
+        {
+            "name": "symfony/console",
+            "version": "7.4.2"
+        }
+    ],
+    "packages-dev": [],
+    "content-hash": "fixture"
+}

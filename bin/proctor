@@ -16,6 +16,8 @@ use Waynestate\Proctor\Check\ComposerVersionCheck;
 use Waynestate\Proctor\Check\DestructiveDeployCheck;
 use Waynestate\Proctor\Check\Finding;
 use Waynestate\Proctor\Check\InstantClientCommittedCheck;
+use Waynestate\Proctor\Check\LaravelEolCheck;
+use Waynestate\Proctor\Check\LaravelPhpCheck;
 use Waynestate\Proctor\Check\LockCommittedCheck;
 use Waynestate\Proctor\Check\Mysql56Check;
 use Waynestate\Proctor\Check\OverridesCheck;
@@ -183,6 +185,8 @@ $application->addCommand(new class () extends Command {
             $checks = [
                 new PhpFloorCheck(),
                 new UnpatchedCheck(),
+                new LaravelEolCheck(),
+                new LaravelPhpCheck(),
                 new UnboundedConstraintsCheck(),
                 new ComposerConfigCheck(),
                 new LockCommittedCheck(),

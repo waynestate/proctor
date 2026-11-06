@@ -23,6 +23,8 @@ final class RuleIdContractTest extends ProctorTestCase
         // The check's default finding (no named rule).
         'proctor/php-floor',
         'proctor/unpatched',
+        'proctor/laravel-eol',
+        'proctor/laravel-php',
         'proctor/lock-committed',
         'proctor/destructive-deploy',
         'proctor/overrides',

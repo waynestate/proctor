@@ -9,7 +9,7 @@ This page lists every check PROCTOR runs in a single `vendor/bin/proctor check` 
 
 ![Nine real lines from PROCTOR's text report, one per check shown: FAIL php-floor, WARN unpatched, FAIL unbounded-constraints, PASS lock-committed, WARN portability, WARN mysql56, WARN ci-pipelines, PASS composer-audit, FAIL overrides. Each line is written in words; color only repeats what the word says.](../readme/report.svg)
 
-*Nine of the seventeen checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
+*Nine of the twenty checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
 
 ## How a check reports
 
@@ -30,10 +30,12 @@ The six checks that read composer.json and composer.lock. Details and fixes: [Co
 
 ## PHP and database
 
-The checks that grade the PHP floor, patch currency, MySQL 5.6 compatibility and the age of the policy in use. Details and fixes: [PHP checks](check-php.md).
+The checks that grade the PHP floor, the locked Laravel line, patch currency, MySQL 5.6 compatibility and the age of the policy in use. Details and fixes: [PHP checks](check-php.md).
 
 - `php-floor`: fails when the lowest PHP version allowed by `require.php` is past security support plus the grace window, when composer.json has no usable php constraint, or when there is no composer.json at all.
 - `unpatched`: warns when a locked component is behind the policy's `latest_patch` for its version line, and passes when it is current. Reads laravel from composer.lock (`laravel/framework`), vue and inertia from package-lock.json (`vue`, `@inertiajs/vue3`), and the PHP runtime from `--php-runtime`. No finding when the component, its version line, or `latest_patch` is absent from the policy.
+- `laravel-eol`: classifies the locked `laravel/framework` version against the policy as of `--today`: active passes, naming the line's end date when it has one; security-only warns, naming the end date and the days left; eol fails, and past the security end date plus the grace window it fails as `eol_grace_expired`, each naming the security end date when the line has one. No finding when composer.lock has no `laravel/framework` or the version resolves to no policy line.
+- `laravel-php`: fails when composer.json's `require.php` allows a PHP version outside the range the policy records for the locked Laravel major, and passes when the constraint fits the range; the message names the app's constraint, the policy range and the Laravel major. No finding when composer.lock has no `laravel/framework`, the line has no recorded range, or composer.json declares no `require.php`.
 - `mysql56`: warns when migrations or app code use MySQL features the shared 5.6 server rejects: JSON columns (in `database/`) and JSON queries, generated columns, `renameColumn`/`renameIndex`, vector, invisible and spatial columns, `Schema::hasColumn`-style introspection, raw SQL with 5.7+ syntax, the upsert row alias, indexed strings over 191 characters, date columns defaulting to the current time, and the `db:show`/`db:monitor` commands. Warnings, not failures: an app on its own newer database is not affected.
 - `policy-age`: warns when the policy in use is more than 60 days old (its `refreshed_on` date is more than 60 days before `--today`), or when a non-bundled policy has no `refreshed_on` date. Warning only: an old policy never fails a run.
 
