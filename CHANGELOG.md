@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Security: the front-page deploy layer moves to Symfony 7.4.23 (symfony/http-foundation and symfony/yaml advisories, including CVE-2026-118514).
+
 ## 0.6.0 (2026-11-05)
 
 - This is a pre-1.0 minor: consumers that pin `^0.5` stay on 0.5.x until they move their constraint to `^0.6`. Three changes can turn a passing run into a failing one (see the Note entries below).
