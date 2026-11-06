@@ -384,6 +384,75 @@ YAML,
         self::assertSame('gitlab pipeline runs composer ci', $findings[0]->message);
     }
 
+    public function testGitlabScriptLineWithComposerUpdateWarns(): void
+    {
+        $findings = (new CiPipelinesCheck())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/ci-pipelines-composer-update-gitlab-app'),
+        );
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertSame('proctor/ci-pipelines/composer-update', $findings[0]->ruleId);
+        self::assertSame(
+            [['ci-pipelines-composer-update', '.gitlab-ci.yml', 6]],
+            $this->triples($findings),
+        );
+        self::assertSame(
+            'ci-pipelines-composer-update: CI runs "composer update" in composer-ci; install from the lock with "composer install" instead (rule 3.7).',
+            $findings[0]->message,
+        );
+    }
+
+    public function testGithubStepRunWithComposerUpdateWarns(): void
+    {
+        $findings = (new CiPipelinesCheck())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/ci-pipelines-composer-update-github-app'),
+        );
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertSame('proctor/ci-pipelines/composer-update', $findings[0]->ruleId);
+        self::assertSame(
+            [['ci-pipelines-composer-update', '.github/workflows/ci.yml', 17]],
+            $this->triples($findings),
+        );
+        self::assertSame(
+            'ci-pipelines-composer-update: CI runs "composer update" in Refresh dependencies; install from the lock with "composer install" instead (rule 3.7).',
+            $findings[0]->message,
+        );
+    }
+
+    public function testChainedCommandsWarnOncePerLine(): void
+    {
+        $findings = (new CiPipelinesCheck())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/ci-pipelines-composer-update-chained-app'),
+        );
+
+        self::assertCount(2, $findings);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertSame(Finding::STATUS_WARNING, $findings[1]->status);
+        self::assertSame(
+            [
+                ['ci-pipelines-composer-update', '.gitlab-ci.yml', 5],
+                ['ci-pipelines-composer-update', '.gitlab-ci.yml', 10],
+            ],
+            $this->triples($findings),
+        );
+        self::assertStringContainsString('CI runs "composer update foo/bar" in composer-ci', $findings[0]->message);
+        self::assertStringContainsString('CI runs "composer update bar/baz" in refresh', $findings[1]->message);
+    }
+
+    public function testComposerUpdateInCommentsDoesNotWarn(): void
+    {
+        $findings = (new CiPipelinesCheck())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/ci-pipelines-composer-update-comment-app'),
+        );
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+        self::assertSame('gitlab pipeline runs composer ci', $findings[0]->message);
+    }
+
     /**
      * A temp app whose composer.json names it a stack package. When
      * $githubMirror is not null, extra.proctor.github-mirror carries that

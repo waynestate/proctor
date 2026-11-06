@@ -1,0 +1,10 @@
+# A pipeline whose script lines chain composer commands together.
+composer-ci:
+  image: composer:2.10.3
+  script:
+    - composer install && composer update foo/bar
+    - composer ci
+refresh:
+  image: composer:2.10.3
+  script:
+    - composer update bar/baz && composer require baz/qux

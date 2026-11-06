@@ -1,0 +1,8 @@
+# composer update in a YAML comment never runs.
+composer-ci:
+  image: composer:2.10.3
+  script:
+    - |
+      composer install && # composer update
+      composer ci
+    - composer ci

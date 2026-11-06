@@ -25,6 +25,13 @@ use Symfony\Component\Yaml\Yaml;
  * pipeline that sets COMPOSER_NO_AUDIT or COMPOSER_NO_BLOCKING in its
  * environment, or COMPOSER_AUDIT_ABANDONED to ignore, warns
  * (proctor/ci-pipelines/composer-audit-off), whatever the project kind.
+ *
+ * A script line of a GitLab job (script, before_script or after_script)
+ * or a GitHub step run that carries a command segment starting with
+ * composer update or composer require warns once per line
+ * (proctor/ci-pipelines/composer-update): CI installs from the lock,
+ * rule 3.7. A segment that starts with # after trimming is a comment
+ * inside a block string, not a command, and never fires.
  */
 final class CiPipelinesCheck implements CheckInterface
 {
@@ -168,27 +175,48 @@ final class CiPipelinesCheck implements CheckInterface
 
         $findings = $this->composerAuditOffFindings($data, $absolutePath, self::GITLAB_CI, true);
 
-        foreach ($data as $job) {
+        $runsComposerCi = false;
+        $seen = [];
+        foreach ($data as $jobName => $job) {
             // A GitLab job is a top-level map with a script key.
-            if (!is_array($job) || !isset($job['script'])) {
+            if (!is_array($job)) {
                 continue;
             }
-            foreach ($this->scriptLines($job['script']) as $line) {
-                if ($this->lineRunsComposerCi($line)) {
-                    return $findings;
+            foreach (['script', 'before_script', 'after_script'] as $key) {
+                if (!isset($job[$key])) {
+                    continue;
+                }
+                foreach ($this->scriptLines($job[$key]) as $line) {
+                    // Only a job's script counts for the composer ci contract.
+                    if ($key === 'script' && $this->lineRunsComposerCi($line)) {
+                        $runsComposerCi = true;
+                    }
+                    $finding = $this->composerUpdateFinding(
+                        $line,
+                        (string) $jobName,
+                        (string) $jobName,
+                        self::GITLAB_CI,
+                        $absolutePath,
+                        $seen,
+                    );
+                    if ($finding !== null) {
+                        $findings[] = $finding;
+                    }
                 }
             }
         }
 
-        $findings[] = new Finding(
-            $this->id(),
-            $status,
-            'ci-pipelines-gitlab-no-ci: no job in .gitlab-ci.yml runs composer ci; add a job whose script runs composer ci',
-            self::GITLAB_CI,
-            1,
-            null,
-            'gitlab-no-ci',
-        );
+        if (!$runsComposerCi) {
+            $findings[] = new Finding(
+                $this->id(),
+                $status,
+                'ci-pipelines-gitlab-no-ci: no job in .gitlab-ci.yml runs composer ci; add a job whose script runs composer ci',
+                self::GITLAB_CI,
+                1,
+                null,
+                'gitlab-no-ci',
+            );
+        }
 
         return $findings;
     }
@@ -266,10 +294,11 @@ final class CiPipelinesCheck implements CheckInterface
         );
 
         $runsComposerCi = false;
+        $seen = [];
         $jobs = $data['jobs'] ?? null;
 
         if (is_array($jobs)) {
-            foreach ($jobs as $job) {
+            foreach ($jobs as $jobName => $job) {
                 if (!is_array($job)) {
                     continue;
                 }
@@ -294,14 +323,28 @@ final class CiPipelinesCheck implements CheckInterface
                 if (!is_array($steps)) {
                     continue;
                 }
-                foreach ($steps as $step) {
+                foreach ($steps as $stepIndex => $step) {
                     if (!is_array($step)) {
                         continue;
                     }
                     if (isset($step['run'])) {
+                        $stepName = is_string($step['name'] ?? null)
+                            ? $step['name']
+                            : sprintf('step %d', $stepIndex + 1);
                         foreach ($this->scriptLines($step['run']) as $line) {
                             if ($this->lineRunsComposerCi($line)) {
                                 $runsComposerCi = true;
+                            }
+                            $finding = $this->composerUpdateFinding(
+                                $line,
+                                (string) $jobName . ' / ' . $stepName,
+                                $stepName,
+                                self::GITHUB_CI,
+                                $absolutePath,
+                                $seen,
+                            );
+                            if ($finding !== null) {
+                                $findings[] = $finding;
                             }
                         }
                     }
@@ -558,6 +601,71 @@ final class CiPipelinesCheck implements CheckInterface
         }
 
         return false;
+    }
+
+    /**
+     * The warning for a script line that carries a command segment
+     * starting with composer update or composer require, or null when no
+     * segment of the line does. One finding per (file, context, line):
+     * the same line reached twice earns one warning, whatever the walk.
+     * Segments that start with # after trimming are comments inside a
+     * block string, not commands, and never fire. A line that carries
+     * both commands still earns one finding, for its first matching
+     * segment.
+     *
+     * @param string              $line         the script line as parsed
+     * @param string              $context      what identifies the line for dedupe: the GitLab job
+     *                                         name, or the GitHub job and step together
+     * @param string              $jobOrStep    the job or step name the message shows
+     * @param string              $relativePath the pipeline file, relative to the app root
+     * @param string              $absolutePath the pipeline file, absolute
+     * @param array<string, bool> $seen         already-seen (file, context, line) keys
+     */
+    private function composerUpdateFinding(
+        string $line,
+        string $context,
+        string $jobOrStep,
+        string $relativePath,
+        string $absolutePath,
+        array &$seen,
+    ): ?Finding {
+        $key = $relativePath . "\0" . $context . "\0" . $line;
+        if (isset($seen[$key])) {
+            return null;
+        }
+        $seen[$key] = true;
+
+        $segments = preg_split('/&&|\|\||;/', $line);
+        if ($segments === false) {
+            return null;
+        }
+        foreach ($segments as $segment) {
+            $segment = trim((string) $segment);
+            if ($segment === '' || str_starts_with($segment, '#')) {
+                continue;
+            }
+            foreach (['composer update', 'composer require'] as $command) {
+                $length = strlen($command);
+                if (str_starts_with($segment, $command)
+                    && (strlen($segment) === $length || $segment[$length] === ' ' || $segment[$length] === "\t")) {
+                    return new Finding(
+                        $this->id(),
+                        Finding::STATUS_WARNING,
+                        sprintf(
+                            'ci-pipelines-composer-update: CI runs "%s" in %s; install from the lock with "composer install" instead (rule 3.7).',
+                            $segment,
+                            $jobOrStep,
+                        ),
+                        $relativePath,
+                        $this->lineOf($segment, $absolutePath),
+                        null,
+                        'composer-update',
+                    );
+                }
+            }
+        }
+
+        return null;
     }
 
     /**

@@ -267,8 +267,10 @@ Failures" as A03 and notes that only 11 CVEs map to its CWEs, so an advisory-onl
 Sources: [Packagist: an update on Composer and Packagist supply chain security, 2026-05-27](https://blog.packagist.com/an-update-on-composer-packagist-supply-chain-security);
 [OWASP Top 10 2025, A03 Software Supply Chain Failures](https://top10.owasp.org/2025/A03_2025-Software_Supply_Chain_Failures).
 
-**How the stack holds it: Not yet.** The Preflight `proctor` component runs `composer install`, so it uses the lock.
-Nothing stops a custom job from running `update`, and PROCTOR cannot see the pipeline.
+**How the stack holds it: Partially.** The Preflight `proctor` component runs `composer install`, so it uses the lock.
+PROCTOR's `ci-pipelines` check warns (`proctor/ci-pipelines/composer-update`) when a command segment of a GitLab job
+script line or a GitHub step run starts with `composer update` or `composer require`. What remains: the finding is a
+warning, not a fail, and only `.gitlab-ci.yml` and `.github/workflows/ci.yml` are read.
 
 ### 3.8 Keep locked components on the latest patch
 A locked component that is behind the policy's `latest_patch` for its version line is a warning, not a failure: a

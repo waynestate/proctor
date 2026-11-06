@@ -5,6 +5,7 @@
 - Added: a committed accessibility gate for the site (`scripts/a11y.sh` on Linux and macOS, `scripts/a11y.ps1` on Windows): axe-core with the WCAG 2.2 AA tag set in a real Chromium browser via Playwright, run in Docker, checks every HTML page under `site/` (the front page and all docs pages) in light and dark mode at 360 px and 1280 px, and any violation fails the run.
 - Security: the front-page deploy layer moves to Symfony 7.4.23 (symfony/http-foundation and symfony/yaml advisories, including CVE-2026-118514).
 - Changed: composer-version now also fails when the Composer on PATH is below the CREED policy's `tools.composer.minimum` (2.8.0 in the bundled policy), naming the policy in the message; the CVE floors (2.2.24 on the 2.2 LTS line, 2.7.7 on every other line) stay as absolute floors underneath it, and a policy without a composer minimum behaves exactly as before.
+- Added: ci-pipelines warns when a command segment of a GitLab job script line (`script`, `before_script` or `after_script`) or a GitHub step run starts with `composer update` or `composer require` (rule id `proctor/ci-pipelines/composer-update`): CI must install from the lock (BEST_PRACTICES rule 3.7). A warning, never a fail.
 
 ## 0.6.0 (2026-11-05)
 

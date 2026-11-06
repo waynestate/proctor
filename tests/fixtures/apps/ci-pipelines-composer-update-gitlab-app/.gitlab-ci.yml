@@ -1,0 +1,7 @@
+# A pipeline that refreshes its dependencies instead of installing from the lock.
+composer-ci:
+  image: composer:2.10.3
+  script:
+    - composer install --no-interaction --no-progress --prefer-dist
+    - composer update
+    - composer ci
