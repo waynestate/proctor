@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added: a committed accessibility gate for the site (`scripts/a11y.sh` on Linux and macOS, `scripts/a11y.ps1` on Windows): axe-core with the WCAG 2.2 AA tag set in a real Chromium browser via Playwright, run in Docker, checks every HTML page under `site/` (the front page and all docs pages) in light and dark mode at 360 px and 1280 px, and any violation fails the run.
 - Security: the front-page deploy layer moves to Symfony 7.4.23 (symfony/http-foundation and symfony/yaml advisories, including CVE-2026-118514).
 
 ## 0.6.0 (2026-11-05)
