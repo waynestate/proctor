@@ -1622,10 +1622,14 @@ vendor/bin/proctor check --policy=policy.json
 
 Or set the environment variable for the shell:
 
+Linux / macOS
+
 ```sh
 export PROCTOR_POLICY=/path/to/policy.json
 vendor/bin/proctor check
 ```
+
+Windows (PowerShell)
 
 ```powershell
 $env:PROCTOR_POLICY = 'C:\path\to\policy.json'

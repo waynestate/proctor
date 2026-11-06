@@ -56,12 +56,12 @@
 <pre><code class="language-bash">vendor/bin/proctor check --policy=policy.json
 </code></pre>
 <p>Or set the environment variable for the shell:</p>
-<pre><code class="language-sh">export PROCTOR_POLICY=/path/to/policy.json
+<div class="docs-tabs" data-tabs="linux / macos|windows (powershell)"><div class="docs-tabs__panel" data-tab-label="Linux / macOS"><p class="docs-tabs__label">Linux / macOS</p><pre><code class="language-sh">export PROCTOR_POLICY=/path/to/policy.json
 vendor/bin/proctor check
-</code></pre>
-<pre><code class="language-powershell">$env:PROCTOR_POLICY = 'C:\path\to\policy.json'
+</code></pre></div>
+<div class="docs-tabs__panel" data-tab-label="Windows (PowerShell)"><p class="docs-tabs__label">Windows (PowerShell)</p><pre><code class="language-powershell">$env:PROCTOR_POLICY = 'C:\path\to\policy.json'
 vendor/bin/proctor check
-</code></pre>
+</code></pre></div></div>
 <aside class="docs-callout docs-callout--note" role="note"><p class="docs-callout__label">Note</p><p>The resolver reads each candidate's top-level <code>refreshed_on</code> date from the raw JSON and treats it as a date only when it is an ISO date (<code>YYYY-MM-DD</code>). A value that is absent or not one is treated as absent.</p></aside>
 <h2 id="the-vendor-copy">The vendor copy<a class="docs-heading-link" aria-label="Link to this section" href="#the-vendor-copy">#</a></h2>
 <p>An app that installs CREED gets its policy automatically:</p>
