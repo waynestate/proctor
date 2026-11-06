@@ -13,9 +13,18 @@
    --dk-* tokens and the rules below win without !important. The kit's
    docs.css stays byte for byte Squire's.
 
-   The front page has no dark mode, so the dark set is derived (the exam
-   book's cardstock green at night, cream text, gold where the light page uses
-   green, a softer red pen), as mapped in the stack's docs theme notes.
+   The front page has no dark mode, so the dark set is derived: the same
+   ruled paper under a desk lamp after hours (warm graphite, cream type, a
+   softer red pen, the green ink lifted to a pale tint so it still reads).
+   WSU green stays where the front page puts it, on the seal and the footer
+   band, never as the page. Every kit token is restated in both dark blocks,
+   because the kit's own dark blocks would otherwise win and paint the page
+   WayneUI's dark green.
+
+   Two touches from the front page, behind prefers-reduced-motion:
+   no-preference only: the current page's bubble is pencilled in as the page
+   lands (the answer sheet's fill), and the pager cards take the red pen's
+   tick on hover, the same stroke as the question cards.
 
    File map: 1. fonts and tokens  2. frame  3. masthead  4. sidebar and menu
              5. article  6. code  7. tabs  8. tables, notes  9. toc, pager,
@@ -64,6 +73,7 @@
   --p-margin: rgba(155, 28, 46, 0.38);
   --p-slab: #142521;           /* the install command's ground */
   --p-slab-ink: #f4f1ea;
+  --p-shade: rgba(20, 37, 33, 0.34);   /* the edge of a table that scrolls */
   --p-display: "Young Serif", Georgia, "Times New Roman", serif;
   --p-hand: "Caveat", "Segoe Print", "Bradley Hand", cursive;
   --p-body: var(--wsu-font-family-body, Lato, Calibri, "Helvetica Neue", Arial, sans-serif);
@@ -74,6 +84,9 @@
   --p-pen: var(--p-crimson);
   /* The red pen's underline under every page title: one hand-drawn stroke. */
   --p-pen-stroke: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 14' preserveAspectRatio='none'%3E%3Cpath d='M3 9.5C42 5.2 86 4.1 130 5.4c34 1 69 2.6 107-1.2' fill='none' stroke='%239b1c2e' stroke-width='3.2' stroke-linecap='round'/%3E%3C/svg%3E");
+
+  /* The red pen's tick from the question cards (front page .q__tick). */
+  --p-tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 30'%3E%3Cpath d='M3 16 L14 26 L37 3' fill='none' stroke='%239b1c2e' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 
   /* The kit's tokens, set from the palette above. */
   --dk-bg: var(--p-paper);
@@ -586,7 +599,15 @@ body {
 /* Tables are the answer sheet: white stock, drop-out green rules. */
 .docs-table {
   margin: 1.25rem 0 1.5rem;
-  background: var(--p-white);
+  /* A table wider than the column scrolls in its frame; a soft shade on the
+     side that has more to show (the covers ride with the content, the shades
+     stay on the frame, so each shade lifts once its end is reached). */
+  background:
+    linear-gradient(to right, var(--p-white) 40%, transparent) left / 2.5rem 100% no-repeat local,
+    linear-gradient(to left, var(--p-white) 40%, transparent) right / 2.5rem 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, var(--p-shade), transparent) left / 1.1rem 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, var(--p-shade), transparent) right / 1.1rem 100% no-repeat scroll,
+    var(--p-white);
   border: 1px solid rgba(46, 122, 108, 0.35);
   border-radius: 4px;
   box-shadow: 0 18px 32px -28px rgba(20, 37, 33, 0.55);
@@ -741,6 +762,32 @@ body {
   margin-inline-start: auto;
 }
 
+/* The red pen's tick, as on the front page's question cards: it sits in the
+   card's empty corner (away from the text) and shows on hover or focus. */
+.docs-pager__link {
+  position: relative;
+}
+
+.docs-pager__link::after {
+  content: "";
+  position: absolute;
+  inset-block-start: 0.7rem;
+  inset-inline-end: 0.85rem;
+  inline-size: 28px;
+  block-size: 21px;
+  background: var(--p-tick) no-repeat center / contain;
+  clip-path: inset(0 100% 0 0);
+  pointer-events: none;
+}
+
+.docs-pager__link--next::after {
+  inset-inline: 0.85rem auto;
+}
+
+.docs-pager__link:is(:hover, :focus-visible)::after {
+  clip-path: inset(0 -2px 0 0);
+}
+
 .docs-pager__dir {
   font-size: 0.72rem;
   font-weight: 700;
@@ -787,37 +834,40 @@ body {
 
 /* --------------------------------------------------------------- 10. dark */
 
-/* Derived: the front page has no dark mode. The exam book's cardstock green
-   for the ground, cream text, gold where the light page uses green, and a
-   red pen light enough to read at night. */
+/* Derived: the front page has no dark mode. The exam hall after hours: warm
+   graphite paper with the same faint rules, cream text, the green ink as a
+   pale tint for links, gold for the one detail (Copy, focus, card tops), a
+   red pen light enough to read at night. Green is the seal and the footer. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --p-heading: #f1ecdf;
-    --p-pen: #ff8fa0;
-    --p-margin: rgba(255, 143, 160, 0.3);
-    --p-desk: #162925;
-    --p-stock: #132623;
-    --p-white: #11231f;
-    --p-cream: #1a2f2a;
-    --p-rule: rgba(241, 236, 223, 0.04);
-    --p-hairline: #2f443e;
-    --p-sheet-ink: #8fcfbf;
-    --p-pencil: #f1ecdf;
-    --p-slab: #08150f;
-    --p-green: #0a3f37;
-    --p-pen-stroke: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 14' preserveAspectRatio='none'%3E%3Cpath d='M3 9.5C42 5.2 86 4.1 130 5.4c34 1 69 2.6 107-1.2' fill='none' stroke='%23ff8fa0' stroke-width='3.2' stroke-linecap='round'/%3E%3C/svg%3E");
+    --p-heading: #f4f1ea;
+    --p-pen: #f2939e;
+    --p-margin: rgba(242, 147, 158, 0.26);
+    --p-desk: #24231f;
+    --p-stock: #252420;
+    --p-white: #21201d;
+    --p-cream: #2b2a25;
+    --p-rule: rgba(244, 241, 234, 0.045);
+    --p-hairline: #3b3933;
+    --p-sheet-ink: #93cdbf;
+    --p-pencil: #e9e4d7;
+    --p-slab: #121211;
+    --p-shade: rgba(0, 0, 0, 0.75);
+    --p-tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 30'%3E%3Cpath d='M3 16 L14 26 L37 3' fill='none' stroke='%23f2939e' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    --p-green: #0c5449;
+    --p-pen-stroke: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 14' preserveAspectRatio='none'%3E%3Cpath d='M3 9.5C42 5.2 86 4.1 130 5.4c34 1 69 2.6 107-1.2' fill='none' stroke='%23f2939e' stroke-width='3.2' stroke-linecap='round'/%3E%3C/svg%3E");
 
-    --dk-bg: #0e1f1c;
-    --dk-ink: #f1ecdf;
-    --dk-muted: #b8c4be;
-    --dk-rule: #2f443e;
-    --dk-accent: var(--p-gold);
+    --dk-bg: #1c1b19;
+    --dk-ink: #efeae0;
+    --dk-muted: #bcb6a9;
+    --dk-rule: #3b3933;
+    --dk-accent: #9fd6c7;
     --dk-on-accent: #142521;
     --dk-note: var(--p-gold);
-    --dk-tip: #8fcfbf;
+    --dk-tip: #93cdbf;
     --dk-warning: var(--p-gold);
-    --dk-danger: #ff8fa0;
-    --dk-code-bg: #162925;
+    --dk-danger: #f2939e;
+    --dk-code-bg: #2b2a25;
     --dk-focus: var(--p-gold);
 
     color-scheme: dark;
@@ -825,32 +875,34 @@ body {
 }
 
 :root[data-theme="dark"] {
-  --p-heading: #f1ecdf;
-  --p-pen: #ff8fa0;
-  --p-margin: rgba(255, 143, 160, 0.3);
-  --p-desk: #162925;
-  --p-stock: #132623;
-  --p-white: #11231f;
-  --p-cream: #1a2f2a;
-  --p-rule: rgba(241, 236, 223, 0.04);
-  --p-hairline: #2f443e;
-  --p-sheet-ink: #8fcfbf;
-  --p-pencil: #f1ecdf;
-  --p-slab: #08150f;
-  --p-green: #0a3f37;
-  --p-pen-stroke: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 14' preserveAspectRatio='none'%3E%3Cpath d='M3 9.5C42 5.2 86 4.1 130 5.4c34 1 69 2.6 107-1.2' fill='none' stroke='%23ff8fa0' stroke-width='3.2' stroke-linecap='round'/%3E%3C/svg%3E");
+  --p-heading: #f4f1ea;
+  --p-pen: #f2939e;
+  --p-margin: rgba(242, 147, 158, 0.26);
+  --p-desk: #24231f;
+  --p-stock: #252420;
+  --p-white: #21201d;
+  --p-cream: #2b2a25;
+  --p-rule: rgba(244, 241, 234, 0.045);
+  --p-hairline: #3b3933;
+  --p-sheet-ink: #93cdbf;
+  --p-pencil: #e9e4d7;
+  --p-slab: #121211;
+  --p-shade: rgba(0, 0, 0, 0.75);
+  --p-tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 30'%3E%3Cpath d='M3 16 L14 26 L37 3' fill='none' stroke='%23f2939e' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --p-green: #0c5449;
+  --p-pen-stroke: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 14' preserveAspectRatio='none'%3E%3Cpath d='M3 9.5C42 5.2 86 4.1 130 5.4c34 1 69 2.6 107-1.2' fill='none' stroke='%23f2939e' stroke-width='3.2' stroke-linecap='round'/%3E%3C/svg%3E");
 
-  --dk-bg: #0e1f1c;
-  --dk-ink: #f1ecdf;
-  --dk-muted: #b8c4be;
-  --dk-rule: #2f443e;
-  --dk-accent: var(--p-gold);
+  --dk-bg: #1c1b19;
+  --dk-ink: #efeae0;
+  --dk-muted: #bcb6a9;
+  --dk-rule: #3b3933;
+  --dk-accent: #9fd6c7;
   --dk-on-accent: #142521;
   --dk-note: var(--p-gold);
-  --dk-tip: #8fcfbf;
+  --dk-tip: #93cdbf;
   --dk-warning: var(--p-gold);
-  --dk-danger: #ff8fa0;
-  --dk-code-bg: #162925;
+  --dk-danger: #f2939e;
+  --dk-code-bg: #2b2a25;
   --dk-focus: var(--p-gold);
 
   color-scheme: dark;
@@ -1038,6 +1090,18 @@ body {
   .docs-pager__link {
     max-width: none;
   }
+
+  /* A table of three or more columns keeps readable columns and scrolls in
+     its frame (the edge shade shows there is more) instead of squeezing the
+     prose into one word per line. */
+  .docs-table table:has(th:nth-child(3)) {
+    min-inline-size: 46rem;
+  }
+
+  /* Stacked cards run the full column; the next card no longer hugs the right. */
+  .docs-pager__link--next {
+    margin-inline-start: 0;
+  }
 }
 
 @media (max-width: 420px) {
@@ -1075,6 +1139,18 @@ body {
     transition: transform 0.3s var(--p-ease-out), box-shadow 0.3s;
   }
 
+  /* The tick is drawn left to right, as the pen would. */
+  .docs-pager__link::after {
+    transition: clip-path 0.45s var(--p-ease-out);
+  }
+
+  /* The current page's bubble is pencilled in as the page lands: the answer
+     sheet's fill, once, from the same corner as the front page's bubbles. */
+  .docs-nav a[aria-current="page"]::before {
+    animation: bubble-fill 0.5s var(--p-ease-thunk) 0.35s both;
+    transform-origin: 30% 60%;
+  }
+
   .docs-pager__link:hover {
     transform: translateY(-3px) rotate(-0.3deg);
     box-shadow: 0 16px 28px -18px rgba(20, 37, 33, 0.5);
@@ -1084,6 +1160,11 @@ body {
   .docs-copy__button {
     transition: background-color 0.15s, color 0.15s;
   }
+}
+
+@keyframes bubble-fill {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
 }
 
 @keyframes pen-stroke {
