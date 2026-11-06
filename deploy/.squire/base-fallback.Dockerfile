@@ -7,7 +7,7 @@
 # scripts/parity.sh and parity.ps1 build it for you with `--fallback`:
 #   docker build -f .squire/base-fallback.Dockerfile -t squire/php-parity-base:8.4 .squire
 
-ARG PHP_IMAGE=php:8.4.27-apache
+ARG PHP_IMAGE=php:8.5.12-apache@sha256:08af36df144462d84c7f16190557eec06cb9f656882685610b712a15eec54d46
 ARG NODE_IMAGE=node:22-trixie-slim
 FROM ${NODE_IMAGE} AS node
 
