@@ -179,7 +179,7 @@ $application->addCommand(new class () extends Command {
 
         try {
             $overrides = OverrideFile::load($appPath);
-            $composerVersionCheck = new ComposerVersionCheck();
+            $composerVersionCheck = new ComposerVersionCheck(policy: $policy);
             $checks = [
                 new PhpFloorCheck(),
                 new UnpatchedCheck(),

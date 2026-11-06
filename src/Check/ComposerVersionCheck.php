@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Waynestate\Proctor\Check;
 
+use Waynestate\Proctor\Creed\Policy;
 use Waynestate\Proctor\ToolError;
 
 /**
  * Runs "composer --version --no-ansi" and fails when the Composer on PATH
  * carries the command-injection holes CVE-2024-35241 and CVE-2024-35242:
  * 2.2.x below 2.2.24 on the 2.2 LTS line, or any other 2.x below 2.7.7.
+ * Those CVE floors are absolute. When a CREED policy is given and its
+ * tools.composer.minimum sits above the CVE floor for the version's line,
+ * the policy minimum is the floor instead, and the finding names it.
  * Composer 1 is end of life and fails outright. When composer cannot be run
  * or its version cannot be parsed, the check warns instead of failing, the
  * same way ComposerAuditCheck handles a missing composer.
@@ -35,6 +39,7 @@ final class ComposerVersionCheck implements CheckInterface
 
     public function __construct(
         private readonly ProcessRunnerInterface $process = new ProcessRunner(),
+        private readonly ?Policy $policy = null,
     ) {}
 
     public function id(): string
@@ -121,6 +126,16 @@ final class ComposerVersionCheck implements CheckInterface
 
         $floor = $this->floor($version);
         if (version_compare($version, $floor, '<')) {
+            // The floor differs from the CVE floor only when the policy
+            // minimum raised it.
+            if ($floor !== $this->cveFloor($version)) {
+                return sprintf(
+                    'composer %s is below the CREED policy tools.composer.minimum %s',
+                    $version,
+                    $floor,
+                );
+            }
+
             return sprintf(
                 'composer %s is below the %s floor (CVE-2024-35241, CVE-2024-35242)',
                 $version,
@@ -132,10 +147,26 @@ final class ComposerVersionCheck implements CheckInterface
     }
 
     /**
-     * The floor for the version's line: 2.2.24 on the 2.2 LTS line, 2.7.7
-     * on every other line.
+     * The effective floor for the version: the higher of the CVE floor for
+     * the version's line and the policy's tools.composer.minimum, when the
+     * policy sets one.
      */
     private function floor(string $version): string
+    {
+        $cveFloor = $this->cveFloor($version);
+        $policyMinimum = $this->policyMinimum();
+        if ($policyMinimum !== null && version_compare($policyMinimum, $cveFloor, '>')) {
+            return $policyMinimum;
+        }
+
+        return $cveFloor;
+    }
+
+    /**
+     * The CVE floor for the version's line: 2.2.24 on the 2.2 LTS line,
+     * 2.7.7 on every other line.
+     */
+    private function cveFloor(string $version): string
     {
         $parts = explode('.', $version);
         if ($parts[0] === '2' && ($parts[1] ?? '') === '2') {
@@ -143,6 +174,15 @@ final class ComposerVersionCheck implements CheckInterface
         }
 
         return self::MAINLINE_FLOOR;
+    }
+
+    /**
+     * The policy's tools.composer.minimum, or null when no policy is given
+     * or the policy sets no composer minimum.
+     */
+    private function policyMinimum(): ?string
+    {
+        return $this->policy?->toolMinimum('composer');
     }
 
     private function isComposerOne(string $version): bool

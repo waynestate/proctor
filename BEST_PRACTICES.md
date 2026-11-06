@@ -422,8 +422,11 @@ advisory pages through summaries and did not confirm the CVSS scores against NVD
 
 **How the stack holds it: Partially.** PROCTOR now reads the Composer version, names it in the text report's header
 line, and the `composer-version` check (see 4.6) fails when the Composer on PATH carries the command-injection holes
-CVE-2024-35241 and CVE-2024-35242 or is Composer 1. What remains: no minimum covers the 2026 Perforce flaws fixed in
-2.9.6 and 2.10.3, and the Preflight component installs whatever Composer is current at the time.
+CVE-2024-35241 and CVE-2024-35242 or is Composer 1. Since the next release, the same check also fails when the
+Composer on PATH is below the CREED policy's `tools.composer.minimum` (2.8.0 in the bundled policy), naming the
+policy in the message; the CVE floors stay as absolute floors underneath it. What remains: no minimum covers the 2026
+Perforce flaws fixed in 2.9.6 and 2.10.3, and the Preflight component installs whatever Composer is current at the
+time.
 
 ### 4.9 Report an app that switches the dependency policy off (second pass)
 Look for `config.policy` set to `false`, `policy.malware` or `policy.advisories` set to `false`, and the matching

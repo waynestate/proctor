@@ -69,6 +69,46 @@ final class ComposerVersionCheckTest extends TestCase
         $this->assertVersion('1.10.27', Finding::STATUS_FAIL, 'composer 1.10.27: Composer 1 is end of life');
     }
 
+    public function testComposerTwoSevenNineFailsBelowThePolicyMinimum(): void
+    {
+        $this->assertVersion(
+            '2.7.9',
+            Finding::STATUS_FAIL,
+            'composer 2.7.9 is below the CREED policy tools.composer.minimum 2.8.0',
+            $this->policyWithComposerMinimum('2.8.0'),
+        );
+    }
+
+    public function testComposerTwoTenThreePassesAtThePolicyMinimum(): void
+    {
+        $this->assertVersion(
+            '2.10.3',
+            Finding::STATUS_PASS,
+            'composer 2.10.3 is at or above the 2.8.0 floor',
+            $this->policyWithComposerMinimum('2.8.0'),
+        );
+    }
+
+    public function testComposerTwoSevenNinePassesWithoutAPolicyMinimum(): void
+    {
+        $this->assertVersion('2.7.9', Finding::STATUS_PASS, 'composer 2.7.9 is at or above the 2.7.7 floor');
+    }
+
+    public function testLtsFloorStandsWhenThePolicyNamesNoComposerMinimum(): void
+    {
+        $this->assertVersion(
+            '2.2.23',
+            Finding::STATUS_FAIL,
+            'composer 2.2.23 is below the 2.2.24 floor (CVE-2024-35241, CVE-2024-35242)',
+            Policy::fromArray([
+                'schema_version' => 1,
+                'tools' => [
+                    'php' => ['minimum' => '8.3'],
+                ],
+            ]),
+        );
+    }
+
     public function testUnparseableOutputWarns(): void
     {
         $this->putFakeComposerOnPath();
@@ -109,28 +149,48 @@ final class ComposerVersionCheckTest extends TestCase
      * Runs the check against a stub runner that prints the given version and
      * asserts the finding's status, message and the version kept on the check.
      */
-    private function assertVersion(string $version, string $expectedStatus, string $expectedMessage): void
-    {
+    private function assertVersion(
+        string $version,
+        string $expectedStatus,
+        string $expectedMessage,
+        ?Policy $policy = null,
+    ): void {
         $this->putFakeComposerOnPath();
 
-        $check = new ComposerVersionCheck(new class ($version) implements ProcessRunnerInterface {
-            public function __construct(private readonly string $version) {}
+        $check = new ComposerVersionCheck(
+            new class ($version) implements ProcessRunnerInterface {
+                public function __construct(private readonly string $version) {}
 
-            public function run(array $command, string $cwd, int $timeout = 300, ?array $env = null): ProcessResult
-            {
-                return new ProcessResult(
-                    0,
-                    sprintf("Composer version %s 2025-05-19 13:50:22\n", $this->version),
-                    '',
-                );
-            }
-        });
+                public function run(array $command, string $cwd, int $timeout = 300, ?array $env = null): ProcessResult
+                {
+                    return new ProcessResult(
+                        0,
+                        sprintf("Composer version %s 2025-05-19 13:50:22\n", $this->version),
+                        '',
+                    );
+                }
+            },
+            $policy,
+        );
 
         $finding = $this->runCheck($check);
 
         self::assertSame($expectedStatus, $finding->status);
         self::assertSame($expectedMessage, $finding->message);
         self::assertSame($version, $check->composerVersion);
+    }
+
+    /**
+     * A policy whose tools block sets composer's minimum to the given version.
+     */
+    private function policyWithComposerMinimum(string $minimum): Policy
+    {
+        return Policy::fromArray([
+            'schema_version' => 1,
+            'tools' => [
+                'composer' => ['minimum' => $minimum],
+            ],
+        ]);
     }
 
     /**
