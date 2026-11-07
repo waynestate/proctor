@@ -7,6 +7,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
+use Waynestate\Proctor\Check\AppKeyCheck;
 use Waynestate\Proctor\Check\CheckInterface;
 use Waynestate\Proctor\Check\CheckRunner;
 use Waynestate\Proctor\Check\CiPipelinesCheck;
@@ -14,22 +15,26 @@ use Waynestate\Proctor\Check\ComposerAuditCheck;
 use Waynestate\Proctor\Check\ComposerConfigCheck;
 use Waynestate\Proctor\Check\ComposerVersionCheck;
 use Waynestate\Proctor\Check\DestructiveDeployCheck;
+use Waynestate\Proctor\Check\EnvOutsideConfigCheck;
 use Waynestate\Proctor\Check\Finding;
 use Waynestate\Proctor\Check\InstantClientCommittedCheck;
 use Waynestate\Proctor\Check\LaravelEolCheck;
 use Waynestate\Proctor\Check\LaravelPhpCheck;
 use Waynestate\Proctor\Check\LockCommittedCheck;
 use Waynestate\Proctor\Check\Mysql56Check;
+use Waynestate\Proctor\Check\NodeEolCheck;
 use Waynestate\Proctor\Check\OverridesCheck;
 use Waynestate\Proctor\Check\PhpFloorCheck;
 use Waynestate\Proctor\Check\PolicyAgeCheck;
 use Waynestate\Proctor\Check\PortabilityCheck;
 use Waynestate\Proctor\Check\PreflightPinnedCheck;
 use Waynestate\Proctor\Check\RepoUrlCredentialsCheck;
+use Waynestate\Proctor\Check\ServedFolderCheck;
 use Waynestate\Proctor\Check\UnboundedConstraintsCheck;
 use Waynestate\Proctor\Check\UnpatchedCheck;
 use Waynestate\Proctor\Check\WayneUiForkedViewsCheck;
 use Waynestate\Proctor\Check\WayneUiOutdatedCheck;
+use Waynestate\Proctor\Check\WorldWritableCheck;
 use Waynestate\Proctor\Override\OverrideFile;
 use Waynestate\Proctor\Policy\CiGuard;
 use Waynestate\Proctor\Policy\PolicyResolver;
@@ -187,6 +192,7 @@ $application->addCommand(new class () extends Command {
                 new UnpatchedCheck(),
                 new LaravelEolCheck(),
                 new LaravelPhpCheck(),
+                new NodeEolCheck(),
                 new UnboundedConstraintsCheck(),
                 new ComposerConfigCheck(),
                 new LockCommittedCheck(),
@@ -199,6 +205,10 @@ $application->addCommand(new class () extends Command {
                 $composerVersionCheck,
                 new RepoUrlCredentialsCheck(),
                 new InstantClientCommittedCheck(),
+                new EnvOutsideConfigCheck(),
+                new AppKeyCheck(),
+                new ServedFolderCheck(),
+                new WorldWritableCheck(),
                 new WayneUiForkedViewsCheck(),
                 new WayneUiOutdatedCheck(),
                 new OverridesCheck(),

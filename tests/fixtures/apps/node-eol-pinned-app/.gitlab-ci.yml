@@ -1,0 +1,19 @@
+stages: [build]
+
+build:
+  image: node:20-alpine
+  script:
+    - npm ci
+
+assets:
+  image:
+    name: $CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX/node:26.13.0
+  script:
+    - npm run build
+
+# image: node:18 is a comment, not an image
+
+other:
+  image: someorg/node:1.0
+  script:
+    - echo another org's image carries its own versions

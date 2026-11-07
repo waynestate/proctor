@@ -1,0 +1,7 @@
+{
+    "scripts": {
+        "post-install-cmd": [
+            "chmod -R ugo+rwx bootstrap/cache"
+        ]
+    }
+}

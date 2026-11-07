@@ -41,6 +41,23 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/wayneui-forked-views',
         'proctor/wayneui-outdated',
         'proctor/policy-age',
+        'proctor/node-eol',
+        'proctor/env-outside-config',
+        'proctor/app-key',
+        'proctor/served-folder',
+        'proctor/world-writable',
+        // node-eol
+        'proctor/node-eol/engines',
+        'proctor/node-eol/odd-major',
+        // env-outside-config
+        'proctor/env-outside-config/suppressed',
+        // app-key
+        'proctor/app-key/committed-env',
+        'proctor/app-key/committed-key',
+        'proctor/app-key/cookie-sessions',
+        // served-folder
+        'proctor/served-folder/debug-file',
+        'proctor/served-folder/phpinfo',
         // lock-committed
         'proctor/lock-committed/out-of-sync',
         // unbounded-constraints

@@ -1,0 +1,5 @@
+<?php
+
+return [
+    'key' => env('APP_KEY', 'base64:cHJvY3Rvci1maXh0dXJlLWtleS1ub3QtYS1zZWNyZXQ='),
+];
