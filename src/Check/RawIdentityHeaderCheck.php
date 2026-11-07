@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Waynestate\Proctor\Check;
 
+use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\ArrayDimFetch;
