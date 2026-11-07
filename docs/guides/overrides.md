@@ -16,6 +16,7 @@ This page explains how an app carries a `policy-overrides.json` file next to its
 - The list of valid check ids is built from the checks PROCTOR runs, so a new check needs no change to the guard.
 - An active override that expires within 14 days of `--today` (the expiry day counts) gets a warning finding (`proctor/overrides/expiring`) instead of lapsing without a trace, and an active override whose check raised no failure gets a warning finding (`proctor/overrides/unused`) so a stale approval is removed instead of rotting.
 - A warning never changes the exit code.
+- In `proctor gate`, an expired override blocks the deploy whatever the baseline says, even when its check is not one the gate runs (see [Deploy gate](deploy-gate.md)).
 - When the app has no `policy-overrides.json`, the check produces no findings at all: it passes and prints nothing. Every override, active or expired, is printed as an OVERRIDE line by the CLI in addition to these findings.
 
 > [!WARNING]

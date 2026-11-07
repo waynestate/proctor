@@ -8,7 +8,7 @@ generator: Squire agent-ready
 
 # Exit codes[#](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html#exit-codes)
 
-This page lists the three exit codes `proctor check` ends with and exactly when each one happens, so a pipeline can branch on the right one. The proctor hands back the mark sheet and leaves the hall; the code is the only word it says out loud. For what feeds the verdict, see [Rule ids](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html) and the [checks overview](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html).
+This page lists the three exit codes `proctor check` and `proctor gate` end with and exactly when each one happens, so a pipeline can branch on the right one. The proctor hands back the mark sheet and leaves the hall; the code is the only word it says out loud. For what feeds the verdict, see [Rule ids](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html) and the [checks overview](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html).
 
 ## Codes[#](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html#codes)
 
@@ -19,6 +19,16 @@ This page lists the three exit codes `proctor check` ends with and exactly when 
 | `2` | tool error (bad options, unreadable policy, a present but malformed or unreadable composer.json, or an overrides file that is malformed, unreadable, or names a check that is not registered or the overrides check itself) |
 
 A missing composer.json is not a tool error: the app gets a verdict, with php-floor failing.
+
+## proctor gate[#](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html#proctor-gate)
+
+The deploy gate uses the same three numbers with deploy words (see [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html)):
+
+| Exit code | Meaning |
+| --- | --- |
+| `0` | go: nothing blocked (held and waived failures, warnings allowed) |
+| `1` | no-go: a failure is blocked (a first deploy, a regression against the baseline, or an expired override) |
+| `2` | the gate could not decide (the tool errors above, plus a missing or malformed `--baseline` or a `--record` file it could not write); a platform hook fails open on it |
 
 ## How a run ends[#](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html#how-a-run-ends)
 
