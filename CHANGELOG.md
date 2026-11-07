@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.7.0 (2026-11-07)
+
 - Added: `proctor gate`, the deploy gate (ADR-0006, CREED's deploy-gate chapter). It runs the deploy-time checks (`php-floor`, `unpatched`, `laravel-eol`, `laravel-php`, `lock-committed`, `composer-audit`, `overrides`, `policy-age`) with the app's overrides, ratchets them against `--baseline` (a PROCTOR JSON report, or the running deployment's source directory), prints a short text verdict or JSON (`--format=json`), and exits 0 for go, 1 for no-go and 2 when it could not decide. A failure is blocked on a first deploy (no baseline), on a regression (the baseline passed that rule) or for an expired override of any check; it is held when the baseline failed the same rule id too, and waived when composer-audit had no advisory data. `--record` also writes the JSON verdict to a file that the next run can read as its baseline. `--timeout` defaults to 60 seconds here. Squire's release script consumes it.
 - Changed: `proctor check` and `proctor gate` share one list of registered checks and one reader for `--path`, `--policy`, `--today`, `--php-runtime` and `--timeout`; `proctor check` behaves exactly as before.
 

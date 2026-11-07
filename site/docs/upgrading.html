@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Upgrading | PROCTOR docs</title>
 <meta name="description" content="How to upgrade PROCTOR to a newer release and note the changes that affect your runs.">
-<meta name="docs-version" content="0.6.0">
+<meta name="docs-version" content="0.7.0">
 <link rel="stylesheet" href="../assets/wayne-ui/wayne-ui.css">
 <link rel="stylesheet" href="../assets/docs.css">
 <link rel="stylesheet" href="../docs/theme/proctor.css">
@@ -20,7 +20,7 @@
     <a class="masthead__brand" href="../index.html">
       <img class="masthead__mark" src="../brand/proctor-avatar-256.png" width="34" height="34" alt="">
       <span class="masthead__name">PROCTOR</span>
-      <span class="masthead__form">Form 0.6.0</span>
+      <span class="masthead__form">Form 0.7.0</span>
     </a>
     <nav class="masthead__nav" aria-label="Site">
       <a href="../index.html#questions">Questions</a>
@@ -42,9 +42,34 @@
     <main id="main">
       <article class="docs-article"><h1 id="upgrading">Upgrading<a class="docs-heading-link" aria-label="Link to this section" href="#upgrading">#</a></h1>
 <p>PROCTOR is the invigilator, so upgrading it is a seat change, not a new exam: same hall, fresher pen. This page tells you how to move an app from one PROCTOR release to the next and which changes affect your runs. Start with the release that has a break, then work down to the additive ones.</p>
+<h2 id="0-7-0">0.7.0<a class="docs-heading-link" aria-label="Link to this section" href="#0-7-0">#</a></h2>
+<p>Released 2026-11-07. This is a pre-1.0 minor: consumers that pin <code>^0.6</code> stay on 0.6.x until they move their constraint to <code>^0.7</code>. Most of what is new is additive (<code>proctor gate</code>, the deploy gate, and the <code>raw-identity-header</code>, <code>env-outside-config</code>, <code>app-key</code>, <code>served-folder</code>, <code>laravel-php</code> and <code>laravel-eol</code> checks), but one change can turn a passing run into a failing one.</p>
+<h3 id="breaking">Breaking<a class="docs-heading-link" aria-label="Link to this section" href="#breaking">#</a></h3>
+<ul>
+<li><code>node-eol</code> fails an app that pins an end-of-life Node line (Node 20 or older under the bundled policy, as of 2026-04-30). Node 20 is past the grace window, so it fails as <code>eol_grace_expired</code>, which no override softens: move to Node 22 or 24.</li>
+</ul>
+<h3 id="deprecated">Deprecated<a class="docs-heading-link" aria-label="Link to this section" href="#deprecated">#</a></h3>
+<ul>
+<li>None recorded so far.</li>
+</ul>
+<h3 id="steps">Steps<a class="docs-heading-link" aria-label="Link to this section" href="#steps">#</a></h3>
+<ol>
+<li>
+<p>Move the PROCTOR constraint in your composer.json from <code>^0.6</code> to <code>^0.7</code>, then apply it with <code>composer require waynestate/proctor --dev</code>.</p>
+</li>
+<li>
+<p>Re-run the check in CI and read any <code>node-eol</code> finding first:</p>
+<pre tabindex="0"><code class="language-bash">vendor/bin/proctor check
+</code></pre>
+</li>
+</ol>
+<h3 id="how-to-verify">How to verify<a class="docs-heading-link" aria-label="Link to this section" href="#how-to-verify">#</a></h3>
+<ul>
+<li>Run <code>vendor/bin/proctor check --format=json</code> and confirm the <code>version</code> field reads <code>0.7.0</code>.</li>
+</ul>
 <h2 id="0-6-0">0.6.0<a class="docs-heading-link" aria-label="Link to this section" href="#0-6-0">#</a></h2>
 <p>Released 2026-11-05. This is a pre-1.0 minor: consumers that pin <code>^0.5</code> stay on 0.5.x until they move their constraint to <code>^0.6</code>. Most of what is new is additive, but three changes can turn a passing run into a failing one.</p>
-<h3 id="breaking">Breaking<a class="docs-heading-link" aria-label="Link to this section" href="#breaking">#</a></h3>
+<h3 id="breaking-1">Breaking<a class="docs-heading-link" aria-label="Link to this section" href="#breaking-1">#</a></h3>
 <ul>
 <li><code>composer-audit</code> fails when the composer executable is not on PATH or the app has no composer.lock (rule id <code>proctor/composer-audit/skipped</code>, message starting with <code>not audited:</code>). An app whose audit could not run used to pass with an info line; it now exits non-zero until Composer is installed, the lock is committed, or an active <code>composer-audit</code> override with a reason and an expiry downgrades the fail to a warning.</li>
 <li><code>composer-audit</code> fails each ignore entry in composer.json that no active <code>composer-audit</code> override backs (rule id <code>proctor/composer-audit/unbacked-ignore</code>). An app that silences audit results in its own composer.json used to earn only a count warning; it now exits non-zero until every entry is backed by an active override whose <code>advisory</code> field names the entry's advisory id, whose <code>package</code> field matches the entry's package, or that carries no scope at all. Steps: record one such entry per unbacked ignore in policy-overrides.json with a reason and an expiry, keep the composer.json ignore until the override expires, then remove the ignore entry.</li>
@@ -54,11 +79,11 @@
 <ul>
 <li>An app that failed only because of a dev-only advisory now warns instead. An advisory on a package that composer.lock lists only in <code>packages-dev</code> is a warning at any severity, with the message ending in <code> [dev dependency]</code>; a name in both lists counts as runtime and still fails at or above the threshold. No action is required unless you want the dev dependency updated, because dev tools run in CI.</li>
 </ul>
-<h3 id="deprecated">Deprecated<a class="docs-heading-link" aria-label="Link to this section" href="#deprecated">#</a></h3>
+<h3 id="deprecated-1">Deprecated<a class="docs-heading-link" aria-label="Link to this section" href="#deprecated-1">#</a></h3>
 <ul>
 <li>None recorded so far.</li>
 </ul>
-<h3 id="steps">Steps<a class="docs-heading-link" aria-label="Link to this section" href="#steps">#</a></h3>
+<h3 id="steps-1">Steps<a class="docs-heading-link" aria-label="Link to this section" href="#steps-1">#</a></h3>
 <ol>
 <li>
 <p>Move the PROCTOR constraint in your composer.json from <code>^0.5</code> to <code>^0.6</code>, then apply it with <code>composer require waynestate/proctor --dev</code>.</p>
@@ -75,7 +100,7 @@
 <p>Make sure Composer and composer.lock are present where the check runs, or record a composer-audit override.</p>
 </li>
 </ol>
-<h3 id="how-to-verify">How to verify<a class="docs-heading-link" aria-label="Link to this section" href="#how-to-verify">#</a></h3>
+<h3 id="how-to-verify-1">How to verify<a class="docs-heading-link" aria-label="Link to this section" href="#how-to-verify-1">#</a></h3>
 <ul>
 <li>Run <code>vendor/bin/proctor check --format=json</code> and confirm the <code>version</code> field reads <code>0.6.0</code>.</li>
 <li>Run <code>vendor/bin/proctor check</code> in CI: the run reaches the checks when no refused option is present, or the trusted job sets <code>PROCTOR_ALLOW_OVERRIDES=1</code>.</li>
@@ -83,16 +108,16 @@
 </ul>
 <h2 id="0-5-0">0.5.0<a class="docs-heading-link" aria-label="Link to this section" href="#0-5-0">#</a></h2>
 <p>Released 2026-11-03. This is a pre-1.0 minor: consumers that pin <code>^0.4</code> stay on 0.4.x until they move their constraint to <code>^0.5</code>. Most of what is new warns and never fails, but one check can now turn a passing run into a failing one.</p>
-<h3 id="breaking-1">Breaking<a class="docs-heading-link" aria-label="Link to this section" href="#breaking-1">#</a></h3>
+<h3 id="breaking-2">Breaking<a class="docs-heading-link" aria-label="Link to this section" href="#breaking-2">#</a></h3>
 <ul>
 <li><code>composer-audit</code> fails when <code>composer audit</code> runs but its output is not parseable JSON (rule id <code>proctor/composer-audit/could-not-run</code>, message starting <code>not audited:</code>). A run that audited nothing used to pass quietly; it now exits non-zero, so an app whose audit cannot run will go red until the audit is fixed.</li>
 <li>Consumers that pin <code>^0.4</code> stay on 0.4.x until they move their constraint to <code>^0.5</code>.</li>
 </ul>
-<h3 id="deprecated-1">Deprecated<a class="docs-heading-link" aria-label="Link to this section" href="#deprecated-1">#</a></h3>
+<h3 id="deprecated-2">Deprecated<a class="docs-heading-link" aria-label="Link to this section" href="#deprecated-2">#</a></h3>
 <ul>
 <li>None recorded for this release.</li>
 </ul>
-<h3 id="steps-1">Steps<a class="docs-heading-link" aria-label="Link to this section" href="#steps-1">#</a></h3>
+<h3 id="steps-2">Steps<a class="docs-heading-link" aria-label="Link to this section" href="#steps-2">#</a></h3>
 <ol>
 <li>
 <p>Move the PROCTOR constraint in your composer.json from <code>^0.4</code> to <code>^0.5</code>.</p>
@@ -108,7 +133,7 @@
 </code></pre>
 </li>
 </ol>
-<h3 id="how-to-verify-1">How to verify<a class="docs-heading-link" aria-label="Link to this section" href="#how-to-verify-1">#</a></h3>
+<h3 id="how-to-verify-2">How to verify<a class="docs-heading-link" aria-label="Link to this section" href="#how-to-verify-2">#</a></h3>
 <ul>
 <li>Run <code>vendor/bin/proctor check --format=json</code> and confirm the <code>version</code> field reads <code>0.5.0</code>.</li>
 <li>Confirm the new warnings appear where they apply. They warn and never fail:
@@ -121,15 +146,15 @@
 </ul>
 <h2 id="0-4-0">0.4.0<a class="docs-heading-link" aria-label="Link to this section" href="#0-4-0">#</a></h2>
 <p>Released 2026-11-03. This is a pre-1.0 minor: consumers that pin <code>^0.3</code> stay on 0.3.x until they move their constraint to <code>^0.4</code>. The new checks warn and never fail.</p>
-<h3 id="breaking-2">Breaking<a class="docs-heading-link" aria-label="Link to this section" href="#breaking-2">#</a></h3>
+<h3 id="breaking-3">Breaking<a class="docs-heading-link" aria-label="Link to this section" href="#breaking-3">#</a></h3>
 <ul>
 <li>Consumers that pin <code>^0.3</code> stay on 0.3.x until they move their constraint to <code>^0.4</code>. That constraint move is the only break in this release.</li>
 </ul>
-<h3 id="deprecated-2">Deprecated<a class="docs-heading-link" aria-label="Link to this section" href="#deprecated-2">#</a></h3>
+<h3 id="deprecated-3">Deprecated<a class="docs-heading-link" aria-label="Link to this section" href="#deprecated-3">#</a></h3>
 <ul>
 <li>None recorded for this release.</li>
 </ul>
-<h3 id="steps-2">Steps<a class="docs-heading-link" aria-label="Link to this section" href="#steps-2">#</a></h3>
+<h3 id="steps-3">Steps<a class="docs-heading-link" aria-label="Link to this section" href="#steps-3">#</a></h3>
 <ol>
 <li>
 <p>Move the PROCTOR constraint in your composer.json from <code>^0.3</code> to <code>^0.4</code>.</p>
@@ -145,7 +170,7 @@
 </code></pre>
 </li>
 </ol>
-<h3 id="how-to-verify-2">How to verify<a class="docs-heading-link" aria-label="Link to this section" href="#how-to-verify-2">#</a></h3>
+<h3 id="how-to-verify-3">How to verify<a class="docs-heading-link" aria-label="Link to this section" href="#how-to-verify-3">#</a></h3>
 <ul>
 <li>Run <code>vendor/bin/proctor check --format=json</code> and confirm the <code>version</code> field reads <code>0.4.0</code>.</li>
 <li>Confirm the checks added in this release appear in the report. They warn and never fail, so the exit code of a run that passed before should not change:
@@ -174,10 +199,10 @@
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../docs/troubleshooting.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">Troubleshooting</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#0-6-0">0.6.0</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#changed">Changed</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#deprecated">Deprecated</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify">How to verify</a></li><li class="docs-toc__item"><a href="#0-5-0">0.5.0</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking-1">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#deprecated-1">Deprecated</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps-1">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify-1">How to verify</a></li><li class="docs-toc__item"><a href="#0-4-0">0.4.0</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking-2">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#deprecated-2">Deprecated</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps-2">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify-2">How to verify</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#0-7-0">0.7.0</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#deprecated">Deprecated</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify">How to verify</a></li><li class="docs-toc__item"><a href="#0-6-0">0.6.0</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking-1">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#changed">Changed</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#deprecated-1">Deprecated</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps-1">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify-1">How to verify</a></li><li class="docs-toc__item"><a href="#0-5-0">0.5.0</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking-2">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#deprecated-2">Deprecated</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps-2">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify-2">How to verify</a></li><li class="docs-toc__item"><a href="#0-4-0">0.4.0</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking-3">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#deprecated-3">Deprecated</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps-3">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify-3">How to verify</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
-  <span>Documents PROCTOR <span data-docs-version>0.6.0</span></span>
+  <span>Documents PROCTOR <span data-docs-version>0.7.0</span></span>
   <span><a rel="noopener" href="https://github.com/waynestate/proctor">Source</a> <a href="upgrading.md">Markdown</a></span>
 </footer>
 </body>

@@ -7,6 +7,31 @@ description: How to upgrade PROCTOR to a newer release and note the changes that
 
 PROCTOR is the invigilator, so upgrading it is a seat change, not a new exam: same hall, fresher pen. This page tells you how to move an app from one PROCTOR release to the next and which changes affect your runs. Start with the release that has a break, then work down to the additive ones.
 
+## 0.7.0
+
+Released 2026-11-07. This is a pre-1.0 minor: consumers that pin `^0.6` stay on 0.6.x until they move their constraint to `^0.7`. Most of what is new is additive (`proctor gate`, the deploy gate, and the `raw-identity-header`, `env-outside-config`, `app-key`, `served-folder`, `laravel-php` and `laravel-eol` checks), but one change can turn a passing run into a failing one.
+
+### Breaking
+
+- `node-eol` fails an app that pins an end-of-life Node line (Node 20 or older under the bundled policy, as of 2026-04-30). Node 20 is past the grace window, so it fails as `eol_grace_expired`, which no override softens: move to Node 22 or 24.
+
+### Deprecated
+
+- None recorded so far.
+
+### Steps
+
+1. Move the PROCTOR constraint in your composer.json from `^0.6` to `^0.7`, then apply it with `composer require waynestate/proctor --dev`.
+2. Re-run the check in CI and read any `node-eol` finding first:
+
+   ```bash
+   vendor/bin/proctor check
+   ```
+
+### How to verify
+
+- Run `vendor/bin/proctor check --format=json` and confirm the `version` field reads `0.7.0`.
+
 ## 0.6.0
 
 Released 2026-11-05. This is a pre-1.0 minor: consumers that pin `^0.5` stay on 0.5.x until they move their constraint to `^0.6`. Most of what is new is additive, but three changes can turn a passing run into a failing one.
