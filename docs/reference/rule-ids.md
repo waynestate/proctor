@@ -15,6 +15,9 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `unpatched` | `proctor/unpatched` |
 | `laravel-eol` | `proctor/laravel-eol` |
 | `laravel-php` | `proctor/laravel-php` |
+| `node-eol` | `proctor/node-eol` |
+| `node-eol` | `proctor/node-eol/engines` |
+| `node-eol` | `proctor/node-eol/odd-major` |
 | `lock-committed` | `proctor/lock-committed` |
 | `lock-committed` | `proctor/lock-committed/out-of-sync` |
 | `destructive-deploy` | `proctor/destructive-deploy` |
@@ -81,6 +84,16 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `composer-version` | `proctor/composer-version/could-not-determine` |
 | `repo-url-credentials` | `proctor/repo-url-credentials` |
 | `instant-client-committed` | `proctor/instant-client-committed` |
+| `env-outside-config` | `proctor/env-outside-config` |
+| `env-outside-config` | `proctor/env-outside-config/suppressed` |
+| `app-key` | `proctor/app-key` |
+| `app-key` | `proctor/app-key/committed-env` |
+| `app-key` | `proctor/app-key/committed-key` |
+| `app-key` | `proctor/app-key/cookie-sessions` |
+| `served-folder` | `proctor/served-folder` |
+| `served-folder` | `proctor/served-folder/debug-file` |
+| `served-folder` | `proctor/served-folder/phpinfo` |
+| `world-writable` | `proctor/world-writable` |
 | `wayneui-forked-views` | `proctor/wayneui-forked-views` |
 | `wayneui-outdated` | `proctor/wayneui-outdated` |
 | `wayneui-outdated` | `proctor/wayneui-outdated/skipped` |

@@ -1052,3 +1052,45 @@ version outside the policy range for the locked Laravel major, and passes when t
 `proctor/laravel-php`). No finding without `laravel/framework` in composer.lock, without a recorded range, or without a
 `require.php`: php-floor owns the missing-constraint verdict. `LaravelPhpCheckTest` pins the fixture outcomes for the
 pass, both out-of-range directions, the override and the skips.
+
+### The node-eol check
+CREED's handbook asks an app to build and run on a Node line that still gets security fixes, and the policy records
+each Node line's dates. What was missing was a check that reads which Node a repository actually names.
+
+**How the stack holds it: Checked.** The `node-eol` check grades every Node version the repository pins (`.nvmrc`,
+`.node-version`, package.json `volta.node`, an official `node` image in `.gitlab-ci.yml` or on a Dockerfile `FROM`
+line) with the same table as `php-floor`: active passes, security-only warns with the days left, eol fails, and past
+the grace window it fails as `eol_grace_expired`, which no override softens. `engines.node` is a declaration, so its
+lowest major warns at worst (`proctor/node-eol/engines`); an odd major warns wherever it is named
+(`proctor/node-eol/odd-major`). Silent when the policy has no node component. `NodeEolCheckTest` pins every source and
+state.
+
+## App code and the served folder
+
+### The env-outside-config check
+After `php artisan config:cache`, Laravel no longer loads .env, so `env()` outside config/ returns null in production.
+
+**How the stack holds it: Checked.** The `env-outside-config` check warns for every `env()` call in a Laravel app
+outside the top-level `config/` (PHP read on the syntax tree, Blade by a quoted-argument pattern that skips `@env`). A
+call carrying Larastan's own ignore marker for the same rule is an info note (`proctor/env-outside-config/suppressed`).
+Warnings only. `EnvOutsideConfigCheckTest` pins the flagged calls, the skipped look-alikes and the suppressed note.
+
+### The app-key check
+Whoever holds a Laravel APP_KEY can forge encrypted payloads, so the key never lives in the repository, and a cookie
+session driver makes a leaked key worse.
+
+**How the stack holds it: Checked.** The `app-key` check warns on a committed real env file
+(`proctor/app-key/committed-env`), a real key in any committed env file or literal in `config/app.php`
+(`proctor/app-key/committed-key`, the key never printed), and the cookie session driver
+(`proctor/app-key/cookie-sessions`). A real env file is graded only when PROCTOR knows it is committed (git lists it,
+or the run is in CI), so a developer's own `.env` never raises a flag. Rotation after a leak stays a process.
+`AppKeyCheckTest` pins every rule, the local-only skip and the CI grading.
+
+### The served-folder and world-writable checks
+A file in `public/` can be downloaded by anyone, and a world-writable folder can be changed by any process on the host.
+
+**How the stack holds it: Checked.** `served-folder` warns when a committed file under the top-level `public/` calls
+`phpinfo()` or is a dump, backup, editor copy, log, env file or `adminer*.php`. `world-writable` warns on `chmod 777`
+(and `0777`, `a+rwx`, `ugo+rwx`) in shell scripts, Dockerfiles, Makefiles, `.gitlab-ci.yml`, composer and npm scripts,
+and on a PHP `chmod()` with the literal `0777`. Both warn, never fail. Whether the container runs as a non-root user is
+a runtime fact and stays outside PROCTOR. `ServedFolderCheckTest` and `WorldWritableCheckTest` pin the outcomes.

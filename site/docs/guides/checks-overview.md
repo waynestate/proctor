@@ -12,7 +12,7 @@ This page lists every check PROCTOR runs in a single `vendor/bin/proctor check` 
 
 ![Nine real lines from PROCTOR's text report, one per check shown: FAIL php-floor, WARN unpatched, FAIL unbounded-constraints, PASS lock-committed, WARN portability, WARN mysql56, WARN ci-pipelines, PASS composer-audit, FAIL overrides. Each line is written in words; color only repeats what the word says.](https://proctor.apps.wayne.edu/docs/readme/report.svg)
 
-*Nine of the twenty checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
+*Nine of the twenty-five checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
 
 ## How a check reports[#](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html#how-a-check-reports)
 
@@ -54,6 +54,16 @@ Details and fixes: [CI checks](https://proctor.apps.wayne.edu/docs/guides/check-
 - `destructive-deploy`: fails when a deploy script runs an artisan command that drops or rebuilds the database (`migrate:fresh`, `migrate:refresh`, `migrate:reset`, `db:wipe`), which erases production data on every deploy.
 - `instant-client-committed`: warns when Oracle Instant Client is committed to the repo: an archive, an unzipped install under an `instantclient` directory, or a loose client library.
 
+## App code and files[#](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html#app-code-and-files)
+
+The checks that read the app's own files: the Node line it builds on, `env()` outside config, a committed APP_KEY, files in `public/` and `chmod 777`. Details and fixes: [App checks](https://proctor.apps.wayne.edu/docs/guides/check-app.html).
+
+- `node-eol`: grades every Node version the repository pins (`.nvmrc`, `.node-version`, package.json `volta.node`, an official `node` image in `.gitlab-ci.yml` or a Dockerfile) with php-floor's table: active passes, security-only warns, eol fails, and past the grace window it fails as `eol_grace_expired`. `engines.node` warns at worst and an odd major always warns. Silent when the policy has no node component.
+- `env-outside-config`: warns for every `env()` call in a Laravel app outside its config files, which returns null after `php artisan config:cache`; a call with Larastan's ignore marker for the same rule is an info note.
+- `app-key`: warns on a committed real env file, a real APP_KEY committed in an env file or `config/app.php` (never printed), and the cookie session driver. A real env file is graded only when git lists it or the run is in CI.
+- `served-folder`: warns when a committed file under `public/` is a dump, backup, editor copy, log, env file or `adminer*.php`, or calls `phpinfo()`.
+- `world-writable`: warns on `chmod 777` (and `0777`, `a+rwx`, `ugo+rwx`) in scripts, Dockerfiles, Makefiles, CI and composer or npm scripts, and on a PHP `chmod()` with `0777`.
+
 ## WayneUI[#](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html#wayneui)
 
 Details and fixes: [WayneUI checks](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html).
@@ -70,6 +80,7 @@ Details and fixes: [WayneUI checks](https://proctor.apps.wayne.edu/docs/guides/c
 - [Composer checks](https://proctor.apps.wayne.edu/docs/guides/check-composer.html)
 - [PHP checks](https://proctor.apps.wayne.edu/docs/guides/check-php.html)
 - [CI checks](https://proctor.apps.wayne.edu/docs/guides/check-ci.html)
+- [App checks](https://proctor.apps.wayne.edu/docs/guides/check-app.html)
 - [WayneUI checks](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html)
 - [Overrides](https://proctor.apps.wayne.edu/docs/guides/overrides.html)
 - [Rule ids](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html)

@@ -39,6 +39,10 @@
           "path": "guides/check-ci"
         },
         {
+          "title": "App checks",
+          "path": "guides/check-app"
+        },
+        {
           "title": "WayneUI checks",
           "path": "guides/check-wayneui"
         },

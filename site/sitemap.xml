@@ -2,6 +2,7 @@
 <!-- Written by Squire's agent-ready kit from the pages in the site folder; do not edit. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://proctor.apps.wayne.edu/</loc></url>
+  <url><loc>https://proctor.apps.wayne.edu/docs/guides/check-app.html</loc></url>
   <url><loc>https://proctor.apps.wayne.edu/docs/guides/check-ci.html</loc></url>
   <url><loc>https://proctor.apps.wayne.edu/docs/guides/check-composer.html</loc></url>
   <url><loc>https://proctor.apps.wayne.edu/docs/guides/check-php.html</loc></url>
