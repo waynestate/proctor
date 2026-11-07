@@ -51,6 +51,10 @@
           "path": "guides/overrides"
         },
         {
+          "title": "Deploy gate",
+          "path": "guides/deploy-gate"
+        },
+        {
           "title": "Policy",
           "path": "guides/policy"
         },

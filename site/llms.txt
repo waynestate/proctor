@@ -30,6 +30,7 @@ Every page below is Markdown. The HTML pages send the same Markdown to a client 
 - [PHP checks | PROCTOR docs](https://proctor.apps.wayne.edu/docs/guides/check-php.md): The checks that grade the PHP floor, the locked Laravel line, patch currency, MySQL 5.6 compatibility and the age of the policy in use.
 - [WayneUI checks | PROCTOR docs](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.md): The checks that flag forked copies of WayneUI views and an installed WayneUI that is behind the latest release.
 - [Checks | PROCTOR docs](https://proctor.apps.wayne.edu/docs/guides/checks-overview.md): An overview of every check PROCTOR runs and how each reports pass, warning, info or fail.
+- [Deploy gate | PROCTOR docs](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.md): How proctor gate decides go or no-go for a deploy: the deploy-time checks, the ratchet against a baseline, overrides, the record file and the exit codes.
 - [Formats | PROCTOR docs](https://proctor.apps.wayne.edu/docs/guides/formats.md): The four output formats PROCTOR writes: text, json, codequality and sarif.
 - [GitHub code scanning | PROCTOR docs](https://proctor.apps.wayne.edu/docs/guides/github-code-scanning.md): How the sarif format feeds GitHub code scanning on the GitHub mirror through the official upload action.
 - [Overrides | PROCTOR docs](https://proctor.apps.wayne.edu/docs/guides/overrides.md): How an app carries a policy-overrides.json file to waive a check's fail findings until an expiry date.

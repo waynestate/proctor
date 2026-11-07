@@ -12,7 +12,7 @@ The stack's check command
 
 PROCTOR stands for Policy Rules Of Code, Tested On Release.
 
-Run `vendor/bin/proctor check` in a PHP app and it checks the app against CREED's version policy: the PHP floor, patch levels, Composer constraints, the lock file, `composer audit`, MySQL 5.6 safety, portability and the CI pipelines. You get text, JSON, GitLab Code Quality or SARIF, and an exit code of 0, 1 or 2.
+Run `vendor/bin/proctor check` in a PHP app and it checks the app against CREED's version policy: the PHP floor, patch levels, Composer constraints, the lock file, `composer audit`, MySQL 5.6 safety, portability and the CI pipelines. You get text, JSON, GitLab Code Quality or SARIF, and an exit code of 0, 1 or 2. Before a deploy, `proctor gate` runs the deploy-time checks against what is already live and answers go or no-go.
 
 `$ composer require waynestate/proctor --dev`
 
@@ -519,7 +519,7 @@ Transfer students, new this term
   Scans the apps and reports each one's PHP, Laravel and sign-in versions.
 - ![Squire logo](https://proctor.apps.wayne.edu/assets/marks/squire.png)
   [Squire](https://squire.apps.wayne.edu/)
-  The deploy kit for Citadel. A release can be set to stop on failing PROCTOR checks.
+  The deploy kit for Citadel. Its release script asks `proctor gate` for a go or no-go, and can be set to stop on a no-go.
 - ![Drawbridge logo](https://proctor.apps.wayne.edu/assets/marks/drawbridge.png)
   [Drawbridge](https://drawbridge.apps.wayne.edu/)
   A gateway that signs people in through Entra ID before they reach a Citadel app.

@@ -32,6 +32,7 @@ A clean hall exits 0 (warnings allowed), a resit exits 1, and a tripped proctor 
 
 - [Quick start](guides/quick-start.md): install PROCTOR, run the first check and read the mark sheet.
 - [Install](install.md): requirements, the composer line and the single-file PHAR route.
+- [Deploy gate](guides/deploy-gate.md): `proctor gate` gives a release script a go or no-go, ratcheted against what is already running.
 - Reference: the long-form docs for the [commands](reference/commands.md), [rule ids](reference/rule-ids.md) and [exit codes](reference/exit-codes.md).
 
 ## Status

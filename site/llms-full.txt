@@ -80,6 +80,12 @@ vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--po
 - `--today`: override today's date (YYYY-MM-DD) so runs are deterministic. In CI this option is refused unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`.
 - `--php-runtime`: the PHP version that will serve the app (X.Y.Z), used by the `unpatched` check. CI should pass the deploy image's PHP, not the runner's.
 
+Before a deploy, ask for a go or no-go instead (see [Deploy gate](#deploy-gate)):
+
+```
+vendor/bin/proctor gate [--path=.] [--format=text|json] [--baseline=<report or directory>] [--record=<file>] [--policy=<file>] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z] [--timeout=60]
+```
+
 ### Checks
 
 - `php-floor`: fails when the lowest PHP version allowed by `require.php` is past security support plus the grace window, when composer.json has no usable php constraint, or when there is no composer.json at all.
@@ -130,6 +136,29 @@ flowchart LR
   class one fail
   class two trip
 ```
+
+### Deploy gate
+
+`proctor gate` is the proctor at the exam-hall door: it does not mark the whole paper, it decides whether you may sit. A release script or a platform hook calls it before a deploy, and it follows CREED's deploy-gate chapter: a small, fast rule set that ratchets, so a deploy that does not make things worse always passes.
+
+| Gate check | Why it is at the door |
+| --- | --- |
+| `php-floor` | the PHP the app declares is still supported |
+| `unpatched` | the runtime and framework are on their latest patch (warns only) |
+| `laravel-eol` | the locked Laravel line is still supported |
+| `laravel-php` | the declared PHP fits the locked Laravel line |
+| `lock-committed` | the lock file is the release |
+| `composer-audit` | no known advisory at or above the threshold |
+| `overrides` | every override is still in date |
+| `policy-age` | the policy itself is fresh (warns only) |
+
+Overrides are applied first, as in `proctor check`. Each remaining failure is then blocked (no baseline, so a first deploy; a regression, because the baseline passed that rule; or an expired override, for any check), held (the baseline failed the same rule id too, so owners of an EOL app can still ship the fix) or waived (composer-audit had no advisory data, which only warns at deploy time). Any block is a no-go.
+
+- `--baseline`: a PROCTOR JSON report (the file `--record` wrote last time) or the running deployment's source directory. Without it, every failure blocks.
+- `--record`: also write the JSON verdict to a file; pass it as `--baseline` next time.
+- Exit codes: `0` go, `1` no-go, `2` the gate could not decide. A platform hook fails open on 2, with an alert, so a gate bug never takes down deploys.
+
+The whole story, with the verdict's JSON shape: [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html).
 
 ### Formats
 
@@ -435,7 +464,7 @@ The stack's check command
 
 PROCTOR stands for Policy Rules Of Code, Tested On Release.
 
-Run `vendor/bin/proctor check` in a PHP app and it checks the app against CREED's version policy: the PHP floor, patch levels, Composer constraints, the lock file, `composer audit`, MySQL 5.6 safety, portability and the CI pipelines. You get text, JSON, GitLab Code Quality or SARIF, and an exit code of 0, 1 or 2.
+Run `vendor/bin/proctor check` in a PHP app and it checks the app against CREED's version policy: the PHP floor, patch levels, Composer constraints, the lock file, `composer audit`, MySQL 5.6 safety, portability and the CI pipelines. You get text, JSON, GitLab Code Quality or SARIF, and an exit code of 0, 1 or 2. Before a deploy, `proctor gate` runs the deploy-time checks against what is already live and answers go or no-go.
 
 `$ composer require waynestate/proctor --dev`
 
@@ -942,7 +971,7 @@ Transfer students, new this term
   Scans the apps and reports each one's PHP, Laravel and sign-in versions.
 - ![Squire logo](https://proctor.apps.wayne.edu/assets/marks/squire.png)
   [Squire](https://squire.apps.wayne.edu/)
-  The deploy kit for Citadel. A release can be set to stop on failing PROCTOR checks.
+  The deploy kit for Citadel. Its release script asks `proctor gate` for a go or no-go, and can be set to stop on a no-go.
 - ![Drawbridge logo](https://proctor.apps.wayne.edu/assets/marks/drawbridge.png)
   [Drawbridge](https://drawbridge.apps.wayne.edu/)
   A gateway that signs people in through Entra ID before they reach a Citadel app.
@@ -1570,6 +1599,86 @@ Details and fixes: [WayneUI checks](https://proctor.apps.wayne.edu/docs/guides/c
 
 ---
 
+Source: https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html
+
+## Deploy gate[#](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html#deploy-gate)
+
+`proctor gate` answers one question for a release script or a platform hook: may this commit be deployed? It runs the small, deploy-time part of PROCTOR's checks, compares the failures with what the running deployment already fails, and exits 0 for go or 1 for no-go. `proctor check` marks the whole paper; the gate is the proctor at the exam-hall door, deciding only whether you may sit.
+
+It follows CREED's deploy-gate chapter (the stack's deploy-gate decision): the rule set is small, offline-tolerant and fast, and it ratchets, so a deploy that does not make things worse always passes.
+
+### Run it[#](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html#run-it)
+
+```
+vendor/bin/proctor gate [--path=.] [--format=text|json] [--baseline=<report or directory>] [--record=<file>] [--policy=<file>] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z] [--timeout=60]
+```
+
+- `--baseline`: what the running deployment already fails. Either a PROCTOR JSON report (the file `--record` wrote last time, or `proctor check --format=json` output) or the running deployment's source directory, which the gate checks with the same rules. Leave it out for a first deploy.
+- `--record`: also write the JSON verdict to this file, whatever `--format` says; its folder is created. Next time, pass the same file as `--baseline`.
+- `--format`: `text` (default), a short verdict for the deploy log, or `json`.
+- `--policy`, `--today`, `--php-runtime`: as for `proctor check`, including the CI guard on `--policy` and `--today`.
+- `--timeout`: seconds for `composer audit` before it is killed; 60 by default here, because a deploy should not wait five minutes.
+
+### What it runs[#](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html#what-it-runs)
+
+Eight of the checks, the deploy-time rule set: `php-floor`, `unpatched`, `laravel-eol`, `laravel-php`, `lock-committed`, `composer-audit`, `overrides` and `policy-age`. That covers the PHP floor and the runtime, the framework line and the PHP range it supports, the lock file, known advisories, and the overrides themselves. Style, portability, MySQL 5.6 safety, CI pipelines and the rest stay in `proctor check`, in CI.
+
+### How it decides[#](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html#how-it-decides)
+
+The app's overrides are applied first, exactly as in `proctor check`. Then each failure is one of these:
+
+| Outcome | When | Effect |
+| --- | --- | --- |
+| `blocked` (`new-app`) | there is no baseline | no-go |
+| `blocked` (`regression`) | the baseline passed that rule | no-go |
+| `blocked` (`expired-override`) | an override in policy-overrides.json has expired, for any check | no-go, whatever the baseline says |
+| `held` | the baseline failed the same rule id too | go: the ratchet lets an existing violation through, so the owners of an EOL app can still ship the fix |
+| `waived` | composer-audit could not get advisory data (`proctor/composer-audit/skipped` or `could-not-run`) | go: missing advisory data only warns at deploy time |
+
+Warnings and info notes never change the verdict. The comparison is by rule id, so a rule that already failed on the baseline is held even if it got worse within the rule; `proctor check` in CI still fails it. The unused-override warning is left to `proctor check`, because the gate runs only some checks and would call an override for a skipped check unused.
+
+Note
+
+An override names any registered check, not only the eight above. An expired one blocks the deploy even when its check is not part of the gate.
+
+### Exit codes[#](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html#exit-codes)
+
+| Exit code | Meaning |
+| --- | --- |
+| `0` | go: nothing blocked (held, waived and warnings allowed) |
+| `1` | no-go: at least one failure is blocked |
+| `2` | the gate could not decide (bad options, an unreadable policy, a malformed overrides file, a missing or malformed baseline, or a record file it could not write) |
+
+A platform hook should fail open on 2, with an alert: a bug in the gate must never take down deploys (the stack's deploy-gate decision). A release script may choose to stop on it instead.
+
+### The verdict[#](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html#the-verdict)
+
+The text verdict leads with the answer and lists only what is not a pass:
+
+```
+proctor 0.6.0 gate: NO-GO
+Policy: vendor (vendor/waynestate/creed/policy/policy.json), refreshed 2026-10-20, 7 days ago
+Baseline: none, so this is a first deploy and every failure blocks
+Checks: php-floor, unpatched, laravel-eol, laravel-php, lock-committed, composer-audit, overrides, policy-age
+BLOCK php-floor: php floor 7.4 is eol_grace_expired [new app: no baseline, so every failure blocks]
+RESULT: no-go (1 blocked, 0 held, 0 waived, 0 warnings, 3 passed)
+```
+
+The JSON verdict carries `command` (`gate`), `verdict` (`go`, `no-go`, or `error` when it could not decide), `exit`, `policy`, `baseline` (its source, path and failing rule ids, or null), `checks`, a `summary` with the count of each outcome, `findings` and `overrides`. Each finding keeps the check's own `status` and adds `gate` (its outcome) and, when blocked, `reason`. Because the status is kept, a recorded verdict works as the next run's baseline.
+
+### In a release[#](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html#in-a-release)
+
+Squire's release script runs the gate when PROCTOR is installed, records the verdict, and keeps the last accepted verdict as the next baseline. On Citadel, the gate is meant to run in `runGitPull()`, inside the app's image, before the fetched commit is checked out; that hook waits on the Citadel team.
+
+### Related[#](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html#related)
+
+- [Overrides](https://proctor.apps.wayne.edu/docs/guides/overrides.html)
+- [Exit codes](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html)
+- [Commands](https://proctor.apps.wayne.edu/docs/reference/commands.html)
+- [Formats](https://proctor.apps.wayne.edu/docs/guides/formats.html)
+
+---
+
 Source: https://proctor.apps.wayne.edu/docs/guides/formats.html
 
 ## Formats[#](https://proctor.apps.wayne.edu/docs/guides/formats.html#formats)
@@ -1653,6 +1762,10 @@ A SARIF 2.1.0 log: one run, one rule per check, one result per non-pass finding,
 
 Both `codequality` and `sarif` identify a finding with the same fingerprint, its stable identity: the lower-case hex SHA-256 of the rule id, a newline, the path (an empty string when the finding has none), a newline, and the message.
 
+### proctor gate[#](https://proctor.apps.wayne.edu/docs/guides/formats.html#proctor-gate)
+
+`proctor gate` writes `text` or `json` only: a short go or no-go verdict for the deploy log, or the same verdict as JSON, which also works as the next run's baseline. Its shape is on the [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html) page.
+
 ### Related[#](https://proctor.apps.wayne.edu/docs/guides/formats.html#related)
 
 - [Quick start](https://proctor.apps.wayne.edu/docs/guides/quick-start.html)
@@ -1732,6 +1845,7 @@ This page explains how an app carries a `policy-overrides.json` file next to its
 - The list of valid check ids is built from the checks PROCTOR runs, so a new check needs no change to the guard.
 - An active override that expires within 14 days of `--today` (the expiry day counts) gets a warning finding (`proctor/overrides/expiring`) instead of lapsing without a trace, and an active override whose check raised no failure gets a warning finding (`proctor/overrides/unused`) so a stale approval is removed instead of rotting.
 - A warning never changes the exit code.
+- In `proctor gate`, an expired override blocks the deploy whatever the baseline says, even when its check is not one the gate runs (see [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html)).
 - When the app has no `policy-overrides.json`, the check produces no findings at all: it passes and prints nothing. Every override, active or expired, is printed as an OVERRIDE line by the CLI in addition to these findings.
 
 Warning
@@ -1977,6 +2091,7 @@ A clean hall exits 0 (warnings allowed), a resit exits 1, and a tripped proctor 
 
 - [Quick start](https://proctor.apps.wayne.edu/docs/guides/quick-start.html): install PROCTOR, run the first check and read the mark sheet.
 - [Install](https://proctor.apps.wayne.edu/docs/install.html): requirements, the composer line and the single-file PHAR route.
+- [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html): `proctor gate` gives a release script a go or no-go, ratcheted against what is already running.
 - Reference: the long-form docs for the [commands](https://proctor.apps.wayne.edu/docs/reference/commands.html), [rule ids](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html) and [exit codes](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html).
 
 ### Status[#](https://proctor.apps.wayne.edu/docs/#status)
@@ -2054,6 +2169,7 @@ Every command PROCTOR ships, with the options each one accepts. The table is gen
 | Command | What it does |
 | --- | --- |
 | `proctor check` | Measure a PHP app against the version policy. |
+| `proctor gate` | Decide go or no-go for a deploy: the deploy-time checks, ratcheted against a baseline. |
 
 #### `proctor check` [#](https://proctor.apps.wayne.edu/docs/reference/commands.html#proctor-check)
 
@@ -2069,6 +2185,24 @@ Usage: `proctor check [--path PATH] [--format FORMAT] [--policy POLICY] [--today
 | `--today=VALUE` | Override today's date (YYYY-MM-DD). In CI this option is refused unless PROCTOR_ALLOW_OVERRIDES=1. |  |
 | `--php-runtime=VALUE` | The PHP version that will serve the app (X.Y.Z), for the unpatched check. |  |
 | `--timeout=VALUE` | Maximum seconds for composer audit before it is killed. | `300` |
+| `--silent` | Do not output any message |  |
+
+#### `proctor gate` [#](https://proctor.apps.wayne.edu/docs/reference/commands.html#proctor-gate)
+
+Decide go or no-go for a deploy: the deploy-time checks, ratcheted against a baseline.
+
+Usage: `proctor gate [--path PATH] [--format FORMAT] [--baseline BASELINE] [--record RECORD] [--policy POLICY] [--today TODAY] [--php-runtime PHP-RUNTIME] [--timeout TIMEOUT]`
+
+| Option | Meaning | Default |
+| --- | --- | --- |
+| `--path=VALUE` | Path to the application to deploy. | `.` |
+| `--format=VALUE` | Output format (text, json). | `text` |
+| `--baseline=VALUE` | What the running deployment already fails: a PROCTOR JSON report (the file --record writes) or the running source directory. Without it every failure blocks, as for a first deploy. |  |
+| `--record=VALUE` | Also write the JSON verdict to this file (its folder is created), whatever --format says. A later run can read it with --baseline. |  |
+| `--policy=VALUE` | Path to the CREED-format policy file. Without it, PROCTOR checks the PROCTOR_POLICY environment variable, then the app's vendor/waynestate/creed/policy/policy.json, then its own bundled copy. In CI this option is refused unless PROCTOR_ALLOW_OVERRIDES=1. |  |
+| `--today=VALUE` | Override today's date (YYYY-MM-DD). In CI this option is refused unless PROCTOR_ALLOW_OVERRIDES=1. |  |
+| `--php-runtime=VALUE` | The PHP version that will serve the app (X.Y.Z), for the unpatched check. |  |
+| `--timeout=VALUE` | Maximum seconds for composer audit before it is killed. | `60` |
 | `--silent` | Do not output any message |  |
 
 #### Options every command accepts[#](https://proctor.apps.wayne.edu/docs/reference/commands.html#options-every-command-accepts)
@@ -2097,8 +2231,20 @@ vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--po
 - `--today`: override today's date (YYYY-MM-DD) so runs are deterministic. In CI this option is refused unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`.
 - `--php-runtime`: the PHP version that will serve the app (X.Y.Z), used by the `unpatched` check. CI should pass the deploy image's PHP, not the runner's.
 
+Ask for a go or no-go before a deploy, against the verdict recorded last time:
+
+```
+vendor/bin/proctor gate --baseline=storage/proctor-gate.json --record=storage/proctor-gate.json
+```
+
+- `--baseline`: what the running deployment already fails: a PROCTOR JSON report or the running source directory. Without it every failure blocks, as for a first deploy.
+- `--record`: also write the JSON verdict to this file, for the deploy log and the next run's `--baseline`.
+
+The gate runs eight deploy-time checks and exits 0 (go), 1 (no-go) or 2 (could not decide); see [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html).
+
 ### Related[#](https://proctor.apps.wayne.edu/docs/reference/commands.html#related)
 
+- [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html)
 - [Exit codes](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html)
 - [Rule ids](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html)
 - [Troubleshooting](https://proctor.apps.wayne.edu/docs/troubleshooting.html)
@@ -2195,7 +2341,7 @@ Source: https://proctor.apps.wayne.edu/docs/reference/exit-codes.html
 
 ## Exit codes[#](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html#exit-codes)
 
-This page lists the three exit codes `proctor check` ends with and exactly when each one happens, so a pipeline can branch on the right one. The proctor hands back the mark sheet and leaves the hall; the code is the only word it says out loud. For what feeds the verdict, see [Rule ids](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html) and the [checks overview](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html).
+This page lists the three exit codes `proctor check` and `proctor gate` end with and exactly when each one happens, so a pipeline can branch on the right one. The proctor hands back the mark sheet and leaves the hall; the code is the only word it says out loud. For what feeds the verdict, see [Rule ids](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html) and the [checks overview](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html).
 
 ### Codes[#](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html#codes)
 
@@ -2206,6 +2352,16 @@ This page lists the three exit codes `proctor check` ends with and exactly when 
 | `2` | tool error (bad options, unreadable policy, a present but malformed or unreadable composer.json, or an overrides file that is malformed, unreadable, or names a check that is not registered or the overrides check itself) |
 
 A missing composer.json is not a tool error: the app gets a verdict, with php-floor failing.
+
+### proctor gate[#](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html#proctor-gate)
+
+The deploy gate uses the same three numbers with deploy words (see [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html)):
+
+| Exit code | Meaning |
+| --- | --- |
+| `0` | go: nothing blocked (held and waived failures, warnings allowed) |
+| `1` | no-go: a failure is blocked (a first deploy, a regression against the baseline, or an expired override) |
+| `2` | the gate could not decide (the tool errors above, plus a missing or malformed `--baseline` or a `--record` file it could not write); a platform hook fails open on it |
 
 ### How a run ends[#](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html#how-a-run-ends)
 

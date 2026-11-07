@@ -36,6 +36,7 @@ A clean hall exits 0 (warnings allowed), a resit exits 1, and a tripped proctor 
 
 - [Quick start](https://proctor.apps.wayne.edu/docs/guides/quick-start.html): install PROCTOR, run the first check and read the mark sheet.
 - [Install](https://proctor.apps.wayne.edu/docs/install.html): requirements, the composer line and the single-file PHAR route.
+- [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html): `proctor gate` gives a release script a go or no-go, ratcheted against what is already running.
 - Reference: the long-form docs for the [commands](https://proctor.apps.wayne.edu/docs/reference/commands.html), [rule ids](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html) and [exit codes](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html).
 
 ## Status[#](https://proctor.apps.wayne.edu/docs/#status)

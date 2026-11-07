@@ -87,6 +87,10 @@ A SARIF 2.1.0 log: one run, one rule per check, one result per non-pass finding,
 
 Both `codequality` and `sarif` identify a finding with the same fingerprint, its stable identity: the lower-case hex SHA-256 of the rule id, a newline, the path (an empty string when the finding has none), a newline, and the message.
 
+## proctor gate[#](https://proctor.apps.wayne.edu/docs/guides/formats.html#proctor-gate)
+
+`proctor gate` writes `text` or `json` only: a short go or no-go verdict for the deploy log, or the same verdict as JSON, which also works as the next run's baseline. Its shape is on the [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html) page.
+
 ## Related[#](https://proctor.apps.wayne.edu/docs/guides/formats.html#related)
 
 - [Quick start](https://proctor.apps.wayne.edu/docs/guides/quick-start.html)

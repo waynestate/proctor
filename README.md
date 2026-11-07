@@ -79,6 +79,12 @@ vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--po
 - `--today`: override today's date (YYYY-MM-DD) so runs are deterministic. In CI this option is refused unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`.
 - `--php-runtime`: the PHP version that will serve the app (X.Y.Z), used by the `unpatched` check. CI should pass the deploy image's PHP, not the runner's.
 
+Before a deploy, ask for a go or no-go instead (see [Deploy gate](#deploy-gate)):
+
+```
+vendor/bin/proctor gate [--path=.] [--format=text|json] [--baseline=<report or directory>] [--record=<file>] [--policy=<file>] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z] [--timeout=60]
+```
+
 ## Checks
 
 <div align="center">
@@ -140,6 +146,29 @@ flowchart LR
 <br>
 <div align="center"><img src="docs/readme/marking.jpg" width="100%" alt="The front page's answer sheet: five steps from 'pencils up' to 'resit, pencils down', nine bubbles filled, question 3 circled in red pen with the fix in the margin, the fail struck through and a PASS stamp."></div>
 </details>
+
+## Deploy gate
+
+`proctor gate` is the proctor at the exam-hall door: it does not mark the whole paper, it decides whether you may sit. A release script or a platform hook calls it before a deploy, and it follows CREED's deploy-gate chapter: a small, fast rule set that ratchets, so a deploy that does not make things worse always passes.
+
+| Gate check | Why it is at the door |
+| --- | --- |
+| `php-floor` | the PHP the app declares is still supported |
+| `unpatched` | the runtime and framework are on their latest patch (warns only) |
+| `laravel-eol` | the locked Laravel line is still supported |
+| `laravel-php` | the declared PHP fits the locked Laravel line |
+| `lock-committed` | the lock file is the release |
+| `composer-audit` | no known advisory at or above the threshold |
+| `overrides` | every override is still in date |
+| `policy-age` | the policy itself is fresh (warns only) |
+
+Overrides are applied first, as in `proctor check`. Each remaining failure is then blocked (no baseline, so a first deploy; a regression, because the baseline passed that rule; or an expired override, for any check), held (the baseline failed the same rule id too, so owners of an EOL app can still ship the fix) or waived (composer-audit had no advisory data, which only warns at deploy time). Any block is a no-go.
+
+- `--baseline`: a PROCTOR JSON report (the file `--record` wrote last time) or the running deployment's source directory. Without it, every failure blocks.
+- `--record`: also write the JSON verdict to a file; pass it as `--baseline` next time.
+- Exit codes: `0` go, `1` no-go, `2` the gate could not decide. A platform hook fails open on 2, with an alert, so a gate bug never takes down deploys.
+
+The whole story, with the verdict's JSON shape: [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html).
 
 ## Formats
 

@@ -11,6 +11,7 @@ Every command PROCTOR ships, with the options each one accepts. The table is gen
 | Command | What it does |
 | --- | --- |
 | `proctor check` | Measure a PHP app against the version policy. |
+| `proctor gate` | Decide go or no-go for a deploy: the deploy-time checks, ratcheted against a baseline. |
 
 ### `proctor check`
 
@@ -26,6 +27,24 @@ Usage: `proctor check [--path PATH] [--format FORMAT] [--policy POLICY] [--today
 | `--today=VALUE` | Override today's date (YYYY-MM-DD). In CI this option is refused unless PROCTOR_ALLOW_OVERRIDES=1. |  |
 | `--php-runtime=VALUE` | The PHP version that will serve the app (X.Y.Z), for the unpatched check. |  |
 | `--timeout=VALUE` | Maximum seconds for composer audit before it is killed. | `300` |
+| `--silent` | Do not output any message |  |
+
+### `proctor gate`
+
+Decide go or no-go for a deploy: the deploy-time checks, ratcheted against a baseline.
+
+Usage: `proctor gate [--path PATH] [--format FORMAT] [--baseline BASELINE] [--record RECORD] [--policy POLICY] [--today TODAY] [--php-runtime PHP-RUNTIME] [--timeout TIMEOUT]`
+
+| Option | Meaning | Default |
+| --- | --- | --- |
+| `--path=VALUE` | Path to the application to deploy. | `.` |
+| `--format=VALUE` | Output format (text, json). | `text` |
+| `--baseline=VALUE` | What the running deployment already fails: a PROCTOR JSON report (the file --record writes) or the running source directory. Without it every failure blocks, as for a first deploy. |  |
+| `--record=VALUE` | Also write the JSON verdict to this file (its folder is created), whatever --format says. A later run can read it with --baseline. |  |
+| `--policy=VALUE` | Path to the CREED-format policy file. Without it, PROCTOR checks the PROCTOR_POLICY environment variable, then the app's vendor/waynestate/creed/policy/policy.json, then its own bundled copy. In CI this option is refused unless PROCTOR_ALLOW_OVERRIDES=1. |  |
+| `--today=VALUE` | Override today's date (YYYY-MM-DD). In CI this option is refused unless PROCTOR_ALLOW_OVERRIDES=1. |  |
+| `--php-runtime=VALUE` | The PHP version that will serve the app (X.Y.Z), for the unpatched check. |  |
+| `--timeout=VALUE` | Maximum seconds for composer audit before it is killed. | `60` |
 | `--silent` | Do not output any message |  |
 
 ### Options every command accepts
@@ -55,7 +74,20 @@ vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--po
 - `--today`: override today's date (YYYY-MM-DD) so runs are deterministic. In CI this option is refused unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`.
 - `--php-runtime`: the PHP version that will serve the app (X.Y.Z), used by the `unpatched` check. CI should pass the deploy image's PHP, not the runner's.
 
+Ask for a go or no-go before a deploy, against the verdict recorded last time:
+
+```
+vendor/bin/proctor gate --baseline=storage/proctor-gate.json --record=storage/proctor-gate.json
+```
+
+- `--baseline`: what the running deployment already fails: a PROCTOR JSON report or the running source directory. Without it every failure blocks, as for a first deploy.
+- `--record`: also write the JSON verdict to this file, for the deploy log and the next run's `--baseline`.
+
+The gate runs eight deploy-time checks and exits 0 (go), 1 (no-go) or 2 (could not decide); see [Deploy gate](../guides/deploy-gate.md).
+
 ## Related
+
+- [Deploy gate](../guides/deploy-gate.md)
 
 - [Exit codes](exit-codes.md)
 - [Rule ids](rule-ids.md)
