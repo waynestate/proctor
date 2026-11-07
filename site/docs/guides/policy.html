@@ -53,19 +53,19 @@
 <li>The policy bundled with PROCTOR, <code>src/Creed/policy.json</code> (origin <code>bundled</code>).</li>
 </ol>
 <p>Name the policy explicitly:</p>
-<pre><code class="language-bash">vendor/bin/proctor check --policy=policy.json
+<pre tabindex="0"><code class="language-bash">vendor/bin/proctor check --policy=policy.json
 </code></pre>
 <p>Or set the environment variable for the shell:</p>
-<div class="docs-tabs" data-tabs="linux / macos|windows (powershell)"><div class="docs-tabs__panel" data-tab-label="Linux / macOS"><p class="docs-tabs__label">Linux / macOS</p><pre><code class="language-sh">export PROCTOR_POLICY=/path/to/policy.json
+<div class="docs-tabs" data-tabs="linux / macos|windows (powershell)"><div class="docs-tabs__panel" data-tab-label="Linux / macOS"><p class="docs-tabs__label">Linux / macOS</p><pre tabindex="0"><code class="language-sh">export PROCTOR_POLICY=/path/to/policy.json
 vendor/bin/proctor check
 </code></pre></div>
-<div class="docs-tabs__panel" data-tab-label="Windows (PowerShell)"><p class="docs-tabs__label">Windows (PowerShell)</p><pre><code class="language-powershell">$env:PROCTOR_POLICY = 'C:\path\to\policy.json'
+<div class="docs-tabs__panel" data-tab-label="Windows (PowerShell)"><p class="docs-tabs__label">Windows (PowerShell)</p><pre tabindex="0"><code class="language-powershell">$env:PROCTOR_POLICY = 'C:\path\to\policy.json'
 vendor/bin/proctor check
 </code></pre></div></div>
 <aside class="docs-callout docs-callout--note" role="note"><p class="docs-callout__label">Note</p><p>The resolver reads each candidate's top-level <code>refreshed_on</code> date from the raw JSON and treats it as a date only when it is an ISO date (<code>YYYY-MM-DD</code>). A value that is absent or not one is treated as absent.</p></aside>
 <h2 id="the-vendor-copy">The vendor copy<a class="docs-heading-link" aria-label="Link to this section" href="#the-vendor-copy">#</a></h2>
 <p>An app that installs CREED gets its policy automatically:</p>
-<pre><code class="language-bash">composer require waynestate/creed --dev
+<pre tabindex="0"><code class="language-bash">composer require waynestate/creed --dev
 </code></pre>
 <p>The vendor copy wins over the bundled one only when it is at least as fresh: its <code>refreshed_on</code> is the same as or newer than the bundled copy's (ISO dates compare as strings), or the bundled copy has no <code>refreshed_on</code> date at all.</p>
 <p>A vendor copy that cannot be read or parsed is skipped with a note on stderr and the run continues with the next source; a vendor copy older than the bundled one is skipped the same way. The notes PROCTOR can print:</p>
@@ -79,7 +79,7 @@ vendor/bin/proctor check
 <h2 id="policy-and-date-in-ci">Policy and date in CI<a class="docs-heading-link" aria-label="Link to this section" href="#policy-and-date-in-ci">#</a></h2>
 <p>In CI (any of <code>CI</code>, <code>GITLAB_CI</code> or <code>GITHUB_ACTIONS</code> set to a value other than <code>0</code> or <code>false</code>), <code>--policy</code> and <code>--today</code> are refused with a tool error (exit 2): in CI the policy and the date must come from the stack, not from the app being checked, so a pipeline that could pass its own policy or date in its own <code>.gitlab-ci.yml</code> could grade itself. The refusal message names the option or options that were given.</p>
 <p>The <code>PROCTOR_POLICY</code> environment variable stays allowed in CI; it is how a trusted job names a policy. A trusted job (a protected or group-level CI variable, never the app's own <code>.gitlab-ci.yml</code>) can allow the two options by setting <code>PROCTOR_ALLOW_OVERRIDES</code> to exactly <code>1</code>:</p>
-<pre><code class="language-yaml"># Group Settings &gt; CI/CD &gt; Variables: name PROCTOR_ALLOW_OVERRIDES, value 1,
+<pre tabindex="0"><code class="language-yaml"># Group Settings &gt; CI/CD &gt; Variables: name PROCTOR_ALLOW_OVERRIDES, value 1,
 # type Variable, scope Protected. Never in the app's own .gitlab-ci.yml.
 PROCTOR_ALLOW_OVERRIDES: &quot;1&quot;
 </code></pre>

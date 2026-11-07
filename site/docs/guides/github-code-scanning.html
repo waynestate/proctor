@@ -44,7 +44,7 @@
 <p>The <code>sarif</code> format feeds GitHub code scanning on the GitHub mirror. This page adds the workflow that uploads the log with the official action, pinned to a full commit SHA. Run the check with <code>--format=sarif</code>, and let the scanner show the findings on the files. PROCTOR now files the mark sheet in the format the head office already reads; no more translating the exam results by hand.</p>
 <h2 id="the-workflow">The workflow<a class="docs-heading-link" aria-label="Link to this section" href="#the-workflow">#</a></h2>
 <p>Add this workflow to the mirror. It sets up PHP, installs PROCTOR, runs the check against the app's CREED policy file, and uploads the resulting log:</p>
-<pre><code class="language-yaml">name: proctor
+<pre tabindex="0"><code class="language-yaml">name: proctor
 on: [push, pull_request]
 permissions:
   security-events: write

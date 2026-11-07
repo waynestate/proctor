@@ -44,7 +44,7 @@
 <p>This page describes the four formats PROCTOR writes with <code>--format</code>: <code>text</code>, <code>json</code>, <code>codequality</code> and <code>sarif</code>. Pick the format your consumer reads, run the check once, and point the report where the consumer looks. One exam, four ways to file the mark sheet.</p>
 <h2 id="choosing-a-format">Choosing a format<a class="docs-heading-link" aria-label="Link to this section" href="#choosing-a-format">#</a></h2>
 <p>The default is <code>text</code>. Choose another with <code>--format</code>:</p>
-<pre><code class="language-bash">vendor/bin/proctor check --format=json
+<pre tabindex="0"><code class="language-bash">vendor/bin/proctor check --format=json
 </code></pre>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
 <thead>
@@ -74,7 +74,7 @@
 </table></div>
 <h2 id="text">text<a class="docs-heading-link" aria-label="Link to this section" href="#text">#</a></h2>
 <p>The default human-readable format: a header line with the tool and the versions of the external tools used, then one line per finding in check order, then one line per override, then a summary line:</p>
-<pre><code>proctor 0.1.0 | composer: 2.10.3
+<pre tabindex="0"><code>proctor 0.1.0 | composer: 2.10.3
 Policy: option (/app/policy.json), refreshed 2026-10-20, 7 days ago
 PASS php-floor: php floor 8.4 is active
 FAIL unbounded-constraints: vendor/a constraint &quot;dev-master&quot; is unbounded

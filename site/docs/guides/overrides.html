@@ -56,7 +56,7 @@
 <aside class="docs-callout docs-callout--warning" role="note"><p class="docs-callout__label">Warning</p><p>An expired override fails the run. Renew it or delete it before the expiry date.</p></aside>
 <h2 id="when-the-audit-cannot-run">When the audit cannot run<a class="docs-heading-link" aria-label="Link to this section" href="#when-the-audit-cannot-run">#</a></h2>
 <p><code>composer-audit</code> fails (<code>proctor/composer-audit/skipped</code>) with a message that starts with <code>not audited:</code> in two cases: the composer executable is not on PATH, and the app path has no composer.lock. Until Composer is installed or the lock is committed, an active <code>composer-audit</code> entry downgrades those fails to warnings:</p>
-<pre><code class="language-json">[
+<pre tabindex="0"><code class="language-json">[
     {
         &quot;check&quot;: &quot;composer-audit&quot;,
         &quot;reason&quot;: &quot;no lock yet, ticket in progress&quot;,
@@ -68,7 +68,7 @@
 <p>An entry needs a <code>check</code>, a <code>reason</code>, an <code>expires</code> date and an <code>approved_by</code>; a file missing any of them is rejected (exit 2). Remove the entry when the audit can run again, so the approval does not rot.</p>
 <h2 id="backing-an-audit-ignore-entry">Backing an audit ignore entry<a class="docs-heading-link" aria-label="Link to this section" href="#backing-an-audit-ignore-entry">#</a></h2>
 <p><code>composer-audit</code> fails each ignore entry in composer.json that no active <code>composer-audit</code> override backs (<code>proctor/composer-audit/unbacked-ignore</code>), because an ignore without a dated approval never expires. An override backs the entry when its <code>advisory</code> field equals the entry's advisory id case-insensitively, its <code>package</code> field matches the entry's package the way composer matches patterns, or it carries no scope at all; an entry that names neither an id nor a package (an ignore-severity level) is backed by an unscoped override only. An override that backs an entry is not reported unused. To back an <code>ignore-id</code> entry for CVE-2024-52301:</p>
-<pre><code class="language-json">[
+<pre tabindex="0"><code class="language-json">[
     {
         &quot;check&quot;: &quot;composer-audit&quot;,
         &quot;advisory&quot;: &quot;CVE-2024-52301&quot;,
@@ -82,7 +82,7 @@
 <h2 id="verify-the-date-window">Verify the date window<a class="docs-heading-link" aria-label="Link to this section" href="#verify-the-date-window">#</a></h2>
 <p>Use <code>--today=YYYY-MM-DD</code> to make the 14-day warning window deterministic. For example, an entry that expires on the same day as <code>--today</code> is still inside the window, because the expiry day counts.</p>
 <p>Run the check against the app path:</p>
-<pre><code class="language-bash">vendor/bin/proctor check --path=. --today=YYYY-MM-DD
+<pre tabindex="0"><code class="language-bash">vendor/bin/proctor check --path=. --today=YYYY-MM-DD
 </code></pre>
 <h2 id="rule-ids">Rule ids<a class="docs-heading-link" aria-label="Link to this section" href="#rule-ids">#</a></h2>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>

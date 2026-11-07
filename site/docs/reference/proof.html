@@ -46,16 +46,16 @@
 <p>Proof runs against real Wayne State applications are on a private site, <a rel="noopener" href="https://proof.apps.wayne.edu/proctor/">proof.apps.wayne.edu/proctor</a>, behind a Wayne State employee sign-in.</p>
 <h2 id="docs">Docs<a class="docs-heading-link" aria-label="Link to this section" href="#docs">#</a></h2>
 <p>The documentation lives at <a rel="noopener" href="https://proctor.apps.wayne.edu/docs/">proctor.apps.wayne.edu/docs</a> and is built from <code>docs/</code> by Squire's docs builder:</p>
-<pre><code>composer docs
+<pre tabindex="0"><code>composer docs
 </code></pre>
 <p>renders the pages into <code>site/docs/</code> and fills the generated command and environment reference from the CLI and the source. The pages are committed, so the site stays static. Check without writing:</p>
-<pre><code>composer docs:check
+<pre tabindex="0"><code>composer docs:check
 </code></pre>
 <p>which runs as part of <code>composer ci</code>.</p>
 <h2 id="running-the-tests-in-docker">Running the tests in Docker<a class="docs-heading-link" aria-label="Link to this section" href="#running-the-tests-in-docker">#</a></h2>
 <p>Maintainers: how to build, test and release this project, and where its data comes from, is in <a rel="noopener" href="https://nougat.snu.gs/enterprise-apps/proctor/-/blob/main/MAINTAINING.md">MAINTAINING.md</a>.</p>
 <p>No PHP is needed on the host:</p>
-<pre><code>docker run --rm -v &quot;${PWD}:/app&quot; -w /app composer:2 composer install --no-interaction
+<pre tabindex="0"><code>docker run --rm -v &quot;${PWD}:/app&quot; -w /app composer:2 composer install --no-interaction
 docker run --rm -v &quot;${PWD}:/app&quot; -w /app php:8.4-cli vendor/bin/phpunit
 </code></pre>
 <p>The same works with <code>php:8.3-cli</code> in place of <code>php:8.4-cli</code>.</p>

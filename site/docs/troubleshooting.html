@@ -183,7 +183,7 @@
 </ul>
 <h2 id="you-are-on-an-older-proctor">You are on an older PROCTOR<a class="docs-heading-link" aria-label="Link to this section" href="#you-are-on-an-older-proctor">#</a></h2>
 <p>Some symptoms were bugs, fixed in a release. Check your version first:</p>
-<pre><code>composer show waynestate/proctor
+<pre tabindex="0"><code>composer show waynestate/proctor
 </code></pre>
 <ul>
 <li>Exit 255 with <code>Allowed memory size exhausted</code> while scanning a large app: fixed in 0.2.4. Each file's syntax tree is dropped before the next file is parsed, and <code>bin/proctor</code> raises a memory limit below 512M to 512M (a higher limit or -1 is left alone).</li>

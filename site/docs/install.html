@@ -59,10 +59,10 @@ phar is the one-file alternative.</p>
 Replace <code>&lt;release&gt;</code> with the base URL of the release's asset links (the
 release page lists both files).</p>
 <p>Linux / macOS (sh), one line:</p>
-<pre><code class="language-sh">curl -fsSL -o proctor.phar &quot;&lt;release&gt;/proctor.phar&quot; -o proctor.phar.sha256 &quot;&lt;release&gt;/proctor.phar.sha256&quot; &amp;&amp; sha256sum -c proctor.phar.sha256 &amp;&amp; php proctor.phar --version
+<pre tabindex="0"><code class="language-sh">curl -fsSL -o proctor.phar &quot;&lt;release&gt;/proctor.phar&quot; -o proctor.phar.sha256 &quot;&lt;release&gt;/proctor.phar.sha256&quot; &amp;&amp; sha256sum -c proctor.phar.sha256 &amp;&amp; php proctor.phar --version
 </code></pre>
 <p>Windows (PowerShell), one line, no bash needed:</p>
-<pre><code class="language-powershell">Invoke-WebRequest &quot;&lt;release&gt;/proctor.phar&quot; -OutFile proctor.phar; Invoke-WebRequest &quot;&lt;release&gt;/proctor.phar.sha256&quot; -OutFile proctor.phar.sha256; if ((Get-FileHash proctor.phar -Algorithm SHA256).Hash -ne (Get-Content proctor.phar.sha256 -TotalCount 1).Trim().Split(' ')[0]) { throw &quot;sha256 mismatch&quot; }; php proctor.phar --version
+<pre tabindex="0"><code class="language-powershell">Invoke-WebRequest &quot;&lt;release&gt;/proctor.phar&quot; -OutFile proctor.phar; Invoke-WebRequest &quot;&lt;release&gt;/proctor.phar.sha256&quot; -OutFile proctor.phar.sha256; if ((Get-FileHash proctor.phar -Algorithm SHA256).Hash -ne (Get-Content proctor.phar.sha256 -TotalCount 1).Trim().Split(' ')[0]) { throw &quot;sha256 mismatch&quot; }; php proctor.phar --version
 </code></pre>
 <p>Until the first tagged release that runs the job, build it from a checkout
 with the script for your OS (both need Docker, and no PHP or Composer on the
@@ -70,12 +70,12 @@ host): <code>.\scripts\build-phar.ps1</code> on Windows, <code>scripts/build-pha
 Linux / macOS. Each script writes <code>build/proctor.phar</code> and verifies it by
 printing PROCTOR's version.</p>
 <h2 id="install-1">Install<a class="docs-heading-link" aria-label="Link to this section" href="#install-1">#</a></h2>
-<pre><code>composer require waynestate/proctor --dev
+<pre tabindex="0"><code>composer require waynestate/proctor --dev
 </code></pre>
 <p>The command is then <code>vendor/bin/proctor</code>.</p>
 <h2 id="verify">Verify<a class="docs-heading-link" aria-label="Link to this section" href="#verify">#</a></h2>
 <p>Run the check against the app:</p>
-<pre><code>vendor/bin/proctor check
+<pre tabindex="0"><code>vendor/bin/proctor check
 </code></pre>
 <p>Expected: the text report. A header line with the tool and the versions of the external tools used (composer), a line naming the policy in use (origin, path, refresh date), one line per finding, one line per override, then a RESULT line. Exit codes: 0 for pass (warnings allowed), 1 for one or more failures, 2 for a tool error. A proctor that prints a mark sheet is a proctor that is on duty.</p>
 <h2 id="next-steps">Next steps<a class="docs-heading-link" aria-label="Link to this section" href="#next-steps">#</a></h2>

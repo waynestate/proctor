@@ -45,13 +45,13 @@
 <ol>
 <li>
 <p>Add PROCTOR to the app as a dev dependency.</p>
-<pre><code>composer require waynestate/proctor --dev
+<pre tabindex="0"><code>composer require waynestate/proctor --dev
 </code></pre>
 <p>Expected: Composer installs it, and the command is then <code>vendor/bin/proctor</code>.</p>
 </li>
 <li>
 <p>Run the first check.</p>
-<pre><code>vendor/bin/proctor check
+<pre tabindex="0"><code>vendor/bin/proctor check
 </code></pre>
 <p>Expected: the text report. A header line with the tool and the composer version, a line naming the policy in use, one line per finding written in words, then a RESULT line. Exit 0 when nothing failed (warnings allowed), 1 when something did.</p>
 <p><img src="../readme/report.svg" alt="Nine real lines from PROCTOR's text report, one per check, each written in words" /></p>
@@ -62,19 +62,19 @@
 </li>
 <li>
 <p>Make the run deterministic.</p>
-<pre><code>vendor/bin/proctor check --today=2026-01-01 --php-runtime=8.4.0
+<pre tabindex="0"><code>vendor/bin/proctor check --today=2026-01-01 --php-runtime=8.4.0
 </code></pre>
 <p>Expected: the same marks on every run. <code>--today</code> overrides today's date so runs are deterministic, and <code>--php-runtime</code> tells the <code>unpatched</code> check the PHP version that will serve the app. CI should pass the deploy image's PHP, not the runner's.</p>
 </li>
 <li>
 <p>Emit a machine-readable mark sheet (optional).</p>
-<pre><code>vendor/bin/proctor check --format=json
+<pre tabindex="0"><code>vendor/bin/proctor check --format=json
 </code></pre>
 <p>Use <code>--format=codequality</code> for GitLab's Code Quality JSON, or <code>--format=sarif</code> for a SARIF 2.1.0 log that GitHub code scanning can read.</p>
 </li>
 <li>
 <p>Name the policy explicitly (optional).</p>
-<pre><code>vendor/bin/proctor check --policy=policy.json
+<pre tabindex="0"><code>vendor/bin/proctor check --policy=policy.json
 </code></pre>
 <p>Without <code>--policy</code>, PROCTOR resolves the policy in this order: the <code>PROCTOR_POLICY</code> environment variable, the app's <code>vendor/waynestate/creed/policy/policy.json</code>, then the copy bundled with PROCTOR.</p>
 </li>

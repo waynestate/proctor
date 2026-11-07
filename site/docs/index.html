@@ -46,10 +46,10 @@
 <aside class="docs-callout docs-callout--note" role="note"><p class="docs-callout__label">Note</p><p><strong>Not to be confused with:</strong> code style is Pinstripe, CI is Preflight. PROCTOR grades an app against CREED's rules.</p></aside>
 <h2 id="install-and-first-run">Install and first run<a class="docs-heading-link" aria-label="Link to this section" href="#install-and-first-run">#</a></h2>
 <p>Add PROCTOR to the app as a dev dependency:</p>
-<pre><code>composer require waynestate/proctor --dev
+<pre tabindex="0"><code>composer require waynestate/proctor --dev
 </code></pre>
 <p>The command is then <code>vendor/bin/proctor</code>. Run it against the app:</p>
-<pre><code>vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--policy=&lt;file&gt;] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z]
+<pre tabindex="0"><code>vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--policy=&lt;file&gt;] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z]
 </code></pre>
 <p>A clean hall exits 0 (warnings allowed), a resit exits 1, and a tripped proctor exits 2.</p>
 <h2 id="pick-your-path">Pick your path<a class="docs-heading-link" aria-label="Link to this section" href="#pick-your-path">#</a></h2>
