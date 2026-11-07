@@ -355,6 +355,28 @@ final class Policy
     }
 
     /**
+     * How composer audit treats an abandoned package: ignore, report or fail.
+     *
+     * From the rules block; it is Composer's own audit.abandoned setting.
+     * 'fail' when the key is absent, which is Composer's default since 2.7,
+     * so a policy shaped before the rule existed behaves as Composer does
+     * out of the box.
+     *
+     * @throws InvalidArgumentException when the value is not one of ignore,
+     *                                  report or fail
+     */
+    public function abandonedPackages(): string
+    {
+        $value = $this->rules['abandoned_packages'] ?? 'fail';
+        if (!is_string($value) || !in_array($value, ['ignore', 'report', 'fail'], true)) {
+            throw new InvalidArgumentException(
+                'Policy rules carry an unknown "abandoned_packages" value: ' . var_export($value, true),
+            );
+        }
+        return $value;
+    }
+
+    /**
      * The minimum version of a developer tool, from the tools block.
      *
      * Null when the tool is not listed.
