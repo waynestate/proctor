@@ -5,8 +5,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>App checks | PROCTOR docs</title>
-<meta name="description" content="The checks that read an app&#039;s own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, debug files in public/ and chmod 777.">
-<meta name="docs-version" content="0.6.0">
+<meta name="description" content="The checks that read an app&#039;s own files for an end-of-life Node line, env() outside config, identity headers read directly, a committed APP_KEY, debug files in public/ and chmod 777.">
+<meta name="docs-version" content="0.7.0">
 <link rel="stylesheet" href="../../assets/wayne-ui/wayne-ui.css">
 <link rel="stylesheet" href="../../assets/docs.css">
 <link rel="stylesheet" href="../../docs/theme/proctor.css">
@@ -20,7 +20,7 @@
     <a class="masthead__brand" href="../../index.html">
       <img class="masthead__mark" src="../../brand/proctor-avatar-256.png" width="34" height="34" alt="">
       <span class="masthead__name">PROCTOR</span>
-      <span class="masthead__form">Form 0.6.0</span>
+      <span class="masthead__form">Form 0.7.0</span>
     </a>
     <nav class="masthead__nav" aria-label="Site">
       <a href="../../index.html#questions">Questions</a>
@@ -41,8 +41,8 @@
   <div class="docs-content">
     <main id="main">
       <article class="docs-article"><h1 id="app-checks">App checks<a class="docs-heading-link" aria-label="Link to this section" href="#app-checks">#</a></h1>
-<p>This page covers the seven PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, <code>env()</code> calls outside config, identity headers read directly, a committed APP_KEY, files a stranger can download from <code>public/</code>, and <code>chmod 777</code>. Each one holds a CREED practice. Run <code>vendor/bin/proctor check</code> against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.</p>
-<p><code>node-eol</code> and <code>mysql-eol</code> can fail a run. The other five warn, never fail: a new check must not turn a passing app into a failing one.</p>
+<p>This page covers the six PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, <code>env()</code> calls outside config, identity headers read directly, a committed APP_KEY, files a stranger can download from <code>public/</code>, and <code>chmod 777</code>. Each one holds a CREED practice. Run <code>vendor/bin/proctor check</code> against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.</p>
+<p>Only <code>node-eol</code> can fail a run. The other five warn, never fail: a new check must not turn a passing app into a failing one.</p>
 <h2 id="node-eol">node-eol<a class="docs-heading-link" aria-label="Link to this section" href="#node-eol">#</a></h2>
 <p><code>node-eol</code> grades every Node version the repository pins against the policy's <code>node</code> lines as of <code>--today</code>. The sources:</p>
 <ul>
@@ -101,56 +101,6 @@
 <tr>
 <td><code>node-eol</code></td>
 <td><code>proctor/node-eol/odd-major</code></td>
-</tr>
-</tbody>
-</table></div>
-<h2 id="mysql-eol">mysql-eol<a class="docs-heading-link" aria-label="Link to this section" href="#mysql-eol">#</a></h2>
-<p><code>mysql-eol</code> grades every MySQL or MariaDB version the repository names against the policy's <code>mysql</code> and <code>mariadb</code> lines as of <code>--today</code>. The sources:</p>
-<ul>
-<li>an official <code>mysql</code> or <code>mariadb</code> image on an <code>image:</code> line in a root <code>docker-compose*.yml</code> or <code>compose*.yml</code> (<code>mysql:8.0</code>, <code>mariadb:10.11</code>, <code>docker.io/library/mysql:8.4</code>, or one behind a registry host or a <code>$VAR</code> prefix);</li>
-<li><code>SQUIRE_MYSQL_IMAGE=mysql:&lt;version&gt;</code> in <code>.env.squire.example</code> or <code>.env.example</code>.</li>
-</ul>
-<p>A <code>@sha256:</code> digest after the tag is tolerated: the version still comes from the tag. Each source gets the same table as <code>php-floor</code>, except an active version stays silent instead of passing:</p>
-<div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
-<thead>
-<tr>
-<th>State</th>
-<th>Result</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Active</td>
-<td>silent</td>
-</tr>
-<tr>
-<td>Security only</td>
-<td>warning, naming the security end date and the days left</td>
-</tr>
-<tr>
-<td>End of life</td>
-<td>fail, naming the security end date</td>
-</tr>
-<tr>
-<td>Past the security end date plus the grace window</td>
-<td>fail as <code>eol_grace_expired</code></td>
-</tr>
-</tbody>
-</table></div>
-<p>An active override downgrades the eol fail to a warning, never the grace-expired one.</p>
-<p>No finding when the policy has no <code>mysql</code> or <code>mariadb</code> component, when the repository names no database version, or for another organization's image that happens to be called mysql (<code>someorg/mysql:8.0</code>).</p>
-<p>Fix by moving the image to an active line, in every place the report names: the compose file and the env example should agree.</p>
-<div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
-<thead>
-<tr>
-<th>Check</th>
-<th>Rule id</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>mysql-eol</code></td>
-<td><code>proctor/mysql-eol</code></td>
 </tr>
 </tbody>
 </table></div>
@@ -313,10 +263,10 @@
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../../docs/guides/check-ci.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">CI checks</span></a><a class="docs-pager__link docs-pager__link--next" href="../../docs/guides/check-wayneui.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">WayneUI checks</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#node-eol">node-eol</a></li><li class="docs-toc__item"><a href="#mysql-eol">mysql-eol</a></li><li class="docs-toc__item"><a href="#env-outside-config">env-outside-config</a></li><li class="docs-toc__item"><a href="#raw-identity-header">raw-identity-header</a></li><li class="docs-toc__item"><a href="#app-key">app-key</a></li><li class="docs-toc__item"><a href="#served-folder">served-folder</a></li><li class="docs-toc__item"><a href="#world-writable">world-writable</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#node-eol">node-eol</a></li><li class="docs-toc__item"><a href="#env-outside-config">env-outside-config</a></li><li class="docs-toc__item"><a href="#raw-identity-header">raw-identity-header</a></li><li class="docs-toc__item"><a href="#app-key">app-key</a></li><li class="docs-toc__item"><a href="#served-folder">served-folder</a></li><li class="docs-toc__item"><a href="#world-writable">world-writable</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
-  <span>Documents PROCTOR <span data-docs-version>0.6.0</span></span>
+  <span>Documents PROCTOR <span data-docs-version>0.7.0</span></span>
   <span><a rel="noopener" href="https://github.com/waynestate/proctor">Source</a> <a href="check-app.md">Markdown</a></span>
 </footer>
 </body>
