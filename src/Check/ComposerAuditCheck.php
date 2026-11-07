@@ -10,9 +10,9 @@ use Waynestate\Proctor\Override\Override;
 use Waynestate\Proctor\ToolError;
 
 /**
- * Runs "composer audit --format=json --locked --no-plugins --no-interaction"
- * in the app path, with a minimal environment of its own, and reports the
- * advisories and abandoned packages it finds.
+ * Runs "composer audit --format=json --locked --no-plugins --no-interaction
+ * --abandoned=<policy>" in the app path, with a minimal environment of its
+ * own, and reports the advisories and abandoned packages it finds.
  *
  * Composer exits non-zero (1, 2 or 3) when it reports findings; that is
  * expected, so the decision is made from stdout, never from the exit code
@@ -28,7 +28,13 @@ use Waynestate\Proctor\ToolError;
  * ignored-advisories section. A detailed ignore rule only counts when it
  * applies to audit (its on-audit flag is not false) and, for a package rule
  * carrying a constraint, when the locked version satisfies it. Abandoned
- * packages are warnings. When the composer executable or composer.lock is
+ * packages follow the policy's abandoned_packages rule, which is also
+ * passed to composer as --abandoned: fail gives one fail per package
+ * (rule `proctor/composer-audit/abandoned`), report gives a warning, and
+ * ignore gives nothing. An abandoned package the app ignores in its
+ * composer.json (config.policy.abandoned.ignore, or the legacy
+ * config.audit.ignore-abandoned) is a warning, not a fail, the same as an
+ * ignored advisory. When the composer executable or composer.lock is
  * missing, the check fails (rule `proctor/composer-audit/skipped`) with a
  * message that starts with `not audited:` and names the fix, installing
  * Composer or committing the lock, or recording a dated override, because a
@@ -90,8 +96,17 @@ final class ComposerAuditCheck implements CheckInterface
             )];
         }
 
+        $abandonedPolicy = $this->abandonedPolicy($context->policy);
         $result = $this->process->run(
-            [$composer, 'audit', '--format=json', '--locked', '--no-plugins', '--no-interaction'],
+            [
+                $composer,
+                'audit',
+                '--format=json',
+                '--locked',
+                '--no-plugins',
+                '--no-interaction',
+                '--abandoned=' . $abandonedPolicy,
+            ],
             $context->appPath,
             $context->timeout,
             self::auditEnvironment(),
@@ -162,19 +177,41 @@ final class ComposerAuditCheck implements CheckInterface
             }
         }
 
+        // Composer lists each abandoned package with its suggested
+        // replacement, a package name or null. Any other value (an older
+        // shape, or composer.lock's own `true`) still names an abandoned
+        // package, so it reads as "no named replacement" instead of
+        // vanishing. Under fail or report every listed package becomes a
+        // finding, so an abandoned-only non-zero exit never reaches the
+        // exit-code fail below; under ignore composer does not fail on
+        // them, so they leave a non-zero exit unexplained.
         $abandoned = $decoded['abandoned'] ?? [];
-        if (is_array($abandoned)) {
+        if (is_array($abandoned) && $abandonedPolicy !== 'ignore') {
+            $ignoredAbandoned = $this->ignoredAbandoned($context);
             foreach ($abandoned as $package => $replacement) {
+                $packageName = (string) $package;
+                if ($packageName === '') {
+                    continue;
+                }
+                $named = is_string($replacement) && $replacement !== '' ? $replacement : null;
+                $appIgnores = false;
+                foreach ($ignoredAbandoned as $pattern) {
+                    if ($this->packageMatches($pattern, $packageName)) {
+                        $appIgnores = true;
+                        break;
+                    }
+                }
                 $findings[] = new Finding(
                     $this->id(),
-                    Finding::STATUS_WARNING,
-                    is_string($replacement) && $replacement !== ''
-                        ? sprintf('%s is abandoned (use %s instead)', (string) $package, $replacement)
-                        : sprintf('%s is abandoned', (string) $package),
+                    $abandonedPolicy === 'fail' && !$appIgnores ? Finding::STATUS_FAIL : Finding::STATUS_WARNING,
+                    $named !== null
+                        ? sprintf('%s is abandoned; use %s instead', $packageName, $named)
+                        : sprintf('%s is abandoned with no named replacement', $packageName),
                     'composer.lock',
                     1,
                     null,
                     'abandoned',
+                    [['package' => $packageName, 'replacement' => $named]],
                 );
             }
         }
@@ -231,6 +268,74 @@ final class ComposerAuditCheck implements CheckInterface
         }
 
         return $threshold;
+    }
+
+    /**
+     * The policy's abandoned_packages rule (ignore, report or fail; fail
+     * when the policy does not carry it), as a tool error when the value
+     * is unknown, the same as a bad threshold.
+     *
+     * @throws ToolError if the rule is not ignore, report or fail
+     */
+    private function abandonedPolicy(Policy $policy): string
+    {
+        try {
+            return $policy->abandonedPackages();
+        } catch (\InvalidArgumentException $e) {
+            throw new ToolError($e->getMessage() . '; expected ignore, report or fail.');
+        }
+    }
+
+    /**
+     * The package patterns the app's composer.json tells composer audit to
+     * leave out of its abandoned list: config.policy.abandoned.ignore, in
+     * either of composer's two shapes, counting an entry when one of its
+     * rules applies to audit (on-audit not false); or the legacy
+     * config.audit.ignore-abandoned while there is no
+     * config.policy.abandoned block. Composer matches these by package name
+     * only, so a rule's constraint is not consulted here either.
+     *
+     * @return list<string>
+     */
+    private function ignoredAbandoned(CheckContext $context): array
+    {
+        $file = $context->appPath . '/composer.json';
+        $raw = is_file($file) ? file_get_contents($file) : false;
+        if ($raw === false) {
+            return [];
+        }
+
+        $data = json_decode($raw, true);
+        $config = is_array($data) ? ($data['config'] ?? null) : null;
+        if (!is_array($config)) {
+            return [];
+        }
+
+        $policy = is_array($config['policy'] ?? null) ? ($config['policy']['abandoned'] ?? null) : null;
+        if (!is_array($policy)) {
+            $audit = $config['audit'] ?? null;
+
+            return is_array($audit) ? self::ignoreEntries($audit['ignore-abandoned'] ?? null) : [];
+        }
+
+        $packages = [];
+        foreach ($this->ignorePairs($policy['ignore'] ?? null) as $pair) {
+            $package = $pair['key'];
+            if ($package === null && is_string($pair['value']) && $pair['value'] !== '') {
+                $package = $pair['value'];
+            }
+            if (!is_string($package) || $package === '') {
+                continue;
+            }
+            foreach ($this->ignoreRules($pair['value']) as $rule) {
+                if ($this->appliesToAudit($rule)) {
+                    $packages[] = $package;
+                    break;
+                }
+            }
+        }
+
+        return array_values(array_unique($packages));
     }
 
     /**

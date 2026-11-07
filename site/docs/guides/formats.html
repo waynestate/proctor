@@ -96,7 +96,7 @@ RESULT: fail (1 failures, 0 warnings)
 <ul>
 <li>Top level: <code>tool</code>, <code>version</code>, <code>path</code>, <code>today</code> (a <code>YYYY-MM-DD</code> date), <code>result</code> (<code>pass</code> or <code>fail</code>), <code>exit</code> (0 or 1), <code>tools</code>, <code>policy</code>, <code>findings</code>, <code>overrides</code>.</li>
 <li><code>policy</code> holds <code>origin</code>, <code>path</code>, <code>refreshed_on</code> and <code>age_days</code>.</li>
-<li>Each finding in <code>findings</code> holds <code>check_id</code>, <code>rule_id</code>, <code>status</code>, <code>message</code>, <code>path</code> and <code>line</code>. An advisory finding carries an <code>advisories</code> array with one entry per advisory (package, id, cve, title, link, severity); other findings have no such key.</li>
+<li>Each finding in <code>findings</code> holds <code>check_id</code>, <code>rule_id</code>, <code>status</code>, <code>message</code>, <code>path</code> and <code>line</code>. An advisory finding carries an <code>advisories</code> array with one entry per advisory (package, id, cve, title, link, severity); an abandoned-package finding (<code>proctor/composer-audit/abandoned</code>) carries one entry with the package and its suggested replacement (a package name or null), so a package-scoped override can match it; other findings have no such key.</li>
 <li>Each entry in <code>overrides</code> holds <code>check</code>, <code>reason</code>, <code>expires</code>, <code>approved_by</code> and <code>expired</code>, computed from <code>today</code>.</li>
 </ul>
 <p>When the report cannot be encoded, PROCTOR fails the run with a tool error (exit 2): <code>Could not encode the JSON report: &lt;reason&gt;</code>.</p>

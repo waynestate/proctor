@@ -29,7 +29,8 @@ final class Finding
      * @param string|null                $rule       the rule within the check, or null for the check's default
      *                                               finding; the stable rule id is proctor/<checkId>/<rule>
      * @param list<array<string, mixed>> $advisories machine-readable advisory data (id, cve, title, link and
-     *                                               severity per entry), empty when the finding carries none
+     *                                               severity per entry, or package and replacement for an
+     *                                               abandoned package), empty when the finding carries none
      */
     public function __construct(
         public readonly string $checkId,

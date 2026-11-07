@@ -56,7 +56,7 @@ One machine-readable object, pretty-printed on stdout. Slashes and Unicode are l
 
 - Top level: `tool`, `version`, `path`, `today` (a `YYYY-MM-DD` date), `result` (`pass` or `fail`), `exit` (0 or 1), `tools`, `policy`, `findings`, `overrides`.
 - `policy` holds `origin`, `path`, `refreshed_on` and `age_days`.
-- Each finding in `findings` holds `check_id`, `rule_id`, `status`, `message`, `path` and `line`. An advisory finding carries an `advisories` array with one entry per advisory (package, id, cve, title, link, severity); other findings have no such key.
+- Each finding in `findings` holds `check_id`, `rule_id`, `status`, `message`, `path` and `line`. An advisory finding carries an `advisories` array with one entry per advisory (package, id, cve, title, link, severity); an abandoned-package finding (`proctor/composer-audit/abandoned`) carries one entry with the package and its suggested replacement (a package name or null), so a package-scoped override can match it; other findings have no such key.
 - Each entry in `overrides` holds `check`, `reason`, `expires`, `approved_by` and `expired`, computed from `today`.
 
 When the report cannot be encoded, PROCTOR fails the run with a tool error (exit 2): `Could not encode the JSON report: <reason>`.

@@ -9,10 +9,13 @@ use PHPUnit\Framework\TestCase;
 use Waynestate\Proctor\Check\CheckContext;
 use Waynestate\Proctor\Check\ComposerAuditCheck;
 use Waynestate\Proctor\Check\Finding;
+use Waynestate\Proctor\Check\OverrideApplier;
 use Waynestate\Proctor\Check\ProcessResult;
 use Waynestate\Proctor\Check\ProcessRunnerInterface;
 use Waynestate\Proctor\Creed\Policy;
+use Waynestate\Proctor\Override\Override;
 use Waynestate\Proctor\Override\OverrideFile;
+use Waynestate\Proctor\ToolError;
 
 /**
  * Tests the ComposerAuditCheck with a stub ProcessRunner, so advisory
@@ -549,23 +552,217 @@ final class ComposerAuditCheckTest extends TestCase
         self::assertSame(self::MESSAGES[0], $findings[0]->message);
     }
 
-    public function testAbandonedPackagesAreWarnings(): void
+    public function testAbandonedPackageWithAReplacementFailsUnderTheFailPolicy(): void
     {
-        $json = json_encode([
-            'advisories' => [],
-            'abandoned' => [
-                'vendor/abandoned' => true,
-                'vendor/abandoned-replaced' => 'vendor/replacement',
-            ],
-        ]);
+        // The fixture policy carries no abandoned_packages rule, so it is
+        // fail, composer's own default.
+        $json = json_encode(['advisories' => [], 'abandoned' => ['vendor/old' => 'vendor/new']]);
+
+        $findings = $this->runAudit($this->app('audit-app'), (string) $json);
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_FAIL, $findings[0]->status);
+        self::assertSame('proctor/composer-audit/abandoned', $findings[0]->ruleId);
+        self::assertSame('vendor/old is abandoned; use vendor/new instead', $findings[0]->message);
+        self::assertSame('composer.lock', $findings[0]->path);
+        self::assertSame(1, $findings[0]->line);
+        self::assertSame([['package' => 'vendor/old', 'replacement' => 'vendor/new']], $findings[0]->advisories);
+    }
+
+    public function testAbandonedPackageWithNoReplacementFailsUnderTheFailPolicy(): void
+    {
+        $json = json_encode(['advisories' => [], 'abandoned' => ['vendor/old' => null]]);
+
+        $findings = $this->runAudit($this->app('audit-app'), (string) $json, 1, false, '', $this->policyWith('fail'));
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_FAIL, $findings[0]->status);
+        self::assertSame('proctor/composer-audit/abandoned', $findings[0]->ruleId);
+        self::assertSame('vendor/old is abandoned with no named replacement', $findings[0]->message);
+        self::assertSame([['package' => 'vendor/old', 'replacement' => null]], $findings[0]->advisories);
+    }
+
+    public function testAbandonedPackageWithAValueThatIsNotANameReadsAsNoNamedReplacement(): void
+    {
+        // Composer 2.10 writes a package name or null, but an older or odd
+        // shape (true, as composer.lock records it, or an empty string)
+        // still names an abandoned package, so it is graded instead of
+        // dropped.
+        $json = json_encode(['advisories' => [], 'abandoned' => ['vendor/old' => true, 'vendor/older' => '']]);
 
         $findings = $this->runAudit($this->app('audit-app'), (string) $json);
 
         self::assertCount(2, $findings);
+        self::assertSame(Finding::STATUS_FAIL, $findings[0]->status);
+        self::assertSame('vendor/old is abandoned with no named replacement', $findings[0]->message);
+        self::assertSame(Finding::STATUS_FAIL, $findings[1]->status);
+        self::assertSame('vendor/older is abandoned with no named replacement', $findings[1]->message);
+    }
+
+    public function testAbandonedPackagesAreWarningsUnderTheReportPolicy(): void
+    {
+        $json = json_encode([
+            'advisories' => [],
+            'abandoned' => [
+                'vendor/old' => 'vendor/new',
+                'vendor/older' => null,
+            ],
+        ]);
+
+        $findings = $this->runAudit($this->app('audit-app'), (string) $json, 0, false, '', $this->policyWith('report'));
+
+        self::assertCount(2, $findings);
         self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
-        self::assertSame('vendor/abandoned is abandoned', $findings[0]->message);
+        self::assertSame('proctor/composer-audit/abandoned', $findings[0]->ruleId);
+        self::assertSame('vendor/old is abandoned; use vendor/new instead', $findings[0]->message);
         self::assertSame(Finding::STATUS_WARNING, $findings[1]->status);
-        self::assertSame('vendor/abandoned-replaced is abandoned (use vendor/replacement instead)', $findings[1]->message);
+        self::assertSame('vendor/older is abandoned with no named replacement', $findings[1]->message);
+    }
+
+    public function testAbandonedPackagesGiveNoFindingUnderTheIgnorePolicy(): void
+    {
+        $json = json_encode(['advisories' => [], 'abandoned' => ['vendor/old' => 'vendor/new']]);
+
+        $findings = $this->runAudit($this->app('audit-app'), (string) $json, 0, false, '', $this->policyWith('ignore'));
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+        self::assertSame('no advisories found', $findings[0]->message);
+    }
+
+    public function testAbandonedOnlyNonZeroExitRaisesNoExitCodeFinding(): void
+    {
+        // Under fail composer exits 1 for an abandoned package alone; the
+        // abandoned list explains that exit, so the exit-code fail stays
+        // away.
+        $json = json_encode(['advisories' => [], 'abandoned' => ['vendor/old' => null]]);
+
+        $findings = $this->runAudit($this->app('audit-app'), (string) $json, 1);
+
+        self::assertCount(1, $findings);
+        self::assertSame('proctor/composer-audit/abandoned', $findings[0]->ruleId);
+        foreach ($findings as $finding) {
+            self::assertNotSame('proctor/composer-audit/exit-code', $finding->ruleId);
+        }
+    }
+
+    public function testNonZeroExitUnderTheIgnorePolicyIsNotExplainedByAbandonedPackages(): void
+    {
+        // Under ignore composer never fails on an abandoned package, so a
+        // non-zero exit came from something PROCTOR cannot read.
+        $json = json_encode(['advisories' => [], 'abandoned' => ['vendor/old' => null]]);
+
+        $findings = $this->runAudit($this->app('audit-app'), (string) $json, 1, false, '', $this->policyWith('ignore'));
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_FAIL, $findings[0]->status);
+        self::assertSame('proctor/composer-audit/exit-code', $findings[0]->ruleId);
+    }
+
+    public function testPolicyAbandonedIgnoreEntryDowngradesTheFailToAWarning(): void
+    {
+        // config.policy.abandoned.ignore names the package with a star, so
+        // the abandoned fail becomes a warning, the same as an ignored
+        // advisory; the entry itself still needs a dated override.
+        $app = $this->tempApp('proctor-abandoned-ignore-app-', [
+            'policy' => ['abandoned' => ['ignore' => ['vendor/old*' => 'moving off it this term']]],
+        ]);
+        $json = json_encode(['advisories' => [], 'abandoned' => ['vendor/old-package' => null, 'vendor/other' => null]]);
+
+        $findings = $this->abandonedFindings($this->runAudit($app, (string) $json));
+
+        self::assertCount(2, $findings);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertSame('vendor/old-package is abandoned with no named replacement', $findings[0]->message);
+        self::assertSame(Finding::STATUS_FAIL, $findings[1]->status);
+    }
+
+    public function testLegacyIgnoreAbandonedEntryDowngradesTheFailToAWarning(): void
+    {
+        $app = $this->tempApp('proctor-abandoned-legacy-app-', [
+            'audit' => ['ignore-abandoned' => ['vendor/old']],
+        ]);
+        $json = json_encode(['advisories' => [], 'abandoned' => ['vendor/old' => 'vendor/new']]);
+
+        $findings = $this->abandonedFindings($this->runAudit($app, (string) $json));
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+    }
+
+    public function testAbandonedIgnoreEntryWithOnAuditFalseKeepsTheFail(): void
+    {
+        $app = $this->tempApp('proctor-abandoned-on-audit-app-', [
+            'policy' => ['abandoned' => ['ignore' => ['vendor/old' => ['reason' => 'block only', 'on-audit' => false]]]],
+        ]);
+        $json = json_encode(['advisories' => [], 'abandoned' => ['vendor/old' => null]]);
+
+        $findings = $this->abandonedFindings($this->runAudit($app, (string) $json));
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_FAIL, $findings[0]->status);
+    }
+
+    public function testPackageScopedOverrideCoversTheAbandonedFail(): void
+    {
+        // The finding carries the package, so an override scoped to it
+        // downgrades the fail and one scoped to another package does not.
+        $json = json_encode(['advisories' => [], 'abandoned' => ['vendor/old' => 'vendor/new']]);
+        $findings = $this->runAudit($this->app('audit-app'), (string) $json);
+        $today = new DateTimeImmutable('2026-10-27');
+        $expires = new DateTimeImmutable('2026-12-31');
+
+        $covered = (new OverrideApplier(
+            [new Override('composer-audit', 'replacing it this term', $expires, 'reviewer', null, 'vendor/old')],
+            $today,
+        ))->apply($findings);
+        $missed = (new OverrideApplier(
+            [new Override('composer-audit', 'another package', $expires, 'reviewer', null, 'vendor/other')],
+            $today,
+        ))->apply($findings);
+
+        self::assertSame(Finding::STATUS_WARNING, $covered[0]->status);
+        self::assertSame('vendor/old is abandoned; use vendor/new instead (overridden: replacing it this term)', $covered[0]->message);
+        self::assertSame(Finding::STATUS_FAIL, $missed[0]->status);
+    }
+
+    public function testUnknownAbandonedPackagesRuleIsAToolError(): void
+    {
+        $this->expectException(ToolError::class);
+        $this->expectExceptionMessage('abandoned_packages');
+
+        $this->runAudit($this->app('audit-app'), '{"advisories": [], "abandoned": []}', 0, false, '', $this->policyWith('sometimes'));
+    }
+
+    public function testAuditPassesThePolicyAbandonedRuleToComposer(): void
+    {
+        foreach (['ignore', 'report', 'fail'] as $value) {
+            $captured = new class implements ProcessRunnerInterface {
+                /** @var list<string>|null */
+                public ?array $command = null;
+
+                public function run(array $command, string $cwd, int $timeout = 300, ?array $env = null): ProcessResult
+                {
+                    $this->command = $command;
+
+                    return new ProcessResult(0, '{"advisories": [], "abandoned": []}', '');
+                }
+            };
+            $this->putFakeComposerOnPath();
+
+            (new ComposerAuditCheck($captured))->run(new CheckContext(
+                $this->app('audit-app'),
+                $this->policyWith($value),
+                new DateTimeImmutable('2026-10-27'),
+            ));
+
+            self::assertIsArray($captured->command);
+            self::assertContains('--abandoned=' . $value, $captured->command);
+            self::assertCount(1, array_filter(
+                $captured->command,
+                static fn(string $part): bool => str_starts_with($part, '--abandoned'),
+            ));
+        }
     }
 
     public function testCleanAuditPasses(): void
@@ -724,7 +921,7 @@ final class ComposerAuditCheckTest extends TestCase
         self::assertIsArray($captured->command);
         $command = $captured->command;
         self::assertSame('audit', $command[1]);
-        foreach (['--format=json', '--locked', '--no-plugins', '--no-interaction'] as $flag) {
+        foreach (['--format=json', '--locked', '--no-plugins', '--no-interaction', '--abandoned=fail'] as $flag) {
             self::assertContains($flag, $command);
         }
 
@@ -750,12 +947,19 @@ final class ComposerAuditCheckTest extends TestCase
      * the existing tests assert the same findings they did before the
      * warning existed. The app's policy-overrides.json, when present, is
      * loaded into the context, so an ignore entry an active override backs
-     * earns no unbacked-ignore fail.
+     * earns no unbacked-ignore fail. The policy is the fixture policy
+     * unless one is given.
      *
      * @return list<Finding>
      */
-    private function runAudit(string $app, string $json, int $exitCode = 1, bool $keepIgnoreEntries = false, string $stderr = ''): array
-    {
+    private function runAudit(
+        string $app,
+        string $json,
+        int $exitCode = 1,
+        bool $keepIgnoreEntries = false,
+        string $stderr = '',
+        ?Policy $policy = null,
+    ): array {
         $this->putFakeComposerOnPath();
 
         $check = new ComposerAuditCheck(new class ($json, $exitCode, $stderr) implements ProcessRunnerInterface {
@@ -773,7 +977,7 @@ final class ComposerAuditCheckTest extends TestCase
 
         $context = new CheckContext(
             $app,
-            Policy::fromFile(__DIR__ . '/fixtures/policy.json'),
+            $policy ?? Policy::fromFile(__DIR__ . '/fixtures/policy.json'),
             new DateTimeImmutable('2026-10-27'),
             OverrideFile::load($app),
         );
@@ -803,6 +1007,52 @@ final class ComposerAuditCheckTest extends TestCase
             self::assertSame(self::MESSAGES[$index], $finding->message, sprintf('finding %d message', $index + 1));
             self::assertSame($statuses[$index], $finding->status, sprintf('finding %d status', $index + 1));
         }
+    }
+
+    /**
+     * The fixture policy with its abandoned_packages rule set to $value.
+     */
+    private function policyWith(string $value): Policy
+    {
+        $data = json_decode((string) file_get_contents(__DIR__ . '/fixtures/policy.json'), true);
+        self::assertIsArray($data);
+        $rules = $data['rules'] ?? [];
+        self::assertIsArray($rules);
+        $rules['abandoned_packages'] = $value;
+        $data['rules'] = $rules;
+
+        return Policy::fromArray($data);
+    }
+
+    /**
+     * A temporary app whose composer.json carries the given config block,
+     * with an empty lock.
+     *
+     * @param array<string, mixed> $config
+     */
+    private function tempApp(string $prefix, array $config): string
+    {
+        $app = sys_get_temp_dir() . '/' . $prefix . uniqid();
+        mkdir($app, 0755, true);
+        file_put_contents($app . '/composer.json', (string) json_encode(['name' => 'vendor/temp', 'config' => $config]));
+        file_put_contents($app . '/composer.lock', '{}');
+
+        return $app;
+    }
+
+    /**
+     * Only the proctor/composer-audit/abandoned findings, in order.
+     *
+     * @param list<Finding> $findings
+     *
+     * @return list<Finding>
+     */
+    private function abandonedFindings(array $findings): array
+    {
+        return array_values(array_filter(
+            $findings,
+            static fn(Finding $finding): bool => $finding->ruleId === 'proctor/composer-audit/abandoned',
+        ));
     }
 
     /**

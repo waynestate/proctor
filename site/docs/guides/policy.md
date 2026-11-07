@@ -12,7 +12,7 @@ This page explains which CREED-format policy file PROCTOR checks against, and ho
 
 ## What a policy file contains[#](https://proctor.apps.wayne.edu/docs/guides/policy.html#what-a-policy-file-contains)
 
-`--policy` takes a CREED-format policy file: schema_version 1, component versions with released, active_until and security_until dates, and rules (audit_severity_threshold, banned_constraints, eol_grace_days). The policy-file wiring to `waynestate/creed` is described in [The CREED reader copy](https://proctor.apps.wayne.edu/docs/guides/policy.html#the-creed-reader-copy) below.
+`--policy` takes a CREED-format policy file: schema_version 1, component versions with released, active_until and security_until dates, and rules (audit_severity_threshold, abandoned_packages, banned_constraints, eol_grace_days). The policy-file wiring to `waynestate/creed` is described in [The CREED reader copy](https://proctor.apps.wayne.edu/docs/guides/policy.html#the-creed-reader-copy) below.
 
 ## Resolution order[#](https://proctor.apps.wayne.edu/docs/guides/policy.html#resolution-order)
 
