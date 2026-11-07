@@ -106,10 +106,11 @@
 </tbody>
 </table></div>
 <h2 id="laravel-php">laravel-php<a class="docs-heading-link" aria-label="Link to this section" href="#laravel-php">#</a></h2>
-<p><code>laravel-php</code> checks that composer.json's <code>require.php</code> stays inside the PHP range the policy records for the locked Laravel major. It reads the version from composer.lock and the range from the policy's <code>requires</code> block for that major's line, then asks whether every PHP version the constraint allows is one the major can run on. The range's max counts as supported, so a max of <code>8.5</code> admits everything below <code>8.6</code>.</p>
+<p><code>laravel-php</code> checks composer.json's <code>require.php</code> against the PHP range the policy records for the locked Laravel major. It reads the version from composer.lock and the range from the policy's <code>requires</code> block for that major's line, then asks two questions of the constraint: does it allow any PHP version inside the range, and does it allow any PHP below the range's floor? Composer and the deployed runtime decide the upper end, so an open upper bound such as <code>^8.2</code> passes; the range's max counts as supported, so a max of <code>8.5</code> admits everything below <code>8.6</code>.</p>
 <ul>
-<li>A constraint inside the range passes; the message names the app's constraint, the policy range and the Laravel major.</li>
-<li>A constraint that allows a PHP version outside the range fails: the app would not boot on PHP it declares.</li>
+<li>A constraint that allows no PHP version inside the range fails: <code>php constraint &quot;X&quot; allows no PHP in the MIN to MAX range of laravel L</code>. The app would not boot on any PHP the locked major runs on.</li>
+<li>A constraint whose lowest allowed version is below the range's floor fails: <code>php constraint &quot;X&quot; allows PHP below MIN, the floor of laravel L (MIN to MAX)</code>. The app claims a PHP the locked major cannot run on.</li>
+<li>Every other constraint passes: <code>php constraint &quot;X&quot; fits the MIN to MAX range of laravel L</code>, including Laravel's own skeleton constraint <code>^8.2</code> on a line floored at 8.2.</li>
 </ul>
 <p>An active <code>laravel-php</code> override downgrades the fail to a warning. There is no finding when composer.lock has no <code>laravel/framework</code>, the line has no recorded range, or composer.json declares no <code>require.php</code>: php-floor owns the missing-constraint verdict. A present <code>require.php</code> that is not a valid version constraint is a tool error.</p>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>

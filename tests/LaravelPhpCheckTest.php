@@ -19,7 +19,27 @@ final class LaravelPhpCheckTest extends ProctorTestCase
         return __DIR__ . '/fixtures/policy-laravel.json';
     }
 
-    public function testConstraintInsideRangePasses(): void
+    public function testSkeletonConstraintPasses(): void
+    {
+        $stdout = $this->runProctor($this->app('laravel-php-caret-82-app'), 'text', $this->policy())['stdout'];
+
+        self::assertMatchesRegularExpression(
+            '/^PASS laravel-php: php constraint "\^8\.2" fits the 8\.2 to 8\.5 range of laravel 12$/m',
+            $stdout,
+        );
+    }
+
+    public function testCaretAboveFloorPasses(): void
+    {
+        $stdout = $this->runProctor($this->app('laravel-php-caret-84-app'), 'text', $this->policy())['stdout'];
+
+        self::assertMatchesRegularExpression(
+            '/^PASS laravel-php: php constraint "\^8\.4" fits the 8\.2 to 8\.5 range of laravel 12$/m',
+            $stdout,
+        );
+    }
+
+    public function testTildeConstraintPasses(): void
     {
         $stdout = $this->runProctor($this->app('laravel-php-pass-app'), 'text', $this->policy())['stdout'];
 
@@ -29,22 +49,22 @@ final class LaravelPhpCheckTest extends ProctorTestCase
         );
     }
 
-    public function testConstraintBelowRangeFails(): void
+    public function testBelowFloorFails(): void
     {
         $stdout = $this->runProctor($this->app('laravel-php-below-app'), 'text', $this->policy())['stdout'];
 
         self::assertMatchesRegularExpression(
-            '/^FAIL laravel-php: php constraint "\^8\.1" allows PHP outside the 8\.2 to 8\.5 range of laravel 12$/m',
+            '/^FAIL laravel-php: php constraint ">=8\.0" allows PHP below 8\.2, the floor of laravel 12 \(8\.2 to 8\.5\)$/m',
             $stdout,
         );
     }
 
-    public function testConstraintAboveRangeFails(): void
+    public function testNoOverlapWithRangeFails(): void
     {
-        $stdout = $this->runProctor($this->app('laravel-php-above-app'), 'text', $this->policy())['stdout'];
+        $stdout = $this->runProctor($this->app('laravel-php-no-overlap-app'), 'text', $this->policy())['stdout'];
 
         self::assertMatchesRegularExpression(
-            '/^FAIL laravel-php: php constraint "\^8\.4" allows PHP outside the 8\.2 to 8\.5 range of laravel 12$/m',
+            '/^FAIL laravel-php: php constraint "\^7\.4" allows no PHP in the 8\.2 to 8\.5 range of laravel 12$/m',
             $stdout,
         );
     }
@@ -54,7 +74,7 @@ final class LaravelPhpCheckTest extends ProctorTestCase
         $stdout = $this->runProctor($this->app('laravel-php-override-app'), 'text', $this->policy())['stdout'];
 
         self::assertMatchesRegularExpression(
-            '/^WARN laravel-php: php constraint "\^8\.1" allows PHP outside the 8\.2 to 8\.5 range of laravel 12 \(overridden: fixture: PHP 8\.1 still runs on the staging container\)$/m',
+            '/^WARN laravel-php: php constraint "\^8\.1" allows PHP below 8\.2, the floor of laravel 12 \(8\.2 to 8\.5\) \(overridden: fixture: PHP 8\.1 still runs on the staging container\)$/m',
             $stdout,
         );
     }

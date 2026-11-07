@@ -51,10 +51,11 @@ An active `laravel-eol` override downgrades the `eol` fail to a warning; it neve
 
 ## laravel-php
 
-`laravel-php` checks that composer.json's `require.php` stays inside the PHP range the policy records for the locked Laravel major. It reads the version from composer.lock and the range from the policy's `requires` block for that major's line, then asks whether every PHP version the constraint allows is one the major can run on. The range's max counts as supported, so a max of `8.5` admits everything below `8.6`.
+`laravel-php` checks composer.json's `require.php` against the PHP range the policy records for the locked Laravel major. It reads the version from composer.lock and the range from the policy's `requires` block for that major's line, then asks two questions of the constraint: does it allow any PHP version inside the range, and does it allow any PHP below the range's floor? Composer and the deployed runtime decide the upper end, so an open upper bound such as `^8.2` passes; the range's max counts as supported, so a max of `8.5` admits everything below `8.6`.
 
-- A constraint inside the range passes; the message names the app's constraint, the policy range and the Laravel major.
-- A constraint that allows a PHP version outside the range fails: the app would not boot on PHP it declares.
+- A constraint that allows no PHP version inside the range fails: `php constraint "X" allows no PHP in the MIN to MAX range of laravel L`. The app would not boot on any PHP the locked major runs on.
+- A constraint whose lowest allowed version is below the range's floor fails: `php constraint "X" allows PHP below MIN, the floor of laravel L (MIN to MAX)`. The app claims a PHP the locked major cannot run on.
+- Every other constraint passes: `php constraint "X" fits the MIN to MAX range of laravel L`, including Laravel's own skeleton constraint `^8.2` on a line floored at 8.2.
 
 An active `laravel-php` override downgrades the fail to a warning. There is no finding when composer.lock has no `laravel/framework`, the line has no recorded range, or composer.json declares no `require.php`: php-floor owns the missing-constraint verdict. A present `require.php` that is not a valid version constraint is a tool error.
 

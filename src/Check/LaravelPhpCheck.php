@@ -4,21 +4,24 @@ declare(strict_types=1);
 
 namespace Waynestate\Proctor\Check;
 
+use Composer\Semver\Comparator;
 use Composer\Semver\Constraint\ConstraintInterface;
 use Composer\Semver\Intervals;
 use Composer\Semver\VersionParser;
 use Waynestate\Proctor\ToolError;
 
 /**
- * Checks that the require.php constraint of composer.json stays inside the
- * PHP range the policy records for the locked laravel/framework line.
+ * Checks the require.php constraint of composer.json against the PHP range
+ * the policy records for the locked laravel/framework line.
  *
- * A constraint that allows a PHP version the locked Laravel major cannot run
- * on is a fail: the app would not boot on PHP it declares. The range comes
- * from the policy's requires block; an app without laravel/framework in
- * composer.lock, a line without a recorded range, or an app without a
- * require.php constraint earns no finding (php-floor owns the
- * missing-constraint verdict).
+ * Composer and the deployed runtime decide the upper end, so an open upper
+ * bound such as ^8.2 passes; the constraint's floor is what the app claims.
+ * The check fails when the constraint allows no PHP version inside the
+ * range, or when its lowest allowed version sits below the range's min.
+ * The range comes from the policy's requires block; an app without
+ * laravel/framework in composer.lock, a line without a recorded range, or
+ * an app without a require.php constraint earns no finding (php-floor owns
+ * the missing-constraint verdict).
  */
 final class LaravelPhpCheck implements CheckInterface
 {
@@ -54,21 +57,70 @@ final class LaravelPhpCheck implements CheckInterface
             sprintf('>=%s <%s', $range['min'], $this->upperBound($range['max'])),
         );
 
-        $inside = Intervals::isSubsetOf($allowed, $supported);
+        // Rule 1: the constraint allows no PHP version inside the range.
+        if (!Intervals::haveIntersections($allowed, $supported)) {
+            return [new Finding(
+                $this->id(),
+                Finding::STATUS_FAIL,
+                sprintf(
+                    'php constraint "%s" allows no PHP in the %s to %s range of laravel %s',
+                    $constraint,
+                    $range['min'],
+                    $range['max'],
+                    $line,
+                ),
+                'composer.json',
+            )];
+        }
 
+        // Rule 2: the constraint's lowest allowed version sits below the
+        // range's min. The upper end is open by design, so only the floor is
+        // judged here.
+        $lowest = $this->lowestAllowedVersion($allowed);
+        if ($lowest !== null && Comparator::lessThan($lowest, $range['min'])) {
+            return [new Finding(
+                $this->id(),
+                Finding::STATUS_FAIL,
+                sprintf(
+                    'php constraint "%s" allows PHP below %s, the floor of laravel %s (%s to %s)',
+                    $constraint,
+                    $range['min'],
+                    $line,
+                    $range['min'],
+                    $range['max'],
+                ),
+                'composer.json',
+            )];
+        }
+
+        // Rule 3: the constraint reaches the range and holds its floor.
         return [new Finding(
             $this->id(),
-            $inside ? Finding::STATUS_PASS : Finding::STATUS_FAIL,
+            Finding::STATUS_PASS,
             sprintf(
-                'php constraint "%s" %s the %s to %s range of laravel %s',
+                'php constraint "%s" fits the %s to %s range of laravel %s',
                 $constraint,
-                $inside ? 'fits' : 'allows PHP outside',
                 $range['min'],
                 $range['max'],
                 $line,
             ),
             'composer.json',
         )];
+    }
+
+    /**
+     * The lowest stable version the constraint allows, or null when the
+     * constraint names no stable version at all. Intervals come back sorted
+     * ascending, so the start of the first numeric interval is the floor.
+     */
+    private function lowestAllowedVersion(ConstraintInterface $constraint): ?string
+    {
+        $numeric = Intervals::get($constraint)['numeric'];
+        if ($numeric === []) {
+            return null;
+        }
+
+        return $numeric[0]->getStart()->getVersion();
     }
 
     /**
