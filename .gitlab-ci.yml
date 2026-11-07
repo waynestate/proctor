@@ -9,6 +9,7 @@
 # CI variable of a trusted job.
 variables:
   PROCTOR_ALLOW_OVERRIDES: "1"
+  COMPOSER_CACHE_DIR: "$CI_PROJECT_DIR/.cache/composer"
 
 include:
   - component: $CI_SERVER_FQDN/enterprise-apps/preflight/php-test@0.1.4
@@ -27,15 +28,27 @@ include:
       allow_failure: true
       image: "${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/php:8.4-cli-trixie@sha256:9cf851bc2c1b37c3e59dfd677a3c3e56d485af5a47c93f629424bb039eafcb69"
 
+# Dependency caching: images already come through the Dependency Proxy, and
+# every job that installs packages extends a cache keyed on its lock files,
+# so a pipeline downloads only what changed instead of everything, every run.
+.composer-cache:
+  cache:
+    key:
+      files: [composer.lock, deploy/composer.lock]
+      prefix: composer
+    paths: [.cache/composer/]
+
 # WayneUI strict copies: the script scans a copy of the root without tests/fixtures.
 # The setting extra.proctor."wayneui.copies" = "fail" in composer.json makes a stale copy fail.
 wayneui-copies:
+  extends: .composer-cache
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/composer:2.10.3
   script:
     - composer install --working-dir=deploy --no-interaction --no-progress --prefer-dist
     - sh scripts/wayneui-copies-scan.sh
 
 composer-ci:
+  extends: .composer-cache
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/composer:2.10.3
   script:
     - composer install --no-interaction --no-progress --prefer-dist
@@ -47,6 +60,7 @@ composer-ci:
 # composer image, so there is no Docker-in-Docker and no release tooling on the
 # arm64 runner: curl and the GitLab API do the publishing.
 release-phar:
+  extends: .composer-cache
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/composer:2.10.3
   rules:
     - if: $CI_COMMIT_TAG
