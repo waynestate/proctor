@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added: The Proof page records its last run.
 - Added: `node-eol` grades every Node version the repository pins (`.nvmrc`, `.node-version`, package.json `volta.node`, an official `node` image in `.gitlab-ci.yml` or on a Dockerfile `FROM` line) against the policy's node lines as of `--today`, with the same table as php-floor: active passes, security-only warns with the days left, eol fails, and past the grace window it fails as `eol_grace_expired` (rule id `proctor/node-eol`). `engines.node` warns at worst (`proctor/node-eol/engines`) and an odd major always warns (`proctor/node-eol/odd-major`). Silent when the policy has no node component.
 - Note: node-eol can turn a passing run into a failing one: an app that pins an end-of-life Node line (Node 20 or older under the bundled policy, as of 2026-04-30) now fails. Node 20 left security support on 2026-04-30 and is past the grace window, so it fails as `eol_grace_expired`, which no override softens: move to Node 22 or 24.
 - Added: `env-outside-config` warns for every `env()` call in a Laravel app outside its config files, which returns null after `php artisan config:cache` (rule id `proctor/env-outside-config`); a call carrying Larastan's ignore marker for the same rule is an info note (`proctor/env-outside-config/suppressed`). Warnings only.
