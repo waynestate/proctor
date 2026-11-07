@@ -37,7 +37,7 @@ which runs as part of `composer ci`.
 
 ## Running the tests in Docker
 
-Maintainers: how to build, test and release this project, and where its data comes from, is in [MAINTAINING.md](https://nougat.snu.gs/enterprise-apps/proctor/-/blob/main/MAINTAINING.md).
+Maintainers: how to build, test and release this project, and where its data comes from, is in [MAINTAINING.md](https://github.com/waynestate/proctor/blob/main/MAINTAINING.md).
 
 No PHP is needed on the host:
 

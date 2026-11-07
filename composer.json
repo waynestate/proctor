@@ -3,8 +3,8 @@
     "description": "A framework-free PHP CLI that measures a PHP app against the version policy.",
     "homepage": "https://proctor.apps.wayne.edu/",
     "support": {
-        "source": "https://nougat.snu.gs/enterprise-apps/proctor",
-        "issues": "https://nougat.snu.gs/enterprise-apps/proctor/-/issues"
+        "source": "https://github.com/waynestate/proctor",
+        "issues": "https://git.wayne.edu/enterprise-apps/proctor/-/issues"
     },
     "type": "library",
     "license": "MIT",

@@ -30,9 +30,7 @@ Documentation: [proctor.apps.wayne.edu/docs](https://proctor.apps.wayne.edu/docs
 
 ## Where the code lives
 
-The canonical repository is on nougat: [enterprise-apps/proctor](https://nougat.snu.gs/enterprise-apps/proctor). git.wayne.edu and GitHub ([waynestate/proctor](https://github.com/waynestate/proctor)) are read-only mirrors of it.
-Open issues and merge requests on nougat, not on the mirrors.
-This moves to git.wayne.edu once it has CI runners. Your proctor keeps one answer sheet, and this is it; the mirrors hold photocopies.
+The canonical repository is [enterprise-apps/proctor](https://git.wayne.edu/enterprise-apps/proctor) on git.wayne.edu: clone it over SSH as `git@git.wayne.edu:enterprise-apps/proctor.git` or over HTTPS as `https://git.wayne.edu/enterprise-apps/proctor.git`, open issues and merge requests there, and make tags there, by the maintainer, with an approver. GitHub ([waynestate/proctor](https://github.com/waynestate/proctor)) is a read-only push mirror of it, for the published package: nobody pushes to it, and Packagist reads from it. Your proctor keeps one answer sheet, and this is it; the mirror holds the photocopy.
 
 ## Install
 
@@ -455,7 +453,7 @@ MIT, Wayne State University, Enterprise Applications.
   <a href="https://github.com/waynestate/pinstripe" title="Pinstripe"><img src="docs/readme/cast/pinstripe.png" width="40" alt="Pinstripe"></a>
   <a href="https://github.com/waynestate/booster" title="Booster"><img src="docs/readme/cast/booster.png" width="40" alt="Booster"></a>
   <a href="https://github.com/waynestate/rollcall" title="Rollcall"><img src="docs/readme/cast/rollcall.png" width="40" alt="Rollcall"></a>
-  <a href="https://nougat.snu.gs/enterprise-apps/drawbridge" title="Drawbridge"><img src="docs/readme/cast/drawbridge.png" width="40" alt="Drawbridge"></a>
+  <a href="https://git.wayne.edu/enterprise-apps/drawbridge" title="Drawbridge"><img src="docs/readme/cast/drawbridge.png" width="40" alt="Drawbridge"></a>
   <a href="https://github.com/waynestate/advisor" title="ADVISOR"><img src="docs/readme/cast/advisor.png" width="40" alt="ADVISOR"></a>
   <a href="https://github.com/waynestate/weld" title="WELD"><img src="docs/readme/cast/weld.png" width="40" alt="WELD"></a>
 </div>

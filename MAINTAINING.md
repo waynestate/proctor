@@ -17,7 +17,7 @@ it enforces. No phones during the exam, including ours.
 
 ## Where it lives
 
-Development happens on nougat, the canonical repository: [enterprise-apps/proctor](https://nougat.snu.gs/enterprise-apps/proctor). This GitHub repository and git.wayne.edu are read-only mirrors: `main` and tags are copied automatically, and changes, issues and merge requests go to nougat. Nobody pushes to the mirrors.
+Development happens on git.wayne.edu, the canonical repository: [enterprise-apps/proctor](https://git.wayne.edu/enterprise-apps/proctor). Changes, issues and merge requests go there, and tags are made there, by the maintainer, with an approver. GitHub ([waynestate/proctor](https://github.com/waynestate/proctor)) is a read-only push mirror of it: `main` and tags are copied automatically, nobody pushes to it, and Packagist picks releases up from there.
 
 ## Build and test
 
@@ -100,7 +100,7 @@ checkout, so run it by hand after each refresh. Commit the copy with the CREED c
    `## Unreleased`.
 2. `composer ci` green locally, then on both pipelines for that commit. Refresh the CREED copy first if CREED moved.
 3. Run a secrets scan of the history and check that nothing internal (server names, people, IDs) is in the tree.
-4. Tag `X.Y.Z` (no `v`) on nougat. The mirror carries the tag to GitHub, and Packagist picks it up from there.
+4. Tag `X.Y.Z` (no `v`) on git.wayne.edu, with an approver. The push mirror carries the tag to GitHub, and Packagist picks it up from there.
 5. Wait for the `release-phar` job: it builds the phar on the tag, uploads
    `proctor.phar` and `proctor.phar.sha256` to the generic package registry,
    and attaches both as asset links on the GitLab Release. Check the release
