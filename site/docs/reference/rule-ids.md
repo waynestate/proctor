@@ -16,6 +16,8 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | --- | --- |
 | `php-floor` | `proctor/php-floor` |
 | `unpatched` | `proctor/unpatched` |
+| `laravel-eol` | `proctor/laravel-eol` |
+| `laravel-php` | `proctor/laravel-php` |
 | `lock-committed` | `proctor/lock-committed` |
 | `lock-committed` | `proctor/lock-committed/out-of-sync` |
 | `destructive-deploy` | `proctor/destructive-deploy` |
