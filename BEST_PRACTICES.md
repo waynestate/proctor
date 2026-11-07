@@ -1082,6 +1082,19 @@ outside the top-level `config/` (PHP read on the syntax tree, Blade by a quoted-
 call carrying Larastan's own ignore marker for the same rule is an info note (`proctor/env-outside-config/suppressed`).
 Warnings only. `EnvOutsideConfigCheckTest` pins the flagged calls, the skipped look-alikes and the suppressed note.
 
+### The raw-identity-header check
+DRAWBRIDGE, the gateway, signs the session into the X-Sesame-Assertion header and passes the user's claims as request
+headers; CREED's handbook says the gateway driver accepts only the signed assertion, never a bare header (auth-3).
+
+**How the stack holds it: Checked.** The `raw-identity-header` check warns, never fails, when app code reads an
+identity header directly: a string key on `$_SERVER` or `$_ENV`, the quoted argument of `getenv()` or `apache_getenv()`,
+the quoted first argument of a method named `header`, `server`, `hasHeader`, `getHeader` or `getHeaderLine` (and of
+`get()` on a `->headers` object), or a key on the result of `getallheaders()` or `apache_request_headers()`. PHP is read
+on the syntax tree, so a name in a comment or a log string is not flagged; names match case-insensitively with `-` and
+`_` interchangeable, and the `HTTP_` prefix Apache adds to request headers is accepted where the read comes from
+`$_SERVER` or the environment. `X-Sesame-Assertion` and `PHP_AUTH_USER` are not identity claims and are not flagged.
+Warnings only. `RawIdentityHeaderCheckTest` pins the flagged reads, the skipped look-alikes and the clean pass.
+
 ### The app-key check
 Whoever holds a Laravel APP_KEY can forge encrypted payloads, so the key never lives in the repository, and a cookie
 session driver makes a leaked key worse.

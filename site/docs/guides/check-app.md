@@ -1,6 +1,6 @@
 ---
 title: "App checks | PROCTOR docs"
-description: "The checks that read an app's own files for an end-of-life Node line, env() outside config, a committed APP_KEY, debug files in public/ and chmod 777."
+description: "The checks that read an app's own files for an end-of-life Node line, env() outside config, identity headers read directly, a committed APP_KEY, debug files in public/ and chmod 777."
 url: https://proctor.apps.wayne.edu/docs/guides/check-app.html
 llms: https://proctor.apps.wayne.edu/llms.txt
 generator: Squire agent-ready
@@ -8,9 +8,9 @@ generator: Squire agent-ready
 
 # App checks[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-checks)
 
-This page covers the five PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, `env()` calls outside config, a committed APP_KEY, files a stranger can download from `public/`, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
+This page covers the six PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, `env()` calls outside config, identity headers read directly, a committed APP_KEY, files a stranger can download from `public/`, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
 
-Only `node-eol` can fail a run. The other four warn, never fail: a new check must not turn a passing app into a failing one.
+Only `node-eol` can fail a run. The other five warn, never fail: a new check must not turn a passing app into a failing one.
 
 ## node-eol[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#node-eol)
 
@@ -60,6 +60,24 @@ Fix by reading the variable in a config file (`'url' => env('APP_URL')` in `conf
 | --- | --- |
 | `env-outside-config` | `proctor/env-outside-config` |
 | `env-outside-config` | `proctor/env-outside-config/suppressed` |
+
+## raw-identity-header[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#raw-identity-header)
+
+`raw-identity-header` warns, never fails, when app code reads an identity header directly instead of taking the user from SESAME. DRAWBRIDGE, the gateway, signs the session into the `X-Sesame-Assertion` header and passes the user's claims as request headers; only SESAME's gateway driver may open that pair, because it verifies the signature before a claim becomes the logged-in user (CREED auth-3). App code that reads a claim header itself accepts whatever value the proxy, or a client, put there.
+
+It runs on every app and scans every `*.php` file except `vendor/`, `node_modules/`, `storage/`, `tests/` and `.git/` at any depth.
+
+PHP is read on the syntax tree with names resolved, so a header name in a comment or a log string, a variable named `$REMOTE_USER`, and `getenv()` with a computed argument are not flagged. Flagged read positions: a string key on `$_SERVER` or `$_ENV`, the quoted argument of `getenv()` or `apache_getenv()`, the quoted first argument of a method named `header`, `server`, `hasHeader`, `getHeader` or `getHeaderLine` (and of `get()` on a `->headers` object), and a string key on the result of `getallheaders()` or `apache_request_headers()`, directly or through a variable assigned from them.
+
+Names match case-insensitively with `-` and `_` interchangeable. Where the read comes from `$_SERVER` or the environment (and from `request()->server()`, which reads the same bag) the `HTTP_` prefix Apache adds to request headers is accepted too. `X-Sesame-Assertion` is the signed assertion itself and `PHP_AUTH_USER` is basic-auth material, so neither is an identity claim and neither is flagged. A file that does not parse is skipped here; the portability check reports it.
+
+Blade templates (`*.blade.php`) are not PHP until compiled, so a Blade line is matched with a pattern for `$_SERVER['...']` and `request()->header('...')` / `request()->server('...')`.
+
+Fix by taking the user from SESAME (the gateway driver) and reading the claims it returns.
+
+| Check | Rule id |
+| --- | --- |
+| `raw-identity-header` | `proctor/raw-identity-header` |
 
 ## app-key[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-key)
 

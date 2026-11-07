@@ -89,6 +89,7 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `instant-client-committed` | `proctor/instant-client-committed` |
 | `env-outside-config` | `proctor/env-outside-config` |
 | `env-outside-config` | `proctor/env-outside-config/suppressed` |
+| `raw-identity-header` | `proctor/raw-identity-header` |
 | `app-key` | `proctor/app-key` |
 | `app-key` | `proctor/app-key/committed-env` |
 | `app-key` | `proctor/app-key/committed-key` |

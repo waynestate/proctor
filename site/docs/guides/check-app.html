@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>App checks | PROCTOR docs</title>
-<meta name="description" content="The checks that read an app&#039;s own files for an end-of-life Node line, env() outside config, a committed APP_KEY, debug files in public/ and chmod 777.">
+<meta name="description" content="The checks that read an app&#039;s own files for an end-of-life Node line, env() outside config, identity headers read directly, a committed APP_KEY, debug files in public/ and chmod 777.">
 <meta name="docs-version" content="0.6.0">
 <link rel="stylesheet" href="../../assets/wayne-ui/wayne-ui.css">
 <link rel="stylesheet" href="../../assets/docs.css">
@@ -41,8 +41,8 @@
   <div class="docs-content">
     <main id="main">
       <article class="docs-article"><h1 id="app-checks">App checks<a class="docs-heading-link" aria-label="Link to this section" href="#app-checks">#</a></h1>
-<p>This page covers the five PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, <code>env()</code> calls outside config, a committed APP_KEY, files a stranger can download from <code>public/</code>, and <code>chmod 777</code>. Each one holds a CREED practice. Run <code>vendor/bin/proctor check</code> against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.</p>
-<p>Only <code>node-eol</code> can fail a run. The other four warn, never fail: a new check must not turn a passing app into a failing one.</p>
+<p>This page covers the six PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, <code>env()</code> calls outside config, identity headers read directly, a committed APP_KEY, files a stranger can download from <code>public/</code>, and <code>chmod 777</code>. Each one holds a CREED practice. Run <code>vendor/bin/proctor check</code> against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.</p>
+<p>Only <code>node-eol</code> can fail a run. The other five warn, never fail: a new check must not turn a passing app into a failing one.</p>
 <h2 id="node-eol">node-eol<a class="docs-heading-link" aria-label="Link to this section" href="#node-eol">#</a></h2>
 <p><code>node-eol</code> grades every Node version the repository pins against the policy's <code>node</code> lines as of <code>--today</code>. The sources:</p>
 <ul>
@@ -125,6 +125,27 @@
 <tr>
 <td><code>env-outside-config</code></td>
 <td><code>proctor/env-outside-config/suppressed</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="raw-identity-header">raw-identity-header<a class="docs-heading-link" aria-label="Link to this section" href="#raw-identity-header">#</a></h2>
+<p><code>raw-identity-header</code> warns, never fails, when app code reads an identity header directly instead of taking the user from SESAME. DRAWBRIDGE, the gateway, signs the session into the <code>X-Sesame-Assertion</code> header and passes the user's claims as request headers; only SESAME's gateway driver may open that pair, because it verifies the signature before a claim becomes the logged-in user (CREED auth-3). App code that reads a claim header itself accepts whatever value the proxy, or a client, put there.</p>
+<p>It runs on every app and scans every <code>*.php</code> file except <code>vendor/</code>, <code>node_modules/</code>, <code>storage/</code>, <code>tests/</code> and <code>.git/</code> at any depth.</p>
+<p>PHP is read on the syntax tree with names resolved, so a header name in a comment or a log string, a variable named <code>$REMOTE_USER</code>, and <code>getenv()</code> with a computed argument are not flagged. Flagged read positions: a string key on <code>$_SERVER</code> or <code>$_ENV</code>, the quoted argument of <code>getenv()</code> or <code>apache_getenv()</code>, the quoted first argument of a method named <code>header</code>, <code>server</code>, <code>hasHeader</code>, <code>getHeader</code> or <code>getHeaderLine</code> (and of <code>get()</code> on a <code>-&gt;headers</code> object), and a string key on the result of <code>getallheaders()</code> or <code>apache_request_headers()</code>, directly or through a variable assigned from them.</p>
+<p>Names match case-insensitively with <code>-</code> and <code>_</code> interchangeable. Where the read comes from <code>$_SERVER</code> or the environment (and from <code>request()-&gt;server()</code>, which reads the same bag) the <code>HTTP_</code> prefix Apache adds to request headers is accepted too. <code>X-Sesame-Assertion</code> is the signed assertion itself and <code>PHP_AUTH_USER</code> is basic-auth material, so neither is an identity claim and neither is flagged. A file that does not parse is skipped here; the portability check reports it.</p>
+<p>Blade templates (<code>*.blade.php</code>) are not PHP until compiled, so a Blade line is matched with a pattern for <code>$_SERVER['...']</code> and <code>request()-&gt;header('...')</code> / <code>request()-&gt;server('...')</code>.</p>
+<p>Fix by taking the user from SESAME (the gateway driver) and reading the claims it returns.</p>
+<div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Rule id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>raw-identity-header</code></td>
+<td><code>proctor/raw-identity-header</code></td>
 </tr>
 </tbody>
 </table></div>
@@ -242,7 +263,7 @@
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../../docs/guides/check-ci.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">CI checks</span></a><a class="docs-pager__link docs-pager__link--next" href="../../docs/guides/check-wayneui.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">WayneUI checks</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#node-eol">node-eol</a></li><li class="docs-toc__item"><a href="#env-outside-config">env-outside-config</a></li><li class="docs-toc__item"><a href="#app-key">app-key</a></li><li class="docs-toc__item"><a href="#served-folder">served-folder</a></li><li class="docs-toc__item"><a href="#world-writable">world-writable</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#node-eol">node-eol</a></li><li class="docs-toc__item"><a href="#env-outside-config">env-outside-config</a></li><li class="docs-toc__item"><a href="#raw-identity-header">raw-identity-header</a></li><li class="docs-toc__item"><a href="#app-key">app-key</a></li><li class="docs-toc__item"><a href="#served-folder">served-folder</a></li><li class="docs-toc__item"><a href="#world-writable">world-writable</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.6.0</span></span>
