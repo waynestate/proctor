@@ -54,6 +54,7 @@ final class CheckSet
             new LaravelEolCheck(),
             new LaravelPhpCheck(),
             new NodeEolCheck(),
+            new MysqlEolCheck(),
             new UnboundedConstraintsCheck(),
             new ComposerConfigCheck(),
             new LockCommittedCheck(),
