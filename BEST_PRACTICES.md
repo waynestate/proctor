@@ -830,17 +830,24 @@ command line and the environment. Other child processes (the composer version pr
 inherit the caller's environment; this practice is about the audit. It uses an argument array (8.2).
 
 ### 8.7 Treat the CI platform as part of the trust base (second pass)
-Keep the GitLab instance and its runners on a patched release, and say so in the Preflight docs.
+Keep the GitLab instance and its runners on a patched release, and say so in the Preflight docs. The minimum
+supported GitLab version is 18.7: run 18.7 or later, and keep it patched. The stack's own instances run GitLab 19.5.1
+CE.
 
 Why: GitLab's patch page for 2026-10-12 describes CVE-2026-97229, a CVSS 10.0 integer overflow in the CI/CD regular
 expression compiler of CE and EE, exploitable by an unauthenticated user, fixed in 19.2.8, 19.3.5 and 19.4.2. A gate
 that runs on an unpatched server proves little. This is outside PROCTOR's code, but the stack's guide should name it.
+The stack's CI components also need GitLab 18.7 or later: PREFLIGHT's templates use `spec:component`, which PREFLIGHT
+practice 2.11 records as generally available in 18.7 (unverified against GitLab's own page). On an older GitLab the
+gates are silently lost.
 
 Sources: [GitLab patch release 19.4.2, 19.3.5, 19.2.8](https://docs.gitlab.com/releases/patches/patch-release-gitlab-19-4-2-released/).
 Other 2026 GitLab CVEs came to me only through news summaries and I did not verify them.
 
-**How the stack holds it: Not yet.** No stack document names a minimum GitLab version. PROCTOR cannot see the server
-version.
+**How the stack holds it: Documented.** The floor is GitLab 18.7, set by `spec:component` in PREFLIGHT's CI
+components, and the install page lists it under Requirements. 18.7 is a feature floor, not a security floor: the patch note above covers only
+the 19.2, 19.3 and 19.4 lines, so an owner on 18.x must check the patch status of their own instance. PROCTOR cannot
+see the server version.
 
 ---
 
@@ -888,7 +895,7 @@ Added in the second pass (2026-10-27):
 33. Done: the `php-floor` check prints the security-end date and the days left in the security-only warning (see 2.7).
 34. 3.7: Done: the Preflight guide documents installing from the lock and never running `composer update` in a deploy, and asks authors not to re-tag (see 3.7).
 35. 4.12: Decide in the policy whether `require-dev` packages count, then pass `--no-dev` or not.
-36. 8.7: Done: the Preflight guide names a minimum patched GitLab version (see 8.7).
+36. 8.7: Documented: the floor is GitLab 18.7 (`spec:component`), named in the install page's requirements; patch status on 18.x is the owner's to check (see 8.7).
 37. 4.11: Re-read the Composer cooldown policy once 2.11 is stable, and decide whether to ask for it.
 38. 6.7 (tagged Enforced by construction): Done: a CLI test asserts the text output carries no escape byte, and a
     writer test feeds an escape sequence through a finding (see 6.7).

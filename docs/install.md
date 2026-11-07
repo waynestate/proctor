@@ -10,8 +10,9 @@ description: Install PROCTOR as a Composer dev dependency so the command is avai
 - PHP `^8.3`. composer.json pins the platform to `8.3.0`, so the package resolves against 8.3 and runs on anything newer.
 - No PHP extensions. composer.json declares no `ext-*` requirement; the runtime libraries (`symfony/console`, `symfony/yaml`, `composer/semver`, `nikic/php-parser`) arrive as Composer packages.
 - Composer, for the main install path below. The single-file PHAR route needs only a PHP CLI and a download from the GitLab Release.
+- GitLab 18.7 or later for the stack's CI (the stack's CI components use `spec:component`). See BEST_PRACTICES 8.7.
 
-Where the code lives: the canonical repository is on nougat, [enterprise-apps/proctor](https://nougat.snu.gs/enterprise-apps/proctor). git.wayne.edu and GitHub ([waynestate/proctor](https://github.com/waynestate/proctor)) are read-only mirrors of it. Open issues and merge requests on nougat, not on the mirrors. Your proctor keeps one answer sheet, and this is it; the mirrors hold photocopies.
+Where the code lives: the canonical repository is on git.wayne.edu, [enterprise-apps/proctor](https://git.wayne.edu/enterprise-apps/proctor). GitHub ([waynestate/proctor](https://github.com/waynestate/proctor)) is a read-only mirror of it. Open issues and merge requests on git.wayne.edu, not on the mirror. Your proctor keeps one answer sheet, and this is it; the mirrors hold photocopies.
 
 ## Single-file PHAR
 

@@ -46,8 +46,9 @@
 <li>PHP <code>^8.3</code>. composer.json pins the platform to <code>8.3.0</code>, so the package resolves against 8.3 and runs on anything newer.</li>
 <li>No PHP extensions. composer.json declares no <code>ext-*</code> requirement; the runtime libraries (<code>symfony/console</code>, <code>symfony/yaml</code>, <code>composer/semver</code>, <code>nikic/php-parser</code>) arrive as Composer packages.</li>
 <li>Composer, for the main install path below. The single-file PHAR route needs only a PHP CLI and a download from the GitLab Release.</li>
+<li>GitLab 18.7 or later for the stack's CI (the stack's CI components use <code>spec:component</code>). See BEST_PRACTICES 8.7.</li>
 </ul>
-<p>Where the code lives: the canonical repository is on nougat, <a rel="noopener" href="https://nougat.snu.gs/enterprise-apps/proctor">enterprise-apps/proctor</a>. git.wayne.edu and GitHub (<a rel="noopener" href="https://github.com/waynestate/proctor">waynestate/proctor</a>) are read-only mirrors of it. Open issues and merge requests on nougat, not on the mirrors. Your proctor keeps one answer sheet, and this is it; the mirrors hold photocopies.</p>
+<p>Where the code lives: the canonical repository is on git.wayne.edu, <a rel="noopener" href="https://git.wayne.edu/enterprise-apps/proctor">enterprise-apps/proctor</a>. GitHub (<a rel="noopener" href="https://github.com/waynestate/proctor">waynestate/proctor</a>) is a read-only mirror of it. Open issues and merge requests on git.wayne.edu, not on the mirror. Your proctor keeps one answer sheet, and this is it; the mirrors hold photocopies.</p>
 <h2 id="single-file-phar">Single-file PHAR<a class="docs-heading-link" aria-label="Link to this section" href="#single-file-phar">#</a></h2>
 <p>The single-file PHAR is how Preflight and apps without Composer access run
 PROCTOR as one file, and from the next release it is attached to each GitLab
