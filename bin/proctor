@@ -28,6 +28,7 @@ use Waynestate\Proctor\Check\PhpFloorCheck;
 use Waynestate\Proctor\Check\PolicyAgeCheck;
 use Waynestate\Proctor\Check\PortabilityCheck;
 use Waynestate\Proctor\Check\PreflightPinnedCheck;
+use Waynestate\Proctor\Check\RawIdentityHeaderCheck;
 use Waynestate\Proctor\Check\RepoUrlCredentialsCheck;
 use Waynestate\Proctor\Check\ServedFolderCheck;
 use Waynestate\Proctor\Check\UnboundedConstraintsCheck;
@@ -206,6 +207,7 @@ $application->addCommand(new class () extends Command {
                 new RepoUrlCredentialsCheck(),
                 new InstantClientCommittedCheck(),
                 new EnvOutsideConfigCheck(),
+                new RawIdentityHeaderCheck(),
                 new AppKeyCheck(),
                 new ServedFolderCheck(),
                 new WorldWritableCheck(),
