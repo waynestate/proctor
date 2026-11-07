@@ -171,8 +171,8 @@ final class RawIdentityHeaderCheck implements CheckInterface
             if ($name === null || !in_array($name, self::ENV_FUNCTIONS, true)) {
                 continue;
             }
-            $first = $call->getArgs()[0] ?? null;
-            if ($first instanceof String_ && ($header = $this->matchName($first->value, true)) !== null) {
+            $arg = $call->getArgs()[0] ?? null;
+            if ($arg !== null && $arg->value instanceof String_ && ($header = $this->matchName($arg->value->value, true)) !== null) {
                 $reads[] = [$call->getStartLine(), $header];
             }
         }
@@ -188,8 +188,8 @@ final class RawIdentityHeaderCheck implements CheckInterface
             ) {
                 continue;
             }
-            $first = $call->getArgs()[0] ?? null;
-            if ($first instanceof String_ && ($header = $this->matchName($first->value, $fromServerBag)) !== null) {
+            $arg = $call->getArgs()[0] ?? null;
+            if ($arg !== null && $arg->value instanceof String_ && ($header = $this->matchName($arg->value->value, $fromServerBag)) !== null) {
                 $reads[] = [$call->getStartLine(), $header];
             }
         }
