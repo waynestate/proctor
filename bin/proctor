@@ -7,38 +7,13 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
-use Waynestate\Proctor\Check\AppKeyCheck;
-use Waynestate\Proctor\Check\CheckInterface;
 use Waynestate\Proctor\Check\CheckRunner;
-use Waynestate\Proctor\Check\CiPipelinesCheck;
-use Waynestate\Proctor\Check\ComposerAuditCheck;
-use Waynestate\Proctor\Check\ComposerConfigCheck;
+use Waynestate\Proctor\Check\CheckSet;
 use Waynestate\Proctor\Check\ComposerVersionCheck;
-use Waynestate\Proctor\Check\DestructiveDeployCheck;
-use Waynestate\Proctor\Check\EnvOutsideConfigCheck;
 use Waynestate\Proctor\Check\Finding;
-use Waynestate\Proctor\Check\InstantClientCommittedCheck;
-use Waynestate\Proctor\Check\LaravelEolCheck;
-use Waynestate\Proctor\Check\LaravelPhpCheck;
-use Waynestate\Proctor\Check\LockCommittedCheck;
-use Waynestate\Proctor\Check\Mysql56Check;
-use Waynestate\Proctor\Check\NodeEolCheck;
-use Waynestate\Proctor\Check\OverridesCheck;
-use Waynestate\Proctor\Check\PhpFloorCheck;
-use Waynestate\Proctor\Check\PolicyAgeCheck;
-use Waynestate\Proctor\Check\PortabilityCheck;
-use Waynestate\Proctor\Check\PreflightPinnedCheck;
-use Waynestate\Proctor\Check\RawIdentityHeaderCheck;
-use Waynestate\Proctor\Check\RepoUrlCredentialsCheck;
-use Waynestate\Proctor\Check\ServedFolderCheck;
-use Waynestate\Proctor\Check\UnboundedConstraintsCheck;
-use Waynestate\Proctor\Check\UnpatchedCheck;
-use Waynestate\Proctor\Check\WayneUiForkedViewsCheck;
-use Waynestate\Proctor\Check\WayneUiOutdatedCheck;
-use Waynestate\Proctor\Check\WorldWritableCheck;
+use Waynestate\Proctor\Console\GateCommand;
+use Waynestate\Proctor\Console\RunOptions;
 use Waynestate\Proctor\Override\OverrideFile;
-use Waynestate\Proctor\Policy\CiGuard;
-use Waynestate\Proctor\Policy\PolicyResolver;
 use Waynestate\Proctor\Report\CodeQualityWriter;
 use Waynestate\Proctor\Report\JsonWriter;
 use Waynestate\Proctor\Report\Report;
@@ -123,113 +98,33 @@ $application->addCommand(new class () extends Command {
             return 2;
         }
 
-        $appPath = (string) $input->getOption('path');
-
-        // In CI the policy and the date must come from the stack, not from the
-        // app being checked, so the options are refused unless a trusted job
-        // allows them (PROCTOR_ALLOW_OVERRIDES=1).
-        $refusal = CiGuard::refusal($input->getOption('policy'), $input->getOption('today'));
-        if (null !== $refusal) {
-            $errorOutput->writeln($refusal, OutputInterface::OUTPUT_RAW);
-            return 2;
-        }
-
+        // --path, --policy, --today, --timeout and --php-runtime, shared with
+        // `proctor gate` (the CI guard included).
         try {
-            $resolved = PolicyResolver::resolve(
-                $input->getOption('policy'),
-                $appPath,
-                static function (string $note) use ($errorOutput): void {
-                    $errorOutput->writeln($note, OutputInterface::OUTPUT_RAW);
-                },
-            );
-        } catch (InvalidArgumentException | RuntimeException $e) {
+            $options = RunOptions::fromInput($input, $errorOutput);
+        } catch (ToolError $e) {
             $errorOutput->writeln($e->getMessage(), OutputInterface::OUTPUT_RAW);
             return 2;
         }
-        $policy = $resolved->policy;
-
-        $todayOption = $input->getOption('today');
-        if (null === $todayOption) {
-            $today = new \DateTimeImmutable('today');
-        } else {
-            $today = \DateTimeImmutable::createFromFormat('!Y-m-d', $todayOption);
-            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $todayOption) || false === $today) {
-                $errorOutput->writeln(sprintf(
-                    'Invalid --today value "%s". Expected format: YYYY-MM-DD.',
-                    $todayOption
-                ));
-                return 2;
-            }
-        }
-
-        $timeoutOption = (string) $input->getOption('timeout');
-        if (!preg_match('/^\d+$/', $timeoutOption) || (int) $timeoutOption < 1) {
-            $errorOutput->writeln(sprintf(
-                'Invalid --timeout value "%s". Expected a positive integer number of seconds.',
-                $timeoutOption
-            ));
-            return 2;
-        }
-        $timeout = (int) $timeoutOption;
-
-        $phpRuntimeOption = $input->getOption('php-runtime');
-        $phpRuntime = null;
-        if (null !== $phpRuntimeOption && '' !== $phpRuntimeOption) {
-            if (!preg_match('/^\d+\.\d+\.\d+$/', $phpRuntimeOption)) {
-                $errorOutput->writeln(sprintf(
-                    'Invalid --php-runtime value "%s". Expected format: X.Y.Z (digits and dots only).',
-                    $phpRuntimeOption
-                ));
-                return 2;
-            }
-            $phpRuntime = $phpRuntimeOption;
-        }
+        $appPath = $options->appPath;
+        $resolved = $options->resolved;
+        $today = $options->today;
 
         try {
             $overrides = OverrideFile::load($appPath);
-            $composerVersionCheck = new ComposerVersionCheck(policy: $policy);
-            $checks = [
-                new PhpFloorCheck(),
-                new UnpatchedCheck(),
-                new LaravelEolCheck(),
-                new LaravelPhpCheck(),
-                new NodeEolCheck(),
-                new UnboundedConstraintsCheck(),
-                new ComposerConfigCheck(),
-                new LockCommittedCheck(),
-                new PortabilityCheck(),
-                new Mysql56Check(),
-                new DestructiveDeployCheck(),
-                new CiPipelinesCheck(),
-                new PreflightPinnedCheck(),
-                new ComposerAuditCheck(),
-                $composerVersionCheck,
-                new RepoUrlCredentialsCheck(),
-                new InstantClientCommittedCheck(),
-                new EnvOutsideConfigCheck(),
-                new RawIdentityHeaderCheck(),
-                new AppKeyCheck(),
-                new ServedFolderCheck(),
-                new WorldWritableCheck(),
-                new WayneUiForkedViewsCheck(),
-                new WayneUiOutdatedCheck(),
-                new OverridesCheck(),
-                new PolicyAgeCheck($resolved),
-            ];
+            $composerVersionCheck = new ComposerVersionCheck(policy: $resolved->policy);
+            $checks = CheckSet::all($resolved, $composerVersionCheck);
             // The ids come from the registered checks, so a new check needs
             // no change here.
-            OverrideFile::assertKnownChecks(
-                $overrides,
-                array_map(fn (CheckInterface $check) => $check->id(), $checks),
-            );
+            OverrideFile::assertKnownChecks($overrides, CheckSet::ids($checks));
             $runner = new CheckRunner(
                 $appPath,
-                $policy,
+                $resolved->policy,
                 $today,
                 $checks,
                 $overrides,
-                $timeout,
-                $phpRuntime
+                $options->timeout,
+                $options->phpRuntime
             );
             $findings = $runner->run();
         } catch (ToolError $e) {
@@ -278,5 +173,9 @@ $application->addCommand(new class () extends Command {
         };
     }
 });
+
+// The deploy gate: the small deploy-time rule set, ratcheted against a
+// baseline, with a go or no-go a release script can branch on (ADR-0006).
+$application->addCommand(new GateCommand());
 
 exit($application->run());

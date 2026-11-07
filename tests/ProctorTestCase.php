@@ -89,6 +89,20 @@ abstract class ProctorTestCase extends TestCase
     }
 
     /**
+     * Runs bin/proctor gate with the given arguments. Unlike runProctor(), it
+     * adds nothing: pass --path, --policy and --today yourself.
+     *
+     * @param list<string>          $args     the arguments after `gate`
+     * @param array<string, string> $extraEnv environment variables for the child, merged last
+     *
+     * @return array{exit: int, stdout: string, stderr: string}
+     */
+    protected function runGate(array $args, array $extraEnv = []): array
+    {
+        return $this->runCommand([PHP_BINARY, dirname(__DIR__) . '/bin/proctor', 'gate', ...$args], null, null, $extraEnv);
+    }
+
+    /**
      * Runs bin/proctor with a PATH that finds no tools (unless $path gives
      * one), and returns the exit code, stdout and stderr.
      *

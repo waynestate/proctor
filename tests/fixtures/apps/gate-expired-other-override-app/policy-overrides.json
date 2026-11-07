@@ -1,0 +1,8 @@
+[
+    {
+        "check": "portability",
+        "reason": "fixture: expired, on a check the gate does not run",
+        "expires": "2026-01-01",
+        "approved_by": "tester"
+    }
+]
