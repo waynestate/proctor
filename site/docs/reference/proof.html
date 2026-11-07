@@ -75,7 +75,7 @@
 </code></pre>
 <p>which runs as part of <code>composer ci</code>.</p>
 <h2 id="running-the-tests-in-docker">Running the tests in Docker<a class="docs-heading-link" aria-label="Link to this section" href="#running-the-tests-in-docker">#</a></h2>
-<p>Maintainers: how to build, test and release this project, and where its data comes from, is in <a rel="noopener" href="https://nougat.snu.gs/enterprise-apps/proctor/-/blob/main/MAINTAINING.md">MAINTAINING.md</a>.</p>
+<p>Maintainers: how to build, test and release this project, and where its data comes from, is in <a rel="noopener" href="https://github.com/waynestate/proctor/blob/main/MAINTAINING.md">MAINTAINING.md</a>.</p>
 <p>No PHP is needed on the host:</p>
 <pre tabindex="0"><code>docker run --rm -v &quot;${PWD}:/app&quot; -w /app -e COMPOSER_PROCESS_TIMEOUT=0 composer:2.10.3 sh -c &quot;composer install -q --no-progress &amp;&amp; composer ci&quot;
 </code></pre>
@@ -95,7 +95,7 @@
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.6.0</span></span>
-  <span><a rel="noopener" href="https://nougat.snu.gs/enterprise-apps/proctor">Source</a> Mirrors: <a rel="noopener" href="https://git.wayne.edu/enterprise-apps/proctor">git.wayne.edu</a> <a rel="noopener" href="https://github.com/waynestate/proctor">GitHub</a> <a href="proof.md">Markdown</a></span>
+  <span><a rel="noopener" href="https://github.com/waynestate/proctor">Source</a> <a href="proof.md">Markdown</a></span>
 </footer>
 </body>
 </html>

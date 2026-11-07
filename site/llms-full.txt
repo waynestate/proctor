@@ -8,7 +8,7 @@ The README and the Markdown twin of every page, joined. The index is https://pro
 
 ## README
 
-Source: https://nougat.snu.gs/enterprise-apps/proctor/blob/HEAD/README.md
+Source: https://github.com/waynestate/proctor/blob/HEAD/README.md
 
 ## PROCTOR
 
@@ -25,15 +25,13 @@ passed with `--policy`; PROCTOR itself holds no policy of its own.
 > [!NOTE]
 > **Not to be confused with:** code style is Pinstripe, CI is Preflight. PROCTOR grades an app against CREED's rules.
 
-Checks: `composer ci` (the same command runs on GitLab and GitHub). Front page: [`site/index.html`](https://nougat.snu.gs/enterprise-apps/proctor/blob/HEAD/site/index.html).
-On Citadel it is served by the raw-PHP deploy layer in [`deploy/`](https://nougat.snu.gs/enterprise-apps/proctor/blob/HEAD/deploy/): a Squire kit whose front controller serves `site/` behind HELMET's security headers. For local development, keep serving `site/` directly.
+Checks: `composer ci` (the same command runs on GitLab and GitHub). Front page: [`site/index.html`](https://github.com/waynestate/proctor/blob/HEAD/site/index.html).
+On Citadel it is served by the raw-PHP deploy layer in [`deploy/`](https://github.com/waynestate/proctor/blob/HEAD/deploy/): a Squire kit whose front controller serves `site/` behind HELMET's security headers. For local development, keep serving `site/` directly.
 Documentation: [proctor.apps.wayne.edu/docs](https://proctor.apps.wayne.edu/docs/).
 
 ### Where the code lives
 
-The canonical repository is on nougat: [enterprise-apps/proctor](https://nougat.snu.gs/enterprise-apps/proctor). git.wayne.edu and GitHub ([waynestate/proctor](https://github.com/waynestate/proctor)) are read-only mirrors of it.
-Open issues and merge requests on nougat, not on the mirrors.
-This moves to git.wayne.edu once it has CI runners. Your proctor keeps one answer sheet, and this is it; the mirrors hold photocopies.
+The canonical repository is [enterprise-apps/proctor](https://git.wayne.edu/enterprise-apps/proctor) on git.wayne.edu: clone it over SSH as `git@git.wayne.edu:enterprise-apps/proctor.git` or over HTTPS as `https://git.wayne.edu/enterprise-apps/proctor.git`, open issues and merge requests there, and make tags there, by the maintainer, with an approver. GitHub ([waynestate/proctor](https://github.com/waynestate/proctor)) is a read-only push mirror of it, for the published package: nobody pushes to it, and Packagist reads from it. Your proctor keeps one answer sheet, and this is it; the mirror holds the photocopy.
 
 ### Install
 
@@ -406,7 +404,7 @@ The docs pages wear the front page: the same masthead and main menu, ruled paper
 
 ### Running the tests in Docker
 
-Maintainers: how to build, test and release this project, and where its data comes from, is in [MAINTAINING.md](https://nougat.snu.gs/enterprise-apps/proctor/blob/HEAD/MAINTAINING.md).
+Maintainers: how to build, test and release this project, and where its data comes from, is in [MAINTAINING.md](https://github.com/waynestate/proctor/blob/HEAD/MAINTAINING.md).
 
 No PHP is needed on the host:
 
@@ -2257,7 +2255,7 @@ which runs as part of `composer ci`.
 
 ### Running the tests in Docker[#](https://proctor.apps.wayne.edu/docs/reference/proof.html#running-the-tests-in-docker)
 
-Maintainers: how to build, test and release this project, and where its data comes from, is in [MAINTAINING.md](https://nougat.snu.gs/enterprise-apps/proctor/-/blob/main/MAINTAINING.md).
+Maintainers: how to build, test and release this project, and where its data comes from, is in [MAINTAINING.md](https://github.com/waynestate/proctor/blob/main/MAINTAINING.md).
 
 No PHP is needed on the host:
 
