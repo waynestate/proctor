@@ -219,7 +219,7 @@
 <!-- /generated -->
 <h2 id="examples">Examples<a class="docs-heading-link" aria-label="Link to this section" href="#examples">#</a></h2>
 <p>Run the check against an application:</p>
-<pre tabindex="0"><code>vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--policy=&lt;file&gt;] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z]
+<pre tabindex="0"><code>vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--policy=&lt;file&gt;] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z] [--timeout=300]
 </code></pre>
 <ul>
 <li><code>--path</code>: path to the application to check (default <code>.</code>).</li>
@@ -227,6 +227,7 @@
 <li><code>--policy</code>: path to the CREED-format policy file. Optional: without it, PROCTOR resolves the policy from the <code>PROCTOR_POLICY</code> environment variable, then the app's <code>vendor/waynestate/creed/policy/policy.json</code>, then the copy bundled with PROCTOR (see <a href="../guides/policy.html">Policy</a>). In CI this option is refused unless a trusted job sets <code>PROCTOR_ALLOW_OVERRIDES=1</code>.</li>
 <li><code>--today</code>: override today's date (YYYY-MM-DD) so runs are deterministic. In CI this option is refused unless a trusted job sets <code>PROCTOR_ALLOW_OVERRIDES=1</code>.</li>
 <li><code>--php-runtime</code>: the PHP version that will serve the app (X.Y.Z), used by the <code>unpatched</code> check. CI should pass the deploy image's PHP, not the runner's.</li>
+<li><code>--timeout</code>: seconds <code>composer audit</code> may run before it is killed (default 300). <code>proctor gate</code> defaults to 60.</li>
 </ul>
 <p>Ask for a go or no-go before a deploy, against the verdict recorded last time:</p>
 <pre tabindex="0"><code>vendor/bin/proctor gate --baseline=storage/proctor-gate.json --record=storage/proctor-gate.json
