@@ -22,6 +22,7 @@ use Waynestate\Proctor\Check\LaravelEolCheck;
 use Waynestate\Proctor\Check\LaravelPhpCheck;
 use Waynestate\Proctor\Check\LockCommittedCheck;
 use Waynestate\Proctor\Check\Mysql56Check;
+use Waynestate\Proctor\Check\MysqlEolCheck;
 use Waynestate\Proctor\Check\NodeEolCheck;
 use Waynestate\Proctor\Check\OverridesCheck;
 use Waynestate\Proctor\Check\PhpFloorCheck;
@@ -194,6 +195,7 @@ $application->addCommand(new class () extends Command {
                 new LaravelEolCheck(),
                 new LaravelPhpCheck(),
                 new NodeEolCheck(),
+                new MysqlEolCheck(),
                 new UnboundedConstraintsCheck(),
                 new ComposerConfigCheck(),
                 new LockCommittedCheck(),

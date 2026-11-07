@@ -1,13 +1,13 @@
 ---
 title: App checks
-description: The checks that read an app's own files for an end-of-life Node line, env() outside config, identity headers read directly, a committed APP_KEY, debug files in public/ and chmod 777.
+description: The checks that read an app's own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, debug files in public/ and chmod 777.
 ---
 
 # App checks
 
-This page covers the six PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, `env()` calls outside config, identity headers read directly, a committed APP_KEY, files a stranger can download from `public/`, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
+This page covers the seven PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, files a stranger can download from `public/`, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
 
-Only `node-eol` can fail a run. The other five warn, never fail: a new check must not turn a passing app into a failing one.
+`node-eol` and `mysql-eol` can fail a run. The other five warn, never fail: a new check must not turn a passing app into a failing one.
 
 ## node-eol
 
@@ -40,6 +40,32 @@ Fix by moving the pin to an active even line, in every place the report names: t
 | `node-eol` | `proctor/node-eol` |
 | `node-eol` | `proctor/node-eol/engines` |
 | `node-eol` | `proctor/node-eol/odd-major` |
+
+## mysql-eol
+
+`mysql-eol` grades every MySQL or MariaDB version the repository names against the policy's `mysql` and `mariadb` lines as of `--today`. The sources:
+
+- an official `mysql` or `mariadb` image on an `image:` line in a root `docker-compose*.yml` or `compose*.yml` (`mysql:8.0`, `mariadb:10.11`, `docker.io/library/mysql:8.4`, or one behind a registry host or a `$VAR` prefix);
+- `SQUIRE_MYSQL_IMAGE=mysql:<version>` in `.env.squire.example` or `.env.example`.
+
+A `@sha256:` digest after the tag is tolerated: the version still comes from the tag. Each source gets the same table as `php-floor`, except an active version stays silent instead of passing:
+
+| State | Result |
+| --- | --- |
+| Active | silent |
+| Security only | warning, naming the security end date and the days left |
+| End of life | fail, naming the security end date |
+| Past the security end date plus the grace window | fail as `eol_grace_expired` |
+
+An active override downgrades the eol fail to a warning, never the grace-expired one.
+
+No finding when the policy has no `mysql` or `mariadb` component, when the repository names no database version, or for another organization's image that happens to be called mysql (`someorg/mysql:8.0`).
+
+Fix by moving the image to an active line, in every place the report names: the compose file and the env example should agree.
+
+| Check | Rule id |
+| --- | --- |
+| `mysql-eol` | `proctor/mysql-eol` |
 
 ## env-outside-config
 

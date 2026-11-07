@@ -1072,6 +1072,18 @@ lowest major warns at worst (`proctor/node-eol/engines`); an odd major warns whe
 (`proctor/node-eol/odd-major`). Silent when the policy has no node component. `NodeEolCheckTest` pins every source and
 state.
 
+### The mysql-eol check
+CREED's handbook asks an app to run a database engine line that still gets security fixes, and the policy records
+each MySQL and MariaDB line's dates. What was missing was a check that reads which database a repository actually names.
+
+**How the stack holds it: Checked.** The `mysql-eol` check grades every MySQL or MariaDB version the repository names
+(an official `mysql` or `mariadb` image on an `image:` line in a root `docker-compose*.yml` or `compose*.yml`, and
+`SQUIRE_MYSQL_IMAGE=mysql:<version>` in `.env.squire.example` or `.env.example`) with the same table as `php-floor`,
+except a supported version stays silent instead of passing: active is silent, security-only warns with the days left,
+eol fails, and past the grace window it fails as `eol_grace_expired`, which no override softens. A `@sha256:` digest
+after the tag is tolerated; the version comes from the tag. Silent when the policy has no mysql or mariadb component.
+`MysqlEolCheckTest` pins every source and state.
+
 ## App code and the served folder
 
 ### The env-outside-config check

@@ -61,6 +61,7 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `mysql56` | `proctor/mysql56/upsert-alias` |
 | `mysql56` | `proctor/mysql56/string-default` |
 | `mysql56` | `proctor/mysql56/parse-error` |
+| `mysql-eol` | `proctor/mysql-eol` |
 | `ci-pipelines` | `proctor/ci-pipelines` |
 | `ci-pipelines` | `proctor/ci-pipelines/gitlab-missing` |
 | `ci-pipelines` | `proctor/ci-pipelines/gitlab-parse` |

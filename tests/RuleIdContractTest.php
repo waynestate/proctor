@@ -42,6 +42,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/wayneui-outdated',
         'proctor/policy-age',
         'proctor/node-eol',
+        'proctor/mysql-eol',
         'proctor/env-outside-config',
         'proctor/raw-identity-header',
         'proctor/app-key',

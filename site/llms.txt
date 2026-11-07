@@ -24,7 +24,7 @@ Every page below is Markdown. The HTML pages send the same Markdown to a client 
 ## Pages
 
 - [PROCTOR: Watches the exam. Doesn't help.](https://proctor.apps.wayne.edu/index.md): PROCTOR checks a PHP app against CREED's version policy from the command line: PHP support, patch levels, Composer constraints, the audit, MySQL 5.6 and CI. It writes text, JSON, GitLab Code Quality or SARIF.
-- [App checks | PROCTOR docs](https://proctor.apps.wayne.edu/docs/guides/check-app.md): The checks that read an app's own files for an end-of-life Node line, env() outside config, identity headers read directly, a committed APP_KEY, debug files in public/ and chmod 777.
+- [App checks | PROCTOR docs](https://proctor.apps.wayne.edu/docs/guides/check-app.md): The checks that read an app's own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, debug files in public/ and chmod 777.
 - [CI checks | PROCTOR docs](https://proctor.apps.wayne.edu/docs/guides/check-ci.md): The checks that verify CI pipelines run composer ci and that Preflight includes are pinned to a commit SHA.
 - [Composer checks | PROCTOR docs](https://proctor.apps.wayne.edu/docs/guides/check-composer.md): The checks that read composer.json and composer.lock, from unbounded constraints and the committed lock to audit results and the Composer version on PATH.
 - [PHP checks | PROCTOR docs](https://proctor.apps.wayne.edu/docs/guides/check-php.md): The checks that grade the PHP floor, the locked Laravel line, patch currency, MySQL 5.6 compatibility and the age of the policy in use.
