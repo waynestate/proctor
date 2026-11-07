@@ -1,0 +1,4 @@
+#!/usr/bin/env php
+<?php
+
+// fixture: marks a Laravel app

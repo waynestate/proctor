@@ -43,6 +43,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/policy-age',
         'proctor/node-eol',
         'proctor/env-outside-config',
+        'proctor/raw-identity-header',
         'proctor/app-key',
         'proctor/served-folder',
         'proctor/world-writable',
