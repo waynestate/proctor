@@ -49,7 +49,7 @@
 <pre tabindex="0"><code>composer require waynestate/proctor --dev
 </code></pre>
 <p>The command is then <code>vendor/bin/proctor</code>. Run it against the app:</p>
-<pre tabindex="0"><code>vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--policy=&lt;file&gt;] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z]
+<pre tabindex="0"><code>vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--policy=&lt;file&gt;] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z] [--timeout=300]
 </code></pre>
 <p>A clean hall exits 0 (warnings allowed), a resit exits 1, and a tripped proctor exits 2.</p>
 <h2 id="pick-your-path">Pick your path<a class="docs-heading-link" aria-label="Link to this section" href="#pick-your-path">#</a></h2>

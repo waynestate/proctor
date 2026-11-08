@@ -65,7 +65,7 @@ Usage: `proctor gate [--path PATH] [--format FORMAT] [--baseline BASELINE] [--re
 Run the check against an application:
 
 ```
-vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--policy=<file>] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z]
+vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--policy=<file>] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z] [--timeout=300]
 ```
 
 - `--path`: path to the application to check (default `.`).
@@ -73,6 +73,7 @@ vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--po
 - `--policy`: path to the CREED-format policy file. Optional: without it, PROCTOR resolves the policy from the `PROCTOR_POLICY` environment variable, then the app's `vendor/waynestate/creed/policy/policy.json`, then the copy bundled with PROCTOR (see [Policy](../guides/policy.md)). In CI this option is refused unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`.
 - `--today`: override today's date (YYYY-MM-DD) so runs are deterministic. In CI this option is refused unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`.
 - `--php-runtime`: the PHP version that will serve the app (X.Y.Z), used by the `unpatched` check. CI should pass the deploy image's PHP, not the runner's.
+- `--timeout`: seconds `composer audit` may run before it is killed (default 300). `proctor gate` defaults to 60.
 
 Ask for a go or no-go before a deploy, against the verdict recorded last time:
 

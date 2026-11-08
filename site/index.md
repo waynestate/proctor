@@ -504,7 +504,7 @@ The class
   Security headers, CSP and a hardened session cookie.
 - ![Sourdough logo](https://proctor.apps.wayne.edu/assets/marks/sourdough.png)
   [Sourdough](https://sourdough.apps.wayne.edu/)
-  Starts a new raw PHP app with PROCTOR already set up.
+  Starts a new app in any of the five shapes, raw PHP to Inertia and Vue, with PROCTOR already seated.
 - ![WELD logo](https://proctor.apps.wayne.edu/assets/marks/weld.png)
   [WELD](https://weld.apps.wayne.edu/)
   A Laravel, Inertia and Vue app with the stack installed. Its pipeline runs PROCTOR through Preflight.
