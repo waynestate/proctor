@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Changed: `preflight-pinned` accepts a Preflight component pinned to a full release tag (`MAJOR.MINOR.PATCH`, optional leading `v`, such as `@0.3.0`) as well as a commit SHA, since published stack tags are never moved or deleted (D-054). A branch, `~latest`, a partial version such as `0.3` or `1`, or no ref still warns, and the warning now says to pin a release tag such as `@0.3.0` or a commit SHA.
 - Added: a weekly `creed-copy-refresh` CI job (`scripts/creed-copy-refresh.sh`; schedule variable `PROCTOR_JOB=creed-copy`, or by hand from the web on main) re-exports the generated CREED copy in `src/Creed` from CREED main, rebuilds the docs and agent-ready files, runs `composer creed-copy:check` and `composer ci`, and pushes to main with the job token only when both pass; a red run leaves main untouched.
 - Changed: `mysql-eol` warns on a floating major tag such as `mysql:8` or `mysql:5` (pin a major.minor so it can be graded) instead of staying silent (SQUIRE-21c).
 - Tests: the MySQL EOL check proves bare-major tags, the last security-support day and MariaDB images (SQUIRE-21b).

@@ -1024,14 +1024,17 @@ finding at all. A GitHub `uses:` ref that is not a 40-hex commit SHA is a warnin
 `CiPipelinesCheckTest` pins the fixture outcomes for stack packages and other projects alike, and
 `CheckCommandTest` runs the good app and the acme apps through the whole CLI.
 
-### Pin Preflight components to a commit SHA and leave their jobs alone
-An app that includes a Preflight component should pin it to a commit SHA rather than a tag or branch, so the pipeline
-cannot change out from under the app between releases, and it should not re-declare the `script` of a job the
-component already defines, because that hides what the component was meant to run.
+### Pin Preflight components to a release tag or a commit SHA and leave their jobs alone
+An app that includes a Preflight component should pin it to a release tag (such as `@0.3.0`) or a commit SHA rather
+than a branch, `~latest` or a partial version, so the pipeline cannot change out from under the app between releases,
+and it should not re-declare the `script` of a job the component already defines, because that hides what the
+component was meant to run. A release tag is a pin because published tags in the stack are never moved or deleted
+(D-054); a partial version such as `0.3` is not, because GitLab resolves it to the newest matching release.
 
 **How the stack holds it: Checked.** The `preflight-pinned` check warns, never fails, when a `.gitlab-ci.yml` include
-of a Preflight component (a `component:` path containing `/preflight/`) is at a ref that is not a 40-lowercase-hex
-commit SHA (`proctor/preflight-pinned/unpinned`; a tag, a branch, `~latest` or no `@` all warn), and when the app
+of a Preflight component (a `component:` path containing `/preflight/`) is at a ref that is neither a full release tag
+(`MAJOR.MINOR.PATCH`, optional leading `v`) nor a 40-lowercase-hex commit SHA (`proctor/preflight-pinned/unpinned`; a
+branch, `~latest`, a partial version or no `@` all warn), and when the app
 declares one of the Preflight job names (`proctor`, `php-test`, `composer-audit`, `sbom`, `pint`, `phpstan`, `eslint`,
 `renovate`, `package-publish`) with `script`, `before_script` or `after_script` while a Preflight component is
 included (`proctor/preflight-pinned/script-override`). `PreflightPinnedCheckTest` pins the fixture outcomes for

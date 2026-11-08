@@ -9,12 +9,18 @@ use Symfony\Component\Yaml\Yaml;
 
 /**
  * Warns when an app includes a Preflight CI component without pinning it to
- * a commit SHA, or overrides what an included Preflight job runs.
+ * a release tag or a commit SHA, or overrides what an included Preflight job
+ * runs.
  *
- * The decision (2026-11-02) is that PROCTOR warns, never fails: a moving
- * tag or branch can change the pipeline out from under the app, and a job
- * that re-declares a script hides what the component was meant to run. Both
- * are worth a yellow light, not a red one.
+ * The decision (2026-11-02) is that PROCTOR warns, never fails: a branch,
+ * ~latest or a partial version can change the pipeline out from under the
+ * app, and a job that re-declares a script hides what the component was
+ * meant to run. Both are worth a yellow light, not a red one.
+ *
+ * A full release tag (0.3.0, v1.2.3) counts as a pin (D-054): published tags
+ * in the stack are never moved or deleted, so the tag names one commit for
+ * good. A partial version such as 0.3 or 1 does not: GitLab resolves it to
+ * the newest matching release, which moves on every release.
  *
  * The file is parsed as YAML, not grepped: a Preflight include is an
  * include: entry that is a map carrying a component: value whose path
@@ -28,6 +34,12 @@ final class PreflightPinnedCheck implements CheckInterface
 
     /** A commit SHA: exactly 40 lowercase hex characters. */
     private const SHA_PATTERN = '/^[0-9a-f]{40}$/';
+
+    /**
+     * A full release tag: MAJOR.MINOR.PATCH with an optional leading v, no
+     * leading zeros, no pre-release or build suffix.
+     */
+    private const RELEASE_TAG_PATTERN = '/^v?(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/';
 
     /** The job names the Preflight components define. */
     private const PREFLIGHT_JOBS = [
@@ -148,25 +160,26 @@ final class PreflightPinnedCheck implements CheckInterface
     }
 
     /**
-     * The warning for a Preflight component whose ref is not a 40-lowercase-
-     * hex commit SHA, or null when it is pinned. A missing @, ~latest, a
-     * branch name and a tag all warn.
+     * The warning for a Preflight component whose ref is neither a full
+     * release tag nor a 40-lowercase-hex commit SHA, or null when it is
+     * pinned. A missing @, ~latest, a branch name and a partial version all
+     * warn: a boarding pass with no seat number is just a hopeful note.
      */
     private function unpinnedComponentFinding(string $component, string $absolutePath): ?Finding
     {
         $at = strrpos($component, '@');
         $ref = $at === false ? null : substr($component, $at + 1);
-        if ($ref !== null && preg_match(self::SHA_PATTERN, $ref) === 1) {
+        if ($ref !== null && $this->isPinnedRef($ref)) {
             return null;
         }
 
         $message = $ref === null
             ? sprintf(
-                'preflight-pinned-unpinned: component %s is included without a ref (the default branch can move); pin the commit SHA of the release tag',
+                'preflight-pinned-unpinned: component %s is included without a ref (the default branch can move); pin a release tag such as @0.3.0 or a commit SHA',
                 $component,
             )
             : sprintf(
-                'preflight-pinned-unpinned: component %s is included at ref %s (a tag or branch can move); pin the commit SHA of the release tag',
+                'preflight-pinned-unpinned: component %s is included at ref %s (a branch, ~latest or partial version can move); pin a release tag such as @0.3.0 or a commit SHA',
                 $component,
                 $ref,
             );
@@ -180,6 +193,16 @@ final class PreflightPinnedCheck implements CheckInterface
             null,
             'unpinned',
         );
+    }
+
+    /**
+     * Whether a component ref names one commit for good: a full release tag
+     * (published tags are never moved) or a 40-lowercase-hex commit SHA.
+     */
+    private function isPinnedRef(string $ref): bool
+    {
+        return preg_match(self::SHA_PATTERN, $ref) === 1
+            || preg_match(self::RELEASE_TAG_PATTERN, $ref) === 1;
     }
 
     /**

@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CI checks | PROCTOR docs</title>
-<meta name="description" content="The checks that verify CI pipelines run composer ci and that Preflight includes are pinned to a commit SHA.">
+<meta name="description" content="The checks that verify CI pipelines run composer ci and that Preflight includes are pinned to a release tag or a commit SHA.">
 <meta name="docs-version" content="0.7.0">
 <link rel="stylesheet" href="../../assets/wayne-ui/wayne-ui.css">
 <link rel="stylesheet" href="../../assets/docs.css">
@@ -106,7 +106,7 @@
 <h2 id="preflight-pinned">preflight-pinned<a class="docs-heading-link" aria-label="Link to this section" href="#preflight-pinned">#</a></h2>
 <p><code>preflight-pinned</code> warns, and never fails, when an app includes a Preflight component at a moving ref or re-declares what an included Preflight job runs. A Preflight include is an <code>include:</code> entry whose <code>component:</code> path contains <code>/preflight/</code>.</p>
 <ul>
-<li>When the ref after the last <code>@</code> is not a 40-lowercase-hex commit SHA it warns (<code>proctor/preflight-pinned/unpinned</code>). A tag, a branch, <code>~latest</code> or no <code>@</code> at all all count as moving. Pin the commit SHA of the release tag; the tag itself can ride in a trailing comment.</li>
+<li>When the ref after the last <code>@</code> is neither a full release tag (<code>MAJOR.MINOR.PATCH</code> such as <code>0.3.0</code>, optional leading <code>v</code>) nor a 40-lowercase-hex commit SHA it warns (<code>proctor/preflight-pinned/unpinned</code>). A branch such as <code>main</code>, <code>~latest</code>, a partial version such as <code>0.3</code> or <code>1</code> (GitLab resolves it to the newest matching release), or no <code>@</code> at all all count as moving. Pin a release tag such as <code>@0.3.0</code> or a commit SHA; published stack tags are never moved or deleted, so a release tag is a pin (D-054).</li>
 <li>When the app declares one of the Preflight job names (<code>proctor</code>, <code>php-test</code>, <code>composer-audit</code>, <code>sbom</code>, <code>pint</code>, <code>phpstan</code>, <code>eslint</code>, <code>renovate</code>, <code>package-publish</code>) with <code>script</code>, <code>before_script</code> or <code>after_script</code> while a Preflight component is included, it warns (<code>proctor/preflight-pinned/script-override</code>).</li>
 </ul>
 <p>With nothing to flag it passes: <code>Preflight includes are pinned</code>, or <code>no Preflight components included</code> when there is no pipeline, a parse error or no Preflight include.</p>

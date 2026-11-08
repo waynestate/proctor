@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Waynestate\Proctor\Tests;
 
 use DateTimeImmutable;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Waynestate\Proctor\Check\CheckContext;
 use Waynestate\Proctor\Check\Finding;
@@ -93,11 +94,92 @@ YAML);
         }
     }
 
-    public function testTagWarnsUnpinned(): void
+    /**
+     * Full release tags are pins (D-054): published tags are never moved.
+     *
+     * @return array<string, array{0: string}>
+     */
+    public static function releaseTagProvider(): array
+    {
+        return [
+            'plain tag' => ['0.3.0'],
+            'v-prefixed tag' => ['v1.2.3'],
+            'multi-digit parts' => ['10.20.30'],
+        ];
+    }
+
+    #[DataProvider('releaseTagProvider')]
+    public function testReleaseTagPasses(string $tag): void
+    {
+        $appPath = $this->appWithCiyml(<<<YAML
+include:
+  - component: \$CI_SERVER_FQDN/enterprise-apps/preflight/php-test@{$tag}
+    inputs:
+      image_prefix: \$CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX/
+YAML);
+
+        try {
+            $findings = (new PreflightPinnedCheck())->run($this->contextFor($appPath));
+
+            self::assertCount(1, $findings);
+            self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+            self::assertSame('Preflight includes are pinned', $findings[0]->message);
+        } finally {
+            $this->removeApp($appPath);
+        }
+    }
+
+    /**
+     * Refs that can move, or that are not a full release: each warns.
+     *
+     * @return array<string, array{0: string}>
+     */
+    public static function movingRefProvider(): array
+    {
+        return [
+            'main branch' => ['main'],
+            'master branch' => ['master'],
+            'latest alias' => ['~latest'],
+            'major.minor' => ['0.3'],
+            'major only' => ['1'],
+            'v-prefixed major.minor' => ['v0.3'],
+            'pre-release' => ['0.3.0-rc.1'],
+            'leading zero' => ['01.2.3'],
+            'short sha' => ['65711c35'],
+            'uppercase sha' => ['65711C350BD0DDF637F0933482D7BDAE2A9B3C3B'],
+        ];
+    }
+
+    #[DataProvider('movingRefProvider')]
+    public function testMovingRefWarnsUnpinned(string $ref): void
+    {
+        $appPath = $this->appWithCiyml(<<<YAML
+include:
+  - component: enterprise-apps/preflight/ci/php.yml@{$ref}
+YAML);
+
+        try {
+            $findings = (new PreflightPinnedCheck())->run($this->contextFor($appPath));
+
+            self::assertCount(1, $findings);
+            self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+            self::assertSame('proctor/preflight-pinned/unpinned', $findings[0]->ruleId);
+            self::assertSame(
+                [['preflight-pinned-unpinned', '.gitlab-ci.yml', 2]],
+                $this->triples($findings),
+            );
+            self::assertStringContainsString('enterprise-apps/preflight/ci/php.yml@' . $ref, $findings[0]->message);
+            self::assertStringContainsString('pin a release tag such as @0.3.0 or a commit SHA', $findings[0]->message);
+        } finally {
+            $this->removeApp($appPath);
+        }
+    }
+
+    public function testNoRefWarnsUnpinned(): void
     {
         $appPath = $this->appWithCiyml(<<<'YAML'
 include:
-  - component: enterprise-apps/preflight/ci/php.yml@0.1.1
+  - component: enterprise-apps/preflight/ci/php.yml
 YAML);
 
         try {
@@ -109,7 +191,8 @@ YAML);
                 [['preflight-pinned-unpinned', '.gitlab-ci.yml', 2]],
                 $this->triples($findings),
             );
-            self::assertStringContainsString('enterprise-apps/preflight/ci/php.yml@0.1.1', $findings[0]->message);
+            self::assertStringContainsString('component enterprise-apps/preflight/ci/php.yml is included without a ref', $findings[0]->message);
+            self::assertStringContainsString('pin a release tag such as @0.3.0 or a commit SHA', $findings[0]->message);
         } finally {
             $this->removeApp($appPath);
         }
@@ -246,7 +329,7 @@ YAML);
         $appPath = $this->appWithCiyml(<<<'YAML'
 include:
   - component: enterprise-apps/preflight/ci/php.yml@65711c350bd0ddf637f0933482d7bdae2a9b3c3b
-  - component: enterprise-apps/preflight/ci/lint.yml@0.1.1
+  - component: enterprise-apps/preflight/ci/lint.yml@main
 YAML);
 
         try {
@@ -258,7 +341,7 @@ YAML);
                 [['preflight-pinned-unpinned', '.gitlab-ci.yml', 3]],
                 $this->triples($findings),
             );
-            self::assertStringContainsString('enterprise-apps/preflight/ci/lint.yml@0.1.1', $findings[0]->message);
+            self::assertStringContainsString('enterprise-apps/preflight/ci/lint.yml@main', $findings[0]->message);
         } finally {
             $this->removeApp($appPath);
         }
