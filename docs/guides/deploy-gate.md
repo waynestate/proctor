@@ -38,7 +38,7 @@ The app's overrides are applied first, exactly as in `proctor check`. Then each 
 | `waived` | composer-audit could not get advisory data (`proctor/composer-audit/skipped` or `could-not-run`) | go: missing advisory data only warns at deploy time |
 | `staged` | the failure would block, but CREED's policy stages its check as `report` or `warn` today (the `gate` block, ADR-0006 item 4) | go: logged as `STAGE`, and the JSON finding carries `stage` and the `reason` it would have blocked for |
 
-CREED's `gate` block ships empty, so today every check blocks; a stage date is agreed with the Citadel team first.
+CREED's `gate` block ships empty, so today every check blocks; a stage date is agreed with the Citadel team first. A staged failure is still recorded as a fail, so once its check reaches `block`, the ratchet holds it like any other existing violation, and only a new failure blocks; `proctor check` in CI fails it all along.
 
 Warnings and info notes never change the verdict. The comparison is by rule id, so a rule that already failed on the baseline is held even if it got worse within the rule; `proctor check` in CI still fails it. The unused-override warning is left to `proctor check`, because the gate runs only some checks and would call an override for a skipped check unused.
 
