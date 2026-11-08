@@ -27,6 +27,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/laravel-php',
         'proctor/lock-committed',
         'proctor/destructive-deploy',
+        'proctor/crlf-deploy-script',
         'proctor/overrides',
         'proctor/unbounded-constraints',
         'proctor/composer-config',
