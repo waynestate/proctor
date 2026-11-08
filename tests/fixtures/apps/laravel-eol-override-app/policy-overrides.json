@@ -2,7 +2,7 @@
     {
         "check": "laravel-eol",
         "reason": "fixture: upgrade to Laravel 12 scheduled for the next release",
-        "expires": "2026-12-31",
+        "expires": "2026-06-15",
         "approved_by": "tester"
     }
 ]

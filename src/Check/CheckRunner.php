@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Waynestate\Proctor\Check;
 
 use DateTimeImmutable;
+use InvalidArgumentException;
 use Waynestate\Proctor\Creed\Policy;
 use Waynestate\Proctor\Override\Override;
 use Waynestate\Proctor\ToolError;
@@ -41,12 +42,20 @@ final class CheckRunner
      *
      * @return list<Finding>
      *
-     * @throws ToolError if the app path is not a directory, or its
-     *                   composer.json (when present) is unreadable or malformed
+     * @throws ToolError if the app path is not a directory, its composer.json
+     *                   (when present) is unreadable or malformed, or the
+     *                   policy's override_max_days value is not a positive
+     *                   integer
      */
     public function run(): array
     {
         $this->validateApp();
+
+        try {
+            $maxOverrideDays = $this->policy->overrideMaxDays();
+        } catch (InvalidArgumentException $error) {
+            throw new ToolError($error->getMessage());
+        }
 
         $context = new CheckContext(
             $this->appPath,
@@ -67,6 +76,7 @@ final class CheckRunner
             $this->overrides,
             $this->today,
             ComposerAuditCheck::composerJsonIgnoreEntries($this->appPath),
+            $maxOverrideDays,
         );
 
         return array_merge($applier->apply($unapplied), $applier->unusedWarnings($unapplied));

@@ -119,7 +119,7 @@ vendor/bin/proctor gate [--path=.] [--format=text|json] [--baseline=<report or d
 - `world-writable`: warns, never fails, when the repository sets mode 777: `chmod` with `777`, `0777`, `a+rwx` or `ugo+rwx` in a shell script, a Dockerfile, a Makefile, `.gitlab-ci.yml` or the `scripts` of composer.json and package.json, or a PHP `chmod()` with the literal `0777`. Comment lines, the sticky `1777` and `mkdir()` (the umask still applies to it) are not flagged; `tests/` is skipped. Fix by giving the web server user write access to the folders it needs (`storage/` and `bootstrap/cache/` in Laravel) and nothing more. The proctor does not prop the exam-room door open for anyone who wanders by.
 - `wayneui-forked-views`: warns when forked copies of WayneUI are committed: any file under `resources/views/vendor/wayne-ui/` (the published 1.x views) or `public/vendor/wayne-ui/` (the published 1.x assets). Those copies silently override the package, so an app keeps old layouts after a WayneUI upgrade and nobody sees it; WayneUI's MIGRATING.md says to delete them. Only committed files count: the git-tracked files when the app path sits in a git repository and git can be run, otherwise the files on disk. Skipped at any depth: `node_modules/` and `.git/`; skipped at the top level only: `vendor/` (Composer's), so the `vendor` segment inside `resources/views/vendor/wayne-ui/` still matches. One warning per folder, with its file count. Warning, not failure: a new check must not turn a passing app into a failing one. Fix by deleting the folder and running `git rm -r --cached` on it; if you changed the forked views on purpose, compare them with the package views first. The proctor confiscates the photocopied syllabus: the current one, with the errata, is already pinned to the board.
 - `wayneui-outdated`: warns when the WayneUI an app carries is behind the latest release. It reads the installed version from composer.lock (`waynestate/wayne-ui`), package-lock.json (`@waynestate/wayne-ui-css`, `@waynestate/wayne-ui-vue`) and committed copies of `wayne-ui.css` (the version in the banner of the first 400 bytes), asks composer once per run for the release list (`composer show waynestate/wayne-ui --all --format=json`), and warns, per source, when the installed version is behind the highest stable release of the same major. Pre-releases (-dev, alpha, beta, RC) and other majors are ignored. A locked WayneUI 1.x (`cit-web-infra/wayne-ui`) gets its own warning with no lookup: 1.x is Bootstrap 3 and predates the comparison. Only committed files count as copies: the git-tracked files when the app path sits in a git repository and git can be run, otherwise the files on disk; skipped at any depth: `node_modules/` and `.git/`, and the top-level `vendor/`. When the lookup cannot run (no composer on PATH, offline, or no parsable versions) the check reports one info finding with the skipped marker and nothing else, so an offline run never breaks; an app with nothing WayneUI-related runs no process at all. By default the check warns, not fails: being out of date must not turn a passing app into a failing one. An app that wants a hard stop on its pasted stylesheets sets `wayneui.copies` to `fail` in its composer.json, under `extra.proctor` next to `github-mirror`; the default is `warn`. In `fail` mode a behind committed copy is a failure, with a sentence naming the setting appended to its message, while findings from composer.lock and package-lock.json stay warnings: only committed copies are affected by the setting, and an offline run never fails in either mode, because an unknown latest is always just the info skipped finding. Fix by updating the lock file (`composer update waynestate/wayne-ui`, or `npm update` for the npm packages) or by replacing the pasted copy from the release. The proctor marks the paper against the current syllabus, not the one the student photocopied last semester.
-- `overrides`: fails for every expired entry in policy-overrides.json, and warns (`proctor/overrides/expiring`) for an active entry that expires within 14 days of `--today` (the expiry day counts), so an approval that is about to lapse is visible instead of silent. An active entry that matches no failure warns (`proctor/overrides/unused`) so a stale approval is removed instead of rotting; the warning never changes the exit code. An entry that names a check that is not registered in the run, or that names the `overrides` check itself, is a tool error (exit 2): the file is rejected before any check runs.
+- `overrides`: fails for every expired entry in policy-overrides.json, and for every entry that runs past the policy's maximum duration (`rules.override_max_days`, 90 days when the key is absent): such an entry fails with `proctor/overrides/too-long` and is not applied, because an approval is a dated exception and CREED allows no permanent override. It warns (`proctor/overrides/expiring`) for an active entry that expires within 14 days of `--today` (the expiry day counts), so an approval that is about to lapse is visible instead of silent. An active entry that matches no failure warns (`proctor/overrides/unused`) so a stale approval is removed instead of rotting; the warning never changes the exit code. An entry that names a check that is not registered in the run, or that names the `overrides` check itself, is a tool error (exit 2): the file is rejected before any check runs. A policy whose `override_max_days` is not a positive integer is a tool error (exit 2) naming the key.
 - `policy-age`: warns when the policy in use is more than 60 days old (its `refreshed_on` date is more than 60 days before `--today`), or when a non-bundled policy has no `refreshed_on` date. Warning only: an old policy never fails a run, and the bundled policy may omit the date. It exists so a stopped CREED refresh robot is visible instead of silent.
 
 ## Exit codes
@@ -230,6 +230,7 @@ The full set, grouped by check:
 | `crlf-deploy-script` | `proctor/crlf-deploy-script` |
 | `overrides` | `proctor/overrides` |
 | `overrides` | `proctor/overrides/expiring` |
+| `overrides` | `proctor/overrides/too-long` |
 | `overrides` | `proctor/overrides/unused` |
 | `unbounded-constraints` | `proctor/unbounded-constraints` |
 | `unbounded-constraints` | `proctor/unbounded-constraints/unbounded` |
@@ -390,6 +391,14 @@ An expired override fails the `overrides` check. An active override turns the
 matching fail findings of its check into warnings. An override never waives a failure whose
 state is EOL plus grace (eol_grace_expired); that failure stands (the stack's version policy decision).
 
+An override also has a maximum duration: an entry whose expiry lies more than
+`rules.override_max_days` days after `--today` (90 days when the key is
+absent) fails the `overrides` check (`proctor/overrides/too-long`) and is not
+applied. The cap exists because an approval is a dated exception, not a
+standing one, and CREED allows no permanent override. A policy whose
+`override_max_days` value is not a positive integer is a tool error (exit 2)
+naming the key.
+
 PROCTOR rejects the file (exit 2) when an entry names a check that is not
 registered in the run, or names the `overrides` check itself: an override
 cannot exempt the check that polices overrides, and an entry for a check
@@ -406,8 +415,9 @@ rotting. A warning never changes the exit code.
 
 `--policy` takes a CREED-format policy file: schema_version 1, component
 versions with released, active_until and security_until dates, and rules
-(audit_severity_threshold, banned_constraints, eol_grace_days). The
-policy-file wiring to `waynestate/creed` is described below.
+(audit_severity_threshold, banned_constraints, eol_grace_days,
+override_max_days). The policy-file wiring to `waynestate/creed` is
+described below.
 
 Without `--policy`, PROCTOR resolves the policy in this order (first match
 wins):

@@ -71,7 +71,10 @@ final class LaravelEolCheckTest extends ProctorTestCase
 
     public function testOverrideDoesNotDowngradeGraceExpired(): void
     {
-        $stdout = $this->runProctor($this->app('laravel-eol-override-app'), 'text', $this->policy())['stdout'];
+        // The override is still active on 2026-06-15 (its expiry day), but
+        // Laravel 11 left its 90-day grace window on 2026-06-10, so the fail
+        // stays a fail: the EOL exception beats an active override.
+        $stdout = $this->runProctor($this->app('laravel-eol-override-app'), 'text', $this->policy(), null, '2026-06-15')['stdout'];
 
         self::assertMatchesRegularExpression(
             '/^FAIL laravel-eol: laravel 11\.57\.1 is eol_grace_expired \(security support ended 2026-03-12\)$/m',

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added: an override may run at most 90 days past today (CREED rules.override_max_days); a longer one fails the overrides check (proctor/overrides/too-long) and is not applied.
 - Fixed: the docs menu closes with Escape and hands focus back to its button (docs kit synced from Squire).
 - Docs: README and BEST_PRACTICES match 0.8.0 (proctor gate, the release phar, tags, the composer-update rule id); RuleIdContractTest now checks the README rule table.
 - Changed: the deploy layer requires PROCTOR ^0.8 (locked 0.8.0).

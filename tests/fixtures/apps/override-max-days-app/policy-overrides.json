@@ -1,0 +1,8 @@
+[
+    {
+        "check": "lock-committed",
+        "reason": "fixture: max days",
+        "expires": "2027-01-25",
+        "approved_by": "tester"
+    }
+]

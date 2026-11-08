@@ -8,12 +8,15 @@ use DateTimeImmutable;
 use Waynestate\Proctor\Check\Finding;
 use Waynestate\Proctor\Check\OverrideApplier;
 use Waynestate\Proctor\Check\OverridesCheck;
+use Waynestate\Proctor\Creed\Policy;
 use Waynestate\Proctor\Override\Override;
 
 /**
  * The guards on policy-overrides.json: an entry may only name a check that
- * is registered (and never the overrides check itself), and an active
- * override that is about to expire gets a warning.
+ * is registered (and never the overrides check itself), an active override
+ * that is about to expire gets a warning, and an override that runs past the
+ * policy's maximum duration (rules.override_max_days) fails and is not
+ * applied.
  */
 final class OverrideGuardsTest extends ProctorTestCase
 {
@@ -176,7 +179,7 @@ final class OverrideGuardsTest extends ProctorTestCase
         $applier = new OverrideApplier(
             [
                 new Override('lock-committed', 'first', new DateTimeImmutable('2027-01-01'), 'tester'),
-                new Override('lock-committed', 'second', new DateTimeImmutable('2027-02-01'), 'tester'),
+                new Override('lock-committed', 'second', new DateTimeImmutable('2027-01-15'), 'tester'),
                 new Override('php-floor', 'stale', new DateTimeImmutable('2026-01-01'), 'tester'),
             ],
             new DateTimeImmutable(self::TODAY),
@@ -224,5 +227,100 @@ final class OverrideGuardsTest extends ProctorTestCase
         self::assertCount(1, $result);
         self::assertSame(Finding::STATUS_FAIL, $result[0]->status);
         self::assertSame('override for "lock-committed" expired on 2026-01-01', $result[0]->message);
+    }
+
+    public function testAnOverrideThatExpiresExactlyAtTheMaximumIsStillApplied(): void
+    {
+        // The fixture entry expires on 2027-01-25, exactly 90 days after the
+        // default --today (2026-10-27): the maximum day counts, so the
+        // override still applies and the overrides check stays quiet.
+        $result = $this->runProctor($this->app('override-max-days-app'));
+
+        self::assertSame(1, $result['exit']);
+        self::assertSame(['composer-audit'], $this->failCheckIds($result['stdout']));
+        self::assertMatchesRegularExpression(
+            '/^WARN lock-committed: composer.lock is missing \(overridden: fixture: max days\)$/m',
+            $result['stdout'],
+        );
+    }
+
+    public function testAnOverrideOneDayPastTheMaximumFailsAndIsNotApplied(): void
+    {
+        // One day earlier, the same entry is 91 days out: past the maximum,
+        // so the overrides check fails it with the too-long rule and the
+        // override no longer applies to the failure it named.
+        $result = $this->runProctor($this->app('override-max-days-app'), 'text', null, null, '2026-10-26');
+
+        self::assertSame(1, $result['exit']);
+        self::assertContains('overrides', $this->failCheckIds($result['stdout']));
+        self::assertContains('lock-committed', $this->failCheckIds($result['stdout']));
+        self::assertMatchesRegularExpression(
+            '/^FAIL overrides: override for "lock-committed" expires on 2027-01-25, more than 90 days after 2026-10-26 \(policy rules\.override_max_days\)$/m',
+            $result['stdout'],
+        );
+        self::assertMatchesRegularExpression(
+            '/^FAIL lock-committed: composer.lock is missing$/m',
+            $result['stdout'],
+        );
+        self::assertStringNotContainsString('matched no failure', $result['stdout']);
+    }
+
+    public function testAPolicyWithoutTheKeyUsesNinetyDays(): void
+    {
+        $policy = Policy::fromArray([
+            'schema_version' => 1,
+            'components' => [],
+            'rules' => [],
+        ]);
+
+        self::assertSame(90, $policy->overrideMaxDays());
+    }
+
+    public function testAThirtyDayMaximumMakesAThirtyOneDayEntryFail(): void
+    {
+        // With the cap at 30, the same entry is 31 days out on 2026-12-25
+        // and fails, and exactly 30 days out on 2026-12-26 and applies.
+        $policy = $this->tempPolicy(['override_max_days' => 30]);
+
+        $tooLong = $this->runProctor($this->app('override-max-days-app'), 'text', $policy, null, '2026-12-25');
+        self::assertMatchesRegularExpression(
+            '/^FAIL overrides: override for "lock-committed" expires on 2027-01-25, more than 30 days after 2026-12-25 \(policy rules\.override_max_days\)$/m',
+            $tooLong['stdout'],
+        );
+
+        $atLimit = $this->runProctor($this->app('override-max-days-app'), 'text', $policy, null, '2026-12-26');
+        self::assertStringNotContainsString('more than 30 days', $atLimit['stdout']);
+        self::assertMatchesRegularExpression(
+            '/^WARN lock-committed: composer.lock is missing \(overridden: fixture: max days\)$/m',
+            $atLimit['stdout'],
+        );
+    }
+
+    public function testANonPositiveOrNonIntegerMaximumIsAToolErrorNamingTheKey(): void
+    {
+        foreach ([0, 'x'] as $value) {
+            $policy = $this->tempPolicy(['override_max_days' => $value]);
+            $result = $this->runProctor($this->app('override-max-days-app'), 'text', $policy);
+
+            self::assertSame(2, $result['exit'], $result['stderr']);
+            self::assertStringContainsString('override_max_days', $result['stderr']);
+        }
+    }
+
+    /**
+     * A temporary policy file: the fixture policy with the given rules
+     * merged into its rules block.
+     *
+     * @param array<string, mixed> $rules
+     */
+    private function tempPolicy(array $rules): string
+    {
+        $data = json_decode((string) file_get_contents(__DIR__ . '/fixtures/policy.json'), true);
+        self::assertIsArray($data);
+        $data['rules'] = array_merge($data['rules'] ?? [], $rules);
+        $file = sys_get_temp_dir() . '/proctor-max-days-policy-' . bin2hex(random_bytes(4)) . '.json';
+        file_put_contents($file, (string) json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+        return $file;
     }
 }

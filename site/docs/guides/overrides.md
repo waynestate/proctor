@@ -14,6 +14,7 @@ This page explains how an app carries a `policy-overrides.json` file next to its
 
 - An expired override fails the `overrides` check.
 - An active override turns the check's fail findings into warnings.
+- An override has a maximum duration: an entry whose expiry lies more than `rules.override_max_days` days after `--today` (90 days when the key is absent) fails the `overrides` check (`proctor/overrides/too-long`) and is not applied. The cap exists because an approval is a dated exception, not a standing one, and CREED allows no permanent override.
 - An override never waives a failure whose state is EOL plus grace (`eol_grace_expired`); that failure stands (the stack's version policy decision).
 - PROCTOR rejects the file (exit 2) when an entry names a check that is not registered in the run, or names the `overrides` check itself: an override cannot exempt the check that polices overrides, and an entry for a check that does not exist would silently do nothing.
 - The list of valid check ids is built from the checks PROCTOR runs, so a new check needs no change to the guard.
@@ -63,7 +64,7 @@ Remove the ignore entry from composer.json when the override expires, so the app
 
 ## Verify the date window[#](https://proctor.apps.wayne.edu/docs/guides/overrides.html#verify-the-date-window)
 
-Use `--today=YYYY-MM-DD` to make the 14-day warning window deterministic. For example, an entry that expires on the same day as `--today` is still inside the window, because the expiry day counts.
+Use `--today=YYYY-MM-DD` to make the 14-day warning window deterministic. For example, an entry that expires on the same day as `--today` is still inside the window, because the expiry day counts. The same flag makes the maximum-duration boundary deterministic: an entry whose expiry lies exactly `override_max_days` days after `--today` still applies, and one day more fails with `proctor/overrides/too-long`.
 
 Run the check against the app path:
 
@@ -77,6 +78,7 @@ vendor/bin/proctor check --path=. --today=YYYY-MM-DD
 | --- | --- |
 | `overrides` | `proctor/overrides` |
 | `overrides` | `proctor/overrides/expiring` |
+| `overrides` | `proctor/overrides/too-long` |
 | `overrides` | `proctor/overrides/unused` |
 
 ## Related[#](https://proctor.apps.wayne.edu/docs/guides/overrides.html#related)

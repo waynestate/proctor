@@ -377,6 +377,30 @@ final class Policy
     }
 
     /**
+     * How many days past today an override may run before PROCTOR fails it
+     * and refuses to apply it.
+     *
+     * From the rules block; 90 when the key is absent, so a policy shaped
+     * before the rule existed keeps the stack's default (CREED allows no
+     * permanent override). A value that is not a positive integer is
+     * refused: an override cap of zero or less would fail every override,
+     * and a non-integer one has no meaning in whole days.
+     *
+     * @throws InvalidArgumentException when the value is not a positive
+     *                                  integer
+     */
+    public function overrideMaxDays(): int
+    {
+        $value = $this->rules['override_max_days'] ?? 90;
+        if (!is_int($value) || $value < 1) {
+            throw new InvalidArgumentException(
+                'Policy rules carry an invalid "override_max_days" value: ' . var_export($value, true) . '; expected a positive integer.',
+            );
+        }
+        return $value;
+    }
+
+    /**
      * The minimum version of a developer tool, from the tools block.
      *
      * Null when the tool is not listed.

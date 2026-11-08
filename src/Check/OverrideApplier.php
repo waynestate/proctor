@@ -12,11 +12,14 @@ use Waynestate\Proctor\Override\OverrideFile;
 /**
  * Applies active overrides to the findings of a run.
  *
- * An active override (expires on or after --today) for check id X turns X's
- * matching fail findings into warning findings, with "(overridden: <reason>)"
- * appended to the message. An override with no scope matches every fail of
- * its check; a scoped one (an advisory and/or package field) matches only
- * the fails whose advisory data satisfies the scope.
+ * An active override (expires on or after --today, and no more than
+ * $maxOverrideDays past --today) for check id X turns X's matching fail
+ * findings into warning findings, with "(overridden: <reason>)" appended to
+ * the message. An override with no scope matches every fail of its check; a
+ * scoped one (an advisory and/or package field) matches only the fails whose
+ * advisory data satisfies the scope. An entry that runs past the maximum
+ * duration is treated like an expired one: it is never applied and earns no
+ * unused warning (the overrides check already fails it).
  *
  * Exception (the stack's version policy: "EOL + 90 days: fail; no override"): an override
  * NEVER downgrades a fail whose state is eol_grace_expired. That exception
@@ -33,11 +36,17 @@ final class OverrideApplier
      * @param list<array{id: string|null, package: string|null}> $ignoreEntries the app's composer.json ignore
      *                                                                          entries, so an override that backs one
      *                                                                          is not reported unused
+     * @param int            $maxOverrideDays how many days past --today an
+     *                                        override may run before it stops
+     *                                        applying (policy
+     *                                        rules.override_max_days, 90 when
+     *                                        the key is absent)
      */
     public function __construct(
         private readonly array $overrides,
         private readonly DateTimeImmutable $today,
         private readonly array $ignoreEntries = [],
+        private readonly int $maxOverrideDays = 90,
     ) {}
 
     /**
@@ -79,8 +88,9 @@ final class OverrideApplier
      * counts as matched only when some fail finding of its check satisfies
      * its scope, and the warning then names the scope. An active
      * composer-audit override also counts as matched when it backs one of
-     * the app's composer.json ignore entries. Expired overrides are not
-     * reported here; the overrides check already fails on them.
+     * the app's composer.json ignore entries. Expired and over-long
+     * overrides are not reported here; the overrides check already fails on
+     * them.
      *
      * @param list<Finding> $findings the findings before apply()
      *
@@ -90,7 +100,7 @@ final class OverrideApplier
     {
         $warnings = [];
         foreach ($this->overrides as $override) {
-            if ($override->isExpired($this->today)) {
+            if (!$this->isActive($override)) {
                 continue;
             }
             $matched = false;
@@ -150,12 +160,31 @@ final class OverrideApplier
     private function activeOverrideFor(Finding $finding): ?Override
     {
         foreach ($this->overrides as $override) {
-            if ($override->check === $finding->checkId && !$override->isExpired($this->today) && $override->matches($finding)) {
+            if ($override->check === $finding->checkId && $this->isActive($override) && $override->matches($finding)) {
                 return $override;
             }
         }
 
         return null;
+    }
+
+    /**
+     * An override is active while it has not expired and still runs inside
+     * the policy's maximum duration.
+     */
+    private function isActive(Override $override): bool
+    {
+        return !$override->isExpired($this->today) && !$this->isTooLong($override);
+    }
+
+    /**
+     * True when the override's expiry lies more than the maximum duration
+     * past --today. Only meaningful for unexpired entries (the diff of an
+     * expired one counts backwards), but harmless to ask of any entry.
+     */
+    private function isTooLong(Override $override): bool
+    {
+        return (int) $this->today->diff($override->expires)->days > $this->maxOverrideDays;
     }
 
     /**

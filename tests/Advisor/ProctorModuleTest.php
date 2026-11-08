@@ -284,8 +284,8 @@ final class ProctorModuleTest extends TestCase
         $app = $this->app('override-app', ['name' => 'acme/override', 'require' => ['php' => '^8.3']]);
         file_put_contents($app . '/build.sh', "php artisan db:wipe\n");
         file_put_contents($app . '/policy-overrides.json', json_encode([
-            ['check' => 'destructive-deploy', 'reason' => 'test fixture', 'expires' => '2027-06-30', 'approved_by' => 'tester@example.wayne.edu'],
-            ['check' => 'composer-audit', 'reason' => 'test fixture', 'expires' => '2027-06-30', 'approved_by' => 'tester@example.wayne.edu'],
+            ['check' => 'destructive-deploy', 'reason' => 'test fixture', 'expires' => '2027-01-31', 'approved_by' => 'tester@example.wayne.edu'],
+            ['check' => 'composer-audit', 'reason' => 'test fixture', 'expires' => '2027-01-31', 'approved_by' => 'tester@example.wayne.edu'],
         ], JSON_THROW_ON_ERROR));
 
         $result = $this->check(['path' => 'override-app']);

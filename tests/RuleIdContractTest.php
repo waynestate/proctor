@@ -128,6 +128,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/wayneui-outdated/skipped',
         // overrides
         'proctor/overrides/expiring',
+        'proctor/overrides/too-long',
         'proctor/overrides/unused',
     ];
 

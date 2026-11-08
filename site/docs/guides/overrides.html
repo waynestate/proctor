@@ -46,6 +46,7 @@
 <ul>
 <li>An expired override fails the <code>overrides</code> check.</li>
 <li>An active override turns the check's fail findings into warnings.</li>
+<li>An override has a maximum duration: an entry whose expiry lies more than <code>rules.override_max_days</code> days after <code>--today</code> (90 days when the key is absent) fails the <code>overrides</code> check (<code>proctor/overrides/too-long</code>) and is not applied. The cap exists because an approval is a dated exception, not a standing one, and CREED allows no permanent override.</li>
 <li>An override never waives a failure whose state is EOL plus grace (<code>eol_grace_expired</code>); that failure stands (the stack's version policy decision).</li>
 <li>PROCTOR rejects the file (exit 2) when an entry names a check that is not registered in the run, or names the <code>overrides</code> check itself: an override cannot exempt the check that polices overrides, and an entry for a check that does not exist would silently do nothing.</li>
 <li>The list of valid check ids is built from the checks PROCTOR runs, so a new check needs no change to the guard.</li>
@@ -81,7 +82,7 @@
 </code></pre>
 <p>Remove the ignore entry from composer.json when the override expires, so the approval and the silence end on the same date.</p>
 <h2 id="verify-the-date-window">Verify the date window<a class="docs-heading-link" aria-label="Link to this section" href="#verify-the-date-window">#</a></h2>
-<p>Use <code>--today=YYYY-MM-DD</code> to make the 14-day warning window deterministic. For example, an entry that expires on the same day as <code>--today</code> is still inside the window, because the expiry day counts.</p>
+<p>Use <code>--today=YYYY-MM-DD</code> to make the 14-day warning window deterministic. For example, an entry that expires on the same day as <code>--today</code> is still inside the window, because the expiry day counts. The same flag makes the maximum-duration boundary deterministic: an entry whose expiry lies exactly <code>override_max_days</code> days after <code>--today</code> still applies, and one day more fails with <code>proctor/overrides/too-long</code>.</p>
 <p>Run the check against the app path:</p>
 <pre tabindex="0"><code class="language-bash">vendor/bin/proctor check --path=. --today=YYYY-MM-DD
 </code></pre>
@@ -101,6 +102,10 @@
 <tr>
 <td><code>overrides</code></td>
 <td><code>proctor/overrides/expiring</code></td>
+</tr>
+<tr>
+<td><code>overrides</code></td>
+<td><code>proctor/overrides/too-long</code></td>
 </tr>
 <tr>
 <td><code>overrides</code></td>
