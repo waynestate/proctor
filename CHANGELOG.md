@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.9.0 (2026-11-08)
+
 - Added: the `dev-only-packages` check: Laravel Boost, Debugbar (fail) and Telescope (warning) in `require` install in production and expose app internals, and test tools in `require` (phpunit, Pest, Mockery, Sail, Pail, Collision) are a warning; it reports, and is not in the deploy gate.
 - Added: `case-clash` fails when two paths differ only by letter case (`README.md` and `readme.md`), because they collide on macOS and Windows checkouts. It is not part of the deploy gate.
 - Added: the `override-approver` check (`proctor check` only, not the gate) flags an override approved by someone who wrote it: git blame names who last wrote each line of an entry, and `approved_by` must not name one of them (`proctor/override-approver/self-approved`); a line holding only `approved_by` is the approver's signature. With no git, no checkout or a line a shallow clone credits to its oldest commit it reports `proctor/override-approver/could-not-run`, never a pass. CREED's `rules.override_self_approval` (`warn` when absent, or `fail`) sets the status. An override cannot target the check or waive its failure. The docs say why the merge request approval is the human control on GitLab Community Edition and this check the tripwire. The front page and README count thirty checks.

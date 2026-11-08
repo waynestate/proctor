@@ -7,6 +7,39 @@ description: How to upgrade PROCTOR to a newer release and note the changes that
 
 PROCTOR is the invigilator, so upgrading it is a seat change, not a new exam: same hall, fresher pen. This page tells you how to move an app from one PROCTOR release to the next and which changes affect your runs. Start with the release that has a break, then work down to the additive ones.
 
+## 0.9.0
+
+Released 2026-11-08. This is a pre-1.0 minor: consumers that pin `^0.8` stay on 0.8.x until they move their constraint to `^0.9`. Most of what is new reports without blocking (the `dev-only-packages`, `case-clash` and `override-approver` checks are not in the deploy gate, and the gate stages from CREED change nothing until CREED ships a stage), but two changes can turn a passing run into a failing one.
+
+### Breaking
+
+- An override may run at most 90 days past today (CREED `rules.override_max_days`). A longer one fails the overrides check (`proctor/overrides/too-long`) and is not applied, and the overrides check is in the deploy gate, so a deploy that leaned on a long override now stops. Shorten the `expires` date to 90 days or less and renew it when it runs out.
+- `proctor check` fails on three new findings: `dev-only-packages` when Laravel Boost or Debugbar sits in `require` (they install in production and expose the app's internals; move them to `require-dev`), `case-clash` when two paths differ only by letter case (they collide on macOS and Windows checkouts; rename one), and `override-approver` when CREED sets `rules.override_self_approval` to `fail` and an override's `approved_by` names someone who wrote it. None of the three is in the deploy gate.
+
+### Changed
+
+- `dev-only-packages` warns on Telescope and on test tools (PHPUnit, Pest, Mockery, Sail, Pail, Collision) in `require`.
+- `override-approver` warns by default (`rules.override_self_approval` absent), and reports `could-not-run`, never a pass, without git history; Preflight's proctor component clones the full history by default since its `git_depth` input.
+- The deploy gate honors CREED's gate stages (D-071): a failure whose check the policy puts at `report` or `warn` is logged as `staged` and the deploy goes ahead. The JSON summary gains `staged` and each finding `stage`.
+- The front page lists the supported versions from the bundled policy.
+
+### Deprecated
+
+- None recorded so far.
+
+### Steps
+
+1. Move the PROCTOR constraint in your composer.json from `^0.8` to `^0.9`, then apply it with `composer require waynestate/proctor --dev`.
+2. Re-run the check in CI and read any `overrides` finding first (it blocks the deploy), then `dev-only-packages` and `case-clash`:
+
+   ```bash
+   vendor/bin/proctor check
+   ```
+
+### How to verify
+
+- Run `vendor/bin/proctor check --format=json` and confirm the `version` field reads `0.9.0`.
+
 ## 0.8.0
 
 Released 2026-11-08. This is a pre-1.0 minor: consumers that pin `^0.7` stay on 0.7.x until they move their constraint to `^0.8`. Most of what is new is additive or a warning (the `mysql-eol` check, the `X-Sesame-Assertion` read in `raw-identity-header`, the ADVISOR module, release tags accepted by `preflight-pinned`), but one change can turn a passing run into a failing one.
