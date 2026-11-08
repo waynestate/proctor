@@ -4,6 +4,9 @@
 
 - Added: an override may run at most 90 days past today (CREED rules.override_max_days); a longer one fails the overrides check (proctor/overrides/too-long) and is not applied.
 - Fixed: the docs menu closes with Escape and hands focus back to its button (docs kit synced from Squire).
+- Fixed: the docs kit's copy button no longer covers the first line of code when it says Copied or Failed: over the code it keeps its resting width and shows a check or a cross when the word does not fit (docs kit synced from Squire).
+- Fixed: the front page's version chip shows the full version the docs show (Form 0.8.0, was Form 0.1). It carries `data-docs-version` now, so the docs builder (synced from Squire) rewrites it at every release and `composer docs:check` fails while it is stale.
+- Fixed: the front page lists the gate, node-eol and wayneui-outdated as built, and the check count says twenty-eight.
 - Docs: README and BEST_PRACTICES match 0.8.0 (proctor gate, the release phar, tags, the composer-update rule id); RuleIdContractTest now checks the README rule table.
 - Changed: the deploy layer requires PROCTOR ^0.8 (locked 0.8.0).
 - Fixed: `proctor check` writes a report in every format when a tool error stops the run (exit 2): `text` prints the message as a FAIL line, `json` writes the report shape with `result` set to `error`, an `error` field carrying the message and empty findings, and `sarif` writes a log whose run reports an unsuccessful invocation; before, only `codequality` did. `proctor gate` writes its text verdict on exit 2 too.
