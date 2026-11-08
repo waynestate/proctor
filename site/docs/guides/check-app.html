@@ -138,7 +138,7 @@
 </tbody>
 </table></div>
 <p>An active override downgrades the eol fail to a warning, never the grace-expired one.</p>
-<p>No finding when the policy has no <code>mysql</code> or <code>mariadb</code> component, when the repository names no database version, or for another organization's image that happens to be called mysql (<code>someorg/mysql:8.0</code>).</p>
+<p>No finding when the policy has no <code>mysql</code> or <code>mariadb</code> component, when the repository names no database version, or for another organization's image that happens to be called mysql (<code>someorg/mysql:8.0</code>). A bare major tag such as <code>mysql:8</code> is a floating tag and gets a warning to pin a major.minor; it is not graded as a guessed line.</p>
 <p>Fix by moving the image to an active line, in every place the report names: the compose file and the env example should agree.</p>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
 <thead>

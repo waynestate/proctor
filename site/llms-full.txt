@@ -1148,7 +1148,7 @@ A `@sha256:` digest after the tag is tolerated: the version still comes from the
 
 An active override downgrades the eol fail to a warning, never the grace-expired one.
 
-No finding when the policy has no `mysql` or `mariadb` component, when the repository names no database version, or for another organization's image that happens to be called mysql (`someorg/mysql:8.0`).
+No finding when the policy has no `mysql` or `mariadb` component, when the repository names no database version, or for another organization's image that happens to be called mysql (`someorg/mysql:8.0`). A bare major tag such as `mysql:8` is a floating tag and gets a warning to pin a major.minor; it is not graded as a guessed line.
 
 Fix by moving the image to an active line, in every place the report names: the compose file and the env example should agree.
 
