@@ -88,6 +88,16 @@ Then check it. Windows: `$env:CREED_PATH = "..\creed"; composer creed-copy:check
 checkout, so run it by hand after each refresh. Commit the copy with the CREED commit it came from in the message
 (the manifest records `creed_version` as `unknown` when the export cannot see a tag).
 
+**Weekly CREED copy refresh.** The `creed-copy-refresh` job (`scripts/creed-copy-refresh.sh`) does this without a
+person every Monday at 07:03 America/Detroit, one hour after CREED's policy robot. It clones CREED main with the job
+token, re-exports the copy, reruns the docs builder and the agent-ready builder, then runs `composer creed-copy:check`
+and the full `composer ci`. Only when both pass does it push one commit to main, as "CREED copy bot", with the CREED
+version in the message. No change in the copy (a moved version stamp in `manifest.json` does not count) means no
+commit. A red run pushes nothing, so main stays as it was and next week's run tries again. The schedule is a GitLab
+setting (CI/CD > Schedules, weekly, variable `PROCTOR_JOB=creed-copy`); to run it now, start a pipeline on main from
+the web. GitLab starts no pipeline for a job-token push, which is why the job runs the whole gate before it pushes.
+Use the hand steps above only when a refresh cannot wait for Monday.
+
 ## Adding or changing a check
 
 - Each check has a stable rule id (see "Rule ids" in the README) and a test. Rule ids never get reused.

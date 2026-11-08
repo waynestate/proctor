@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added: a weekly `creed-copy-refresh` CI job (`scripts/creed-copy-refresh.sh`; schedule variable `PROCTOR_JOB=creed-copy`, or by hand from the web on main) re-exports the generated CREED copy in `src/Creed` from CREED main, rebuilds the docs and agent-ready files, runs `composer creed-copy:check` and `composer ci`, and pushes to main with the job token only when both pass; a red run leaves main untouched.
 - Changed: `mysql-eol` warns on a floating major tag such as `mysql:8` or `mysql:5` (pin a major.minor so it can be graded) instead of staying silent (SQUIRE-21c).
 - Tests: the MySQL EOL check proves bare-major tags, the last security-support day and MariaDB images (SQUIRE-21b).
 - Changed: the bundled CREED copy in `src/Creed` is refreshed from CREED 0.1.7-21: the policy gains the `sessions` block (SESAME and Drawbridge session lifetimes), and the latest Laravel patches move to 12.71.0 and 13.40.0 (the first policy-bot refresh).

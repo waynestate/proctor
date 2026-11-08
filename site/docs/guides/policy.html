@@ -89,6 +89,7 @@ PROCTOR_ALLOW_OVERRIDES: &quot;1&quot;
 <p>The <code>policy-age</code> check warns when the policy is more than 60 days old, or when a non-bundled policy has no <code>refreshed_on</code> date, so a stopped CREED refresh is visible instead of silent.</p>
 <h2 id="the-creed-reader-copy">The CREED reader copy<a class="docs-heading-link" aria-label="Link to this section" href="#the-creed-reader-copy">#</a></h2>
 <p>PROCTOR carries a generated copy of the CREED reader under <code>src/Creed/</code> (namespace <code>Waynestate\Proctor\Creed</code>), so it never depends on the CREED package at runtime. <code>composer creed-copy:check</code> verifies the copy against the CREED checkout named by <code>CREED_PATH</code> (default <code>../creed</code>); refresh it by running CREED's <code>bin/export.php</code> against <code>src/Creed/</code>.</p>
+<p>Weekly CREED copy refresh: a scheduled GitLab job (<code>creed-copy-refresh</code>, Mondays, an hour after CREED's policy robot) re-exports the copy from CREED main, rebuilds the docs, runs <code>composer creed-copy:check</code> and <code>composer ci</code>, and pushes to main only when both pass. A red run leaves main untouched.</p>
 <h2 id="related">Related<a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></h2>
 <ul>
 <li><a href="overrides.html">Overrides</a></li>

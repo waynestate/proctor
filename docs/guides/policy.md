@@ -85,6 +85,8 @@ The `policy-age` check warns when the policy is more than 60 days old, or when a
 
 PROCTOR carries a generated copy of the CREED reader under `src/Creed/` (namespace `Waynestate\Proctor\Creed`), so it never depends on the CREED package at runtime. `composer creed-copy:check` verifies the copy against the CREED checkout named by `CREED_PATH` (default `../creed`); refresh it by running CREED's `bin/export.php` against `src/Creed/`.
 
+Weekly CREED copy refresh: a scheduled GitLab job (`creed-copy-refresh`, Mondays, an hour after CREED's policy robot) re-exports the copy from CREED main, rebuilds the docs, runs `composer creed-copy:check` and `composer ci`, and pushes to main only when both pass. A red run leaves main untouched.
+
 ## Related
 
 - [Overrides](overrides.md)

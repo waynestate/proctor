@@ -416,6 +416,12 @@ package at runtime. `composer creed-copy:check` verifies the copy against the
 CREED checkout named by `CREED_PATH` (default `../creed`); refresh it by
 running CREED's `bin/export.php` against `src/Creed/`.
 
+Weekly CREED copy refresh: a scheduled GitLab job (`creed-copy-refresh`,
+Mondays, an hour after CREED's policy robot) re-exports the copy from CREED
+main, rebuilds the docs, runs `composer creed-copy:check` and `composer ci`,
+and pushes to main only when both pass. A red run leaves main untouched.
+Details in MAINTAINING.md, "Refreshing the CREED copy".
+
 ### Proof
 
 Proof runs against real Wayne State applications are on a private site, [proof.apps.wayne.edu/proctor](https://proof.apps.wayne.edu/proctor/), behind a Wayne State employee sign-in.
@@ -2151,6 +2157,8 @@ The `policy-age` check warns when the policy is more than 60 days old, or when a
 
 PROCTOR carries a generated copy of the CREED reader under `src/Creed/` (namespace `Waynestate\Proctor\Creed`), so it never depends on the CREED package at runtime. `composer creed-copy:check` verifies the copy against the CREED checkout named by `CREED_PATH` (default `../creed`); refresh it by running CREED's `bin/export.php` against `src/Creed/`.
 
+Weekly CREED copy refresh: a scheduled GitLab job (`creed-copy-refresh`, Mondays, an hour after CREED's policy robot) re-exports the copy from CREED main, rebuilds the docs, runs `composer creed-copy:check` and `composer ci`, and pushes to main only when both pass. A red run leaves main untouched.
+
 ### Related[#](https://proctor.apps.wayne.edu/docs/guides/policy.html#related)
 
 - [Overrides](https://proctor.apps.wayne.edu/docs/guides/overrides.html)
@@ -2438,6 +2446,8 @@ A vendor copy that cannot be read or parsed is skipped with a note on stderr and
 Every report names the policy it used: origin (`option`, `env`, `vendor` or `bundled`), path, `refreshed_on` and the age in days. The `policy-age` check warns when the policy is more than 60 days old, or when a non-bundled policy has no `refreshed_on` date, so a stopped CREED refresh is visible instead of silent.
 
 PROCTOR carries a generated copy of the CREED reader under `src/Creed/` (namespace `Waynestate\Proctor\Creed`), so it never depends on the CREED package at runtime. `composer creed-copy:check` verifies the copy against the CREED checkout named by `CREED_PATH` (default `../creed`); refresh it by running CREED's `bin/export.php` against `src/Creed/`.
+
+Weekly CREED copy refresh: a scheduled GitLab job (`creed-copy-refresh`, Mondays, an hour after CREED's policy robot) re-exports the copy from CREED main, rebuilds the docs, runs `composer creed-copy:check` and `composer ci`, and pushes to main only when both pass. A red run leaves main untouched.
 
 ### extra.proctor in composer.json[#](https://proctor.apps.wayne.edu/docs/reference/configuration.html#extra-proctor-in-composer-json)
 

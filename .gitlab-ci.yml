@@ -54,6 +54,27 @@ composer-ci:
     - composer install --no-interaction --no-progress --prefer-dist
     - composer ci
 
+# creed-copy-refresh: keeps the generated CREED reader copy in src/Creed current with no
+# person in the loop. It clones CREED main with the job token, re-exports the copy,
+# rebuilds what the copy feeds (docs site, agent-ready files), runs composer
+# creed-copy:check and the full composer ci, and only when both pass pushes one commit to
+# main with the job token. The schedule is a GitLab setting (CI/CD > Schedules: weekly,
+# Monday 07:03 America/Detroit, one hour after CREED's policy robot, with the variable
+# PROCTOR_JOB=creed-copy); a person can also run it by hand from the web on main. It never
+# runs on a branch. GitLab starts no pipeline for a job-token push, so this job runs the
+# gate itself before it pushes. A red run pushes nothing and leaves main untouched; next
+# week's run tries again. The steps live in scripts/creed-copy-refresh.sh.
+creed-copy-refresh:
+  extends: .composer-cache
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/composer:2.10.3
+  variables:
+    GIT_DEPTH: "0"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $PROCTOR_JOB == "creed-copy" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+  script:
+    - sh scripts/creed-copy-refresh.sh
+
 # release-phar: builds the single-file PHAR and ships it with the GitLab Release.
 # Runs on tags only (rules: if: $CI_COMMIT_TAG): the lead cuts the tag, and this
 # job does the rest. No tag, no run. Everything happens inside the already-PHP
