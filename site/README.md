@@ -10,8 +10,9 @@ anywhere (Citadel, any web server, or `python -m http.server` inside `site/` for
   then re-papered: ruled exam paper with a red margin line, exam-book cardstock, a Scantron-style sheet in drop-out
   green.
 - world: an exam. The hero is the examination book on a desk, with the mark as its seal. Page 1 is the instructions to
-  candidates, Part A is the nine checks set as numbered questions with a real report line each, Part B is next term
-  (what is coming, with no commands), then the marking, four carbon copies (the report formats), a note from home
+  candidates, Part A is the nine checks set as numbered questions with a real report line each, Part B is what was
+  added this term (node-eol, wayneui-outdated and the `proctor gate` final, same cards), Part C is next term (what is
+  coming, with no commands), then the marking, four carbon copies (the report formats), a note from home
   (overrides), the exam halls (CI), "you may turn over your paper" (quick start per OS) and a seating chart of the
   WELD parts.
 - magic: the answer sheet marks itself. Scroll through five steps and the pencil fills the bubbles, the red pen

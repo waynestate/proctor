@@ -344,6 +344,16 @@ a:hover { color: var(--crimson); }
 }
 .q:hover .q__tick path, .q:focus-within .q__tick path { stroke-dashoffset: 0; }
 
+/* Part B: the questions that graduated from next term. Same cards, and the
+   final gets a crimson top edge, because finals always feel like that. */
+.partb { margin-top: 56px; }
+.partb__head { max-width: 720px; margin-bottom: 24px; }
+.partb__title { font-size: clamp(1.6rem, 3.4vw, 2.1rem); line-height: 1.12; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.partb__lede { margin-top: 10px; color: var(--muted); font-size: 1.04rem; }
+.chip--new { background: var(--green); color: var(--white); }
+.q--final { border-top-color: var(--crimson); }
+.q--final .q__no span { background: var(--crimson); }
+
 /* Next term */
 .nextterm {
   margin-top: 40px; padding: 22px 22px 18px;

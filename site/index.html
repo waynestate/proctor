@@ -180,7 +180,7 @@
       <header class="sec-head">
         <p class="sec-head__part">Part A</p>
         <h2 id="questions-title">The questions</h2>
-        <p>Nine of PROCTOR's twenty-seven checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures.</p>
+        <p>Nine of PROCTOR's twenty-eight checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures.</p>
       </header>
 
       <ol class="questions">
@@ -208,7 +208,7 @@
         <li class="q" data-reveal>
           <p class="q__no"><span>Q4</span><code>lock-committed</code></p>
           <h3 class="q__ask">Did you hand in your <code>composer.lock</code>?</h3>
-          <p class="q__rubric">Missing from the app path fails. In CI the working tree is a clone, so present means committed.</p>
+          <p class="q__rubric">Missing from the app path fails. In CI the working tree is a clone, so present means committed. A lock whose content-hash no longer matches <code>composer.json</code> warns: you changed the question after you answered it.</p>
           <p class="q__answer"><span class="mark mark--pass">PASS</span> lock-committed: composer.lock is present</p>
           <svg class="q__tick" viewBox="0 0 40 30" aria-hidden="true"><path pathLength="1" d="M3 16 L14 26 L37 3"/></svg>
         </li>
@@ -249,15 +249,42 @@
         </li>
       </ol>
 
+      <div class="partb">
+        <header class="partb__head" data-reveal>
+          <p class="sec-head__part">Part B</p>
+          <h3 class="partb__title">Added this term <span class="chip chip--new">Built</span></h3>
+          <p class="partb__lede">Last term these were on the coming-soon list. They are built and released now, so they get real answers too. Lock in sync joined Q4 above.</p>
+        </header>
+        <ol class="questions">
+          <li class="q" data-reveal>
+            <p class="q__no"><span>Q10</span><code>node-eol</code></p>
+            <h4 class="q__ask">Is every Node version you pin still supported?</h4>
+            <p class="q__rubric">Reads <code>.nvmrc</code>, <code>.node-version</code>, Volta, and the <code>node</code> images in <code>.gitlab-ci.yml</code> and the Dockerfile. Same table as the PHP floor: active passes, security-only warns with the days left, end of life fails. An odd major always warns.</p>
+            <p class="q__answer"><span class="mark mark--fail">FAIL</span> node-eol: node 20 (.gitlab-ci.yml) is eol_grace_expired (security support ended 2026-04-30)</p>
+            <svg class="q__tick" viewBox="0 0 40 30" aria-hidden="true"><path pathLength="1" d="M3 16 L14 26 L37 3"/></svg>
+          </li>
+          <li class="q" data-reveal>
+            <p class="q__no"><span>Q11</span><code>wayneui-outdated</code></p>
+            <h4 class="q__ask">Is your WayneUI the latest of its line?</h4>
+            <p class="q__rubric">Checks the Composer lock, the npm lock and any committed <code>wayne-ui.css</code> copy, each on its own. Behind is a warning; a project can opt in to failing on a stale pasted copy.</p>
+            <p class="q__answer"><span class="mark mark--warn">WARN</span> wayneui-outdated: composer.lock locks WayneUI 2.0.5; the latest 2.x is 2.0.8. Update with: composer update waynestate/wayne-ui</p>
+            <svg class="q__tick" viewBox="0 0 40 30" aria-hidden="true"><path pathLength="1" d="M3 16 L14 26 L37 3"/></svg>
+          </li>
+          <li class="q q--final" data-reveal>
+            <p class="q__no"><span>Final</span><code>proctor gate</code></p>
+            <h4 class="q__ask">Is this release safe to deploy?</h4>
+            <p class="q__rubric">Runs the deploy-time checks and ratchets them against what is live now. A new failure blocks; one the live release already had is held, so old problems never stop a fix. Exit 0 is go, 1 is no-go. Squire's release script asks it before every deploy.</p>
+            <p class="q__answer"><span class="mark mark--fail">BLOCK</span> php-floor: php floor 7.4 is eol_grace_expired [regression: this rule passed on the baseline]</p>
+            <svg class="q__tick" viewBox="0 0 40 30" aria-hidden="true"><path pathLength="1" d="M3 16 L14 26 L37 3"/></svg>
+          </li>
+        </ol>
+      </div>
+
       <div class="nextterm" data-reveal>
-        <h3 class="nextterm__title">Part B: next term <span class="chip chip--soon">Coming soon</span></h3>
-        <p class="nextterm__lede">Planned but not built yet, so there are no commands for these.</p>
+        <h3 class="nextterm__title">Part C: next term <span class="chip chip--soon">Coming soon</span></h3>
+        <p class="nextterm__lede">Planned but not built yet, so there is no command for it.</p>
         <ul class="nextterm__list">
-          <li><strong>The release gate.</strong> <code>proctor gate</code> against the image that will actually serve the app, with a ratchet that blocks new problems before old ones.</li>
           <li><strong>Security headers and CSP.</strong> HELMET sets them; PROCTOR will check they are there.</li>
-          <li><strong>The WayneUI contract.</strong> Checks that the app uses WayneUI at a supported version.</li>
-          <li><strong>Node versions.</strong> Today only the Vue and Inertia locks are read.</li>
-          <li><strong>Lock in sync.</strong> Flags a lock whose hash no longer matches <code>composer.json</code>.</li>
         </ul>
       </div>
     </div>

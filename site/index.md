@@ -46,7 +46,7 @@ Part A
 
 ## The questions
 
-Nine of PROCTOR's twenty-seven checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures.
+Nine of PROCTOR's twenty-eight checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures.
 
 1. Q1 `php-floor`
    ### Is the lowest PHP your `composer.json` allows still supported?
@@ -62,7 +62,7 @@ Nine of PROCTOR's twenty-seven checks, in the order they run. Each one shows a r
    FAIL unbounded-constraints: vendor/any constraint "\*" is unbounded
 4. Q4 `lock-committed`
    ### Did you hand in your `composer.lock`?
-   Missing from the app path fails. In CI the working tree is a clone, so present means committed.
+   Missing from the app path fails. In CI the working tree is a clone, so present means committed. A lock whose content-hash no longer matches `composer.json` warns: you changed the question after you answered it.
    PASS lock-committed: composer.lock is present
 5. Q5 `portability`
    ### Would the app still run on another host?
@@ -85,15 +85,30 @@ Nine of PROCTOR's twenty-seven checks, in the order they run. Each one shows a r
    Every expired entry in `policy-overrides.json` fails. Active ones still appear in every report, and one that expires within 14 days gets a warning.
    FAIL overrides: override for "lock-committed" expired on 2026-01-01
 
-### Part B: next term Coming soon
+Part B
 
-Planned but not built yet, so there are no commands for these.
+### Added this term Built
 
-- **The release gate.** `proctor gate` against the image that will actually serve the app, with a ratchet that blocks new problems before old ones.
+Last term these were on the coming-soon list. They are built and released now, so they get real answers too. Lock in sync joined Q4 above.
+
+1. Q10 `node-eol`
+   #### Is every Node version you pin still supported?
+   Reads `.nvmrc`, `.node-version`, Volta, and the `node` images in `.gitlab-ci.yml` and the Dockerfile. Same table as the PHP floor: active passes, security-only warns with the days left, end of life fails. An odd major always warns.
+   FAIL node-eol: node 20 (.gitlab-ci.yml) is eol_grace_expired (security support ended 2026-04-30)
+2. Q11 `wayneui-outdated`
+   #### Is your WayneUI the latest of its line?
+   Checks the Composer lock, the npm lock and any committed `wayne-ui.css` copy, each on its own. Behind is a warning; a project can opt in to failing on a stale pasted copy.
+   WARN wayneui-outdated: composer.lock locks WayneUI 2.0.5; the latest 2.x is 2.0.8. Update with: composer update waynestate/wayne-ui
+3. Final `proctor gate`
+   #### Is this release safe to deploy?
+   Runs the deploy-time checks and ratchets them against what is live now. A new failure blocks; one the live release already had is held, so old problems never stop a fix. Exit 0 is go, 1 is no-go. Squire's release script asks it before every deploy.
+   BLOCK php-floor: php floor 7.4 is eol_grace_expired \[regression: this rule passed on the baseline\]
+
+### Part C: next term Coming soon
+
+Planned but not built yet, so there is no command for it.
+
 - **Security headers and CSP.** HELMET sets them; PROCTOR will check they are there.
-- **The WayneUI contract.** Checks that the app uses WayneUI at a supported version.
-- **Node versions.** Today only the Vue and Inertia locks are read.
-- **Lock in sync.** Flags a lock whose hash no longer matches `composer.json`.
 
 Marking
 
