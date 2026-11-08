@@ -1,6 +1,6 @@
 {
     "schema_version": 1,
-    "refreshed_on": "2026-10-29",
+    "refreshed_on": "2026-11-08",
     "components": {
         "php": {
             "versions": {
@@ -76,8 +76,8 @@
                 "12": {
                     "active_until": "2026-08-13",
                     "security_until": "2027-02-24",
-                    "latest_patch": "12.70.2",
-                    "latest_patch_checked": "2026-10-28",
+                    "latest_patch": "12.71.0",
+                    "latest_patch_checked": "2026-11-08",
                     "requires": {
                         "php": {
                             "min": "8.2",
@@ -90,8 +90,8 @@
                 "13": {
                     "active_until": "2027-09-30",
                     "security_until": "2028-03-17",
-                    "latest_patch": "13.39.0",
-                    "latest_patch_checked": "2026-10-28",
+                    "latest_patch": "13.40.0",
+                    "latest_patch_checked": "2026-11-08",
                     "requires": {
                         "php": {
                             "min": "8.3",

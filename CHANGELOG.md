@@ -4,7 +4,7 @@
 
 - Changed: `mysql-eol` warns on a floating major tag such as `mysql:8` or `mysql:5` (pin a major.minor so it can be graded) instead of staying silent (SQUIRE-21c).
 - Tests: the MySQL EOL check proves bare-major tags, the last security-support day and MariaDB images (SQUIRE-21b).
-- Changed: the bundled CREED copy in `src/Creed` is refreshed from CREED 0.1.7-20: the policy gains the `sessions` block (SESAME and Drawbridge session lifetimes).
+- Changed: the bundled CREED copy in `src/Creed` is refreshed from CREED 0.1.7-21: the policy gains the `sessions` block (SESAME and Drawbridge session lifetimes), and the latest Laravel patches move to 12.71.0 and 13.40.0 (the first policy-bot refresh).
 - Added: an ADVISOR module (`Waynestate\Proctor\Advisor\ProctorModule`): a coding agent that runs ADVISOR gains two read-only tools, `proctor_rules` (every rule id, and which are in the deploy gate) and `proctor_check` (PROCTOR's file checks on an app folder, in-process; the subprocess and `.env` checks are skipped and listed).
 - Added: `crlf-deploy-script` fails when a deploy script (`build.sh`, `release.sh`, or a `.sh` under `deployments/`, `deploy_scripts/`, `deploy/` or `scripts/`) has Windows line endings, which break it on Linux (SQUIRE-17). It is not part of the deploy gate.
 - Changed: the front page's deploy layer (`deploy/`) runs Squire's kit 0.6.0 (was 0.5.0): `scripts/release.sh` asks PROCTOR's deploy gate for a go or no-go on each release (a report, not a stop, unless `SQUIRE_PROCTOR=enforce`), and `.env.squire.example` lists the new setting. The layer's pins move to HELMET `^0.4` (locked 0.4.0) and PROCTOR `^0.7` (locked 0.7.0).
