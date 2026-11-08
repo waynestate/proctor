@@ -1079,8 +1079,9 @@ each MySQL and MariaDB line's dates. What was missing was a check that reads whi
 **How the stack holds it: Checked.** The `mysql-eol` check grades every MySQL or MariaDB version the repository names
 (an official `mysql` or `mariadb` image on an `image:` line in a root `docker-compose*.yml` or `compose*.yml`, and
 `SQUIRE_MYSQL_IMAGE=mysql:<version>` in `.env.squire.example` or `.env.example`) with the same table as `php-floor`,
-except a supported version stays silent instead of passing: active is silent, security-only warns with the days left,
-eol fails, and past the grace window it fails as `eol_grace_expired`, which no override softens. A `@sha256:` digest
+except a supported version stays silent instead of passing and nothing fails: active is silent, security-only warns
+with the days left, and eol and `eol_grace_expired` warn until Citadel's shared database server offers a supported
+MySQL (D-008, D-053); then eol fails again. A `@sha256:` digest
 after the tag is tolerated; the version comes from the tag. Silent when the policy has no mysql or mariadb component.
 `MysqlEolCheckTest` pins every source and state.
 
