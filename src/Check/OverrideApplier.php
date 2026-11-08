@@ -146,11 +146,14 @@ final class OverrideApplier
      * EOL exception, per the stack's version policy: "EOL + 90 days: fail; no override") or when
      * it comes from the overrides check itself: an expired override must
      * always fail, even if another active override names the overrides check.
+     * The override-approver check is never overridable for the same reason:
+     * a self-approved override must not waive the finding that names it.
      */
     private function isOverridable(Finding $finding): bool
     {
         return $finding->state !== State::EolGraceExpired
-            && $finding->checkId !== OverridesCheck::ID;
+            && $finding->checkId !== OverridesCheck::ID
+            && $finding->checkId !== OverrideApproverCheck::ID;
     }
 
     /**

@@ -174,9 +174,10 @@ final class RepoFiles
     /**
      * The git executable on PATH, or null. Resolving the path first keeps
      * proc_open from printing a spawn warning into the report when git is
-     * absent (the CLI tests run with a PATH that finds no tools).
+     * absent (the CLI tests run with a PATH that finds no tools). Shared with
+     * OverrideApproverCheck, which must find git the same way.
      */
-    private static function findGit(): ?string
+    public static function findGit(): ?string
     {
         $pathEnv = getenv('PATH');
         if ($pathEnv === false || $pathEnv === '') {

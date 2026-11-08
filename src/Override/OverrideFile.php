@@ -6,6 +6,7 @@ namespace Waynestate\Proctor\Override;
 
 use DateTimeImmutable;
 use Waynestate\Proctor\Check\ComposerAuditCheck;
+use Waynestate\Proctor\Check\OverrideApproverCheck;
 use Waynestate\Proctor\Check\OverridesCheck;
 use Waynestate\Proctor\ToolError;
 
@@ -122,10 +123,13 @@ final class OverrideFile
         // An override cannot exempt the check that polices overrides: an
         // expired override must always fail, so targeting the overrides
         // check is rejected here instead of being silently ignored.
-        if ($check === OverridesCheck::ID) {
+        // The same goes for the check that flags a self-approved override:
+        // an author could otherwise approve their own waiver of it.
+        if ($check === OverridesCheck::ID || $check === OverrideApproverCheck::ID) {
             throw new ToolError(sprintf(
-                '%s: an override cannot target the overrides check.',
+                '%s: an override cannot target the %s check.',
                 $where,
+                $check,
             ));
         }
 

@@ -131,6 +131,10 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/overrides/expiring',
         'proctor/overrides/too-long',
         'proctor/overrides/unused',
+        // override-approver
+        'proctor/override-approver',
+        'proctor/override-approver/self-approved',
+        'proctor/override-approver/could-not-run',
     ];
 
     public function testEveryFindingCarriesAKnownRuleId(): void

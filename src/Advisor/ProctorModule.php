@@ -12,6 +12,7 @@ use Waynestate\Advisor\Module\ToolDefinition;
 use Waynestate\Proctor\Check\CheckRunner;
 use Waynestate\Proctor\Check\CheckSet;
 use Waynestate\Proctor\Check\Finding;
+use Waynestate\Proctor\Check\OverrideApproverCheck;
 use Waynestate\Proctor\Check\OverridesCheck;
 use Waynestate\Proctor\Creed\Policy;
 use Waynestate\Proctor\Override\OverrideFile;
@@ -60,8 +61,8 @@ final class ProctorModule implements Module
      * composer-audit, composer-version and wayneui-outdated run composer;
      * instant-client-committed, the WayneUI checks and every check built on
      * RepoFiles (node-eol, env-outside-config, raw-identity-header,
-     * served-folder, world-writable) run git. app-key reads committed .env
-     * files (and runs git too).
+     * served-folder, world-writable) run git, and override-approver runs git
+     * blame. app-key reads committed .env files (and runs git too).
      *
      * @var array<string, string>
      */
@@ -77,6 +78,7 @@ final class ProctorModule implements Module
         'world-writable' => self::REASON_SUBPROCESS,
         'wayneui-forked-views' => self::REASON_SUBPROCESS,
         'wayneui-outdated' => self::REASON_SUBPROCESS,
+        'override-approver' => self::REASON_SUBPROCESS,
     ];
 
     public const DOCS = 'https://proctor.apps.wayne.edu/docs/';
@@ -144,11 +146,12 @@ final class ProctorModule implements Module
 
     /**
      * The docs URL for a check: its guide page, anchored on its id. The
-     * overrides check has a page of its own.
+     * overrides check, and the override-approver check that reads the same
+     * file, have a page of their own.
      */
     public static function docsUrl(string $checkId): string
     {
-        if ($checkId === OverridesCheck::ID) {
+        if ($checkId === OverridesCheck::ID || $checkId === OverrideApproverCheck::ID) {
             return self::DOCS . 'guides/overrides.html';
         }
 

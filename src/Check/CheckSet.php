@@ -24,6 +24,8 @@ final class CheckSet
      * framework line and its PHP range, the lock file, known advisories, and
      * the overrides themselves (an expired override always blocks).
      * policy-age rides along so a stale policy is visible in the deploy log.
+     * override-approver stays out: it reads git history, which a deploy host
+     * may not have, and the approval question is answered once, in CI.
      */
     public const GATE = [
         'php-floor',
@@ -77,6 +79,7 @@ final class CheckSet
             new WayneUiForkedViewsCheck(),
             new WayneUiOutdatedCheck(),
             new OverridesCheck(),
+            new OverrideApproverCheck(),
             new PolicyAgeCheck($resolved),
         ];
     }

@@ -237,6 +237,9 @@ The full set, grouped by check:
 | `overrides` | `proctor/overrides/expiring` |
 | `overrides` | `proctor/overrides/too-long` |
 | `overrides` | `proctor/overrides/unused` |
+| `override-approver` | `proctor/override-approver` |
+| `override-approver` | `proctor/override-approver/self-approved` |
+| `override-approver` | `proctor/override-approver/could-not-run` |
 | `unbounded-constraints` | `proctor/unbounded-constraints` |
 | `unbounded-constraints` | `proctor/unbounded-constraints/unbounded` |
 | `unbounded-constraints` | `proctor/unbounded-constraints/repository` |
