@@ -33,6 +33,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/case-clash',
         'proctor/overrides',
         'proctor/unbounded-constraints',
+        'proctor/dev-only-packages',
         'proctor/composer-config',
         'proctor/portability',
         'proctor/mysql56',
@@ -71,6 +72,9 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/unbounded-constraints/repository',
         'proctor/unbounded-constraints/minimum-stability',
         'proctor/unbounded-constraints/insecure-url',
+        // dev-only-packages
+        'proctor/dev-only-packages/exposes-internals',
+        'proctor/dev-only-packages/test-tool',
         // composer-config
         'proctor/composer-config/allow-plugins-all',
         'proctor/composer-config/secure-http-off',

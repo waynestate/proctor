@@ -38,6 +38,9 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `unbounded-constraints` | `proctor/unbounded-constraints/repository` |
 | `unbounded-constraints` | `proctor/unbounded-constraints/minimum-stability` |
 | `unbounded-constraints` | `proctor/unbounded-constraints/insecure-url` |
+| `dev-only-packages` | `proctor/dev-only-packages` |
+| `dev-only-packages` | `proctor/dev-only-packages/exposes-internals` |
+| `dev-only-packages` | `proctor/dev-only-packages/test-tool` |
 | `composer-config` | `proctor/composer-config` |
 | `composer-config` | `proctor/composer-config/allow-plugins-all` |
 | `composer-config` | `proctor/composer-config/secure-http-off` |

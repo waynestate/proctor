@@ -58,6 +58,7 @@ final class CheckSet
             new NodeEolCheck(),
             new MysqlEolCheck(),
             new UnboundedConstraintsCheck(),
+            new DevOnlyPackagesCheck(),
             new ComposerConfigCheck(),
             new LockCommittedCheck(),
             new PortabilityCheck(),

@@ -41,7 +41,7 @@
   <div class="docs-content">
     <main id="main">
       <article class="docs-article"><h1 id="composer-checks">Composer checks<a class="docs-heading-link" aria-label="Link to this section" href="#composer-checks">#</a></h1>
-<p>This page covers the six PROCTOR checks that read composer.json and composer.lock: unbounded constraints, unsafe composer settings, the committed lock, audit results, the Composer version on PATH, and credentials in repository URLs. Run <code>vendor/bin/proctor check</code> against the app path, then fix the finding the report names. The proctor checks the pens before it checks the answers.</p>
+<p>This page covers the seven PROCTOR checks that read composer.json and composer.lock: unbounded constraints, development-only packages in require, unsafe composer settings, the committed lock, audit results, the Composer version on PATH, and credentials in repository URLs. Run <code>vendor/bin/proctor check</code> against the app path, then fix the finding the report names. The proctor checks the pens before it checks the answers.</p>
 <h2 id="unbounded-constraints">unbounded-constraints<a class="docs-heading-link" aria-label="Link to this section" href="#unbounded-constraints">#</a></h2>
 <p><code>unbounded-constraints</code> fails for every runtime constraint that is <code>*</code>, names a <code>dev-</code> branch, carries <code>@dev</code>, has a lower bound with no upper bound, or matches the policy's <code>banned_constraints</code>. Each unbounded constraint is its own failure (<code>proctor/unbounded-constraints/unbounded</code>), naming the package and the offending constraint.</p>
 <p>Three more rules warn, and never fail:</p>
@@ -78,6 +78,36 @@
 <tr>
 <td><code>unbounded-constraints</code></td>
 <td><code>proctor/unbounded-constraints/insecure-url</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="dev-only-packages">dev-only-packages<a class="docs-heading-link" aria-label="Link to this section" href="#dev-only-packages">#</a></h2>
+<p><code>dev-only-packages</code> looks at the <code>require</code> block of composer.json, never <code>require-dev</code>, and flags the tools that belong in <code>require-dev</code> because putting them in <code>require</code> ships them to production.</p>
+<p>Two rules report, and neither is in the deploy gate:</p>
+<ul>
+<li><code>exposes-internals</code> fails for Laravel Boost and both spellings of Debugbar (<code>barryvdh/laravel-debugbar</code>, <code>fruitcake/laravel-debugbar</code>), because a debug panel or a Boost helper installed in production exposes app internals. It warns for Laravel Telescope, which may stay in <code>require</code> only if the app registers it for local use as Laravel's Telescope docs describe.</li>
+<li><code>test-tool</code> warns for phpunit, Pest, Mockery, Sail, Pail and Collision, because a test or development tool in <code>require</code> installs in production where it is not needed.</li>
+</ul>
+<p>Each finding names the package and the fix: move it to <code>require-dev</code> with <code>composer remove &lt;package&gt; &amp;&amp; composer require --dev &lt;package&gt;</code>. With none of them in <code>require</code> it passes: <code>no development tool is in require</code>.</p>
+<div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Rule id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>dev-only-packages</code></td>
+<td><code>proctor/dev-only-packages</code></td>
+</tr>
+<tr>
+<td><code>dev-only-packages</code></td>
+<td><code>proctor/dev-only-packages/exposes-internals</code></td>
+</tr>
+<tr>
+<td><code>dev-only-packages</code></td>
+<td><code>proctor/dev-only-packages/test-tool</code></td>
 </tr>
 </tbody>
 </table></div>
@@ -270,7 +300,7 @@
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../../docs/guides/checks-overview.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">Checks</span></a><a class="docs-pager__link docs-pager__link--next" href="../../docs/guides/check-php.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">PHP checks</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#unbounded-constraints">unbounded-constraints</a></li><li class="docs-toc__item"><a href="#composer-config">composer-config</a></li><li class="docs-toc__item"><a href="#lock-committed">lock-committed</a></li><li class="docs-toc__item"><a href="#composer-audit">composer-audit</a></li><li class="docs-toc__item"><a href="#composer-version">composer-version</a></li><li class="docs-toc__item"><a href="#repo-url-credentials">repo-url-credentials</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#unbounded-constraints">unbounded-constraints</a></li><li class="docs-toc__item"><a href="#dev-only-packages">dev-only-packages</a></li><li class="docs-toc__item"><a href="#composer-config">composer-config</a></li><li class="docs-toc__item"><a href="#lock-committed">lock-committed</a></li><li class="docs-toc__item"><a href="#composer-audit">composer-audit</a></li><li class="docs-toc__item"><a href="#composer-version">composer-version</a></li><li class="docs-toc__item"><a href="#repo-url-credentials">repo-url-credentials</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.8.0</span></span>

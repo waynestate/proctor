@@ -96,6 +96,7 @@ vendor/bin/proctor gate [--path=.] [--format=text|json] [--baseline=<report or d
 - `node-eol`: grades every Node version the repository pins against the policy as of `--today`: `.nvmrc`, `.node-version`, package.json `volta.node`, an official `node` image in `.gitlab-ci.yml` (`image:` or `name:`, a registry host or `$CI_DEPENDENCY_PROXY_...` prefix allowed), and an official `node` image on a Dockerfile `FROM` line. Each one gets the CREED state table: active passes, security-only warns with the days left, eol fails, and past the grace window it fails as `eol_grace_expired`, which no override softens. package.json `engines.node` is a declaration, not what runs, so its lowest allowed major is graded the same way but warns at worst (`proctor/node-eol/engines`). An odd major is never an LTS line and never a target, so it warns wherever it is named (`proctor/node-eol/odd-major`). Silent when the policy has no node component or the repository names no Node version, and for aliases (`lts/*`, `node`), tags without a version (`lts-alpine`) and another org's image named node. The proctor checks which calculator is on the desk, not only the one the syllabus allows.
 - `mysql-eol`: grades every MySQL or MariaDB version the repository names against the policy as of `--today`: an official `mysql` or `mariadb` image on an `image:` line in a root `docker-compose*.yml` or `compose*.yml` (a registry host or a `$VAR` prefix allowed, a `@sha256:` digest after the tag tolerated), and `SQUIRE_MYSQL_IMAGE=mysql:` in `.env.squire.example` or `.env.example`. Each one gets the CREED state table: active stays silent, security-only warns with the days left, and eol and `eol_grace_expired` warn, never fail, until Citadel's shared database server offers a supported MySQL (D-008). Silent when the policy has no mysql or mariadb component, or the repository names no database version. The proctor checks which textbook the desk is set up for, not only the one the syllabus allows.
 - `unbounded-constraints`: fails for every runtime constraint that is `*`, names a dev- branch, carries `@dev`, has a lower bound with no upper bound, or matches the policy's `banned_constraints`; warns on `path` and `vcs` repositories, on a `minimum-stability` below stable, and on a repository URL that is plain http. `require-dev`, `php`, `ext-*` and `lib-*` are not checked. No open-ended answers in this hall.
+- `dev-only-packages`: fails when Laravel Boost or Debugbar is in `require`, because they install in production and expose app internals; warns when Telescope is in `require` (keep it there only if the app registers it for local use) and when a test tool (phpunit, Pest, Mockery, Sail, Pail, Collision) is in `require`. It reads only `require`, never `require-dev`. It reports, and is not in the deploy gate.
 - `composer-config`: warns when composer.json opens a door Composer closes by default: `allow-plugins` set to `true`, `secure-http` set to `false`, `lock` set to `false`, `audit.block-insecure` set to `false`, `config.policy` set to `false`, `policy.malware` set to `false` or `policy.advisories` set to `false`; notes when `require.php` is set without `config.platform.php`. Warning and info only, never a fail, so an app that passes today keeps passing.
 - `lock-committed`: fails when composer.lock is missing from the app path. When the lock is present and its `content-hash` is a real 32-hex hash, it warns (`proctor/lock-committed/out-of-sync`) when the hash no longer matches composer.json, so a stale lock that still installs is visible instead of silent; the warning never changes the exit code.
 - `portability`: warns when code hard-codes a platform fact: an absolute host path, a hard-coded proxy address, a local-disk session store, or a php_value/php_flag line in .htaccess. PHP files are matched on the syntax tree (nikic/php-parser with names resolved), not with regular expressions, so a comment or string that merely mentions a banned call is not flagged and a call split over several lines, or hidden behind a `use function ... as ...` alias, is. A call through a variable (`$f()`) is reported as an info note, never as a pass. Scanned: every *.php file, every file under the top-level `config/` directory, and every `.htaccess`. Skipped at any depth: `vendor/`, `node_modules/`, `storage/`, `tests/` and `.git/`; in a Laravel app (an `artisan` file at the project root) also the top-level `bootstrap/cache/`, which holds the generated output of `php artisan optimize` (config.php, routes-v7.php, services.php, packages.php, events.php) instead of app code. A raw-PHP app that keeps its own `bootstrap/cache/` folder is scanned as before.
@@ -236,6 +237,9 @@ The full set, grouped by check:
 | `unbounded-constraints` | `proctor/unbounded-constraints/repository` |
 | `unbounded-constraints` | `proctor/unbounded-constraints/minimum-stability` |
 | `unbounded-constraints` | `proctor/unbounded-constraints/insecure-url` |
+| `dev-only-packages` | `proctor/dev-only-packages` |
+| `dev-only-packages` | `proctor/dev-only-packages/exposes-internals` |
+| `dev-only-packages` | `proctor/dev-only-packages/test-tool` |
 | `composer-config` | `proctor/composer-config` |
 | `composer-config` | `proctor/composer-config/allow-plugins-all` |
 | `composer-config` | `proctor/composer-config/secure-http-off` |
@@ -555,7 +559,7 @@ Run `vendor/bin/proctor check` in a PHP app and it checks the app against CREED'
 
 [Sit the exam](https://proctor.apps.wayne.edu/#start-title) [Watch it mark a paper](https://proctor.apps.wayne.edu/#sheet-title)
 
-- **30** checks
+- **31** checks
 - **4** report formats
 - **3** exit codes
 - **0** policy of its own
@@ -581,7 +585,7 @@ Part A
 
 ### The questions
 
-Nine of PROCTOR's thirty checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures.
+Nine of PROCTOR's thirty-one checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures.
 
 1. Q1 `php-floor`
    ### Is the lowest PHP your `composer.json` allows still supported?
@@ -1500,7 +1504,7 @@ Source: https://proctor.apps.wayne.edu/docs/guides/check-composer.html
 
 ## Composer checks[#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-checks)
 
-This page covers the six PROCTOR checks that read composer.json and composer.lock: unbounded constraints, unsafe composer settings, the committed lock, audit results, the Composer version on PATH, and credentials in repository URLs. Run `vendor/bin/proctor check` against the app path, then fix the finding the report names. The proctor checks the pens before it checks the answers.
+This page covers the seven PROCTOR checks that read composer.json and composer.lock: unbounded constraints, development-only packages in require, unsafe composer settings, the committed lock, audit results, the Composer version on PATH, and credentials in repository URLs. Run `vendor/bin/proctor check` against the app path, then fix the finding the report names. The proctor checks the pens before it checks the answers.
 
 ### unbounded-constraints[#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#unbounded-constraints)
 
@@ -1521,6 +1525,23 @@ Three more rules warn, and never fail:
 | `unbounded-constraints` | `proctor/unbounded-constraints/repository` |
 | `unbounded-constraints` | `proctor/unbounded-constraints/minimum-stability` |
 | `unbounded-constraints` | `proctor/unbounded-constraints/insecure-url` |
+
+### dev-only-packages[#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#dev-only-packages)
+
+`dev-only-packages` looks at the `require` block of composer.json, never `require-dev`, and flags the tools that belong in `require-dev` because putting them in `require` ships them to production.
+
+Two rules report, and neither is in the deploy gate:
+
+- `exposes-internals` fails for Laravel Boost and both spellings of Debugbar (`barryvdh/laravel-debugbar`, `fruitcake/laravel-debugbar`), because a debug panel or a Boost helper installed in production exposes app internals. It warns for Laravel Telescope, which may stay in `require` only if the app registers it for local use as Laravel's Telescope docs describe.
+- `test-tool` warns for phpunit, Pest, Mockery, Sail, Pail and Collision, because a test or development tool in `require` installs in production where it is not needed.
+
+Each finding names the package and the fix: move it to `require-dev` with `composer remove <package> && composer require --dev <package>`. With none of them in `require` it passes: `no development tool is in require`.
+
+| Check | Rule id |
+| --- | --- |
+| `dev-only-packages` | `proctor/dev-only-packages` |
+| `dev-only-packages` | `proctor/dev-only-packages/exposes-internals` |
+| `dev-only-packages` | `proctor/dev-only-packages/test-tool` |
 
 ### composer-config[#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-config)
 
@@ -1795,7 +1816,7 @@ This page lists every check PROCTOR runs in a single `vendor/bin/proctor check` 
 
 ![Nine real lines from PROCTOR's text report, one per check shown: FAIL php-floor, WARN unpatched, FAIL unbounded-constraints, PASS lock-committed, WARN portability, WARN mysql56, WARN ci-pipelines, PASS composer-audit, FAIL overrides. Each line is written in words; color only repeats what the word says.](https://proctor.apps.wayne.edu/docs/readme/report.svg)
 
-*Nine of the thirty checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
+*Nine of the thirty-one checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
 
 ### How a check reports[#](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html#how-a-check-reports)
 
@@ -1805,9 +1826,10 @@ Every finding also carries a stable, namespaced rule id: `proctor/<check-id>` fo
 
 ### Composer[#](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html#composer)
 
-The six checks that read composer.json and composer.lock. Details and fixes: [Composer checks](https://proctor.apps.wayne.edu/docs/guides/check-composer.html).
+The seven checks that read composer.json and composer.lock. Details and fixes: [Composer checks](https://proctor.apps.wayne.edu/docs/guides/check-composer.html).
 
 - `unbounded-constraints`: fails for every runtime constraint that is `*`, names a `dev-` branch, carries `@dev`, has a lower bound with no upper bound, or matches the policy's `banned_constraints`; warns on `path` and `vcs` repositories, on a `minimum-stability` below stable, and on a repository URL that is plain http. `require-dev`, `php`, `ext-*` and `lib-*` are not checked.
+- `dev-only-packages`: fails when Laravel Boost or Debugbar is in `require`, because they install in production and expose app internals; warns when Telescope is in `require` (keep it there only if the app registers it for local use) and when a test tool (phpunit, Pest, Mockery, Sail, Pail, Collision) is in `require`. It reads only `require`, never `require-dev`.
 - `composer-config`: warns when composer.json opens a door Composer closes by default: `allow-plugins` set to `true`, `secure-http` set to `false`, `lock` set to `false`, `audit.block-insecure` set to `false`, `config.policy` set to `false`, `policy.malware` set to `false` or `policy.advisories` set to `false`; notes when `require.php` is set without `config.platform.php`. Warning and info only, never a fail.
 - `lock-committed`: fails when composer.lock is missing from the app path. When the lock is present and its `content-hash` is a real 32-hex hash, it warns (`proctor/lock-committed/out-of-sync`) when the hash no longer matches composer.json, so a stale lock that still installs is visible instead of silent; the warning never changes the exit code.
 - `composer-audit`: fails for advisories at or above the policy's `audit_severity_threshold`, warns for lower ones, and reports info when composer or the lock file is absent. Fails (`proctor/composer-audit/could-not-run`) when the audit runs but its stdout is not parseable JSON, because a green run that audited nothing is worse than a red one. Abandoned packages follow the policy's `abandoned_packages` rule: a fail under `fail` (the default), a warning under `report`, nothing under `ignore` (`proctor/composer-audit/abandoned`).
@@ -2829,6 +2851,9 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `unbounded-constraints` | `proctor/unbounded-constraints/repository` |
 | `unbounded-constraints` | `proctor/unbounded-constraints/minimum-stability` |
 | `unbounded-constraints` | `proctor/unbounded-constraints/insecure-url` |
+| `dev-only-packages` | `proctor/dev-only-packages` |
+| `dev-only-packages` | `proctor/dev-only-packages/exposes-internals` |
+| `dev-only-packages` | `proctor/dev-only-packages/test-tool` |
 | `composer-config` | `proctor/composer-config` |
 | `composer-config` | `proctor/composer-config/allow-plugins-all` |
 | `composer-config` | `proctor/composer-config/secure-http-off` |

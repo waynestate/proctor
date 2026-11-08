@@ -97,6 +97,7 @@ final class ProctorModule implements Module
         'mysql56' => 'check-php',
         'policy-age' => 'check-php',
         'unbounded-constraints' => 'check-composer',
+        'dev-only-packages' => 'check-composer',
         'composer-config' => 'check-composer',
         'lock-committed' => 'check-composer',
         'composer-audit' => 'check-composer',

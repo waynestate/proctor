@@ -5,7 +5,7 @@ description: The checks that read composer.json and composer.lock, from unbounde
 
 # Composer checks
 
-This page covers the six PROCTOR checks that read composer.json and composer.lock: unbounded constraints, unsafe composer settings, the committed lock, audit results, the Composer version on PATH, and credentials in repository URLs. Run `vendor/bin/proctor check` against the app path, then fix the finding the report names. The proctor checks the pens before it checks the answers.
+This page covers the seven PROCTOR checks that read composer.json and composer.lock: unbounded constraints, development-only packages in require, unsafe composer settings, the committed lock, audit results, the Composer version on PATH, and credentials in repository URLs. Run `vendor/bin/proctor check` against the app path, then fix the finding the report names. The proctor checks the pens before it checks the answers.
 
 ## unbounded-constraints
 
@@ -26,6 +26,23 @@ Three more rules warn, and never fail:
 | `unbounded-constraints` | `proctor/unbounded-constraints/repository` |
 | `unbounded-constraints` | `proctor/unbounded-constraints/minimum-stability` |
 | `unbounded-constraints` | `proctor/unbounded-constraints/insecure-url` |
+
+## dev-only-packages
+
+`dev-only-packages` looks at the `require` block of composer.json, never `require-dev`, and flags the tools that belong in `require-dev` because putting them in `require` ships them to production.
+
+Two rules report, and neither is in the deploy gate:
+
+- `exposes-internals` fails for Laravel Boost and both spellings of Debugbar (`barryvdh/laravel-debugbar`, `fruitcake/laravel-debugbar`), because a debug panel or a Boost helper installed in production exposes app internals. It warns for Laravel Telescope, which may stay in `require` only if the app registers it for local use as Laravel's Telescope docs describe.
+- `test-tool` warns for phpunit, Pest, Mockery, Sail, Pail and Collision, because a test or development tool in `require` installs in production where it is not needed.
+
+Each finding names the package and the fix: move it to `require-dev` with `composer remove <package> && composer require --dev <package>`. With none of them in `require` it passes: `no development tool is in require`.
+
+| Check | Rule id |
+| --- | --- |
+| `dev-only-packages` | `proctor/dev-only-packages` |
+| `dev-only-packages` | `proctor/dev-only-packages/exposes-internals` |
+| `dev-only-packages` | `proctor/dev-only-packages/test-tool` |
 
 ## composer-config
 
