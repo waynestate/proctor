@@ -12,7 +12,7 @@ This page lists every check PROCTOR runs in a single `vendor/bin/proctor check` 
 
 ![Nine real lines from PROCTOR's text report, one per check shown: FAIL php-floor, WARN unpatched, FAIL unbounded-constraints, PASS lock-committed, WARN portability, WARN mysql56, WARN ci-pipelines, PASS composer-audit, FAIL overrides. Each line is written in words; color only repeats what the word says.](https://proctor.apps.wayne.edu/docs/readme/report.svg)
 
-*Nine of the twenty-seven checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
+*Nine of the twenty-eight checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
 
 ## How a check reports[#](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html#how-a-check-reports)
 
@@ -52,6 +52,7 @@ Details and fixes: [CI checks](https://proctor.apps.wayne.edu/docs/guides/check-
 - `preflight-pinned`: warns, never fails, when an app includes a Preflight component at a moving ref or re-declares what an included Preflight job runs.
 - `portability`: warns when code hard-codes a platform fact: an absolute host path, a hard-coded proxy address, a local-disk session store, or a php_value/php_flag line in .htaccess.
 - `destructive-deploy`: fails when a deploy script runs an artisan command that drops or rebuilds the database (`migrate:fresh`, `migrate:refresh`, `migrate:reset`, `db:wipe`), which erases production data on every deploy.
+- `crlf-deploy-script`: fails when a deploy script has Windows line endings (CRLF), which break it on Linux.
 - `instant-client-committed`: warns when Oracle Instant Client is committed to the repo: an archive, an unzipped install under an `instantclient` directory, or a loose client library.
 
 ## App code and files[#](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html#app-code-and-files)

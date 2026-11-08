@@ -61,6 +61,7 @@ final class CheckSet
             new PortabilityCheck(),
             new Mysql56Check(),
             new DestructiveDeployCheck(),
+            new CrlfDeployScriptCheck(),
             new CiPipelinesCheck(),
             new PreflightPinnedCheck(),
             new ComposerAuditCheck(),

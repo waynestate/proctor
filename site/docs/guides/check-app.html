@@ -179,7 +179,7 @@
 </tbody>
 </table></div>
 <h2 id="raw-identity-header">raw-identity-header<a class="docs-heading-link" aria-label="Link to this section" href="#raw-identity-header">#</a></h2>
-<p><code>raw-identity-header</code> warns, never fails, when app code reads an identity header directly instead of taking the user from SESAME. DRAWBRIDGE, the gateway, signs the session into the <code>X-Sesame-Assertion</code> header and passes the user's claims as request headers (<code>REMOTE_USER</code>, <code>X-Authenticated-*</code>, <code>X-Drawbridge-*</code>, <code>OIDC_CLAIM_*</code>); only SESAME's gateway driver may open that pair, because it verifies the signature before a claim becomes the logged-in user (CREED auth-3). App code that reads the assertion or a claim header itself accepts whatever value the proxy, or a client, put there.</p>
+<p><code>raw-identity-header</code> warns, never fails, when app code reads an identity header directly instead of taking the user from SESAME. Drawbridge, the gateway, signs the session into the <code>X-Sesame-Assertion</code> header and passes the user's claims as request headers (<code>REMOTE_USER</code>, <code>X-Authenticated-*</code>, <code>X-Drawbridge-*</code>, <code>OIDC_CLAIM_*</code>); only SESAME's gateway driver may open that pair, because it verifies the signature before a claim becomes the logged-in user (CREED auth-3). App code that reads the assertion or a claim header itself accepts whatever value the proxy, or a client, put there.</p>
 <p>It runs on every app and scans every <code>*.php</code> file except <code>vendor/</code>, <code>node_modules/</code>, <code>storage/</code>, <code>tests/</code> and <code>.git/</code> at any depth.</p>
 <p>PHP is read on the syntax tree with names resolved, so a header name in a comment or a log string, a variable named <code>$REMOTE_USER</code>, and <code>getenv()</code> with a computed argument are not flagged. Flagged read positions: a string key on <code>$_SERVER</code> or <code>$_ENV</code>, the quoted argument of <code>getenv()</code> or <code>apache_getenv()</code>, the quoted first argument of a method named <code>header</code>, <code>server</code>, <code>hasHeader</code>, <code>getHeader</code> or <code>getHeaderLine</code> (and of <code>get()</code> on a <code>-&gt;headers</code> object), and a string key on the result of <code>getallheaders()</code> or <code>apache_request_headers()</code>, directly or through a variable assigned from them.</p>
 <p>Names match case-insensitively with <code>-</code> and <code>_</code> interchangeable. Where the read comes from <code>$_SERVER</code> or the environment (and from <code>request()-&gt;server()</code>, which reads the same bag) the <code>HTTP_</code> prefix Apache adds to request headers is accepted too. <code>X-Sesame-Assertion</code> is the signed assertion itself, so it is flagged like any other direct read; <code>PHP_AUTH_USER</code> is basic-auth material, so it is not an identity claim and is not flagged. A file that does not parse is skipped here; the portability check reports it.</p>
@@ -280,6 +280,24 @@
 </tr>
 </tbody>
 </table></div>
+<h2 id="crlf-deploy-script">crlf-deploy-script<a class="docs-heading-link" aria-label="Link to this section" href="#crlf-deploy-script">#</a></h2>
+<p><code>crlf-deploy-script</code> fails when a deploy script has Windows line endings (CRLF): bash on Linux reads the carriage return as part of each command, so <code>set -e</code> becomes <code>set -e\r</code> and the script breaks on the host that runs it.</p>
+<p>Scanned: the top-level <code>build.sh</code> and <code>release.sh</code>, and every <code>.sh</code> file under a <code>deployments/</code>, <code>deploy_scripts/</code>, <code>deploy/</code> or <code>scripts/</code> directory at any depth. Skipped at any depth: <code>vendor/</code>, <code>node_modules/</code> and <code>.git/</code>. One finding per file, on the line of its first carriage return.</p>
+<p>Fix by converting the file to LF (<code>sed -i 's/\r$//' build.sh</code>, or the editor's line-ending setting) and adding <code>*.sh text eol=lf</code> to .gitattributes, so Git keeps it LF on every machine.</p>
+<div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Rule id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crlf-deploy-script</code></td>
+<td><code>proctor/crlf-deploy-script</code></td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="world-writable">world-writable<a class="docs-heading-link" aria-label="Link to this section" href="#world-writable">#</a></h2>
 <p><code>world-writable</code> warns when the repository sets mode 777, which lets any process on the host change the file or folder:</p>
 <ul>
@@ -313,7 +331,7 @@
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../../docs/guides/check-ci.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">CI checks</span></a><a class="docs-pager__link docs-pager__link--next" href="../../docs/guides/check-wayneui.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">WayneUI checks</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#node-eol">node-eol</a></li><li class="docs-toc__item"><a href="#mysql-eol">mysql-eol</a></li><li class="docs-toc__item"><a href="#env-outside-config">env-outside-config</a></li><li class="docs-toc__item"><a href="#raw-identity-header">raw-identity-header</a></li><li class="docs-toc__item"><a href="#app-key">app-key</a></li><li class="docs-toc__item"><a href="#served-folder">served-folder</a></li><li class="docs-toc__item"><a href="#world-writable">world-writable</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#node-eol">node-eol</a></li><li class="docs-toc__item"><a href="#mysql-eol">mysql-eol</a></li><li class="docs-toc__item"><a href="#env-outside-config">env-outside-config</a></li><li class="docs-toc__item"><a href="#raw-identity-header">raw-identity-header</a></li><li class="docs-toc__item"><a href="#app-key">app-key</a></li><li class="docs-toc__item"><a href="#served-folder">served-folder</a></li><li class="docs-toc__item"><a href="#crlf-deploy-script">crlf-deploy-script</a></li><li class="docs-toc__item"><a href="#world-writable">world-writable</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.7.0</span></span>

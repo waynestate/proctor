@@ -86,7 +86,7 @@ Fix by reading the variable in a config file (`'url' => env('APP_URL')` in `conf
 
 ## raw-identity-header
 
-`raw-identity-header` warns, never fails, when app code reads an identity header directly instead of taking the user from SESAME. DRAWBRIDGE, the gateway, signs the session into the `X-Sesame-Assertion` header and passes the user's claims as request headers (`REMOTE_USER`, `X-Authenticated-*`, `X-Drawbridge-*`, `OIDC_CLAIM_*`); only SESAME's gateway driver may open that pair, because it verifies the signature before a claim becomes the logged-in user (CREED auth-3). App code that reads the assertion or a claim header itself accepts whatever value the proxy, or a client, put there.
+`raw-identity-header` warns, never fails, when app code reads an identity header directly instead of taking the user from SESAME. Drawbridge, the gateway, signs the session into the `X-Sesame-Assertion` header and passes the user's claims as request headers (`REMOTE_USER`, `X-Authenticated-*`, `X-Drawbridge-*`, `OIDC_CLAIM_*`); only SESAME's gateway driver may open that pair, because it verifies the signature before a claim becomes the logged-in user (CREED auth-3). App code that reads the assertion or a claim header itself accepts whatever value the proxy, or a client, put there.
 
 It runs on every app and scans every `*.php` file except `vendor/`, `node_modules/`, `storage/`, `tests/` and `.git/` at any depth.
 
@@ -137,6 +137,18 @@ No finding when the app has no `public/` folder. Fix by deleting the file, or mo
 | `served-folder` | `proctor/served-folder` |
 | `served-folder` | `proctor/served-folder/debug-file` |
 | `served-folder` | `proctor/served-folder/phpinfo` |
+
+## crlf-deploy-script
+
+`crlf-deploy-script` fails when a deploy script has Windows line endings (CRLF): bash on Linux reads the carriage return as part of each command, so `set -e` becomes `set -e\r` and the script breaks on the host that runs it.
+
+Scanned: the top-level `build.sh` and `release.sh`, and every `.sh` file under a `deployments/`, `deploy_scripts/`, `deploy/` or `scripts/` directory at any depth. Skipped at any depth: `vendor/`, `node_modules/` and `.git/`. One finding per file, on the line of its first carriage return.
+
+Fix by converting the file to LF (`sed -i 's/\r$//' build.sh`, or the editor's line-ending setting) and adding `*.sh text eol=lf` to .gitattributes, so Git keeps it LF on every machine.
+
+| Check | Rule id |
+| --- | --- |
+| `crlf-deploy-script` | `proctor/crlf-deploy-script` |
 
 ## world-writable
 
