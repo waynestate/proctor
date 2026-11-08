@@ -91,8 +91,14 @@
 <td>composer-audit could not get advisory data (<code>proctor/composer-audit/skipped</code> or <code>could-not-run</code>)</td>
 <td>go: missing advisory data only warns at deploy time</td>
 </tr>
+<tr>
+<td><code>staged</code></td>
+<td>the failure would block, but CREED's policy stages its check as <code>report</code> or <code>warn</code> today (the <code>gate</code> block, ADR-0006 item 4)</td>
+<td>go: logged as <code>STAGE</code>, and the JSON finding carries <code>stage</code> and the <code>reason</code> it would have blocked for</td>
+</tr>
 </tbody>
 </table></div>
+<p>CREED's <code>gate</code> block ships empty, so today every check blocks; a stage date is agreed with the Citadel team first. A staged failure is still recorded as a fail, so once its check reaches <code>block</code>, the ratchet holds it like any other existing violation, and only a new failure blocks; <code>proctor check</code> in CI fails it all along.</p>
 <p>Warnings and info notes never change the verdict. The comparison is by rule id, so a rule that already failed on the baseline is held even if it got worse within the rule; <code>proctor check</code> in CI still fails it. The unused-override warning is left to <code>proctor check</code>, because the gate runs only some checks and would call an override for a skipped check unused.</p>
 <aside class="docs-callout docs-callout--note" role="note"><p class="docs-callout__label">Note</p><p>An override names any registered check, not only the eight above. An expired one blocks the deploy even when its check is not part of the gate.</p></aside>
 <h2 id="exit-codes">Exit codes<a class="docs-heading-link" aria-label="Link to this section" href="#exit-codes">#</a></h2>
@@ -128,7 +134,7 @@ Checks: php-floor, unpatched, laravel-eol, laravel-php, lock-committed, composer
 BLOCK php-floor: php floor 7.4 is eol_grace_expired [new app: no baseline, so every failure blocks]
 RESULT: no-go (1 blocked, 0 held, 0 waived, 0 warnings, 3 passed)
 </code></pre>
-<p>The JSON verdict carries <code>command</code> (<code>gate</code>), <code>verdict</code> (<code>go</code>, <code>no-go</code>, or <code>error</code> when it could not decide), <code>exit</code>, <code>policy</code>, <code>baseline</code> (its source, path and failing rule ids, or null), <code>checks</code>, a <code>summary</code> with the count of each outcome, <code>findings</code> and <code>overrides</code>. Each finding keeps the check's own <code>status</code> and adds <code>gate</code> (its outcome) and, when blocked, <code>reason</code>. Because the status is kept, a recorded verdict works as the next run's baseline.</p>
+<p>The JSON verdict carries <code>command</code> (<code>gate</code>), <code>verdict</code> (<code>go</code>, <code>no-go</code>, or <code>error</code> when it could not decide), <code>exit</code>, <code>policy</code>, <code>baseline</code> (its source, path and failing rule ids, or null), <code>checks</code>, a <code>summary</code> with the count of each outcome, <code>findings</code> and <code>overrides</code>. Each finding keeps the check's own <code>status</code> and adds <code>gate</code> (its outcome), <code>reason</code> when blocked or staged, and <code>stage</code> when staged. Because the status is kept, a recorded verdict works as the next run's baseline.</p>
 <h2 id="in-a-release">In a release<a class="docs-heading-link" aria-label="Link to this section" href="#in-a-release">#</a></h2>
 <p>Squire's release script runs the gate when PROCTOR is installed, records the verdict, and keeps the last accepted verdict as the next baseline. On Citadel, the gate is meant to run in <code>runGitPull()</code>, inside the app's image, before the fetched commit is checked out; that hook waits on the Citadel team.</p>
 <h2 id="related">Related<a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></h2>

@@ -39,6 +39,9 @@ The app's overrides are applied first, exactly as in `proctor check`. Then each 
 | `blocked` (`expired-override`) | an override in policy-overrides.json has expired, for any check | no-go, whatever the baseline says |
 | `held` | the baseline failed the same rule id too | go: the ratchet lets an existing violation through, so the owners of an EOL app can still ship the fix |
 | `waived` | composer-audit could not get advisory data (`proctor/composer-audit/skipped` or `could-not-run`) | go: missing advisory data only warns at deploy time |
+| `staged` | the failure would block, but CREED's policy stages its check as `report` or `warn` today (the `gate` block, ADR-0006 item 4) | go: logged as `STAGE`, and the JSON finding carries `stage` and the `reason` it would have blocked for |
+
+CREED's `gate` block ships empty, so today every check blocks; a stage date is agreed with the Citadel team first. A staged failure is still recorded as a fail, so once its check reaches `block`, the ratchet holds it like any other existing violation, and only a new failure blocks; `proctor check` in CI fails it all along.
 
 Warnings and info notes never change the verdict. The comparison is by rule id, so a rule that already failed on the baseline is held even if it got worse within the rule; `proctor check` in CI still fails it. The unused-override warning is left to `proctor check`, because the gate runs only some checks and would call an override for a skipped check unused.
 
@@ -69,7 +72,7 @@ BLOCK php-floor: php floor 7.4 is eol_grace_expired [new app: no baseline, so ev
 RESULT: no-go (1 blocked, 0 held, 0 waived, 0 warnings, 3 passed)
 ```
 
-The JSON verdict carries `command` (`gate`), `verdict` (`go`, `no-go`, or `error` when it could not decide), `exit`, `policy`, `baseline` (its source, path and failing rule ids, or null), `checks`, a `summary` with the count of each outcome, `findings` and `overrides`. Each finding keeps the check's own `status` and adds `gate` (its outcome) and, when blocked, `reason`. Because the status is kept, a recorded verdict works as the next run's baseline.
+The JSON verdict carries `command` (`gate`), `verdict` (`go`, `no-go`, or `error` when it could not decide), `exit`, `policy`, `baseline` (its source, path and failing rule ids, or null), `checks`, a `summary` with the count of each outcome, `findings` and `overrides`. Each finding keeps the check's own `status` and adds `gate` (its outcome), `reason` when blocked or staged, and `stage` when staged. Because the status is kept, a recorded verdict works as the next run's baseline.
 
 ## In a release[#](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html#in-a-release)
 
