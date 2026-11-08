@@ -288,6 +288,10 @@
 <td><code>proctor/ci-pipelines/composer-audit-off</code></td>
 </tr>
 <tr>
+<td><code>ci-pipelines</code></td>
+<td><code>proctor/ci-pipelines/composer-update</code></td>
+</tr>
+<tr>
 <td><code>preflight-pinned</code></td>
 <td><code>proctor/preflight-pinned</code></td>
 </tr>
@@ -415,7 +419,7 @@
 </table></div>
 <p><code>proctor/composer-audit/skipped</code> is a failure, not an info finding: it fires when the composer executable is not on PATH or the app has no composer.lock, its message starts with <code>not audited:</code>, and an active <code>composer-audit</code> override downgrades it to a warning.</p>
 <h2 id="kept-in-step">Kept in step<a class="docs-heading-link" aria-label="Link to this section" href="#kept-in-step">#</a></h2>
-<p><code>tests/RuleIdContractTest.php</code> keeps this table in step with the checks: a rule id that is emitted but not listed here fails the suite. The proctor stamps each id in pencil so small only the head office can read it, and it never smudges.</p>
+<p><code>tests/RuleIdContractTest.php</code> keeps this table in step with the checks: a rule id that is emitted but not listed in the known set fails the suite, and the test parses the README's copy of this table, so a known rule id missing from it, or a row that names an unknown rule id, fails the suite too. The proctor stamps each id in pencil so small only the head office can read it, and it never smudges.</p>
 <h2 id="related">Related<a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></h2>
 <ul>
 <li><a href="commands.html">Commands</a></li>

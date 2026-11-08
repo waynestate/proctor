@@ -73,6 +73,7 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `ci-pipelines` | `proctor/ci-pipelines/github-private` |
 | `ci-pipelines` | `proctor/ci-pipelines/unpinned-uses` |
 | `ci-pipelines` | `proctor/ci-pipelines/composer-audit-off` |
+| `ci-pipelines` | `proctor/ci-pipelines/composer-update` |
 | `preflight-pinned` | `proctor/preflight-pinned` |
 | `preflight-pinned` | `proctor/preflight-pinned/unpinned` |
 | `preflight-pinned` | `proctor/preflight-pinned/script-override` |
@@ -109,7 +110,7 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 
 ## Kept in step[#](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html#kept-in-step)
 
-`tests/RuleIdContractTest.php` keeps this table in step with the checks: a rule id that is emitted but not listed here fails the suite. The proctor stamps each id in pencil so small only the head office can read it, and it never smudges.
+`tests/RuleIdContractTest.php` keeps this table in step with the checks: a rule id that is emitted but not listed in the known set fails the suite, and the test parses the README's copy of this table, so a known rule id missing from it, or a row that names an unknown rule id, fails the suite too. The proctor stamps each id in pencil so small only the head office can read it, and it never smudges.
 
 ## Related[#](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html#related)
 

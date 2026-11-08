@@ -147,9 +147,12 @@ Why: declared and actual versions drift.
 
 Sources: [PHP supported versions](https://www.php.net/supported-versions.php); the stack's deploy-gate decision.
 
-**How the stack holds it: Documented.** The stack's deploy-gate decision proposes `proctor gate` against the target image tag. The command does
-not exist yet. The gate is platform-neutral: on Citadel it runs from Squire's `citadel` target, whose hook is not
-agreed yet, and other hosts run the same gate as a CI job.
+**How the stack holds it: Partially.** `proctor gate` ships (registered in `bin/proctor`, implemented in
+`src/Console/GateCommand.php`): it runs the deploy-time checks, ratchets them against `--baseline`, and exits 0
+for go, 1 for no-go and 2 when it could not decide. Its `--php-runtime` names the PHP that will serve the app,
+which the `unpatched` check grades, but nothing in the stack's own deploy path sets it yet. The gate is
+platform-neutral: on Citadel, Squire's release script (`scripts/release.sh`) calls it on every release (a report,
+not a stop, unless `SQUIRE_PROCTOR=enforce`), and other hosts run the same gate as a CI job.
 
 ### 2.6 A tool must pass its own check
 The stack's own repos use the same policy as apps. A floor that PROCTOR would fail must be raised in a new major
@@ -424,7 +427,7 @@ advisory pages through summaries and did not confirm the CVSS scores against NVD
 
 **How the stack holds it: Partially.** PROCTOR now reads the Composer version, names it in the text report's header
 line, and the `composer-version` check (see 4.6) fails when the Composer on PATH carries the command-injection holes
-CVE-2024-35241 and CVE-2024-35242 or is Composer 1. Since the next release, the same check also fails when the
+CVE-2024-35241 and CVE-2024-35242 or is Composer 1. Since 0.7.0, the same check also fails when the
 Composer on PATH is below the CREED policy's `tools.composer.minimum` (2.8.0 in the bundled policy), naming the
 policy in the message; the CVE floors stay as absolute floors underneath it. What remains: no minimum covers the 2026
 Perforce flaws fixed in 2.9.6 and 2.10.3, and the Preflight component installs whatever Composer is current at the
@@ -744,8 +747,10 @@ Why: a gate that can take down deploys on its own bug will be switched off.
 Sources: [Semgrep: internal errors do not block](https://docs.semgrep.dev/semgrep-ci/configuring-blocking-and-errors-in-ci);
 the stack's enforcement-points and deploy-gate decisions.
 
-**How the stack holds it: Documented.** `proctor gate` does not exist. The current `composer-audit` check needs the
-network and sets no timeout.
+**How the stack holds it: Partially.** `proctor gate` ships (since 0.7.0): it runs only the deploy-time checks,
+needs no app boot, and `--timeout` caps the one step that touches the network, `composer audit` (60 seconds in the
+gate, 300 in `proctor check`). What remains: `composer-audit` still needs the network to fetch advisories, so an
+offline gate warns instead of failing (missing advisory data only warns).
 
 ---
 
@@ -761,11 +766,13 @@ Sources: [OWASP CICD-SEC-4 Poisoned Pipeline Execution](https://owasp.org/www-pr
 [Composer CLI: `--no-plugins`, `--no-scripts`](https://getcomposer.org/doc/03-cli.md); the stack's deploy-gate decision.
 
 **How the stack holds it: Partially.** PROCTOR builds as a single-file PHAR: `scripts/build-phar.ps1` and
-`scripts/build-phar.sh` produce `build/proctor.phar`, and the README has a "Single-file download" section.
-Preflight's `proctor` component (`templates/proctor/template.yml`) runs `composer install --no-interaction
---no-progress --no-plugins --no-scripts` on the app first, so the app's plugins and scripts no longer run in that
-job. What remains: the PHAR is not published (there is no release step for it), the job still installs the app's
-dependencies, and the README still tells apps to `composer require waynestate/proctor --dev`.
+`scripts/build-phar.sh` produce `build/proctor.phar`, and the README has a "Single-file download" section. The
+pipeline's `release-phar` job (`.gitlab-ci.yml`) builds the PHAR on every tag, verifies it runs, writes
+`build/proctor.phar.sha256`, uploads both to the project's generic package registry and attaches them to the GitLab
+Release, refusing to overwrite a file the tag already published. Preflight's `proctor` component
+(`templates/proctor/template.yml`) runs `composer install --no-interaction --no-progress --no-plugins --no-scripts`
+on the app first, so the app's plugins and scripts no longer run in that job. What remains: the job still installs
+the app's dependencies, and the README still tells apps to `composer require waynestate/proctor --dev`.
 
 ### 8.2 Start child processes without a shell
 Pass arguments as an array so a path or value cannot become a command.
@@ -808,7 +815,7 @@ Sources: [SLSA v1.0 build levels](https://slsa.dev/spec/v1.0/levels) (page marke
 [OpenSSF Scorecard: Signed-Releases](https://github.com/ossf/scorecard/blob/main/docs/checks.md);
 [CISA and NSA: Defending CI/CD environments](https://cisa.gov/news-events/alerts/2023/06/28/cisa-and-nsa-release-joint-guidance-defending-continuous-integrationcontinuous-delivery-cicd).
 
-**How the stack holds it: Partially.** Releases are tagged (0.1.0 through 0.3.0), and since 0.2.4 the reports read the
+**How the stack holds it: Partially.** Releases are tagged (0.1.0 through 0.8.0), and since 0.2.4 the reports read the
 installed `waynestate/proctor` version from Composer, with the in-code constant as the fallback. What remains: no
 release carries a signature or provenance that says where it was built.
 

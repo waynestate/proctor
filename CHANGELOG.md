@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Docs: README and BEST_PRACTICES match 0.8.0 (proctor gate, the release phar, tags, the composer-update rule id); RuleIdContractTest now checks the README rule table.
+
 ## 0.8.0 (2026-11-08)
 
 - Changed: `preflight-pinned` accepts a Preflight component pinned to a full release tag (`MAJOR.MINOR.PATCH`, optional leading `v`, such as `@0.3.0`) as well as a commit SHA, since published stack tags are never moved or deleted (D-054). A branch, `~latest`, a partial version such as `0.3` or `1`, or no ref still warns, and the warning now says to pin a release tag such as `@0.3.0` or a commit SHA.

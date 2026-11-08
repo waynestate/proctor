@@ -10,7 +10,9 @@ namespace Waynestate\Proctor\Tests;
  *
  * This is the guard that keeps the rule ids documented in the README in step
  * with the checks: a new rule id that is not added to KNOWN_RULE_IDS fails
- * here, and a rule id that is no longer emitted is caught by the docs review.
+ * here, and the README's rule-id table is parsed, so a known rule id missing
+ * from it, or a row that names an unknown rule id, fails here too. A rule id
+ * that is no longer emitted is caught by the docs review.
  */
 final class RuleIdContractTest extends ProctorTestCase
 {
@@ -163,6 +165,48 @@ final class RuleIdContractTest extends ProctorTestCase
         }
 
         self::assertNotEmpty($observed, 'expected at least one rule id across the fixture apps');
+    }
+
+    public function testReadmeRuleTableListsExactlyTheKnownRuleIds(): void
+    {
+        $readme = dirname(__DIR__) . '/README.md';
+        self::assertFileExists($readme);
+        $markdown = (string) file_get_contents($readme);
+
+        // The table lives under the "## Rule ids" heading, up to the next heading.
+        self::assertMatchesRegularExpression(
+            '/^## Rule ids\n(.*?)(?=^## )/ms',
+            $markdown,
+            'README.md must have a "## Rule ids" section',
+        );
+        preg_match('/^## Rule ids\n(.*?)(?=^## )/ms', $markdown, $matches);
+        $section = $matches[1] ?? '';
+
+        $listed = [];
+        foreach (preg_split('/\R/', $section) as $line) {
+            if (preg_match('/^\|\s*`[a-z0-9-]+`\s*\|\s*`(proctor\/[a-z0-9-]+(?:\/[a-z0-9-]+)?)`\s*\|$/', $line, $row) !== 1) {
+                continue;
+            }
+            $listed[] = $row[1];
+        }
+
+        self::assertNotEmpty($listed, 'no rule-id rows found in the README table');
+
+        $seen = [];
+        $duplicates = [];
+        foreach ($listed as $id) {
+            if (isset($seen[$id])) {
+                $duplicates[] = $id;
+            }
+            $seen[$id] = true;
+        }
+        self::assertSame([], $duplicates, sprintf('duplicate rows in the README table: %s', implode(', ', $duplicates)));
+
+        $missing = array_values(array_diff(self::KNOWN_RULE_IDS, $listed));
+        self::assertSame([], $missing, sprintf('known rule ids missing from the README table: %s', implode(', ', $missing)));
+
+        $unknown = array_values(array_diff($listed, self::KNOWN_RULE_IDS));
+        self::assertSame([], $unknown, sprintf('README table rows that name no known rule id: %s', implode(', ', $unknown)));
     }
 
     /**
