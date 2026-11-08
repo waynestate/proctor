@@ -60,6 +60,16 @@ final class TextWriter implements ReportWriter
     }
 
     /**
+     * The report body when the run could not decide: the failure label the
+     * finding lines use, the tool as the check id, and the message, so a
+     * tool error reads like any other failed line.
+     */
+    public function writeToolError(string $message): string
+    {
+        return sprintf('FAIL %s: %s', Report::TOOL, $this->sanitize($message));
+    }
+
+    /**
      * The header line: the tool and its version, then each external tool's
      * version, "unknown" when it could not be determined.
      */

@@ -50,6 +50,8 @@ The parts of a report:
 
 Finding messages, override reasons and approvers come from files the app controls, so they are printed with terminal control characters replaced by a visible `?`: an escape sequence or carriage return in one of them must not reach the log.
 
+When the run could not decide (exit 2), the report is one FAIL line: `FAIL proctor: <message>`, the message cleaned the same way.
+
 ## json[#](https://proctor.apps.wayne.edu/docs/guides/formats.html#json)
 
 One machine-readable object, pretty-printed on stdout. Slashes and Unicode are left unescaped, so the output stays readable.
@@ -59,7 +61,7 @@ One machine-readable object, pretty-printed on stdout. Slashes and Unicode are l
 - Each finding in `findings` holds `check_id`, `rule_id`, `status`, `message`, `path` and `line`. An advisory finding carries an `advisories` array with one entry per advisory (package, id, cve, title, link, severity); an abandoned-package finding (`proctor/composer-audit/abandoned`) carries one entry with the package and its suggested replacement (a package name or null), so a package-scoped override can match it; other findings have no such key.
 - Each entry in `overrides` holds `check`, `reason`, `expires`, `approved_by` and `expired`, computed from `today`.
 
-When the report cannot be encoded, PROCTOR fails the run with a tool error (exit 2): `Could not encode the JSON report: <reason>`.
+When the run itself stops before a report exists, PROCTOR writes the report shape with `result` set to `error`, an `error` field carrying the message, `today` and `policy` set to null, and empty `findings` and `overrides`, so a CI upload still gets a valid document. When the report cannot be encoded, PROCTOR fails the run with a tool error (exit 2): `Could not encode the JSON report: <reason>`, and writes that same error document.
 
 ## codequality[#](https://proctor.apps.wayne.edu/docs/guides/formats.html#codequality)
 
@@ -82,6 +84,8 @@ A SARIF 2.1.0 log: one run, one rule per check, one result per non-pass finding,
 - Each result holds `ruleId`, `level`, `message.text` and one location. The level maps `fail` to `error`, `warning` to `warning`, and any other non-pass status to `note`.
 - The location uses the finding's path (backslashes normalized to forward slashes) and its line as `region.startLine`; a finding without a path points at the app's `composer.json`.
 - Each result also carries `partialFingerprints` with the finding's fingerprint under `proctorFingerprint/v1`.
+
+When the run could not decide (exit 2), the log holds one run with no results, and its invocation reports `executionSuccessful` false with the message in a `toolExecutionNotifications` entry of level `error`, so code scanning shows why instead of an empty log.
 
 ## The fingerprint[#](https://proctor.apps.wayne.edu/docs/guides/formats.html#the-fingerprint)
 

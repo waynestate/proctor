@@ -152,6 +152,37 @@ final class SarifShapeTest extends ProctorTestCase
         );
     }
 
+    public function testToolErrorInSarifFormatWritesAValidLogWithAnUnsuccessfulInvocation(): void
+    {
+        $result = $this->runProctor('/nonexistent/proctor-test-path', 'sarif');
+
+        self::assertSame(2, $result['exit']);
+        self::assertStringContainsString('does not exist', $result['stderr']);
+
+        $log = json_decode($result['stdout'], true);
+        self::assertIsArray($log, 'sarif output must be valid JSON');
+        self::assertSame(
+            ['$schema', 'version', 'runs'],
+            array_keys($log),
+        );
+        self::assertSame('https://json.schemastore.org/sarif-2.1.0.json', $log['$schema']);
+        self::assertSame('2.1.0', $log['version']);
+        self::assertIsList($log['runs']);
+        self::assertCount(1, $log['runs']);
+
+        $run = $log['runs'][0];
+        self::assertSame(['tool', 'results', 'invocations'], array_keys($run));
+        self::assertSame(Report::TOOL, $run['tool']['driver']['name']);
+        self::assertSame(Report::version(), $run['tool']['driver']['version']);
+        self::assertSame([], $run['results']);
+
+        $invocation = $run['invocations'][0];
+        self::assertFalse($invocation['executionSuccessful']);
+        $notification = $invocation['toolExecutionNotifications'][0];
+        self::assertSame('error', $notification['level']);
+        self::assertStringContainsString('does not exist', $notification['message']['text']);
+    }
+
     /**
      * The decoded SARIF log of a run on the given fixture app.
      *

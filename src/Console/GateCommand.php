@@ -104,6 +104,8 @@ final class GateCommand extends Command
             }
             if ('json' === $format) {
                 $output->writeln($json, OutputInterface::OUTPUT_RAW);
+            } elseif ('text' === $format) {
+                $output->writeln($writer->textToolError($e->getMessage()), OutputInterface::OUTPUT_RAW);
             }
 
             return Gate::EXIT_TOOL_ERROR;

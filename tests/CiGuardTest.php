@@ -125,7 +125,9 @@ final class CiGuardTest extends ProctorTestCase
         $result = $this->runProctor($this->app('pass-app'), 'text', null, null, null, null, ['CI' => 'true']);
 
         self::assertSame(2, $result['exit']);
-        self::assertSame('', $result['stdout']);
+        // Every format writes its report on a tool error, so the refusal
+        // reaches stdout as a FAIL line too, next to the message on stderr.
+        self::assertSame('FAIL proctor: ' . self::REFUSAL_BOTH . "\n", $result['stdout']);
         self::assertSame(self::REFUSAL_BOTH . "\n", $result['stderr']);
     }
 

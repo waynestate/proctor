@@ -91,6 +91,7 @@ RESULT: fail (1 failures, 0 warnings)
 <li>The summary is <code>RESULT: pass</code>, or <code>RESULT: fail (&lt;failures&gt; failures, &lt;warnings&gt; warnings)</code>.</li>
 </ul>
 <p>Finding messages, override reasons and approvers come from files the app controls, so they are printed with terminal control characters replaced by a visible <code>?</code>: an escape sequence or carriage return in one of them must not reach the log.</p>
+<p>When the run could not decide (exit 2), the report is one FAIL line: <code>FAIL proctor: &lt;message&gt;</code>, the message cleaned the same way.</p>
 <h2 id="json">json<a class="docs-heading-link" aria-label="Link to this section" href="#json">#</a></h2>
 <p>One machine-readable object, pretty-printed on stdout. Slashes and Unicode are left unescaped, so the output stays readable.</p>
 <ul>
@@ -99,7 +100,7 @@ RESULT: fail (1 failures, 0 warnings)
 <li>Each finding in <code>findings</code> holds <code>check_id</code>, <code>rule_id</code>, <code>status</code>, <code>message</code>, <code>path</code> and <code>line</code>. An advisory finding carries an <code>advisories</code> array with one entry per advisory (package, id, cve, title, link, severity); an abandoned-package finding (<code>proctor/composer-audit/abandoned</code>) carries one entry with the package and its suggested replacement (a package name or null), so a package-scoped override can match it; other findings have no such key.</li>
 <li>Each entry in <code>overrides</code> holds <code>check</code>, <code>reason</code>, <code>expires</code>, <code>approved_by</code> and <code>expired</code>, computed from <code>today</code>.</li>
 </ul>
-<p>When the report cannot be encoded, PROCTOR fails the run with a tool error (exit 2): <code>Could not encode the JSON report: &lt;reason&gt;</code>.</p>
+<p>When the run itself stops before a report exists, PROCTOR writes the report shape with <code>result</code> set to <code>error</code>, an <code>error</code> field carrying the message, <code>today</code> and <code>policy</code> set to null, and empty <code>findings</code> and <code>overrides</code>, so a CI upload still gets a valid document. When the report cannot be encoded, PROCTOR fails the run with a tool error (exit 2): <code>Could not encode the JSON report: &lt;reason&gt;</code>, and writes that same error document.</p>
 <h2 id="codequality">codequality<a class="docs-heading-link" aria-label="Link to this section" href="#codequality">#</a></h2>
 <p>GitLab's Code Quality JSON: a single array of findings on stdout, so a merge request shows them. One object per non-pass finding, each with:</p>
 <ul>
@@ -119,6 +120,7 @@ RESULT: fail (1 failures, 0 warnings)
 <li>The location uses the finding's path (backslashes normalized to forward slashes) and its line as <code>region.startLine</code>; a finding without a path points at the app's <code>composer.json</code>.</li>
 <li>Each result also carries <code>partialFingerprints</code> with the finding's fingerprint under <code>proctorFingerprint/v1</code>.</li>
 </ul>
+<p>When the run could not decide (exit 2), the log holds one run with no results, and its invocation reports <code>executionSuccessful</code> false with the message in a <code>toolExecutionNotifications</code> entry of level <code>error</code>, so code scanning shows why instead of an empty log.</p>
 <h2 id="the-fingerprint">The fingerprint<a class="docs-heading-link" aria-label="Link to this section" href="#the-fingerprint">#</a></h2>
 <p>Both <code>codequality</code> and <code>sarif</code> identify a finding with the same fingerprint, its stable identity: the lower-case hex SHA-256 of the rule id, a newline, the path (an empty string when the finding has none), a newline, and the message.</p>
 <h2 id="proctor-gate">proctor gate<a class="docs-heading-link" aria-label="Link to this section" href="#proctor-gate">#</a></h2>

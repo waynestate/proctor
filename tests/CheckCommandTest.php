@@ -300,6 +300,16 @@ final class CheckCommandTest extends ProctorTestCase
         }
     }
 
+    public function testToolErrorInTextFormatPrintsTheMessageAsAFailLine(): void
+    {
+        $result = $this->runProctor('/nonexistent/proctor-test-path');
+
+        self::assertSame(2, $result['exit']);
+        self::assertStringContainsString('does not exist', $result['stderr']);
+        self::assertMatchesRegularExpression('/^FAIL proctor: /m', $result['stdout']);
+        self::assertStringContainsString('does not exist', $result['stdout']);
+    }
+
     public function testTagLikeConstraintReachesTheTextReportLiterally(): void
     {
         $appPath = sys_get_temp_dir() . '/proctor-tag-like-' . uniqid('', true);

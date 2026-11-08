@@ -53,6 +53,45 @@ final class SarifWriter implements ReportWriter
     }
 
     /**
+     * The SARIF log when the run could not decide: one run, no results, and
+     * an invocation that did not finish, so code scanning shows why instead
+     * of an empty log.
+     */
+    public function writeToolError(string $message): string
+    {
+        return $this->encodeToolError([
+            '$schema' => self::SCHEMA,
+            'version' => self::VERSION,
+            'runs' => [
+                [
+                    'tool' => [
+                        'driver' => [
+                            'name' => Report::TOOL,
+                            'version' => Report::version(),
+                            'informationUri' => self::INFORMATION_URI,
+                            'rules' => [],
+                        ],
+                    ],
+                    'results' => [],
+                    'invocations' => [
+                        [
+                            'executionSuccessful' => false,
+                            'toolExecutionNotifications' => [
+                                [
+                                    'level' => 'error',
+                                    'message' => [
+                                        'text' => $message,
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+    }
+
+    /**
      * One rule entry per distinct rule id in the report, in first-seen order.
      *
      * @return list<array<string, mixed>>
@@ -166,6 +205,29 @@ final class SarifWriter implements ReportWriter
         $json = json_encode(
             $log,
             JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE,
+        );
+        if (false === $json) {
+            throw new ToolError(sprintf(
+                'Could not encode the SARIF report: %s',
+                json_last_error_msg(),
+            ));
+        }
+
+        return $json;
+    }
+
+    /**
+     * Like encode(), but for the tool-error log: the message may carry
+     * app-controlled text, so invalid UTF-8 is substituted instead of
+     * failing, which keeps the error log itself encodable.
+     *
+     * @param array<string, mixed> $log
+     */
+    private function encodeToolError(array $log): string
+    {
+        $json = json_encode(
+            $log,
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE,
         );
         if (false === $json) {
             throw new ToolError(sprintf(

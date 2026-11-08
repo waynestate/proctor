@@ -121,4 +121,30 @@ final class JsonShapeTest extends ProctorTestCase
             array_keys($plainFinding),
         );
     }
+
+    public function testToolErrorInJsonFormatWritesAValidReportWithTheError(): void
+    {
+        $result = $this->runProctor('/nonexistent/proctor-test-path', 'json');
+
+        self::assertSame(2, $result['exit']);
+        self::assertStringContainsString('does not exist', $result['stderr']);
+
+        $data = json_decode($result['stdout'], true);
+        self::assertIsArray($data, 'json output must be valid JSON');
+        self::assertSame(
+            ['tool', 'version', 'path', 'today', 'result', 'exit', 'tools', 'policy', 'error', 'findings', 'overrides'],
+            array_keys($data),
+        );
+        self::assertSame(Report::TOOL, $data['tool']);
+        self::assertSame(Report::version(), $data['version']);
+        self::assertSame('/nonexistent/proctor-test-path', $data['path']);
+        self::assertNull($data['today']);
+        self::assertSame('error', $data['result']);
+        self::assertSame(2, $data['exit']);
+        self::assertSame([], $data['tools']);
+        self::assertNull($data['policy']);
+        self::assertStringContainsString('does not exist', $data['error']);
+        self::assertSame([], $data['findings']);
+        self::assertSame([], $data['overrides']);
+    }
 }

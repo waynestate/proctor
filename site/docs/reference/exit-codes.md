@@ -20,6 +20,8 @@ This page lists the three exit codes `proctor check` and `proctor gate` end with
 
 A missing composer.json is not a tool error: the app gets a verdict, with php-floor failing.
 
+On a tool error every format still writes its report to stdout, next to the message on stderr: `text` prints the message as a FAIL line, `json` writes the report shape with `result` set to `error`, an `error` field carrying the message and empty findings, `codequality` lists the error as one blocker issue, and `sarif` writes a log whose single run reports an unsuccessful invocation. A pipeline can read the reason from the report instead of only from stderr.
+
 ## proctor gate[#](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html#proctor-gate)
 
 The deploy gate uses the same three numbers with deploy words (see [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html)):
@@ -29,6 +31,8 @@ The deploy gate uses the same three numbers with deploy words (see [Deploy gate]
 | `0` | go: nothing blocked (held and waived failures, warnings allowed) |
 | `1` | no-go: a failure is blocked (a first deploy, a regression against the baseline, or an expired override) |
 | `2` | the gate could not decide (the tool errors above, plus a missing or malformed `--baseline` or a `--record` file it could not write); a platform hook fails open on it |
+
+On exit 2 the gate writes its verdict in the selected format: the JSON verdict with `verdict` set to `error`, or, for `text`, the verdict line, a FAIL line carrying the message, and a RESULT line.
 
 ## How a run ends[#](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html#how-a-run-ends)
 

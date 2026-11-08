@@ -62,9 +62,62 @@ final class JsonWriter implements ReportWriter
             ),
         ];
 
+        return $this->encode($data);
+    }
+
+    /**
+     * The JSON report when the run could not decide: the report shape with no
+     * findings, result "error", and the message in an error field, so the CI
+     * upload still gets a valid document.
+     */
+    public function writeToolError(string $message, string $path): string
+    {
+        return $this->encodeToolError([
+            'tool' => Report::TOOL,
+            'version' => Report::version(),
+            'path' => $path,
+            'today' => null,
+            'result' => 'error',
+            'exit' => 2,
+            'tools' => [],
+            'policy' => null,
+            'error' => $message,
+            'findings' => [],
+            'overrides' => [],
+        ]);
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    private function encode(array $data): string
+    {
         $json = json_encode(
             $data,
             JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE,
+        );
+        if (false === $json) {
+            throw new ToolError(sprintf(
+                'Could not encode the JSON report: %s',
+                json_last_error_msg(),
+            ));
+        }
+
+        return $json;
+    }
+
+    /**
+     * Like encode(), but for the tool-error report: the message may carry
+     * app-controlled text, so invalid UTF-8 is substituted instead of
+     * failing, which keeps the error report itself encodable.
+     *
+     * @param array<string, mixed> $data
+     */
+    private function encodeToolError(array $data): string
+    {
+        $json = json_encode(
+            $data,
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE,
         );
         if (false === $json) {
             throw new ToolError(sprintf(

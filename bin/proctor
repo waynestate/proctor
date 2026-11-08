@@ -104,6 +104,10 @@ $application->addCommand(new class () extends Command {
             $options = RunOptions::fromInput($input, $errorOutput);
         } catch (ToolError $e) {
             $errorOutput->writeln($e->getMessage(), OutputInterface::OUTPUT_RAW);
+            $output->writeln(
+                $this->toolErrorReport($format, $e->getMessage(), (string) $input->getOption('path')),
+                OutputInterface::OUTPUT_RAW
+            );
             return 2;
         }
         $appPath = $options->appPath;
@@ -129,9 +133,10 @@ $application->addCommand(new class () extends Command {
             $findings = $runner->run();
         } catch (ToolError $e) {
             $errorOutput->writeln($e->getMessage(), OutputInterface::OUTPUT_RAW);
-            if ('codequality' === $format) {
-                $output->writeln((new CodeQualityWriter())->writeToolError($e->getMessage()), OutputInterface::OUTPUT_RAW);
-            }
+            $output->writeln(
+                $this->toolErrorReport($format, $e->getMessage(), $appPath),
+                OutputInterface::OUTPUT_RAW
+            );
             return 2;
         }
 
@@ -156,10 +161,32 @@ $application->addCommand(new class () extends Command {
             $output->writeln($this->writerFor($format)->write($report), OutputInterface::OUTPUT_RAW);
         } catch (ToolError $e) {
             $errorOutput->writeln($e->getMessage(), OutputInterface::OUTPUT_RAW);
+            $output->writeln(
+                $this->toolErrorReport($format, $e->getMessage(), $report->path),
+                OutputInterface::OUTPUT_RAW
+            );
             return 2;
         }
 
         return $report->exitCode;
+    }
+
+    /**
+     * The tool-error report for the selected format, so every format yields
+     * a document when the run cannot decide. The message itself still goes
+     * to stderr; this is the report on stdout.
+     */
+    private function toolErrorReport(string $format, string $message, string $path): string
+    {
+        $writer = $this->writerFor($format);
+
+        return match (true) {
+            $writer instanceof JsonWriter => $writer->writeToolError($message, $path),
+            $writer instanceof CodeQualityWriter => $writer->writeToolError($message),
+            $writer instanceof SarifWriter => $writer->writeToolError($message),
+            $writer instanceof TextWriter => $writer->writeToolError($message),
+            default => throw new ToolError(sprintf('Unknown output format "%s".', $format)),
+        };
     }
 
     private function writerFor(string $format): ReportWriter

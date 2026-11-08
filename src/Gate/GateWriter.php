@@ -168,6 +168,20 @@ final class GateWriter
     }
 
     /**
+     * The text a gate prints when it could not decide, for the deploy log:
+     * the verdict line, the failure line shaped like the finding lines, and
+     * the RESULT line.
+     */
+    public function textToolError(string $message): string
+    {
+        return implode("\n", [
+            sprintf('%s %s gate: ERROR', Report::TOOL, Report::version()),
+            sprintf('FAIL %s: %s', Report::TOOL, Terminal::clean($message)),
+            'RESULT: error (the gate could not decide)',
+        ]);
+    }
+
+    /**
      * @param array<string, mixed> $data
      */
     private function encode(array $data): string

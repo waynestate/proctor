@@ -6,6 +6,7 @@
 - Fixed: the docs menu closes with Escape and hands focus back to its button (docs kit synced from Squire).
 - Docs: README and BEST_PRACTICES match 0.8.0 (proctor gate, the release phar, tags, the composer-update rule id); RuleIdContractTest now checks the README rule table.
 - Changed: the deploy layer requires PROCTOR ^0.8 (locked 0.8.0).
+- Fixed: `proctor check` writes a report in every format when a tool error stops the run (exit 2): `text` prints the message as a FAIL line, `json` writes the report shape with `result` set to `error`, an `error` field carrying the message and empty findings, and `sarif` writes a log whose run reports an unsuccessful invocation; before, only `codequality` did. `proctor gate` writes its text verdict on exit 2 too.
 
 ## 0.8.0 (2026-11-08)
 

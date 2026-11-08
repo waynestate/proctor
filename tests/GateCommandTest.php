@@ -243,6 +243,16 @@ final class GateCommandTest extends ProctorTestCase
         self::assertStringContainsString('does not exist', $data['error']);
     }
 
+    public function testAMissingBaselineIsAToolErrorWithATextReport(): void
+    {
+        $result = $this->gate('pass-app', ['--baseline=' . $this->app('no-such-dir')]);
+
+        self::assertSame(2, $result['exit']);
+        self::assertMatchesRegularExpression('/^proctor \S+ gate: ERROR$/m', $result['stdout']);
+        self::assertMatchesRegularExpression('/^FAIL proctor: Baseline ".*" does not exist\./m', $result['stdout']);
+        self::assertMatchesRegularExpression('/^RESULT: error \(the gate could not decide\)$/m', $result['stdout']);
+    }
+
     public function testABaselineThatIsNotAProctorReportIsAToolError(): void
     {
         $notJson = $this->gate('pass-app', ['--baseline=' . $this->tempFile('not json')]);
