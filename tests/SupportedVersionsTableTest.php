@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Waynestate\Proctor\Tests;
 
+use FilesystemIterator;
 use PHPUnit\Framework\TestCase;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 
 /**
  * The front page's supported-versions table must never drift from the policy
@@ -82,7 +85,7 @@ final class SupportedVersionsTableTest extends TestCase
         $html = file_get_contents($this->tempDir.'/site/index.html');
         $row = '            <tr><th scope="row">PHP</th><td>8.1</td><td>2023-11-25</td><td>2025-12-31</td><td><span class="mark mark--fail">End of life</span></td></tr>';
         self::assertNotFalse(strpos($html, $row), 'the committed table must carry the PHP 8.1 row the check would flag');
-        file_put_contents($this->tempDir.'/site/index.html', str_replace($row, str_replace('8.1', '9.9', $row), $html, 1));
+        file_put_contents($this->tempDir.'/site/index.html', str_replace($row, str_replace('8.1', '9.9', $row), $html));
 
         [$exit, $output] = $this->runScript($this->tempDir, ['--check']);
 
