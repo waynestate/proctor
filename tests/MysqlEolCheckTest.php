@@ -106,4 +106,59 @@ final class MysqlEolCheckTest extends ProctorTestCase
 
         self::assertSame([], $this->mysqlLines($stdout));
     }
+
+    public function testBareMajorTagIsGraded(): void
+    {
+        $dir = sys_get_temp_dir() . '/proctor-mysql-' . bin2hex(random_bytes(4));
+        mkdir($dir);
+        file_put_contents($dir . '/docker-compose.yml', "services:\n  db:\n    image: mysql:8\n");
+
+        $lines = $this->mysqlLines($this->runProctor($dir, 'text', $this->policy(), null, '2026-11-08')['stdout']);
+
+        // A bare major (mysql:8) is not graded: the policy keys on
+        // major.minor, so 8 resolves to no line, the reader does not invent a
+        // mapping and stays silent (MysqlEolCheck.php:23-25).
+        self::assertSame([], $lines);
+
+        unlink($dir . '/docker-compose.yml');
+        rmdir($dir);
+    }
+
+    public function testLastDayOfSecuritySupportStillWarns(): void
+    {
+        $dir = sys_get_temp_dir() . '/proctor-mysql-' . bin2hex(random_bytes(4));
+        mkdir($dir);
+        file_put_contents($dir . '/docker-compose.yml', "services:\n  db:\n    image: mysql:8.0\n");
+
+        $lines = $this->mysqlLines($this->runProctor($dir, 'text', $this->policy(), null, '2026-04-30')['stdout']);
+
+        // 2026-04-30 is the policy's security_until for 8.0 and the boundary
+        // is inclusive (Policy.php:168, $day <= $securityUntil), so the state
+        // is still Security on that day: MysqlEolCheck.php:166 maps Security
+        // to a warning and MysqlEolCheck.php:203 reads the zero days as
+        // "ends today".
+        self::assertSame([
+            'WARN mysql-eol: mysql 8.0 (docker-compose.yml) is in security-only support until 2026-04-30 (ends today)',
+        ], $lines);
+
+        unlink($dir . '/docker-compose.yml');
+        rmdir($dir);
+    }
+
+    public function testMariadbImageIsHandled(): void
+    {
+        $dir = sys_get_temp_dir() . '/proctor-mysql-' . bin2hex(random_bytes(4));
+        mkdir($dir);
+        file_put_contents($dir . '/docker-compose.yml', "services:\n  db:\n    image: mariadb:10.6\n");
+
+        $lines = $this->mysqlLines($this->runProctor($dir, 'text', $this->policy(), null, '2026-11-08')['stdout']);
+
+        // The image pattern matches mariadb (MysqlEolCheck.php:51), but the
+        // fixture policy has no mariadb component, so the image is ignored
+        // silently (MysqlEolCheck.php:66-70).
+        self::assertSame([], $lines);
+
+        unlink($dir . '/docker-compose.yml');
+        rmdir($dir);
+    }
 }
