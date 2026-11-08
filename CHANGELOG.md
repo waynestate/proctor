@@ -4,6 +4,7 @@
 
 - Changed: `preflight-pinned` accepts a Preflight component pinned to a full release tag (`MAJOR.MINOR.PATCH`, optional leading `v`, such as `@0.3.0`) as well as a commit SHA, since published stack tags are never moved or deleted (D-054). A branch, `~latest`, a partial version such as `0.3` or `1`, or no ref still warns, and the warning now says to pin a release tag such as `@0.3.0` or a commit SHA.
 - Added: a weekly `creed-copy-refresh` CI job (`scripts/creed-copy-refresh.sh`; schedule variable `PROCTOR_JOB=creed-copy`, or by hand from the web on main) re-exports the generated CREED copy in `src/Creed` from CREED main, rebuilds the docs and agent-ready files, runs `composer creed-copy:check` and `composer ci`, and pushes to main with the job token only when both pass; a red run leaves main untouched.
+- Changed: the pipeline pins every Preflight CI component to 0.3.0 (preflight@0.3.0); component image inputs are plain image names, since Preflight adds the Dependency Proxy prefix itself.
 - Changed: `mysql-eol` warns on a floating major tag such as `mysql:8` or `mysql:5` (pin a major.minor so it can be graded) instead of staying silent (SQUIRE-21c).
 - Tests: the MySQL EOL check proves bare-major tags, the last security-support day and MariaDB images (SQUIRE-21b).
 - Changed: the bundled CREED copy in `src/Creed` is refreshed from CREED 0.1.7-21: the policy gains the `sessions` block (SESAME and Drawbridge session lifetimes), and the latest Laravel patches move to 12.71.0 and 13.40.0 (the first policy-bot refresh).
