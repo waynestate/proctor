@@ -26,7 +26,8 @@
         "laravel/pint": "^1.32",
         "phpstan/phpstan": "^2.1",
         "waynestate/pinstripe": "^0.1",
-        "league/commonmark": "^2.10"
+        "league/commonmark": "^2.10",
+        "waynestate/advisor": "^0.1.6"
     },
     "config": {
         "platform": {
