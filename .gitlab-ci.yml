@@ -1,6 +1,6 @@
 # composer ci is the contract: the checks are defined there, and this pipeline only wraps them.
 # PROCTOR's pipeline, built from the PREFLIGHT components on this GitLab.
-# Pinned to PREFLIGHT 0.3.0. Never use ~latest.
+# Pinned to PREFLIGHT 0.3.1. Never use ~latest.
 # PROCTOR requires PHP ^8.3, so the test matrix starts at 8.3.
 # Docker Hub images go through the GitLab Dependency Proxy to avoid the anonymous pull limit.
 # This is the repo's own trusted pipeline: PROCTOR refuses --policy and --today in CI unless
