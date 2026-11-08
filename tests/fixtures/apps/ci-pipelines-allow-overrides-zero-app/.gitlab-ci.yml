@@ -1,0 +1,8 @@
+# A pipeline that sets PROCTOR_ALLOW_OVERRIDES to 0, which leaves the guard on.
+variables:
+  PROCTOR_ALLOW_OVERRIDES: "0"
+composer-ci:
+  image: composer:2.10.3
+  script:
+    - composer install --no-interaction --no-progress --prefer-dist
+    - composer ci

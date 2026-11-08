@@ -82,6 +82,7 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `ci-pipelines` | `proctor/ci-pipelines/unpinned-uses` |
 | `ci-pipelines` | `proctor/ci-pipelines/composer-audit-off` |
 | `ci-pipelines` | `proctor/ci-pipelines/composer-update` |
+| `ci-pipelines` | `proctor/ci-pipelines/allow-overrides` |
 | `preflight-pinned` | `proctor/preflight-pinned` |
 | `preflight-pinned` | `proctor/preflight-pinned/unpinned` |
 | `preflight-pinned` | `proctor/preflight-pinned/script-override` |
@@ -115,6 +116,8 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `policy-age` | `proctor/policy-age` |
 
 `proctor/composer-audit/skipped` is a failure, not an info finding: it fires when the composer executable is not on PATH or the app has no composer.lock, its message starts with `not audited:`, and an active `composer-audit` override downgrades it to a warning.
+
+`proctor/ci-pipelines/allow-overrides` warns only when the pipeline environment sets `PROCTOR_ALLOW_OVERRIDES` to `1`: the variable lets the app pass `--policy` and `--today` in CI (BEST_PRACTICES 1.2), so it could grade itself against a policy or a date it picks. Any other value leaves the guard on and gives no finding. Fix: remove the variable; only PROCTOR's own pipeline needs it.
 
 ## Kept in step[#](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html#kept-in-step)
 

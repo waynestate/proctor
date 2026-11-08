@@ -115,6 +115,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/ci-pipelines/unpinned-uses',
         'proctor/ci-pipelines/composer-audit-off',
         'proctor/ci-pipelines/composer-update',
+        'proctor/ci-pipelines/allow-overrides',
         // preflight-pinned
         'proctor/preflight-pinned/unpinned',
         'proctor/preflight-pinned/script-override',

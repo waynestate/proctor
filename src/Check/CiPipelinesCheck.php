@@ -25,6 +25,11 @@ use Symfony\Component\Yaml\Yaml;
  * pipeline that sets COMPOSER_NO_AUDIT or COMPOSER_NO_BLOCKING in its
  * environment, or COMPOSER_AUDIT_ABANDONED to ignore, warns
  * (proctor/ci-pipelines/composer-audit-off), whatever the project kind.
+ * A pipeline that sets PROCTOR_ALLOW_OVERRIDES to 1 in its environment
+ * warns too (proctor/ci-pipelines/allow-overrides): the variable lets
+ * the app pass --policy and --today in CI (BEST_PRACTICES 1.2), so it
+ * could grade itself against a policy or a date it picks; any other
+ * value leaves the guard on.
  *
  * A script line of a GitLab job (script, before_script or after_script)
  * or a GitHub step run that carries a command segment starting with
@@ -136,8 +141,8 @@ final class CiPipelinesCheck implements CheckInterface
     /**
      * The findings for .gitlab-ci.yml: a fail (stack packages) or a
      * warning (other projects) when the file is missing, unparseable, or
-     * no job's script runs composer ci, plus the composer-audit-off
-     * warnings for the environment it sets.
+     * no job's script runs composer ci, plus the composer-audit-off and
+     * allow-overrides warnings for the environment it sets.
      *
      * @return list<Finding>
      */
@@ -174,6 +179,10 @@ final class CiPipelinesCheck implements CheckInterface
         }
 
         $findings = $this->composerAuditOffFindings($data, $absolutePath, self::GITLAB_CI, true);
+        $allowOverrides = $this->allowOverridesFinding($data, $absolutePath, self::GITLAB_CI, true);
+        if ($allowOverrides !== null) {
+            $findings[] = $allowOverrides;
+        }
 
         $runsComposerCi = false;
         $seen = [];
@@ -232,8 +241,8 @@ final class CiPipelinesCheck implements CheckInterface
      * warning. For other projects the file is optional: a missing file
      * gives no finding, and the same rules apply as warnings. A uses:
      * ref that is not a 40-hex commit SHA is a warning either way. The
-     * composer-audit-off warnings for the environment it sets are added
-     * too.
+     * composer-audit-off and allow-overrides warnings for the environment
+     * it sets are added too.
      *
      * @return list<Finding>
      */
@@ -292,6 +301,10 @@ final class CiPipelinesCheck implements CheckInterface
             $this->composerAuditOffFindings($data, $absolutePath, self::GITHUB_CI, false),
             $findings,
         );
+        $allowOverrides = $this->allowOverridesFinding($data, $absolutePath, self::GITHUB_CI, false);
+        if ($allowOverrides !== null) {
+            $findings[] = $allowOverrides;
+        }
 
         $runsComposerCi = false;
         $seen = [];
@@ -409,16 +422,88 @@ final class CiPipelinesCheck implements CheckInterface
      * false (compared string-cast, case-insensitively), and
      * COMPOSER_AUDIT_ABANDONED set to ignore. One warning per variable
      * name per file, whatever the project kind: a warning, never a fail.
-     * GitLab settings come from the top-level variables: and each job's
-     * variables:, where a value is a scalar or a map with a value key;
-     * GitHub's from the top-level env:, each job's env: and each step's
-     * env:. A file that fails to parse gets none of these.
+     * A file that fails to parse gets none of these.
      *
      * @param array<string, mixed> $data the parsed pipeline map
      *
      * @return list<Finding>
      */
     private function composerAuditOffFindings(array $data, string $absolutePath, string $relativePath, bool $gitlab): array
+    {
+        $findings = [];
+        foreach ($this->pipelineEnvSettings($data, $gitlab) as $name => $values) {
+            $offending = false;
+            foreach ($values as $value) {
+                if ($this->switchesComposerAuditOff($name, $value)) {
+                    $offending = true;
+                    break;
+                }
+            }
+            if (!$offending) {
+                continue;
+            }
+            $findings[] = new Finding(
+                $this->id(),
+                Finding::STATUS_WARNING,
+                sprintf(
+                    'ci-pipelines-composer-audit-off: %s is set in the pipeline, so Composer\'s audit or blocking policy is switched off',
+                    $name,
+                ),
+                $relativePath,
+                $this->lineOf($name, $absolutePath),
+                null,
+                'composer-audit-off',
+            );
+        }
+
+        return $findings;
+    }
+
+    /**
+     * The warning for a pipeline that sets PROCTOR_ALLOW_OVERRIDES to 1,
+     * which lets the app pass --policy and --today in CI (BEST_PRACTICES
+     * 1.2) and grade itself against a policy or a date it picks. One
+     * warning per file, whatever the project kind: a warning, never a
+     * fail. Read from the same places as the audit switches: the GitLab
+     * top-level and job variables: and the GitHub top-level, job and
+     * step env:. Any other value (0, empty, false, yes) leaves the guard
+     * on: no finding.
+     *
+     * @param array<string, mixed> $data the parsed pipeline map
+     */
+    private function allowOverridesFinding(array $data, string $absolutePath, string $relativePath, bool $gitlab): ?Finding
+    {
+        $values = $this->pipelineEnvSettings($data, $gitlab)['PROCTOR_ALLOW_OVERRIDES'] ?? [];
+        foreach ($values as $value) {
+            if ($value === '1') {
+                return new Finding(
+                    $this->id(),
+                    Finding::STATUS_WARNING,
+                    'ci-pipelines-allow-overrides: PROCTOR_ALLOW_OVERRIDES is 1 in the pipeline, so PROCTOR accepts --policy and --today and the app can grade itself against a policy or date it picks; remove it (only PROCTOR\'s own pipeline needs it)',
+                    $relativePath,
+                    $this->lineOf('PROCTOR_ALLOW_OVERRIDES', $absolutePath),
+                    null,
+                    'allow-overrides',
+                );
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * The pipeline environment settings the file sets, whatever the
+     * project kind: every value seen for a name, string-cast, in
+     * first-seen order. GitLab settings come from the top-level
+     * variables: and each job's variables:, where a value is a scalar or
+     * a map with a value key; GitHub's from the top-level env:, each
+     * job's env: and each step's env:.
+     *
+     * @param array<string, mixed> $data the parsed pipeline map
+     *
+     * @return array<string, list<string>>
+     */
+    private function pipelineEnvSettings(array $data, bool $gitlab): array
     {
         $settings = [];
         if ($gitlab) {
@@ -449,33 +534,7 @@ final class CiPipelinesCheck implements CheckInterface
             }
         }
 
-        $findings = [];
-        foreach ($settings as $name => $values) {
-            $offending = false;
-            foreach ($values as $value) {
-                if ($this->switchesComposerAuditOff($name, $value)) {
-                    $offending = true;
-                    break;
-                }
-            }
-            if (!$offending) {
-                continue;
-            }
-            $findings[] = new Finding(
-                $this->id(),
-                Finding::STATUS_WARNING,
-                sprintf(
-                    'ci-pipelines-composer-audit-off: %s is set in the pipeline, so Composer\'s audit or blocking policy is switched off',
-                    $name,
-                ),
-                $relativePath,
-                $this->lineOf($name, $absolutePath),
-                null,
-                'composer-audit-off',
-            );
-        }
-
-        return $findings;
+        return $settings;
     }
 
     /**

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added: the `ci-pipelines` check warns (`proctor/ci-pipelines/allow-overrides`) when an app's pipeline sets `PROCTOR_ALLOW_OVERRIDES` to 1, which lets it pass `--policy` and `--today` in CI (BEST_PRACTICES 1.2); any other value leaves the guard on.
+
 ## 0.9.0 (2026-11-08)
 
 - Added: the `dev-only-packages` check: Laravel Boost, Debugbar (fail) and Telescope (warning) in `require` install in production and expose app internals, and test tools in `require` (phpunit, Pest, Mockery, Sail, Pail, Collision) are a warning; it reports, and is not in the deploy gate.

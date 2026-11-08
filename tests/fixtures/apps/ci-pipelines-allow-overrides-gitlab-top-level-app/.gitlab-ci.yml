@@ -1,0 +1,8 @@
+# A pipeline whose top-level variables let PROCTOR accept --policy and --today in CI.
+variables:
+  PROCTOR_ALLOW_OVERRIDES: "1"
+composer-ci:
+  image: composer:2.10.3
+  script:
+    - composer install --no-interaction --no-progress --prefer-dist
+    - composer ci

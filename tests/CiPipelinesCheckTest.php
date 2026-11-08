@@ -384,6 +384,67 @@ YAML,
         self::assertSame('gitlab pipeline runs composer ci', $findings[0]->message);
     }
 
+    public function testGitlabTopLevelAllowOverridesOneWarns(): void
+    {
+        $findings = (new CiPipelinesCheck())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/ci-pipelines-allow-overrides-gitlab-top-level-app'),
+        );
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertSame('proctor/ci-pipelines/allow-overrides', $findings[0]->ruleId);
+        self::assertSame(
+            'ci-pipelines-allow-overrides: PROCTOR_ALLOW_OVERRIDES is 1 in the pipeline, so PROCTOR accepts --policy and --today and the app can grade itself against a policy or date it picks; remove it (only PROCTOR\'s own pipeline needs it)',
+            $findings[0]->message,
+        );
+        self::assertSame(
+            [['ci-pipelines-allow-overrides', '.gitlab-ci.yml', 3]],
+            $this->triples($findings),
+        );
+    }
+
+    public function testGitlabJobVariableMapAllowOverridesOneWarns(): void
+    {
+        $findings = (new CiPipelinesCheck())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/ci-pipelines-allow-overrides-gitlab-job-map-app'),
+        );
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertSame('proctor/ci-pipelines/allow-overrides', $findings[0]->ruleId);
+        self::assertSame(
+            [['ci-pipelines-allow-overrides', '.gitlab-ci.yml', 5]],
+            $this->triples($findings),
+        );
+    }
+
+    public function testGithubStepEnvAllowOverridesOneWarns(): void
+    {
+        $findings = (new CiPipelinesCheck())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/ci-pipelines-allow-overrides-github-step-env-app'),
+        );
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertSame('proctor/ci-pipelines/allow-overrides', $findings[0]->ruleId);
+        self::assertSame('.github/workflows/ci.yml', (string) $findings[0]->path);
+        self::assertSame(
+            [['ci-pipelines-allow-overrides', '.github/workflows/ci.yml', 17]],
+            $this->triples($findings),
+        );
+    }
+
+    public function testAllowOverridesZeroDoesNotWarn(): void
+    {
+        $findings = (new CiPipelinesCheck())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/ci-pipelines-allow-overrides-zero-app'),
+        );
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+        self::assertSame('gitlab pipeline runs composer ci', $findings[0]->message);
+    }
+
     public function testGitlabScriptLineWithComposerUpdateWarns(): void
     {
         $findings = (new CiPipelinesCheck())->run(

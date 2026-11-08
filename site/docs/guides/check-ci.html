@@ -46,10 +46,11 @@
 <p><code>ci-pipelines</code> enforces the CI contract. For a stack package (a composer.json <code>name</code> starting with <code>waynestate/</code>), both <code>.gitlab-ci.yml</code> and <code>.github/workflows/ci.yml</code> must exist and run <code>composer ci</code>; a missing or incomplete file is a failure. For any other project, a missing or incomplete <code>.gitlab-ci.yml</code> is a warning and <code>.github/workflows/ci.yml</code> is optional.</p>
 <p>The files are parsed as YAML, not grepped: a <code>composer ci</code> that only appears in a comment is not a script line, and a GitLab job is a top-level map with a <code>script</code> key. A GitHub job counts when a step runs <code>composer ci</code> or calls a reusable workflow with <code>ci-command: composer ci</code>.</p>
 <p>A private stack package that sets <code>extra.proctor.github-mirror</code> to <code>false</code> in composer.json must never be on GitHub: a missing <code>.github/workflows/ci.yml</code> then gives no finding, and a present one warns (<code>proctor/ci-pipelines/github-private</code>) along with the warning-only rules.</p>
-<p>Two more rules warn, and never fail, for stack packages and other projects alike:</p>
+<p>Three more rules warn, and never fail, for stack packages and other projects alike:</p>
 <ul>
 <li>A GitHub <code>uses:</code> ref that is not a 40-hex commit SHA (<code>proctor/ci-pipelines/unpinned-uses</code>).</li>
 <li>A pipeline environment that switches Composer's audit or blocking policy off (<code>proctor/ci-pipelines/composer-audit-off</code>): <code>COMPOSER_NO_AUDIT</code> or <code>COMPOSER_NO_BLOCKING</code> set to anything but an empty string, <code>0</code> or <code>false</code>, or <code>COMPOSER_AUDIT_ABANDONED</code> set to <code>ignore</code>. On GitLab these come from the top-level or job <code>variables:</code> (a scalar or a map with a <code>value</code> key); on GitHub from the top-level, job or step <code>env:</code>.</li>
+<li>A pipeline environment that sets <code>PROCTOR_ALLOW_OVERRIDES</code> to <code>1</code> (<code>proctor/ci-pipelines/allow-overrides</code>): the variable lets the app pass <code>--policy</code> and <code>--today</code> in CI (BEST_PRACTICES 1.2), so it could grade itself against a policy or a date it picks. Any other value leaves the guard on. On GitLab it is read from the top-level or job <code>variables:</code> (a scalar or a map with a <code>value</code> key); on GitHub from the top-level, job or step <code>env:</code>. Remove the variable; only PROCTOR's own pipeline needs it.</li>
 </ul>
 <p>When nothing needs fixing the check passes with <code>both pipelines run composer ci</code>, or <code>gitlab pipeline runs composer ci</code> when there is no GitHub workflow.</p>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
@@ -100,9 +101,13 @@
 <td><code>ci-pipelines</code></td>
 <td><code>proctor/ci-pipelines/composer-audit-off</code></td>
 </tr>
+<tr>
+<td><code>ci-pipelines</code></td>
+<td><code>proctor/ci-pipelines/allow-overrides</code></td>
+</tr>
 </tbody>
 </table></div>
-<p>Fix a failing pipeline by adding a GitLab job whose <code>script</code> runs <code>composer ci</code>, adding a GitHub workflow that runs <code>composer ci</code> or calls a reusable workflow with <code>ci-command: composer ci</code>, and pinning every <code>uses:</code> ref to a commit SHA.</p>
+<p>Fix a failing pipeline by adding a GitLab job whose <code>script</code> runs <code>composer ci</code>, adding a GitHub workflow that runs <code>composer ci</code> or calls a reusable workflow with <code>ci-command: composer ci</code>, pinning every <code>uses:</code> ref to a commit SHA, and removing <code>PROCTOR_ALLOW_OVERRIDES</code> from the pipeline environment, which only PROCTOR's own pipeline needs.</p>
 <h2 id="preflight-pinned">preflight-pinned<a class="docs-heading-link" aria-label="Link to this section" href="#preflight-pinned">#</a></h2>
 <p><code>preflight-pinned</code> warns, and never fails, when an app includes a Preflight component at a moving ref or re-declares what an included Preflight job runs. A Preflight include is an <code>include:</code> entry whose <code>component:</code> path contains <code>/preflight/</code>.</p>
 <ul>

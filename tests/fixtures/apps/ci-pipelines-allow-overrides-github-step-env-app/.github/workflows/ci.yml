@@ -1,0 +1,17 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run the checks
+        run: composer ci
+        env:
+          PROCTOR_ALLOW_OVERRIDES: 1

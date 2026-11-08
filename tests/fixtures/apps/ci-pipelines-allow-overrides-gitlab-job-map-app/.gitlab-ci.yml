@@ -1,0 +1,9 @@
+# A pipeline that runs composer ci, but its job environment lets PROCTOR accept --policy and --today.
+composer-ci:
+  image: composer:2.10.3
+  variables:
+    PROCTOR_ALLOW_OVERRIDES:
+      value: "1"
+  script:
+    - composer install --no-interaction --no-progress --prefer-dist
+    - composer ci

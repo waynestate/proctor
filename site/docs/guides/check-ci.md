@@ -18,10 +18,11 @@ The files are parsed as YAML, not grepped: a `composer ci` that only appears in 
 
 A private stack package that sets `extra.proctor.github-mirror` to `false` in composer.json must never be on GitHub: a missing `.github/workflows/ci.yml` then gives no finding, and a present one warns (`proctor/ci-pipelines/github-private`) along with the warning-only rules.
 
-Two more rules warn, and never fail, for stack packages and other projects alike:
+Three more rules warn, and never fail, for stack packages and other projects alike:
 
 - A GitHub `uses:` ref that is not a 40-hex commit SHA (`proctor/ci-pipelines/unpinned-uses`).
 - A pipeline environment that switches Composer's audit or blocking policy off (`proctor/ci-pipelines/composer-audit-off`): `COMPOSER_NO_AUDIT` or `COMPOSER_NO_BLOCKING` set to anything but an empty string, `0` or `false`, or `COMPOSER_AUDIT_ABANDONED` set to `ignore`. On GitLab these come from the top-level or job `variables:` (a scalar or a map with a `value` key); on GitHub from the top-level, job or step `env:`.
+- A pipeline environment that sets `PROCTOR_ALLOW_OVERRIDES` to `1` (`proctor/ci-pipelines/allow-overrides`): the variable lets the app pass `--policy` and `--today` in CI (BEST_PRACTICES 1.2), so it could grade itself against a policy or a date it picks. Any other value leaves the guard on. On GitLab it is read from the top-level or job `variables:` (a scalar or a map with a `value` key); on GitHub from the top-level, job or step `env:`. Remove the variable; only PROCTOR's own pipeline needs it.
 
 When nothing needs fixing the check passes with `both pipelines run composer ci`, or `gitlab pipeline runs composer ci` when there is no GitHub workflow.
 
@@ -37,8 +38,9 @@ When nothing needs fixing the check passes with `both pipelines run composer ci`
 | `ci-pipelines` | `proctor/ci-pipelines/github-private` |
 | `ci-pipelines` | `proctor/ci-pipelines/unpinned-uses` |
 | `ci-pipelines` | `proctor/ci-pipelines/composer-audit-off` |
+| `ci-pipelines` | `proctor/ci-pipelines/allow-overrides` |
 
-Fix a failing pipeline by adding a GitLab job whose `script` runs `composer ci`, adding a GitHub workflow that runs `composer ci` or calls a reusable workflow with `ci-command: composer ci`, and pinning every `uses:` ref to a commit SHA.
+Fix a failing pipeline by adding a GitLab job whose `script` runs `composer ci`, adding a GitHub workflow that runs `composer ci` or calls a reusable workflow with `ci-command: composer ci`, pinning every `uses:` ref to a commit SHA, and removing `PROCTOR_ALLOW_OVERRIDES` from the pipeline environment, which only PROCTOR's own pipeline needs.
 
 ## preflight-pinned[#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#preflight-pinned)
 
