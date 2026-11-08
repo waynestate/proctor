@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.8.0 (2026-11-08)
+
 - Changed: `preflight-pinned` accepts a Preflight component pinned to a full release tag (`MAJOR.MINOR.PATCH`, optional leading `v`, such as `@0.3.0`) as well as a commit SHA, since published stack tags are never moved or deleted (D-054). A branch, `~latest`, a partial version such as `0.3` or `1`, or no ref still warns, and the warning now says to pin a release tag such as `@0.3.0` or a commit SHA.
 - Added: a weekly `creed-copy-refresh` CI job (`scripts/creed-copy-refresh.sh`; schedule variable `PROCTOR_JOB=creed-copy`, or by hand from the web on main) re-exports the generated CREED copy in `src/Creed` from CREED main, rebuilds the docs and agent-ready files, runs `composer creed-copy:check` and `composer ci`, and pushes to main with the job token only when both pass; a red run leaves main untouched.
 - Changed: the pipeline pins every Preflight CI component to 0.3.0 (preflight@0.3.0); component image inputs are plain image names, since Preflight adds the Dependency Proxy prefix itself.
@@ -15,10 +17,10 @@
 - Changed: `raw-identity-header` also flags direct reads of `X-Sesame-Assertion`, the signed assertion Drawbridge sends; only SESAME's gateway driver should read it.
 - Fixed: the README and docs usage line for `proctor check` lists `--timeout` (seconds for `composer audit`, default 300), which the command has accepted all along.
 - Fixed: the front page says Sourdough starts all five app shapes with PROCTOR set up; it no longer says raw PHP only.
-
 - Changed: CI caches Composer downloads per lock file (`.composer-cache`, keyed on `composer.lock` and `deploy/composer.lock`), so a pipeline stops fetching every package from Packagist on every run. Images already come through the Dependency Proxy.
 - Added: `mysql-eol` grades every MySQL or MariaDB version the repository names (an official `mysql` or `mariadb` image on an `image:` line in a root `docker-compose*.yml` or `compose*.yml`, and `SQUIRE_MYSQL_IMAGE=mysql:<version>` in `.env.squire.example` or `.env.example`) against the policy's mysql and mariadb lines as of `--today`, with the same table as php-floor except a supported version stays silent instead of passing: active is silent, security-only warns with the days left, and eol and `eol_grace_expired` warn until Citadel offers a supported MySQL (D-008; rule id `proctor/mysql-eol`). Silent when the policy has no mysql or mariadb component.
 - Changed: `mysql-eol` warns, never fails, until Citadel's shared database server offers a supported MySQL (D-008); an end-of-life line still says `eol_grace_expired` and to move to MySQL 8.4 or later (D-053).
+- Fixed: the README's `raw-identity-header` entry says a direct `X-Sesame-Assertion` read is flagged (it said it was not), and the front page's GitLab example includes `preflight/proctor@0.3.0` (was `@0.1.1`).
 
 ## 0.7.0 (2026-11-07)
 

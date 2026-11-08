@@ -109,7 +109,7 @@ vendor/bin/proctor gate [--path=.] [--format=text|json] [--baseline=<report or d
 - `repo-url-credentials`: warns when a credential is written into a package source URL: a deploy token in the userinfo of a composer.json repository URL or a composer.lock source/dist URL (`https://gitlab+deploy-token-12:***@host/group/lib.git`), a bare token user of 20+ characters, a `private_token`, `access_token`, `token` or `password` query parameter, or a `.npmrc` line that sets `_authToken`, `_auth` or `_password` to a literal value (`${SOME_VAR}` is fine). The secret is masked as `***` in the message, so the report itself is safe to hand back. Warning, not failure. Fix by moving the token to `auth.json`, which is gitignored, or a CI variable, and using one registry URL without credentials. The proctor spots the answer key taped inside the desk before the student does.
 - `instant-client-committed`: warns when Oracle Instant Client is committed to the repo: an `instantclient*.zip` or `instantclient*.rpm` archive, any file under a directory named `instantclient` or `instantclient_*` (an unzipped install), or a loose client library such as `libclntsh.so`, `libociei.so` or `oci.dll`. Only committed files count: the git-tracked files when the app path sits in a git repository and git can be run, otherwise the files on disk. Skipped at any depth: `vendor/`, `node_modules/` and `.git/`. One warning per match: the archive, the topmost matching directory, or the loose file, each reported with its total size in MB. Warning, not failure: Citadel's images already include Instant Client, and the WSU Sail and Docker images will too. Fix by deleting it, running `git rm -r --cached` on the path PROCTOR reports, and adding that path to .gitignore. The proctor takes the 60-to-126-MB textbook off the student's desk: the exam hall already keeps a copy on the shelf.
 - `env-outside-config`: warns, never fails, for every `env()` call in a Laravel app (an `artisan` file at the root, or `laravel/framework` in composer.json `require`) outside its config files: after `php artisan config:cache` Laravel no longer loads .env, so the call returns null in production while it works on a laptop. Scanned: every `*.php` file except the top-level `config/` and `bootstrap/cache/`, and `tests/`, `vendor/`, `node_modules/`, `storage/` and `.git/` at any depth. PHP is read on the syntax tree, so a comment, a string, a method named `env` and a function imported from another namespace are not flagged; a Blade line is matched only with a quoted first argument (`{{ env('APP_NAME') }}`), and Blade's `@env('local')` directive is not a call. Larastan enforces the same rule, so a call that carries its ignore marker for it (`@phpstan-ignore larastan.noEnvCallsOutsideOfConfig` on the line or on a comment line right above) is an info note instead (`proctor/env-outside-config/suppressed`), visible but not counted; a closure in `bootstrap/app.php` that runs before config is loaded is the usual reason. Fix by reading the variable in a config file and calling `config()` where it is used. The proctor reads the answer sheet, not the notes in the margin.
-- `raw-identity-header`: warns, never fails, when app code reads an identity header directly instead of taking the user from SESAME. Drawbridge, the gateway, signs the session into the `X-Sesame-Assertion` header and passes the user's claims as request headers; only SESAME's gateway driver may open that pair, because it verifies the signature before a claim becomes the logged-in user (CREED auth-3), and app code that reads a claim header itself accepts whatever value the proxy, or a client, put there. Scanned: every `*.php` file except `vendor/`, `node_modules/`, `storage/`, `tests/` and `.git/` at any depth. PHP is read on the syntax tree with names resolved, so a header name in a comment or a log string, a variable named `$REMOTE_USER`, and `getenv()` with a computed argument are not flagged. Flagged read positions: a string key on `$_SERVER` or `$_ENV`, the quoted argument of `getenv()` or `apache_getenv()`, the quoted first argument of a method named `header`, `server`, `hasHeader`, `getHeader` or `getHeaderLine` (and of `get()` on a `->headers` object), and a string key on the result of `getallheaders()` or `apache_request_headers()`, directly or through a variable assigned from them. Names match case-insensitively with `-` and `_` interchangeable, and where the read comes from `$_SERVER` or the environment the `HTTP_` prefix Apache adds to request headers is accepted too. `X-Sesame-Assertion` is the signed assertion itself and `PHP_AUTH_USER` is basic-auth material, so neither is an identity claim and neither is flagged. Blade templates (`*.blade.php`) are matched line by line for `$_SERVER['...']` and `request()->header('...')` / `request()->server('...')`. A file that does not parse is skipped here; the portability check reports it. Fix by taking the user from SESAME (the gateway driver) and reading the claims it returns. The proctor checks the ID at the door; it does not trust the name written on the exam paper.
+- `raw-identity-header`: warns, never fails, when app code reads an identity header directly instead of taking the user from SESAME. Drawbridge, the gateway, signs the session into the `X-Sesame-Assertion` header and passes the user's claims as request headers; only SESAME's gateway driver may open that pair, because it verifies the signature before a claim becomes the logged-in user (CREED auth-3), and app code that reads a claim header itself accepts whatever value the proxy, or a client, put there. Scanned: every `*.php` file except `vendor/`, `node_modules/`, `storage/`, `tests/` and `.git/` at any depth. PHP is read on the syntax tree with names resolved, so a header name in a comment or a log string, a variable named `$REMOTE_USER`, and `getenv()` with a computed argument are not flagged. Flagged read positions: a string key on `$_SERVER` or `$_ENV`, the quoted argument of `getenv()` or `apache_getenv()`, the quoted first argument of a method named `header`, `server`, `hasHeader`, `getHeader` or `getHeaderLine` (and of `get()` on a `->headers` object), and a string key on the result of `getallheaders()` or `apache_request_headers()`, directly or through a variable assigned from them. Names match case-insensitively with `-` and `_` interchangeable, and where the read comes from `$_SERVER` or the environment the `HTTP_` prefix Apache adds to request headers is accepted too. `X-Sesame-Assertion` is the signed assertion itself, so it is flagged like any other direct read; `PHP_AUTH_USER` is basic-auth material, so it is not an identity claim and is not flagged. Blade templates (`*.blade.php`) are matched line by line for `$_SERVER['...']` and `request()->header('...')` / `request()->server('...')`. A file that does not parse is skipped here; the portability check reports it. Fix by taking the user from SESAME (the gateway driver) and reading the claims it returns. The proctor checks the ID at the door; it does not trust the name written on the exam paper.
 - `app-key`: warns, never fails, when the repository gives away the APP_KEY or makes a leaked one worse. `proctor/app-key/committed-env`: a real env file is committed (`.env`, `.env.production`, any `.env.*` that is not an example or a test file). `proctor/app-key/committed-key`: a committed env file, examples included, sets `APP_KEY` or `APP_PREVIOUS_KEYS` to a real key (`base64:` and 16 or 32 bytes), or `config/app.php` carries one as a literal; the key is never printed. `proctor/app-key/cookie-sessions`: `SESSION_DRIVER=cookie` in a committed env file, or a `cookie` default in `config/session.php`. A real env file is graded only when PROCTOR knows it is committed (git lists it, or `CI`, `GITLAB_CI` or `GITHUB_ACTIONS` is set), so a developer's own `.env` never raises a flag; example files (`.example`, `.dist`, `.sample`, `.template`) are always graded, and test files (`.env.testing`, `.env.test`, `.env.ci`, `.env.dusk.*`) are skipped. Fix by removing the file or value, rotating the key with `php artisan key:generate` on every environment that used it, and moving sessions to the database or redis driver. The proctor does not read the answer key aloud; it only notes that it was left on the desk.
 - `served-folder`: warns, never fails, when a committed file under the top-level `public/` can be downloaded by a stranger: a PHP file that calls `phpinfo()` (`proctor/served-folder/phpinfo`), or a database dump (`*.sql`, `*.sql.gz`, `*.dump`), a backup or editor copy (`*.bak`, `*.old`, `*.orig`, `*.swp`, a name ending in `~`), a log, an env file or a database admin tool (`adminer*.php`) (`proctor/served-folder/debug-file`). No finding when the app has no `public/` folder. Fix by deleting the file or moving it out of `public/`. The proctor clears the scratch paper off the desk before the hall opens.
 - `world-writable`: warns, never fails, when the repository sets mode 777: `chmod` with `777`, `0777`, `a+rwx` or `ugo+rwx` in a shell script, a Dockerfile, a Makefile, `.gitlab-ci.yml` or the `scripts` of composer.json and package.json, or a PHP `chmod()` with the literal `0777`. Comment lines, the sticky `1777` and `mkdir()` (the umask still applies to it) are not flagged; `tests/` is skipped. Fix by giving the web server user write access to the folders it needs (`storage/` and `bootstrap/cache/` in Laravel) and nothing more. The proctor does not prop the exam-room door open for anyone who wanders by.
@@ -638,7 +638,7 @@ Pick the copy your reader needs with `--format`. The findings are the same in al
 White copy · for people · `--format=text` (the default)
 
 ```
-proctor 0.7.0 | composer: 2.10.3
+proctor 0.8.0 | composer: 2.10.3
 Policy: bundled (/app/src/Creed/policy.json), refreshed 2026-10-29, 0 days ago
 PASS php-floor: php floor 8.4 is active
 FAIL unbounded-constraints: vendor/dev constraint "dev-master" is unbounded
@@ -662,7 +662,7 @@ Canary copy · for scripts · `--format=json`
 ```
 {
     "tool": "proctor",
-    "version": "0.7.0",
+    "version": "0.8.0",
     "path": "tests/fixtures/apps/unbounded-app",
     "today": "2026-10-29",
     "result": "fail",
@@ -733,7 +733,7 @@ Gold copy · for GitHub code scanning · `--format=sarif`
     "version": "2.1.0",
     "runs": [
         {
-            "tool": { "driver": { "name": "proctor", "version": "0.7.0", … } },
+            "tool": { "driver": { "name": "proctor", "version": "0.8.0", … } },
             "results": [
                 {
                     "ruleId": "proctor/unbounded-constraints/unbounded",
@@ -799,7 +799,7 @@ Hall G GitLab, through Preflight
 
 ```
 include:
-  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.1.1
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.3.0
     inputs:
       proctor_command: vendor/bin/proctor check --format=codequality --policy=vendor/waynestate/creed/policy/policy.json
 ```
@@ -1811,7 +1811,7 @@ A platform hook should fail open on 2, with an alert: a bug in the gate must nev
 The text verdict leads with the answer and lists only what is not a pass:
 
 ```
-proctor 0.7.0 gate: NO-GO
+proctor 0.8.0 gate: NO-GO
 Policy: vendor (vendor/waynestate/creed/policy/policy.json), refreshed 2026-10-20, 7 days ago
 Baseline: none, so this is a first deploy and every failure blocks
 Checks: php-floor, unpatched, laravel-eol, laravel-php, lock-committed, composer-audit, overrides, policy-age
@@ -2930,13 +2930,19 @@ Source: https://proctor.apps.wayne.edu/docs/upgrading.html
 
 PROCTOR is the invigilator, so upgrading it is a seat change, not a new exam: same hall, fresher pen. This page tells you how to move an app from one PROCTOR release to the next and which changes affect your runs. Start with the release that has a break, then work down to the additive ones.
 
-### 0.7.0[#](https://proctor.apps.wayne.edu/docs/upgrading.html#0-7-0)
+### 0.8.0[#](https://proctor.apps.wayne.edu/docs/upgrading.html#0-8-0)
 
-Released 2026-11-07. This is a pre-1.0 minor: consumers that pin `^0.6` stay on 0.6.x until they move their constraint to `^0.7`. Most of what is new is additive (`proctor gate`, the deploy gate, and the `raw-identity-header`, `env-outside-config`, `app-key`, `served-folder`, `laravel-php` and `laravel-eol` checks), but one change can turn a passing run into a failing one.
+Released 2026-11-08. This is a pre-1.0 minor: consumers that pin `^0.7` stay on 0.7.x until they move their constraint to `^0.8`. Most of what is new is additive or a warning (the `mysql-eol` check, the `X-Sesame-Assertion` read in `raw-identity-header`, the ADVISOR module, release tags accepted by `preflight-pinned`), but one change can turn a passing run into a failing one.
 
 #### Breaking[#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking)
 
-- `node-eol` fails an app that pins an end-of-life Node line (Node 20 or older under the bundled policy, as of 2026-04-30). Node 20 is past the grace window, so it fails as `eol_grace_expired`, which no override softens: move to Node 22 or 24.
+- `crlf-deploy-script` fails an app whose deploy script has Windows line endings (CRLF): the top-level `build.sh` and `release.sh`, and any `.sh` under `deployments/`, `deploy_scripts/`, `deploy/` or `scripts/`. Bash on Linux reads the carriage return as part of each command, so such a script was already broken on the host; PROCTOR now says so before the deploy does. Convert the file to LF and add `*.sh text eol=lf` to `.gitattributes`.
+
+#### Changed[#](https://proctor.apps.wayne.edu/docs/upgrading.html#changed)
+
+- `mysql-eol` is new and warns, never fails, while Citadel's shared database server is MySQL 5.6 (D-008, D-053). It grades the MySQL or MariaDB version named in a root compose file and in `SQUIRE_MYSQL_IMAGE` in `.env.example` or `.env.squire.example`: a security-only line warns with the days left, an end-of-life line warns as `eol_grace_expired` and says to move to MySQL 8.4 or later, and a floating major tag such as `mysql:8` warns until you pin a major.minor. It turns into a fail once Citadel offers a supported MySQL, so treat these warnings as the to-do list for that day.
+- `raw-identity-header` also warns on a direct read of `X-Sesame-Assertion`, the signed assertion Drawbridge sends. Only SESAME's gateway driver should read it; take the user from SESAME instead.
+- `preflight-pinned` accepts a Preflight component pinned to a full release tag such as `@0.3.0` as well as a commit SHA (D-054), so a tag pin no longer warns. A branch, `~latest` or a partial version such as `@0.3` still warns.
 
 #### Deprecated[#](https://proctor.apps.wayne.edu/docs/upgrading.html#deprecated)
 
@@ -2944,13 +2950,37 @@ Released 2026-11-07. This is a pre-1.0 minor: consumers that pin `^0.6` stay on 
 
 #### Steps[#](https://proctor.apps.wayne.edu/docs/upgrading.html#steps)
 
+1. Move the PROCTOR constraint in your composer.json from `^0.7` to `^0.8`, then apply it with `composer require waynestate/proctor --dev`.
+2. Re-run the check in CI and read any `crlf-deploy-script` finding first, then the `mysql-eol` warnings:
+   ```bash
+   vendor/bin/proctor check
+   ```
+
+#### How to verify[#](https://proctor.apps.wayne.edu/docs/upgrading.html#how-to-verify)
+
+- Run `vendor/bin/proctor check --format=json` and confirm the `version` field reads `0.8.0`.
+
+### 0.7.0[#](https://proctor.apps.wayne.edu/docs/upgrading.html#0-7-0)
+
+Released 2026-11-07. This is a pre-1.0 minor: consumers that pin `^0.6` stay on 0.6.x until they move their constraint to `^0.7`. Most of what is new is additive (`proctor gate`, the deploy gate, and the `raw-identity-header`, `env-outside-config`, `app-key`, `served-folder`, `laravel-php` and `laravel-eol` checks), but one change can turn a passing run into a failing one.
+
+#### Breaking[#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-1)
+
+- `node-eol` fails an app that pins an end-of-life Node line (Node 20 or older under the bundled policy, as of 2026-04-30). Node 20 is past the grace window, so it fails as `eol_grace_expired`, which no override softens: move to Node 22 or 24.
+
+#### Deprecated[#](https://proctor.apps.wayne.edu/docs/upgrading.html#deprecated-1)
+
+- None recorded so far.
+
+#### Steps[#](https://proctor.apps.wayne.edu/docs/upgrading.html#steps-1)
+
 1. Move the PROCTOR constraint in your composer.json from `^0.6` to `^0.7`, then apply it with `composer require waynestate/proctor --dev`.
 2. Re-run the check in CI and read any `node-eol` finding first:
    ```bash
    vendor/bin/proctor check
    ```
 
-#### How to verify[#](https://proctor.apps.wayne.edu/docs/upgrading.html#how-to-verify)
+#### How to verify[#](https://proctor.apps.wayne.edu/docs/upgrading.html#how-to-verify-1)
 
 - Run `vendor/bin/proctor check --format=json` and confirm the `version` field reads `0.7.0`.
 
@@ -2958,21 +2988,21 @@ Released 2026-11-07. This is a pre-1.0 minor: consumers that pin `^0.6` stay on 
 
 Released 2026-11-05. This is a pre-1.0 minor: consumers that pin `^0.5` stay on 0.5.x until they move their constraint to `^0.6`. Most of what is new is additive, but three changes can turn a passing run into a failing one.
 
-#### Breaking[#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-1)
+#### Breaking[#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-2)
 
 - `composer-audit` fails when the composer executable is not on PATH or the app has no composer.lock (rule id `proctor/composer-audit/skipped`, message starting with `not audited:`). An app whose audit could not run used to pass with an info line; it now exits non-zero until Composer is installed, the lock is committed, or an active `composer-audit` override with a reason and an expiry downgrades the fail to a warning.
 - `composer-audit` fails each ignore entry in composer.json that no active `composer-audit` override backs (rule id `proctor/composer-audit/unbacked-ignore`). An app that silences audit results in its own composer.json used to earn only a count warning; it now exits non-zero until every entry is backed by an active override whose `advisory` field names the entry's advisory id, whose `package` field matches the entry's package, or that carries no scope at all. Steps: record one such entry per unbacked ignore in policy-overrides.json with a reason and an expiry, keep the composer.json ignore until the override expires, then remove the ignore entry.
 - **Refused `--policy` and `--today` in CI.** In CI (any of `CI`, `GITLAB_CI` or `GITHUB_ACTIONS` set to a value other than `0` or `false`), `proctor check` now refuses `--policy` and `--today` with a tool error (exit 2) unless the job sets `PROCTOR_ALLOW_OVERRIDES=1`. In CI the policy and the date must come from the stack, not from the app being checked: a pipeline that could pass its own policy or date could grade itself. Pipelines that pass these options must either set `PROCTOR_ALLOW_OVERRIDES: "1"` as a variable of a trusted job (a protected or group-level CI variable, never the app's own `.gitlab-ci.yml`) or drop the option: name the policy with the `PROCTOR_POLICY` environment variable instead of `--policy` (it stays allowed in CI), and drop `--today` or let the trusted job allow it. Outside CI nothing changes.
 
-#### Changed[#](https://proctor.apps.wayne.edu/docs/upgrading.html#changed)
+#### Changed[#](https://proctor.apps.wayne.edu/docs/upgrading.html#changed-1)
 
 - An app that failed only because of a dev-only advisory now warns instead. An advisory on a package that composer.lock lists only in `packages-dev` is a warning at any severity, with the message ending in ` [dev dependency]`; a name in both lists counts as runtime and still fails at or above the threshold. No action is required unless you want the dev dependency updated, because dev tools run in CI.
 
-#### Deprecated[#](https://proctor.apps.wayne.edu/docs/upgrading.html#deprecated-1)
+#### Deprecated[#](https://proctor.apps.wayne.edu/docs/upgrading.html#deprecated-2)
 
 - None recorded so far.
 
-#### Steps[#](https://proctor.apps.wayne.edu/docs/upgrading.html#steps-1)
+#### Steps[#](https://proctor.apps.wayne.edu/docs/upgrading.html#steps-2)
 
 1. Move the PROCTOR constraint in your composer.json from `^0.5` to `^0.6`, then apply it with `composer require waynestate/proctor --dev`.
 2. Re-run the check in CI and read any `Refused:` message first:
@@ -2982,7 +3012,7 @@ Released 2026-11-05. This is a pre-1.0 minor: consumers that pin `^0.5` stay on 
 3. For each refused option, either set `PROCTOR_ALLOW_OVERRIDES` to `1` on the trusted job (GitLab: group Settings, CI/CD, Variables, scope Protected), or drop the option and name the policy with `PROCTOR_POLICY`.
 4. Make sure Composer and composer.lock are present where the check runs, or record a composer-audit override.
 
-#### How to verify[#](https://proctor.apps.wayne.edu/docs/upgrading.html#how-to-verify-1)
+#### How to verify[#](https://proctor.apps.wayne.edu/docs/upgrading.html#how-to-verify-2)
 
 - Run `vendor/bin/proctor check --format=json` and confirm the `version` field reads `0.6.0`.
 - Run `vendor/bin/proctor check` in CI: the run reaches the checks when no refused option is present, or the trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`.
@@ -2992,16 +3022,16 @@ Released 2026-11-05. This is a pre-1.0 minor: consumers that pin `^0.5` stay on 
 
 Released 2026-11-03. This is a pre-1.0 minor: consumers that pin `^0.4` stay on 0.4.x until they move their constraint to `^0.5`. Most of what is new warns and never fails, but one check can now turn a passing run into a failing one.
 
-#### Breaking[#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-2)
+#### Breaking[#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-3)
 
 - `composer-audit` fails when `composer audit` runs but its output is not parseable JSON (rule id `proctor/composer-audit/could-not-run`, message starting `not audited:`). A run that audited nothing used to pass quietly; it now exits non-zero, so an app whose audit cannot run will go red until the audit is fixed.
 - Consumers that pin `^0.4` stay on 0.4.x until they move their constraint to `^0.5`.
 
-#### Deprecated[#](https://proctor.apps.wayne.edu/docs/upgrading.html#deprecated-2)
+#### Deprecated[#](https://proctor.apps.wayne.edu/docs/upgrading.html#deprecated-3)
 
 - None recorded for this release.
 
-#### Steps[#](https://proctor.apps.wayne.edu/docs/upgrading.html#steps-2)
+#### Steps[#](https://proctor.apps.wayne.edu/docs/upgrading.html#steps-3)
 
 1. Move the PROCTOR constraint in your composer.json from `^0.4` to `^0.5`.
 2. Apply it with the install command from the README:
@@ -3013,7 +3043,7 @@ Released 2026-11-03. This is a pre-1.0 minor: consumers that pin `^0.4` stay on 
    vendor/bin/proctor check
    ```
 
-#### How to verify[#](https://proctor.apps.wayne.edu/docs/upgrading.html#how-to-verify-2)
+#### How to verify[#](https://proctor.apps.wayne.edu/docs/upgrading.html#how-to-verify-3)
 
 - Run `vendor/bin/proctor check --format=json` and confirm the `version` field reads `0.5.0`.
 - Confirm the new warnings appear where they apply. They warn and never fail:
@@ -3025,15 +3055,15 @@ Released 2026-11-03. This is a pre-1.0 minor: consumers that pin `^0.4` stay on 
 
 Released 2026-11-03. This is a pre-1.0 minor: consumers that pin `^0.3` stay on 0.3.x until they move their constraint to `^0.4`. The new checks warn and never fail.
 
-#### Breaking[#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-3)
+#### Breaking[#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-4)
 
 - Consumers that pin `^0.3` stay on 0.3.x until they move their constraint to `^0.4`. That constraint move is the only break in this release.
 
-#### Deprecated[#](https://proctor.apps.wayne.edu/docs/upgrading.html#deprecated-3)
+#### Deprecated[#](https://proctor.apps.wayne.edu/docs/upgrading.html#deprecated-4)
 
 - None recorded for this release.
 
-#### Steps[#](https://proctor.apps.wayne.edu/docs/upgrading.html#steps-3)
+#### Steps[#](https://proctor.apps.wayne.edu/docs/upgrading.html#steps-4)
 
 1. Move the PROCTOR constraint in your composer.json from `^0.3` to `^0.4`.
 2. Apply it with the install command from the README:
@@ -3045,7 +3075,7 @@ Released 2026-11-03. This is a pre-1.0 minor: consumers that pin `^0.3` stay on 
    vendor/bin/proctor check
    ```
 
-#### How to verify[#](https://proctor.apps.wayne.edu/docs/upgrading.html#how-to-verify-3)
+#### How to verify[#](https://proctor.apps.wayne.edu/docs/upgrading.html#how-to-verify-4)
 
 - Run `vendor/bin/proctor check --format=json` and confirm the `version` field reads `0.4.0`.
 - Confirm the checks added in this release appear in the report. They warn and never fail, so the exit code of a run that passed before should not change:

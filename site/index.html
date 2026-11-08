@@ -379,7 +379,7 @@ RESULT: pass</code></pre>
 
         <div class="carbon carbon--white" role="tabpanel" id="pane-text" aria-labelledby="tab-text" tabindex="0">
           <p class="carbon__copy">White copy · for people · <code>--format=text</code> (the default)</p>
-<pre class="carbon__pre"><code>proctor 0.7.0 | composer: 2.10.3
+<pre class="carbon__pre"><code>proctor 0.8.0 | composer: 2.10.3
 Policy: bundled (/app/src/Creed/policy.json), refreshed 2026-10-29, 0 days ago
 PASS php-floor: php floor 8.4 is active
 FAIL unbounded-constraints: vendor/dev constraint "dev-master" is unbounded
@@ -400,7 +400,7 @@ RESULT: fail (2 failures, 1 warnings)</code></pre>
           <p class="carbon__copy">Canary copy · for scripts · <code>--format=json</code></p>
 <pre class="carbon__pre"><code>{
     "tool": "proctor",
-    "version": "0.7.0",
+    "version": "0.8.0",
     "path": "tests/fixtures/apps/unbounded-app",
     "today": "2026-10-29",
     "result": "fail",
@@ -464,7 +464,7 @@ RESULT: fail (2 failures, 1 warnings)</code></pre>
     "version": "2.1.0",
     "runs": [
         {
-            "tool": { "driver": { "name": "proctor", "version": "0.7.0", … } },
+            "tool": { "driver": { "name": "proctor", "version": "0.8.0", … } },
             "results": [
                 {
                     "ruleId": "proctor/unbounded-constraints/unbounded",
@@ -540,7 +540,7 @@ RESULT: fail (1 failures, 1 warnings)</code></pre>
         <article class="hall" data-reveal>
           <p class="hall__door"><span class="hall__room">Hall G</span> GitLab, through Preflight</p>
 <pre class="hall__pre"><code>include:
-  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.1.1
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.3.0
     inputs:
       proctor_command: vendor/bin/proctor check --format=codequality --policy=vendor/waynestate/creed/policy/policy.json</code></pre>
           <p class="hall__note">The job publishes a Code Quality report, so findings show on the merge request. We strongly recommend a git.wayne.edu instance runner.</p>

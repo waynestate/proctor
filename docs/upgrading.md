@@ -7,6 +7,37 @@ description: How to upgrade PROCTOR to a newer release and note the changes that
 
 PROCTOR is the invigilator, so upgrading it is a seat change, not a new exam: same hall, fresher pen. This page tells you how to move an app from one PROCTOR release to the next and which changes affect your runs. Start with the release that has a break, then work down to the additive ones.
 
+## 0.8.0
+
+Released 2026-11-08. This is a pre-1.0 minor: consumers that pin `^0.7` stay on 0.7.x until they move their constraint to `^0.8`. Most of what is new is additive or a warning (the `mysql-eol` check, the `X-Sesame-Assertion` read in `raw-identity-header`, the ADVISOR module, release tags accepted by `preflight-pinned`), but one change can turn a passing run into a failing one.
+
+### Breaking
+
+- `crlf-deploy-script` fails an app whose deploy script has Windows line endings (CRLF): the top-level `build.sh` and `release.sh`, and any `.sh` under `deployments/`, `deploy_scripts/`, `deploy/` or `scripts/`. Bash on Linux reads the carriage return as part of each command, so such a script was already broken on the host; PROCTOR now says so before the deploy does. Convert the file to LF and add `*.sh text eol=lf` to `.gitattributes`.
+
+### Changed
+
+- `mysql-eol` is new and warns, never fails, while Citadel's shared database server is MySQL 5.6 (D-008, D-053). It grades the MySQL or MariaDB version named in a root compose file and in `SQUIRE_MYSQL_IMAGE` in `.env.example` or `.env.squire.example`: a security-only line warns with the days left, an end-of-life line warns as `eol_grace_expired` and says to move to MySQL 8.4 or later, and a floating major tag such as `mysql:8` warns until you pin a major.minor. It turns into a fail once Citadel offers a supported MySQL, so treat these warnings as the to-do list for that day.
+- `raw-identity-header` also warns on a direct read of `X-Sesame-Assertion`, the signed assertion Drawbridge sends. Only SESAME's gateway driver should read it; take the user from SESAME instead.
+- `preflight-pinned` accepts a Preflight component pinned to a full release tag such as `@0.3.0` as well as a commit SHA (D-054), so a tag pin no longer warns. A branch, `~latest` or a partial version such as `@0.3` still warns.
+
+### Deprecated
+
+- None recorded so far.
+
+### Steps
+
+1. Move the PROCTOR constraint in your composer.json from `^0.7` to `^0.8`, then apply it with `composer require waynestate/proctor --dev`.
+2. Re-run the check in CI and read any `crlf-deploy-script` finding first, then the `mysql-eol` warnings:
+
+   ```bash
+   vendor/bin/proctor check
+   ```
+
+### How to verify
+
+- Run `vendor/bin/proctor check --format=json` and confirm the `version` field reads `0.8.0`.
+
 ## 0.7.0
 
 Released 2026-11-07. This is a pre-1.0 minor: consumers that pin `^0.6` stay on 0.6.x until they move their constraint to `^0.7`. Most of what is new is additive (`proctor gate`, the deploy gate, and the `raw-identity-header`, `env-outside-config`, `app-key`, `served-folder`, `laravel-php` and `laravel-eol` checks), but one change can turn a passing run into a failing one.
