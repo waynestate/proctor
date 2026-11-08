@@ -1,6 +1,6 @@
 # PROCTOR best practices
 
-Written against PROCTOR as of 0.3.0; later changes are in CHANGELOG.md.
+Written against PROCTOR as of 0.8.0; later changes are in CHANGELOG.md.
 Items marked "(second pass)" were added or changed in the second pass; see the section of that name near the end.
 
 ## What this covers
@@ -19,13 +19,14 @@ Each practice says what to do, why, where the idea comes from, and how the stack
 
 PHP that has reached end of life is not supported. PROCTOR treats it as a failure, and so does the rest of the stack.
 
-### The four tags
+### The five tags
 
 | Tag | Meaning |
 |---|---|
 | `Enforced` | Code makes the bad outcome impossible, or the build fails. The entry names what. |
 | `Checked` | PROCTOR or CI warns or fails. The entry names the check. |
 | `Documented` | Written down only. Nothing fails if it is ignored. |
+| `Partially` | Part of it is Enforced or Checked; the entry names the part that is not. |
 | `Not yet` | A gap. Neither code nor text covers it today. |
 
 Tags come from the PROCTOR repo (`src/`, `tests/`, `README.md`, `bin/proctor`) and the stack design documents as read
@@ -37,15 +38,19 @@ on 2026-10-27. Where a design document describes something that is not built, th
 
 ### 1.1 Keep dates and thresholds in the policy file, not in code
 Support dates, the grace window and the audit severity threshold are read from the policy file at run time. The tool
-holds no dates. A PHP version missing from the policy is a failure, not a pass.
+holds no dates. A floor ahead of every listed line passes as active, one below the oldest listed line fails as end of
+life, and any other unknown version is a failure.
 
 Why: one file changes when a version's dates change, and every tool agrees.
 
 Sources: [PHP supported versions](https://www.php.net/supported-versions.php); the stack's version-policy decision.
 
-**How the stack holds it: Enforced.** `Policy::fromFile()` (the generated `Waynestate\Proctor\Creed\Policy`) derives the state of each version from the file.
-`PolicyStateTest` pins the boundary days. An unknown version raises "version X not in policy", which the php-floor
-check reports as a failure.
+**How the stack holds it: Enforced.** `Policy::fromFile()` derives the state of each version from the file, and
+`PolicyStateTest` pins the boundary days. A floor ahead of every listed line passes as active
+(`src/Creed/Policy.php:147`), a floor below the oldest listed line fails as end of life (`src/Creed/Policy.php:150`),
+and a version that matches neither raises `Unknown version of <component>: <version>`
+(`src/Creed/Policy.php:153`), which the php-floor check reports as a failure (`src/Check/PhpFloorCheck.php:60`).
+The tool holds no dates.
 
 ### 1.2 Take the policy and the date from a source the app cannot change
 In CI the policy file and "today" must come from the stack, not from the app being checked. If the app can pick
@@ -57,10 +62,11 @@ Sources: [OWASP Top 10 CI/CD Security Risks, CICD-SEC-4 Poisoned Pipeline Execut
 [GitLab: how included configuration is merged](https://docs.gitlab.com/ci/yaml/includes/).
 
 **How the stack holds it: Partially.** Since 0.2.1, `--policy` is optional: without it PROCTOR resolves the policy from
-the `PROCTOR_POLICY` environment variable, then the app's `vendor/waynestate/creed/policy/policy.json`, then the copy
-bundled with PROCTOR (`src/Creed/policy.json`), and every report names the policy in use. What remains: `--today` is
-accepted on every run, Preflight's `proctor_command` input is free text, and the main `.gitlab-ci.yml` of an app
-overrides included job keys, so an app can still change the command, the date or the policy.
+the `PROCTOR_POLICY` environment variable, then the app's vendored copy (when at least as fresh as the bundled copy),
+then the bundled copy, and every report names the policy in use. Since 0.6.0, in CI `--policy` and `--today` are
+refused unless `PROCTOR_ALLOW_OVERRIDES` is exactly `1` (`src/Policy/CiGuard.php`), while `PROCTOR_POLICY` stays
+allowed. What remains: Preflight's `proctor_command` input is free text, and an app's own `.gitlab-ci.yml` can
+override included job keys, so an app can still change the command and the vendored policy.
 
 ### 1.3 Version the policy schema and read newer files without breaking
 A checker should accept a policy file with a newer minor schema or extra fields and ignore what it does not know.
@@ -369,10 +375,12 @@ Sources: [Composer 2.10 release](https://blog.packagist.com/composer-2-10-releas
 [Composer CLI: audit](https://getcomposer.org/doc/03-cli.md).
 
 **How the stack holds it: Checked.** `ComposerAuditCheck` reads `advisories`, `ignored-advisories` and `abandoned` from
-Composer's JSON; abandoned packages are warnings (rule id `proctor/composer-audit/abandoned`). Malware entries are not
-parsed by name; they are caught by the exit-code finding, which fails (rule id `proctor/composer-audit/exit-code`) when
-Composer exits non-zero and the JSON carries nothing readable, as a malware hit or a policy block does. Tests:
-`tests/ComposerAuditCheckTest.php` (`testAbandonedPackagesAreWarnings`, `testNonZeroExitWithNothingReadableFails`).
+Composer's JSON. Abandoned packages follow the policy's `abandoned_packages` rule (since 0.7.0, default `fail`): under
+`fail` each package the app does not ignore is a failure (rule `proctor/composer-audit/abandoned`), under `report` a
+warning, under `ignore` nothing. Malware entries are caught by the exit-code finding (rule
+`proctor/composer-audit/exit-code`) when Composer exits non-zero and the JSON carries nothing readable. Tests:
+`tests/ComposerAuditCheckTest.php` (`testAbandonedPackageWithAReplacementFailsUnderTheFailPolicy`,
+`testAbandonedPackagesAreWarningsUnderTheReportPolicy`, `testNonZeroExitWithNothingReadableFails`).
 
 ### 4.6 Pin the Composer version that does the audit
 Defaults have changed between Composer releases (the abandoned-package default moved in 2.7, and 2.10 added
@@ -474,7 +482,8 @@ audit exits non-zero and the JSON produced no advisory, ignored-advisory or aban
 one finding (rule id `proctor/composer-audit/exit-code`) instead of passing, so a malware or policy block, or an
 error, cannot hide behind an empty advisory list. Composer's own exit code 2 is a solver error and is reported the
 same way. An exit code of 0 with an empty result still passes, and any exit code with advisories or abandoned
-findings behaves as before (abandoned packages stay warnings).
+findings behaves as before (abandoned packages follow the policy's `abandoned_packages` rule, which defaults to
+`fail`).
 
 ### 4.11 Watch the cooldown policy and decide on it later (second pass)
 Composer 2.11.0-RC1 (2026-10-22) adds a `cooldown` policy that withholds newly published versions for a set period. The
@@ -562,8 +571,10 @@ Why: a far-future date is a permanent override with extra steps.
 
 Sources: the stack's deploy-gate decision.
 
-**How the stack holds it: Documented.** The stack's deploy-gate decision states the rule for the deploy gate. `OverrideFile` accepts any
-valid date.
+**How the stack holds it: Checked.** `OverridesCheck` fails an override whose end date is more than the policy's
+`rules.override_max_days` away (90 days when the key is absent) with the finding `proctor/overrides/too-long`, and
+such an override is not applied; `OverrideFile` itself still accepts any valid date. Test: `tests/OverrideGuardsTest.php`
+(`testAnOverrideOneDayPastTheMaximumFailsAndIsNotApplied`).
 
 ### 5.6 Do not let an override waive the override check, and reject unknown check names
 An active override cannot turn a fail of the `overrides` check into a warning, and an override naming a check nobody
@@ -606,7 +617,7 @@ The warning-before-expiry part is my own suggestion and I have no prior-art sour
 expires within 14 days of `--today` (the expiry day counts), and `OverrideApplier::unusedWarnings()` warns
 (`proctor/overrides/unused`) for an active entry whose check raised no failure, so a stale approval is visible
 instead of silent. Both are warnings; neither changes the exit code. Tests: `tests/OverrideGuardsTest.php`
-(`testExpiringOverrideWarnsButStillPasses`, `testActiveOverrideThatMatchesNoFailureWarns`,
+(`testExpiringOverrideWarnsAndOnlyTheMissingComposerAuditFails`, `testActiveOverrideThatMatchesNoFailureWarns`,
 `testOverrideThatDowngradesAFailureIsNotReportedAsUnused`).
 
 ---
@@ -627,7 +638,7 @@ a separate tool-error code. Composer's process exit codes are 0 OK, 1 generic er
 The three-code split here is PROCTOR's own design and is a sound one, but these two sources do not prove it.)
 
 **How the stack holds it: Enforced.** `bin/proctor` returns 2 for tool errors (unknown command included) and `Report`
-accepts only 0 or 1. `CheckCommandTest` asserts the codes on four fixture apps.
+accepts only 0 or 1. `CheckCommandTest` asserts the codes on 15 fixture apps.
 
 ### 6.2 Publish results in the platform's native report format
 For GitLab, emit Code Quality JSON and declare it as `artifacts:reports:codequality`. Import results directly, not
@@ -638,11 +649,10 @@ Why: the merge request shows the findings with no extra tooling.
 Sources: [GitLab Code Quality](https://docs.gitlab.com/ci/testing/code_quality/).
 
 **How the stack holds it: Enforced.** `CodeQualityWriter` writes the required fields, relative paths, and severities
-`major`, `minor` and `info`. `CodeQualityShapeTest` checks the shape. The CodeClimate template was deprecated in GitLab
-17.3 and is planned for removal in 19.0; PROCTOR does not use it. (Second pass: re-checked on the GitLab page. It is
-still "planned for removal in 19.0" with no date. The accepted severities are `info`, `minor`, `major`, `critical` and
-`blocker`; PROCTOR uses only the first three, so an unwaivable end-of-life failure shows as `major`, the same as any
-other failure. The parser rejects a UTF-8 byte order mark.)
+`major`, `minor` and `info` (the tool-error report uses `blocker`, `CodeQualityWriter::writeToolError`).
+`CodeQualityShapeTest` checks the shape. The CodeClimate template was deprecated in GitLab
+17.3 and is planned for removal in 19.0; PROCTOR does not use it. (The accepted severities are `info`, `minor`,
+`major`, `critical` and `blocker`. The parser rejects a UTF-8 byte order mark.)
 
 ### 6.3 Make fingerprints stable and free of line numbers
 A fingerprint identifies a finding across runs. GitLab compares them with the target branch to show new and resolved
@@ -676,11 +686,10 @@ Why: other platforms and editors read SARIF.
 
 Sources: [OASIS SARIF v2.1.0](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html).
 
-**How the stack holds it: Enforced.** `SarifWriter` writes a SARIF 2.1.0 log: one run, one rule per distinct check id,
-and one result per non-pass finding, with `fail` mapped to `error`, `warning` to `warning` and `info` to `note`.
-`SarifShapeTest` checks the shape. GitHub code scanning reads it through `github/codeql-action/upload-sarif`.
-PROCTOR now files the mark sheet in the format the head office already reads. No more translating the exam results
-by hand.
+**How the stack holds it: Enforced.** `SarifWriter` writes a SARIF 2.1.0 log: one run, one rule per distinct namespaced
+rule id (`$finding->ruleId`, `src/Report/SarifWriter.php`), and one result per non-pass finding, with `fail` mapped to
+`error`, `warning` to `warning` and `info` to `note`. `SarifShapeTest` checks the shape. GitHub code scanning reads it
+through `github/codeql-action/upload-sarif`.
 
 ### 6.6 Make runs reproducible
 The date is injectable so a test gives the same answer on any day.
@@ -690,7 +699,9 @@ Why: policy results depend on dates, and tests must not drift.
 Sources: the stack's version-policy decision.
 
 **How the stack holds it: Enforced.** `--today` is validated as a real `YYYY-MM-DD` date, and every CLI test runs with a
-fixed date and a fixed fixture policy. The same switch is a bypass if an app can set it in CI (see 1.2).
+fixed date and a fixed fixture policy. Since 0.6.0, `--policy` and `--today` are refused in CI unless
+`PROCTOR_ALLOW_OVERRIDES` is exactly `1` (`src/Policy/CiGuard.php`, used by `RunOptions` and `GateCommand`). Tests:
+`tests/CiGuardTest.php` (`testTodayIsRefusedInCiWithTheExactMessage`, `testAllowOverridesExactlyOneAllowsTheOptions`).
 
 ### 6.7 Never carry meaning by color alone (second pass)
 Each result line starts with a word (`PASS`, `INFO`, `WARN`, `FAIL`), and the last line says `RESULT: pass` or
@@ -735,8 +746,12 @@ Why: blocking all old violations on day one freezes the fixes that would clear t
 Sources: [Semgrep: diff-aware scanning and baseline commit](https://docs.semgrep.dev/semgrep-ci/configuring-blocking-and-errors-in-ci);
 [PHPStan: baseline](https://phpstan.org/user-guide/baseline).
 
-**How the stack holds it: Documented.** The stack's deploy-gate decision describes the ratchet and the stages `report`, `warn` and `block`.
-PROCTOR 0.1.0 had no ratchet and no stage field.
+**How the stack holds it: Checked.** `proctor gate` (since 0.7.0, `src/Gate/Gate.php`) ratchets each fail against a
+baseline: blocked on a first deploy, held when the baseline failed the same rule id, blocked as a regression when the
+baseline passed it, waived when it only says the advisory data was unavailable, and staged (logged, deploy goes ahead)
+when the policy's gate stage for its check is `report` or `warn` today. The stage comes from the policy via
+`Policy::gateStage()` (`src/Creed/Policy.php:421`), which reads `gate.stages` and falls back to `gate.default_stage`,
+then to `block`.
 
 ### 7.2 Keep gate mode small, offline and fast, and let a checker bug fail open
 At deploy time the check should need no network and no app boot, finish in seconds, and exit so that an internal error
@@ -804,7 +819,8 @@ Sources: [GitLab: test with a sample project that exercises the tool](https://do
 
 **How the stack holds it: Checked.** PROCTOR's pipeline runs PHPUnit on PHP 8.3 to 8.5 through the Preflight
 `php-test` component, with fixtures for pass, end of life, unbounded and expired override. The audit parsing path
-has no test: the CLI tests remove `composer` from the PATH, so no fixture produces a real advisory.
+is covered by `tests/ComposerAuditCheckTest.php`, which unit-tests the parsing with a stub runner, so no fixture
+needs a real `composer audit`.
 
 ### 8.5 Sign and pin releases, and publish provenance
 A release is a tag that Composer users can pin, with a signature or provenance that says where it was built.
@@ -1115,8 +1131,10 @@ the quoted first argument of a method named `header`, `server`, `hasHeader`, `ge
 `get()` on a `->headers` object), or a key on the result of `getallheaders()` or `apache_request_headers()`. PHP is read
 on the syntax tree, so a name in a comment or a log string is not flagged; names match case-insensitively with `-` and
 `_` interchangeable, and the `HTTP_` prefix Apache adds to request headers is accepted where the read comes from
-`$_SERVER` or the environment. `X-Sesame-Assertion` and `PHP_AUTH_USER` are not identity claims and are not flagged.
-Warnings only. `RawIdentityHeaderCheckTest` pins the flagged reads, the skipped look-alikes and the clean pass.
+`$_SERVER` or the environment. Since 0.8.0, a direct read of `X-Sesame-Assertion` (the signed assertion Drawbridge
+sends) is flagged too (`src/Check/RawIdentityHeaderCheck.php:285`); `PHP_AUTH_USER` is basic-auth material and is not
+an identity claim, so it is not flagged. Warnings only. `RawIdentityHeaderCheckTest` pins the flagged reads, the
+skipped look-alikes and the clean pass.
 
 ### The app-key check
 Whoever holds a Laravel APP_KEY can forge encrypted payloads, so the key never lives in the repository, and a cookie
