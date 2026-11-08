@@ -689,7 +689,8 @@ Sources: [OASIS SARIF v2.1.0](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sar
 **How the stack holds it: Enforced.** `SarifWriter` writes a SARIF 2.1.0 log: one run, one rule per distinct namespaced
 rule id (`$finding->ruleId`, `src/Report/SarifWriter.php`), and one result per non-pass finding, with `fail` mapped to
 `error`, `warning` to `warning` and `info` to `note`. `SarifShapeTest` checks the shape. GitHub code scanning reads it
-through `github/codeql-action/upload-sarif`.
+through `github/codeql-action/upload-sarif`. PROCTOR files the mark sheet in the format the head office already
+reads, so nobody translates the exam results by hand.
 
 ### 6.6 Make runs reproducible
 The date is injectable so a test gives the same answer on any day.
