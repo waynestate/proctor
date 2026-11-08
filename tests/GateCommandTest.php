@@ -369,7 +369,7 @@ final class GateCommandTest extends ProctorTestCase
         self::assertSame(0, $data['summary']['staged']);
 
         $text = $this->gate('eol-app');
-        preg_match('/^RESULT: .*$/', $text['stdout'], $matches);
+        preg_match('/^RESULT: .*$/m', $text['stdout'], $matches);
         self::assertNotEmpty($matches);
         self::assertStringNotContainsString('staged', $matches[0]);
     }
