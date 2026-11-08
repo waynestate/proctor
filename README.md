@@ -172,6 +172,7 @@ Overrides are applied first, as in `proctor check`. Each remaining failure is th
 - `--baseline`: a PROCTOR JSON report (the file `--record` wrote last time) or the running deployment's source directory. Without it, every failure blocks.
 - `--record`: also write the JSON verdict to a file; pass it as `--baseline` next time.
 - Exit codes: `0` go, `1` no-go, `2` the gate could not decide. A platform hook fails open on 2, with an alert, so a gate bug never takes down deploys.
+- Staged rules: when CREED's policy stages a check as `report` or `warn`, a failure that would block is logged as `STAGE` and the deploy goes ahead (ADR-0006 item 4). The policy ships with no stages, so every check blocks today.
 
 The whole story, with the verdict's JSON shape: [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html).
 

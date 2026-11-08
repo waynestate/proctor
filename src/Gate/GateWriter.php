@@ -13,8 +13,9 @@ use Waynestate\Proctor\ToolError;
  * Writes a gate verdict as a short text report or as JSON.
  *
  * Text, for the deploy log: the verdict first, then the policy and baseline
- * in use, one line per finding that is not a pass, the overrides, and a
- * RESULT line with the counts:
+ * in use, one line per finding that is not a pass (a staged fail gets a
+ * STAGE line), the overrides, and a RESULT line with the counts (it names
+ * the staged count only when there is one):
  *
  *   proctor 0.8.0 gate: NO-GO
  *   Policy: bundled (/app/vendor/waynestate/proctor/src/Creed/policy.json), refreshed 2026-10-20, 7 days ago
@@ -65,11 +66,13 @@ final class GateWriter
             );
         }
 
+        $staged = $verdict->count(GateDecision::STAGED);
         $lines[] = sprintf(
-            'RESULT: %s (%d blocked, %d held, %d waived, %d warnings, %d passed)',
+            'RESULT: %s (%d blocked, %d held%s, %d waived, %d warnings, %d passed)',
             $verdict->verdict(),
             $verdict->count(GateDecision::BLOCKED),
             $verdict->count(GateDecision::HELD),
+            $staged > 0 ? sprintf(', %d staged', $staged) : '',
             $verdict->count(GateDecision::WAIVED),
             $verdict->count(GateDecision::WARNING),
             $verdict->count(GateDecision::PASS),
@@ -107,6 +110,7 @@ final class GateWriter
             'summary' => [
                 'blocked' => $verdict->count(GateDecision::BLOCKED),
                 'held' => $verdict->count(GateDecision::HELD),
+                'staged' => $verdict->count(GateDecision::STAGED),
                 'waived' => $verdict->count(GateDecision::WAIVED),
                 'warnings' => $verdict->count(GateDecision::WARNING),
                 'info' => $verdict->count(GateDecision::INFO),
@@ -126,6 +130,9 @@ final class GateWriter
                     ];
                     if (null !== $decision->reason) {
                         $data['reason'] = $decision->reason;
+                    }
+                    if (null !== $decision->stage) {
+                        $data['stage'] = $decision->stage;
                     }
                     if ($finding->advisories !== []) {
                         $data['advisories'] = $finding->advisories;
@@ -226,6 +233,7 @@ final class GateWriter
     {
         return match ($outcome) {
             GateDecision::BLOCKED => 'BLOCK',
+            GateDecision::STAGED => 'STAGE',
             GateDecision::HELD => 'HOLD',
             GateDecision::WAIVED => 'WAIVE',
             GateDecision::INFO => 'INFO',
@@ -235,7 +243,8 @@ final class GateWriter
     }
 
     /**
-     * Why a fail was blocked, held or waived, in the deploy log's words.
+     * Why a fail was blocked, staged, held or waived, in the deploy log's
+     * words.
      */
     private function why(GateDecision $decision): ?string
     {
@@ -245,6 +254,11 @@ final class GateWriter
                 GateDecision::REASON_REGRESSION => 'regression: this rule passed on the baseline',
                 default => 'new app: no baseline, so every failure blocks',
             },
+            GateDecision::STAGED => sprintf(
+                'staged as %s: it would block (%s), but CREED does not block this check yet',
+                $decision->stage,
+                $decision->reason,
+            ),
             GateDecision::HELD => 'held: it failed on the baseline too, so the ratchet lets it through',
             GateDecision::WAIVED => 'waived: no advisory data at deploy time, so it only warns here',
             default => null,

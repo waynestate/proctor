@@ -1,7 +1,7 @@
 {
     "schema_version": 1,
     "source": "creed",
-    "creed_version": "unknown",
+    "creed_version": "0.1.7-38-g66791ef",
     "namespace": "Waynestate\\Proctor\\Creed",
     "files": {
         "Policy.php": {

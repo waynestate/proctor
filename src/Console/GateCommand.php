@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Waynestate\Proctor\Console;
 
+use Closure;
+use InvalidArgumentException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -81,7 +83,7 @@ final class GateCommand extends Command
                 $options->resolved,
                 CheckSet::ids($checks),
                 $baseline,
-                Gate::decide($findings, $baseline),
+                Gate::decide($findings, $baseline, $this->stageOf($options)),
                 $overrides,
             );
 
@@ -177,6 +179,25 @@ final class GateCommand extends Command
             'Baseline "%s" does not exist. Pass a PROCTOR JSON report or the running source directory, or leave --baseline out for a first deploy.',
             $baseline,
         ));
+    }
+
+    /**
+     * The CREED gate stage of a check on the run date (ADR-0006 item 4, D-071).
+     *
+     * @return Closure(string): string
+     */
+    private function stageOf(RunOptions $options): Closure
+    {
+        $policy = $options->resolved->policy;
+        $today = $options->today;
+
+        return static function (string $checkId) use ($policy, $today): string {
+            try {
+                return $policy->gateStage($checkId, $today);
+            } catch (InvalidArgumentException $e) {
+                throw new ToolError($e->getMessage(), 0, $e);
+            }
+        };
     }
 
     /**

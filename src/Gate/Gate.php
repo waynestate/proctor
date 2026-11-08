@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Waynestate\Proctor\Gate;
 
+use Closure;
 use Waynestate\Proctor\Check\Finding;
 use Waynestate\Proctor\Check\OverridesCheck;
 
@@ -22,6 +23,9 @@ use Waynestate\Proctor\Check\OverridesCheck;
  * - waived when it only says the advisory data was unavailable
  *   (composer-audit's skipped and could-not-run rules): at deploy time a
  *   missing advisory database warns, it never stops a deploy.
+ * - staged when it would be blocked but CREED's `gate.stages` put its check
+ *   at `report` or `warn` today (ADR-0006 item 4); the deploy goes ahead and
+ *   the verdict says so.
  *
  * The match is by rule id, so a rule already failing on the baseline is held
  * even if it got worse within the rule; `proctor check` in CI still fails it.
@@ -50,19 +54,27 @@ final class Gate
     private function __construct() {}
 
     /**
-     * @param list<Finding> $findings the gate checks' findings, overrides applied, in check order
-     * @param Baseline|null $baseline the running deployment's failures, or null for a first deploy
+     * @param list<Finding>          $findings the gate checks' findings, overrides applied, in check order
+     * @param Baseline|null          $baseline the running deployment's failures, or null for a first deploy
+     * @param Closure(string): string|null $stageOf given a check id, the CREED gate stage today (`report`, `warn` or `block`); null means every check blocks
      *
      * @return list<GateDecision> one per finding, in the same order, without the dropped ones
      */
-    public static function decide(array $findings, ?Baseline $baseline): array
+    public static function decide(array $findings, ?Baseline $baseline, ?Closure $stageOf = null): array
     {
         $decisions = [];
         foreach ($findings as $finding) {
             if (in_array($finding->ruleId, self::DROPPED_RULES, true)) {
                 continue;
             }
-            $decisions[] = self::decideOne($finding, $baseline);
+            $decision = self::decideOne($finding, $baseline);
+            if (GateDecision::BLOCKED === $decision->outcome && null !== $stageOf) {
+                $stage = $stageOf($finding->checkId);
+                if ('block' !== $stage) {
+                    $decision = new GateDecision($finding, GateDecision::STAGED, $decision->reason, $stage);
+                }
+            }
+            $decisions[] = $decision;
         }
 
         return $decisions;

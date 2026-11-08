@@ -72,6 +72,21 @@ final class GateCommandTest extends ProctorTestCase
         return $data;
     }
 
+    /**
+     * A copy of the fixture policy with a gate block carrying the given
+     * stages, written to a temp file.
+     *
+     * @param array<string, mixed> $stages
+     */
+    private function policyWithStages(array $stages): string
+    {
+        $policy = json_decode((string) file_get_contents(__DIR__ . '/fixtures/policy.json'), true);
+        self::assertIsArray($policy);
+        $policy['gate'] = ['default_stage' => 'block', 'stages' => $stages];
+
+        return $this->tempFile((string) json_encode($policy));
+    }
+
     public function testACleanAppIsAGo(): void
     {
         $result = $this->gate('pass-app');
@@ -292,5 +307,79 @@ final class GateCommandTest extends ProctorTestCase
 
         self::assertSame(2, $result['exit']);
         self::assertStringContainsString('Refused: --today is not accepted in CI', $result['stderr']);
+    }
+
+    public function testAStagedRuleIsLoggedAndTheDeployGoes(): void
+    {
+        $policy = $this->policyWithStages(['php-floor' => [['stage' => 'warn', 'from' => '2026-01-01']]]);
+        $result = $this->gate('eol-app', [], $policy);
+
+        self::assertSame(0, $result['exit'], $result['stdout'] . $result['stderr']);
+        self::assertMatchesRegularExpression('/^proctor \S+ gate: GO$/m', $result['stdout']);
+        self::assertMatchesRegularExpression(
+            '/^STAGE php-floor: .* \[staged as warn: it would block \(new-app\), but CREED does not block this check yet\]$/m',
+            $result['stdout'],
+        );
+        self::assertMatchesRegularExpression('/^RESULT: go \(0 blocked, 0 held, 1 staged, /m', $result['stdout']);
+    }
+
+    public function testTheJsonVerdictCarriesTheStage(): void
+    {
+        $policy = $this->policyWithStages(['php-floor' => [['stage' => 'warn', 'from' => '2026-01-01']]]);
+        $result = $this->gate('eol-app', ['--format=json'], $policy);
+        $data = $this->json($result['stdout']);
+
+        self::assertSame(0, $result['exit'], $result['stdout']);
+        self::assertSame(1, $data['summary']['staged']);
+        $floor = array_values(array_filter($data['findings'], static fn(array $f): bool => 'php-floor' === $f['check_id']))[0];
+        self::assertSame('staged', $floor['gate']);
+        self::assertSame('warn', $floor['stage']);
+        self::assertSame('new-app', $floor['reason']);
+        self::assertSame('fail', $floor['status']);
+    }
+
+    public function testAStageWithAFutureDateStillBlocks(): void
+    {
+        $policy = $this->policyWithStages(['php-floor' => [['stage' => 'report', 'from' => '2099-01-01']]]);
+        $result = $this->gate('eol-app', [], $policy);
+
+        self::assertSame(1, $result['exit'], $result['stdout'] . $result['stderr']);
+        self::assertMatchesRegularExpression('/^BLOCK php-floor: .*$/m', $result['stdout']);
+    }
+
+    public function testAHeldFailureStaysHeldWhenItsCheckIsStaged(): void
+    {
+        $baseline = $this->tempFile((string) json_encode([
+            'tool' => 'proctor',
+            'findings' => [['check_id' => 'php-floor', 'rule_id' => 'proctor/php-floor', 'status' => 'fail']],
+        ]));
+        $policy = $this->policyWithStages(['php-floor' => [['stage' => 'warn', 'from' => '2026-01-01']]]);
+
+        $result = $this->gate('eol-app', ['--baseline=' . $baseline], $policy);
+
+        self::assertSame(0, $result['exit'], $result['stdout'] . $result['stderr']);
+        self::assertMatchesRegularExpression('/^HOLD php-floor: .*$/m', $result['stdout']);
+        self::assertStringNotContainsString('STAGE', $result['stdout']);
+    }
+
+    public function testWithoutStagesTheRecordCountsZeroStaged(): void
+    {
+        $data = $this->json($this->gate('eol-app', ['--format=json'])['stdout']);
+
+        self::assertSame(0, $data['summary']['staged']);
+
+        $text = $this->gate('eol-app');
+        preg_match('/^RESULT: .*$/', $text['stdout'], $matches);
+        self::assertNotEmpty($matches);
+        self::assertStringNotContainsString('staged', $matches[0]);
+    }
+
+    public function testAMalformedGateBlockIsAToolError(): void
+    {
+        $policy = $this->policyWithStages(['php-floor' => 'block']);
+        $result = $this->gate('eol-app', [], $policy);
+
+        self::assertSame(2, $result['exit']);
+        self::assertStringContainsString('gate', $result['stderr']);
     }
 }

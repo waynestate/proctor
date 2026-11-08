@@ -11,7 +11,9 @@ use Waynestate\Proctor\Policy\ResolvedPolicy;
 /**
  * The result of one `proctor gate` run, ready for the GateWriter.
  *
- * Go when nothing is blocked; no-go otherwise. Value object.
+ * Go when nothing is blocked; no-go otherwise. Staged decisions never stop a
+ * deploy: they are fails CREED's gate stages let through as report or warn.
+ * Value object.
  */
 final class GateVerdict
 {
