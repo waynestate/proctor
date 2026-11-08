@@ -164,7 +164,7 @@ function sv_load_policy(string $path): array
 function sv_split_page(string $html): array
 {
     $eol = str_contains($html, "\r\n") ? "\r\n" : "\n";
-    $lines = array_map(static fn (string $line): string => rtrim($line, "\r"), explode("\n", $html));
+    $lines = array_map(static fn(string $line): string => rtrim($line, "\r"), explode("\n", $html));
     $start = null;
     $end = null;
     foreach ($lines as $i => $line) {
@@ -203,10 +203,10 @@ function sv_main(array $argv): int
 
     try {
         $root = str_replace('\\', '/', dirname(__DIR__));
-        $policy = sv_load_policy($root.'/src/Creed/policy.json');
+        $policy = sv_load_policy($root . '/src/Creed/policy.json');
         $fragment = sv_fragment($policy);
 
-        $pagePath = $root.'/site/index.html';
+        $pagePath = $root . '/site/index.html';
         if (! is_file($pagePath)) {
             throw new SupportedVersionsError('site/index.html is missing');
         }
@@ -238,7 +238,7 @@ function sv_main(array $argv): int
 
         return 0;
     } catch (SupportedVersionsError $e) {
-        fwrite(STDOUT, 'supported-versions: '.$e->getMessage()."\n");
+        fwrite(STDOUT, 'supported-versions: ' . $e->getMessage() . "\n");
 
         return 2;
     }

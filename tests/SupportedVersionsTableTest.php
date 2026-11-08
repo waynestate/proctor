@@ -40,20 +40,20 @@ final class SupportedVersionsTableTest extends TestCase
         fclose($pipes[2]);
         $exit = proc_close($process);
 
-        return [$exit, trim((string) $stdout.(string) $stderr)];
+        return [$exit, trim((string) $stdout . (string) $stderr)];
     }
 
     private string $tempDir;
 
     protected function setUp(): void
     {
-        $this->tempDir = sys_get_temp_dir().'/proctor-supported-versions-'.bin2hex(random_bytes(8));
-        mkdir($this->tempDir.'/bin', 0777, true);
-        mkdir($this->tempDir.'/src/Creed', 0777, true);
-        mkdir($this->tempDir.'/site', 0777, true);
-        copy(__DIR__.'/../bin/supported-versions.php', $this->tempDir.'/bin/supported-versions.php');
-        copy(__DIR__.'/../src/Creed/policy.json', $this->tempDir.'/src/Creed/policy.json');
-        copy(__DIR__.'/../site/index.html', $this->tempDir.'/site/index.html');
+        $this->tempDir = sys_get_temp_dir() . '/proctor-supported-versions-' . bin2hex(random_bytes(8));
+        mkdir($this->tempDir . '/bin', 0777, true);
+        mkdir($this->tempDir . '/src/Creed', 0777, true);
+        mkdir($this->tempDir . '/site', 0777, true);
+        copy(__DIR__ . '/../bin/supported-versions.php', $this->tempDir . '/bin/supported-versions.php');
+        copy(__DIR__ . '/../src/Creed/policy.json', $this->tempDir . '/src/Creed/policy.json');
+        copy(__DIR__ . '/../site/index.html', $this->tempDir . '/site/index.html');
     }
 
     protected function tearDown(): void
@@ -82,10 +82,10 @@ final class SupportedVersionsTableTest extends TestCase
 
     public function testAnAlteredRowIsStale(): void
     {
-        $html = file_get_contents($this->tempDir.'/site/index.html');
+        $html = file_get_contents($this->tempDir . '/site/index.html');
         $row = '            <tr><th scope="row">PHP</th><td>8.1</td><td>2023-11-25</td><td>2025-12-31</td><td><span class="mark mark--fail">End of life</span></td></tr>';
         self::assertNotFalse(strpos($html, $row), 'the committed table must carry the PHP 8.1 row the check would flag');
-        file_put_contents($this->tempDir.'/site/index.html', str_replace($row, str_replace('8.1', '9.9', $row), $html));
+        file_put_contents($this->tempDir . '/site/index.html', str_replace($row, str_replace('8.1', '9.9', $row), $html));
 
         [$exit, $output] = $this->runScript($this->tempDir, ['--check']);
 
@@ -95,8 +95,8 @@ final class SupportedVersionsTableTest extends TestCase
 
     public function testMissingMarkersAreAToolError(): void
     {
-        $html = file_get_contents($this->tempDir.'/site/index.html');
-        file_put_contents($this->tempDir.'/site/index.html', str_replace([self::MARKER_START, self::MARKER_END], '', $html));
+        $html = file_get_contents($this->tempDir . '/site/index.html');
+        file_put_contents($this->tempDir . '/site/index.html', str_replace([self::MARKER_START, self::MARKER_END], '', $html));
 
         [$exit, $output] = $this->runScript($this->tempDir, ['--check']);
 
@@ -118,14 +118,14 @@ final class SupportedVersionsTableTest extends TestCase
                 ],
             ],
         ];
-        file_put_contents($this->tempDir.'/src/Creed/policy.json', json_encode($policy, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-        file_put_contents($this->tempDir.'/site/index.html', '<!doctype html><html><body>'."\n".self::MARKER_START."\n".self::MARKER_END."\n</body></html>\n");
+        file_put_contents($this->tempDir . '/src/Creed/policy.json', json_encode($policy, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        file_put_contents($this->tempDir . '/site/index.html', '<!doctype html><html><body>' . "\n" . self::MARKER_START . "\n" . self::MARKER_END . "\n</body></html>\n");
 
         [$exit, $output] = $this->runScript($this->tempDir);
         self::assertSame(0, $exit, $output);
         self::assertSame('supported-versions: site/index.html updated', $output);
 
-        $html = file_get_contents($this->tempDir.'/site/index.html');
+        $html = file_get_contents($this->tempDir . '/site/index.html');
         self::assertSame(1, substr_count($html, '>End of life</span>'));
         self::assertSame(1, substr_count($html, '>Security fixes only</span>'));
         self::assertSame(1, substr_count($html, '>Supported</span>'));
