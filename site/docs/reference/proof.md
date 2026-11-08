@@ -45,8 +45,10 @@ Maintainers: how to build, test and release this project, and where its data com
 No PHP is needed on the host:
 
 ```
-docker run --rm -v "${PWD}:/app" -w /app -e COMPOSER_PROCESS_TIMEOUT=0 composer:2.10.3 sh -c "composer install -q --no-progress && composer ci"
+docker run --rm -v "${PWD}:/app" -v stack-composer-cache:/tmp/cache -w /app -e COMPOSER_PROCESS_TIMEOUT=0 composer:2.10.3 sh -c "composer install -q --no-progress && composer ci"
 ```
+
+The `stack-composer-cache` volume keeps Composer's downloads between runs; Docker creates it the first time.
 
 The plain php images lack git and composer, so 22 tests fail there; the composer image above carries both tools.
 
