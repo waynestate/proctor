@@ -22,11 +22,11 @@ use Waynestate\Proctor\Code\RepoFiles;
  * Warns when app code reads an identity header directly.
  *
  * DRAWBRIDGE, the gateway, signs the session into the X-Sesame-Assertion
- * header and passes the user's claims as request headers: REMOTE_USER,
- * X-Authenticated-*, X-Drawbridge-*, OIDC_CLAIM_* and friends. Only SESAME's
- * gateway driver may open that pair: it verifies the signature before a
- * claim becomes the logged-in user. App code that reads a claim header
- * itself accepts whatever value the proxy, or a client, put there.
+ * header and passes the user's claims as request headers: X-Sesame-Assertion,
+ * REMOTE_USER, X-Authenticated-*, X-Drawbridge-*, OIDC_CLAIM_* and friends.
+ * Only SESAME's gateway driver may open that pair: it verifies the signature
+ * before a claim becomes the logged-in user. App code that reads a claim
+ * header itself accepts whatever value the proxy, or a client, put there.
  *
  * Runs on every PHP app. Scanned: every *.php file except vendor/,
  * node_modules/, storage/, tests/ and .git/ at any depth. PHP is read as an
@@ -40,9 +40,9 @@ use Waynestate\Proctor\Code\RepoFiles;
  * variable assigned from them. Names match case-insensitively with - and _
  * interchangeable; where the read comes from $_SERVER or the environment
  * (and from request()->server(), which reads the same bag) the HTTP_ prefix
- * Apache adds to request headers is accepted too. X-Sesame-Assertion is the
- * signed assertion itself and PHP_AUTH_USER is basic-auth material, so
- * neither is an identity claim and neither is flagged. Blade templates
+ * Apache adds to request headers is accepted too. PHP_AUTH_USER is
+ * basic-auth material, so it is not an identity claim and is not flagged.
+ * Blade templates
  * (*.blade.php) are not PHP until compiled, so a Blade line is matched with
  * a pattern for $_SERVER['...'] and request()->header('...') /
  * request()->server('...'). A file that does not parse is skipped here; the
@@ -282,6 +282,7 @@ final class RawIdentityHeaderCheck implements CheckInterface
         if ($name === 'remote-user'
             || $name === 'auth-user'
             || $name === 'x-remote-user'
+            || $name === 'x-sesame-assertion'
             || $name === 'oidc-access-token'
             || str_starts_with($name, 'x-authenticated-')
             || str_starts_with($name, 'x-drawbridge-')

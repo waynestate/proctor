@@ -86,13 +86,13 @@ Fix by reading the variable in a config file (`'url' => env('APP_URL')` in `conf
 
 ## raw-identity-header
 
-`raw-identity-header` warns, never fails, when app code reads an identity header directly instead of taking the user from SESAME. DRAWBRIDGE, the gateway, signs the session into the `X-Sesame-Assertion` header and passes the user's claims as request headers; only SESAME's gateway driver may open that pair, because it verifies the signature before a claim becomes the logged-in user (CREED auth-3). App code that reads a claim header itself accepts whatever value the proxy, or a client, put there.
+`raw-identity-header` warns, never fails, when app code reads an identity header directly instead of taking the user from SESAME. DRAWBRIDGE, the gateway, signs the session into the `X-Sesame-Assertion` header and passes the user's claims as request headers (`REMOTE_USER`, `X-Authenticated-*`, `X-Drawbridge-*`, `OIDC_CLAIM_*`); only SESAME's gateway driver may open that pair, because it verifies the signature before a claim becomes the logged-in user (CREED auth-3). App code that reads the assertion or a claim header itself accepts whatever value the proxy, or a client, put there.
 
 It runs on every app and scans every `*.php` file except `vendor/`, `node_modules/`, `storage/`, `tests/` and `.git/` at any depth.
 
 PHP is read on the syntax tree with names resolved, so a header name in a comment or a log string, a variable named `$REMOTE_USER`, and `getenv()` with a computed argument are not flagged. Flagged read positions: a string key on `$_SERVER` or `$_ENV`, the quoted argument of `getenv()` or `apache_getenv()`, the quoted first argument of a method named `header`, `server`, `hasHeader`, `getHeader` or `getHeaderLine` (and of `get()` on a `->headers` object), and a string key on the result of `getallheaders()` or `apache_request_headers()`, directly or through a variable assigned from them.
 
-Names match case-insensitively with `-` and `_` interchangeable. Where the read comes from `$_SERVER` or the environment (and from `request()->server()`, which reads the same bag) the `HTTP_` prefix Apache adds to request headers is accepted too. `X-Sesame-Assertion` is the signed assertion itself and `PHP_AUTH_USER` is basic-auth material, so neither is an identity claim and neither is flagged. A file that does not parse is skipped here; the portability check reports it.
+Names match case-insensitively with `-` and `_` interchangeable. Where the read comes from `$_SERVER` or the environment (and from `request()->server()`, which reads the same bag) the `HTTP_` prefix Apache adds to request headers is accepted too. `X-Sesame-Assertion` is the signed assertion itself, so it is flagged like any other direct read; `PHP_AUTH_USER` is basic-auth material, so it is not an identity claim and is not flagged. A file that does not parse is skipped here; the portability check reports it.
 
 Blade templates (`*.blade.php`) are not PHP until compiled, so a Blade line is matched with a pattern for `$_SERVER['...']` and `request()->header('...')` / `request()->server('...')`.
 

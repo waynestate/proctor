@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Changed: `raw-identity-header` also flags direct reads of `X-Sesame-Assertion`, the signed assertion Drawbridge sends; only SESAME's gateway driver should read it.
 - Changed: CI caches Composer downloads per lock file (`.composer-cache`, keyed on `composer.lock` and `deploy/composer.lock`), so a pipeline stops fetching every package from Packagist on every run. Images already come through the Dependency Proxy.
 - Added: `mysql-eol` grades every MySQL or MariaDB version the repository names (an official `mysql` or `mariadb` image on an `image:` line in a root `docker-compose*.yml` or `compose*.yml`, and `SQUIRE_MYSQL_IMAGE=mysql:<version>` in `.env.squire.example` or `.env.example`) against the policy's mysql and mariadb lines as of `--today`, with the same table as php-floor except a supported version stays silent instead of passing: active is silent, security-only warns with the days left, eol fails, and past the grace window it fails as `eol_grace_expired` (rule id `proctor/mysql-eol`). Silent when the policy has no mysql or mariadb component.
 - Note: mysql-eol can turn a passing run into a failing one: an app that pins an end-of-life MySQL line (MySQL 8.0 or older under the bundled policy; 8.0 left security support on 2026-04-30) now fails as `eol_grace_expired`, which no override softens: move to MySQL 8.4 or later.
