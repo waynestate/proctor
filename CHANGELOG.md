@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Docs: README and BEST_PRACTICES match 0.8.0 (proctor gate, the release phar, tags, the composer-update rule id); RuleIdContractTest now checks the README rule table.
+- Changed: the deploy layer requires PROCTOR ^0.8 (locked 0.8.0).
 
 ## 0.8.0 (2026-11-08)
 
