@@ -66,7 +66,9 @@ the `PROCTOR_POLICY` environment variable, then the app's vendored copy (when at
 then the bundled copy, and every report names the policy in use. Since 0.6.0, in CI `--policy` and `--today` are
 refused unless `PROCTOR_ALLOW_OVERRIDES` is exactly `1` (`src/Policy/CiGuard.php`), while `PROCTOR_POLICY` stays
 allowed. What remains: Preflight's `proctor_command` input is free text, and an app's own `.gitlab-ci.yml` can
-override included job keys, so an app can still change the command and the vendored policy.
+override included job keys, so an app can still change the command and the vendored policy. Nothing flags an app
+that sets `PROCTOR_ALLOW_OVERRIDES` in its own `.gitlab-ci.yml` either: the guard reads the variable, and no check
+looks at where it was set.
 
 ### 1.3 Version the policy schema and read newer files without breaking
 A checker should accept a policy file with a newer minor schema or extra fields and ignore what it does not know.
@@ -396,7 +398,8 @@ the command-injection holes CVE-2024-35241 and CVE-2024-35242 (2.2.x below 2.2.2
 Composer 1, and warns when composer cannot be run; the text report's header line names the composer version used.
 (Second pass: the Composer 2.10.2 changelog lists "Fixed `audit` command to output the audit result to stdout".
 PROCTOR reads only stdout, so a Composer older than 2.10.2 is one more reason to set a minimum. Composer 2.11.0-RC1
-was released 2026-10-22 and 2.10.3 is the latest stable in the changelog; check before pinning.)
+was released 2026-10-22 and 2.10.3 is the latest stable in the changelog; check before pinning.) Since then 2.11.0
+(2026-10-29) and 2.11.1 (2026-10-30) have shipped as stable; see 4.11 for what the stack pins.
 
 ### 4.7 Audit again on a schedule
 New advisories appear after code is merged. A weekly scheduled pipeline finds them without a commit.
@@ -437,9 +440,10 @@ advisory pages through summaries and did not confirm the CVSS scores against NVD
 line, and the `composer-version` check (see 4.6) fails when the Composer on PATH carries the command-injection holes
 CVE-2024-35241 and CVE-2024-35242 or is Composer 1. Since 0.7.0, the same check also fails when the
 Composer on PATH is below the CREED policy's `tools.composer.minimum` (2.8.0 in the bundled policy), naming the
-policy in the message; the CVE floors stay as absolute floors underneath it. What remains: no minimum covers the 2026
-Perforce flaws fixed in 2.9.6 and 2.10.3, and the Preflight component installs whatever Composer is current at the
-time.
+policy in the message; the CVE floors stay as absolute floors underneath it. Preflight's `php-test` and `proctor` jobs
+install the Composer release named by their `composer_version` input (default `2.10.3` in Preflight 0.3.1), which
+carries the 2026 Perforce fixes. What remains: the policy minimum (2.8.0) sits below those fixes in 2.9.6 and 2.10.3,
+so the check passes a Composer that lacks them, and an app can set `composer_version` to an older release.
 
 ### 4.9 Report an app that switches the dependency policy off (second pass)
 Look for `config.policy` set to `false`, `policy.malware` or `policy.advisories` set to `false`, and the matching
@@ -497,9 +501,14 @@ Sources: [Composer changelog, 2.11.0-RC1](https://raw.githubusercontent.com/comp
 [Packagist supply chain update](https://blog.packagist.com/an-update-on-composer-packagist-supply-chain-security).
 The claim that most compromises are found within days is mine and is not backed by a source I read.
 
-**How the stack holds it: Not yet.** Do not require it until 2.11 is stable and the base images ship it.
-Decision (Adam, 2026-11-03): when Composer 2.11 is stable and in the base images, Sourdough apps set a 3-day cooldown and
-PROCTOR warns when an app has none. Nothing is built before then.
+**How the stack holds it: Not yet.** Composer 2.11 is stable: 2.11.0 shipped on 2026-10-29 and 2.11.1 on 2026-10-30
+(getcomposer.org download page and the composer/composer releases page, read 2026-11-08), and the 2.11.0 notes add the
+`cooldown` policy (`config.policy.cooldown.period`, default `null`, so off). The base images do not ship it yet: the
+stack repos pin `composer:2.10.3` by digest in their CI and Docker files, Preflight's `php-test` and `proctor` jobs
+install `composer_version` 2.10.3 by default, and the one 2.11 pin is the vendor build stage of Drawbridge's gateway
+image (`composer:2.11.1`). Decision (Adam, 2026-11-03): when 2.11 is in the base images, Sourdough apps set a 3-day
+cooldown and PROCTOR warns when an app has none. Nothing is built before then: no policy rule, no check, no Sourdough
+default.
 
 ### 4.12 Decide whether dev dependencies count (second pass)
 `composer audit --locked` audits `require-dev` packages too. Composer offers `--no-dev`, and `--direct` from
@@ -510,8 +519,12 @@ thing. The reverse is also possible: a dev dependency can run during CI.
 
 Sources: [Composer CLI: audit](https://getcomposer.org/doc/03-cli.md).
 
-**How the stack holds it: Not yet.** The policy does not say, and PROCTOR audits everything in the lock. This is a
-policy decision for the stack, not a coding one.
+**How the stack holds it: Partially.** Since 0.6.0 the `composer-audit` check carries the decision: an advisory on a
+package that composer.lock lists only in packages-dev is a warning at any severity, its message ending in
+` [dev dependency]`; a name in both lists counts as runtime, and so does a name the lock does not list at all. Tests:
+`tests/ComposerAuditCheckTest.php` (`testDevOnlyAdvisoryIsAWarningWithTheDevDependencySuffix`,
+`testPackageInBothListsStillFails`). What remains: the policy file carries no rule for it, so the choice cannot be
+changed per policy.
 
 ---
 
@@ -877,52 +890,25 @@ see the server version.
 
 ## Gaps for the backlog
 
-Practices tagged `Not yet` or `Documented`, each one line. Highest value first.
+Practices tagged `Not yet`, `Documented` or `Partially`, each one line naming what is still open. Highest value first.
+A practice that is now `Checked` or `Enforced` leaves the list; CHANGELOG.md records when it closed.
 
-1. 1.2: Bundle CREED's policy, and refuse `--policy` and `--today` in CI unless a trusted job sets them.
+1. 1.2: Partly done: in CI `--policy` and `--today` are refused unless `PROCTOR_ALLOW_OVERRIDES` is exactly `1` (0.6.0); Preflight's `proctor_command` input is still free text, an app's `.gitlab-ci.yml` can override included job keys, and nothing flags an app that sets `PROCTOR_ALLOW_OVERRIDES` itself (see 1.2).
 2. 8.1: Partly done: the PHAR build exists and the Preflight job installs the app with `--no-plugins --no-scripts`; the PHAR is built and attached to each GitLab Release by the `release-phar` job, the job still installs the app's dependencies, and the README still says `composer require` (see 8.1).
-3. 4.4: Done (unreleased): a count warning (rule id `proctor/composer-audit/ignore-entries`) reports the ignore entries in `composer.json` (`config.policy.advisories.ignore-id`, `config.policy.advisories.ignore`, `config.policy.advisories.ignore-severity`, `config.policy.abandoned.ignore`, or the legacy `config.audit.ignore`, `config.audit.ignore-severity` and `config.audit.ignore-abandoned` while their matching `config.policy` block is absent) without naming them, and an ignore that matches still downgrades the advisory to a warning; the entries are reported, not moved or expired (see 4.4).
-4. 4.3: Partly done: unparsable audit output fails with a message that starts with `not audited:` (rule id `proctor/composer-audit/could-not-run`); a missing composer or lock is still an info note that exits 0, and the owner cannot choose otherwise in CI (see 4.3).
-5. 3.5: Done: the `lock-committed` check warns when the lock's `content-hash` differs from composer.json (rule id `proctor/lock-committed/out-of-sync`) (see 3.5).
-6. 5.6: Reject an override that targets `overrides` or an unknown check name, and add tests.
-7. 2.6: Raise PROCTOR's own floor before 2027-01-01 and run the `proctor` component in its own pipeline.
-8. 1.4: Done: the `unbounded-constraints` check reads its rules from the policy file, which carries `banned_constraints` (see 1.4).
-9. 3.2: Done: the `unbounded-constraints` check fails on open upper bounds and `@dev` flags, and warns when `minimum-stability` is below stable (rule ids `proctor/unbounded-constraints/unbounded`, `proctor/unbounded-constraints/minimum-stability`) (see 3.2).
-10. 4.5: Done: the `composer-audit` check reads the abandoned and malware parts of Composer's audit output; abandoned packages warn (rule id `proctor/composer-audit/abandoned`) (see 4.5).
-11. 4.6: Done: the text report's header line names the Composer version used, and the `composer-version` check fails a vulnerable or end-of-life Composer (see 4.6).
-12. 5.4: Done: a composer-audit override can name the one advisory or package it covers with the optional `advisory` and `package` fields, so a scoped override downgrades only the matching failures (see 5.4).
-13. 5.5: Reject an `expires` date beyond a policy-set maximum.
-14. 5.7: Require an approver who is not the author (needs review rules on the app repo).
-15. 1.3: Done: the policy reader accepts a newer `schema_version` and ignores unknown keys, so a pinned older checker still reads a newer policy file (see 1.3).
-16. 3.3: Done: the `unbounded-constraints` check warns on committed `path` and `vcs` repositories (rule id `proctor/unbounded-constraints/repository`) and on a repository URL that is plain http (rule id `proctor/unbounded-constraints/insecure-url`) (see 3.3).
-17. 3.6: Done: the `composer-config` check (0.2.2) warns when `allow-plugins` is `true`, `secure-http` is `false` or `lock` is `false` (see 3.6).
-18. 2.4: Done: the `composer-config` check (0.2.2) notes when `require.php` is set without `config.platform.php` (see 2.4).
-19. 8.3: Done: child processes run under a timeout, so a hung call cannot hold the runner (see 8.3).
-20. 6.4: Done: a tool error still writes a valid report, so the artifact is never an empty file (see 6.4).
-21. 4.7: Done: the Preflight docs carry a scheduled audit pipeline, so new advisories are found without a commit (see 4.7).
-22. 8.5: Tag, sign and publish provenance for releases.
-23. 7.1 and 7.2: Build `proctor gate` with the ratchet, stages and fail-open exit.
-24. 2.5: Check the target image tag once the gate exists.
-25. 8.4 (tagged Checked, but the audit path is untested): Add a fixture and test that produces a real `composer audit`
-    result.
+3. 2.6: Partly done: PROCTOR's own pipeline runs the Preflight `proctor` component on `deploy/`, with `allow_failure` while findings remain; raise PROCTOR's floor from `^8.3` to `^8.4` before PHP 8.3 reaches end of life on 2027-12-31 (see 2.6).
+4. 5.7: Require an approver who is not the author (needs review rules on the app repo).
+5. 4.7: Documented: Preflight's README carries the weekly "Run it on a schedule" steps, but nothing fails when an app has no schedule (see 4.7).
+6. 8.5: Partly done: releases are tagged (0.1.0 through 0.8.0); sign them and publish provenance that says where each was built (see 8.5).
+7. 7.2: Partly done: `proctor gate` (0.7.0) runs only the deploy-time checks with no app boot and a 60-second audit timeout; `composer-audit` still needs the network, so an offline gate only warns that advisory data is missing (see 7.2).
+8. 2.5: Partly done: `proctor gate --php-runtime` grades the PHP that will serve the app, but Squire's release script does not pass it (`gate_args` in `scripts/release.sh`), so the deploy path never sets it (see 2.5).
 
 Added in the second pass (2026-10-27):
 
-26. 4.8: Done: the `composer-version` check fails the Composer on PATH below the minimum (2.2.x below 2.2.24, any other 2.x below 2.7.7, or Composer 1) (see 4.8).
-27. 4.10 and 4.5: Done: the `composer-audit` check compares Composer's exit code with the parsed result and reads the abandoned and malware parts of the output (rule ids `proctor/composer-audit/abandoned`, `proctor/composer-audit/exit-code`) (see 4.10 and 4.5).
-28. 6.4 (raise priority): Done: a tool error (exit 2) still writes a valid report, so the artifact GitLab uploads parses (see 6.4).
-29. 4.9: Done: the `composer-config` check warns when `config.policy` is `false` (rule id `proctor/composer-config/policy-off`) or when `policy.malware` or `policy.advisories` is the boolean `false` (rule ids `proctor/composer-config/policy-malware-off`, `proctor/composer-config/policy-advisories-off`), and the `ci-pipelines` check warns when the pipeline environment sets `COMPOSER_NO_AUDIT` or `COMPOSER_NO_BLOCKING`, or `COMPOSER_AUDIT_ABANDONED` to `ignore` (rule id `proctor/ci-pipelines/composer-audit-off`) (see 4.9).
-30. 8.6: Done: the audit runs with `--no-plugins --no-interaction` and a minimal explicit environment (see 8.6).
-31. 6.8: Done: control characters are replaced with `?` in the text writer and the report is printed raw, so tag-like
-    strings reach the log literally; a CLI test pins it (see 6.8).
-32. 5.8: Done: the `overrides` check warns (`proctor/overrides/expiring`) for an active entry that expires within 14 days of `--today`, the expiry day counting, and the applier warns (`proctor/overrides/unused`) for an active entry that matched no failure (see 5.8).
-33. Done: the `php-floor` check prints the security-end date and the days left in the security-only warning (see 2.7).
-34. 3.7: Done: the Preflight guide documents installing from the lock and never running `composer update` in a deploy, and asks authors not to re-tag (see 3.7).
-35. 4.12: Decide in the policy whether `require-dev` packages count, then pass `--no-dev` or not.
-36. 8.7: Documented: the floor is GitLab 18.7 (`spec:component`), named in the install page's requirements; patch status on 18.x is the owner's to check (see 8.7).
-37. 4.11: Re-read the Composer cooldown policy once 2.11 is stable, and decide whether to ask for it.
-38. 6.7 (tagged Enforced by construction): Done: a CLI test asserts the text output carries no escape byte, and a
-    writer test feeds an escape sequence through a finding (see 6.7).
+9. 4.8: Partly done: the `composer-version` check fails below the CVE-2024 floors and the policy's `tools.composer.minimum` (0.7.0), but that minimum is 2.8.0, below the 2026 Perforce fixes in 2.9.6 and 2.10.3 (see 4.8).
+10. 3.7: Partly done: the Preflight `proctor` component installs from the lock, and the `ci-pipelines` check warns (`proctor/ci-pipelines/composer-update`) when CI runs `composer update` or `composer require`; the finding is a warning, not a fail, and only `.gitlab-ci.yml` and `.github/workflows/ci.yml` are read (see 3.7).
+11. 4.12: Partly done: `composer-audit` (0.6.0) warns instead of failing for an advisory on a package that composer.lock lists only in packages-dev, marked ` [dev dependency]`, and a name in both lists still fails; the policy file carries no rule for it (see 4.12).
+12. 8.7: Documented: the floor is GitLab 18.7 (`spec:component`), named in the install page's requirements; patch status on 18.x is the owner's to check (see 8.7).
+13. 4.11: Not yet: Composer 2.11 is stable (2.11.1, 2026-10-30) and carries the `cooldown` policy, but the stack's images and Preflight's jobs still use 2.10.3; once 2.11 is in the base images, Sourdough apps set a 3-day cooldown and PROCTOR warns when an app has none (Adam, 2026-11-03) (see 4.11).
 
 ## Second pass (2026-10-27)
 
