@@ -837,14 +837,14 @@ CE.
 Why: GitLab's patch page for 2026-10-12 describes CVE-2026-97229, a CVSS 10.0 integer overflow in the CI/CD regular
 expression compiler of CE and EE, exploitable by an unauthenticated user, fixed in 19.2.8, 19.3.5 and 19.4.2. A gate
 that runs on an unpatched server proves little. This is outside PROCTOR's code, but the stack's guide should name it.
-The stack's CI components also need GitLab 18.7 or later: PREFLIGHT's templates use `spec:component`, which PREFLIGHT
+The stack's CI components also need GitLab 18.7 or later: Preflight's templates use `spec:component`, which Preflight
 practice 2.11 records as generally available in 18.7 (unverified against GitLab's own page). On an older GitLab the
 gates are silently lost.
 
 Sources: [GitLab patch release 19.4.2, 19.3.5, 19.2.8](https://docs.gitlab.com/releases/patches/patch-release-gitlab-19-4-2-released/).
 Other 2026 GitLab CVEs came to me only through news summaries and I did not verify them.
 
-**How the stack holds it: Documented.** The floor is GitLab 18.7, set by `spec:component` in PREFLIGHT's CI
+**How the stack holds it: Documented.** The floor is GitLab 18.7, set by `spec:component` in Preflight's CI
 components, and the install page lists it under Requirements. 18.7 is a feature floor, not a security floor: the patch note above covers only
 the 19.2, 19.3 and 19.4 lines, so an owner on 18.x must check the patch status of their own instance. PROCTOR cannot
 see the server version.
@@ -1095,7 +1095,7 @@ call carrying Larastan's own ignore marker for the same rule is an info note (`p
 Warnings only. `EnvOutsideConfigCheckTest` pins the flagged calls, the skipped look-alikes and the suppressed note.
 
 ### The raw-identity-header check
-DRAWBRIDGE, the gateway, signs the session into the X-Sesame-Assertion header and passes the user's claims as request
+Drawbridge, the gateway, signs the session into the X-Sesame-Assertion header and passes the user's claims as request
 headers; CREED's handbook says the gateway driver accepts only the signed assertion, never a bare header (auth-3).
 
 **How the stack holds it: Checked.** The `raw-identity-header` check warns, never fails, when app code reads an
