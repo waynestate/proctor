@@ -75,6 +75,7 @@
 <li><code>preflight-pinned</code>: warns, never fails, when an app includes a Preflight component at a moving ref or re-declares what an included Preflight job runs.</li>
 <li><code>portability</code>: warns when code hard-codes a platform fact: an absolute host path, a hard-coded proxy address, a local-disk session store, or a php_value/php_flag line in .htaccess.</li>
 <li><code>destructive-deploy</code>: fails when a deploy script runs an artisan command that drops or rebuilds the database (<code>migrate:fresh</code>, <code>migrate:refresh</code>, <code>migrate:reset</code>, <code>db:wipe</code>), which erases production data on every deploy.</li>
+<li><code>crlf-deploy-script</code>: fails when a deploy script has Windows line endings (CRLF), which break it on Linux.</li>
 <li><code>instant-client-committed</code>: warns when Oracle Instant Client is committed to the repo: an archive, an unzipped install under an <code>instantclient</code> directory, or a loose client library.</li>
 </ul>
 <h2 id="app-code-and-files">App code and files<a class="docs-heading-link" aria-label="Link to this section" href="#app-code-and-files">#</a></h2>

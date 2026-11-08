@@ -280,6 +280,24 @@
 </tr>
 </tbody>
 </table></div>
+<h2 id="crlf-deploy-script">crlf-deploy-script<a class="docs-heading-link" aria-label="Link to this section" href="#crlf-deploy-script">#</a></h2>
+<p><code>crlf-deploy-script</code> fails when a deploy script has Windows line endings (CRLF): bash on Linux reads the carriage return as part of each command, so <code>set -e</code> becomes <code>set -e\r</code> and the script breaks on the host that runs it.</p>
+<p>Scanned: the top-level <code>build.sh</code> and <code>release.sh</code>, and every <code>.sh</code> file under a <code>deployments/</code>, <code>deploy_scripts/</code>, <code>deploy/</code> or <code>scripts/</code> directory at any depth. Skipped at any depth: <code>vendor/</code>, <code>node_modules/</code> and <code>.git/</code>. One finding per file, on the line of its first carriage return.</p>
+<p>Fix by converting the file to LF (<code>sed -i 's/\r$//' build.sh</code>, or the editor's line-ending setting) and adding <code>*.sh text eol=lf</code> to .gitattributes, so Git keeps it LF on every machine.</p>
+<div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Rule id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crlf-deploy-script</code></td>
+<td><code>proctor/crlf-deploy-script</code></td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="world-writable">world-writable<a class="docs-heading-link" aria-label="Link to this section" href="#world-writable">#</a></h2>
 <p><code>world-writable</code> warns when the repository sets mode 777, which lets any process on the host change the file or folder:</p>
 <ul>
@@ -313,7 +331,7 @@
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../../docs/guides/check-ci.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">CI checks</span></a><a class="docs-pager__link docs-pager__link--next" href="../../docs/guides/check-wayneui.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">WayneUI checks</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#node-eol">node-eol</a></li><li class="docs-toc__item"><a href="#mysql-eol">mysql-eol</a></li><li class="docs-toc__item"><a href="#env-outside-config">env-outside-config</a></li><li class="docs-toc__item"><a href="#raw-identity-header">raw-identity-header</a></li><li class="docs-toc__item"><a href="#app-key">app-key</a></li><li class="docs-toc__item"><a href="#served-folder">served-folder</a></li><li class="docs-toc__item"><a href="#world-writable">world-writable</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#node-eol">node-eol</a></li><li class="docs-toc__item"><a href="#mysql-eol">mysql-eol</a></li><li class="docs-toc__item"><a href="#env-outside-config">env-outside-config</a></li><li class="docs-toc__item"><a href="#raw-identity-header">raw-identity-header</a></li><li class="docs-toc__item"><a href="#app-key">app-key</a></li><li class="docs-toc__item"><a href="#served-folder">served-folder</a></li><li class="docs-toc__item"><a href="#crlf-deploy-script">crlf-deploy-script</a></li><li class="docs-toc__item"><a href="#world-writable">world-writable</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.7.0</span></span>
