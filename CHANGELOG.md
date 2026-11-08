@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Changed: CI saves its Composer and npm caches even when a job fails, so a retry after a dropped download fetches only what is missing (D-072).
 - Changed: CI caches Composer and npm downloads under a fixed key, so a lock change downloads only what changed (D-072).
 - Added: the deploy gate honors CREED's gate stages (PROCTOR-23, D-071): a failure that would block is `staged` when the policy puts its check at `report` or `warn` today, so it is logged and the deploy goes ahead; the JSON summary gains `staged` and the finding `stage`. CREED ships no stages, so today's gate is unchanged. Also re-exported the CREED reader at 0.1.7-38-g66791ef.
 - Added: the front page shows the supported versions from the bundled policy, written by `bin/supported-versions.php`; `composer ci` fails when the table is stale (PROCTOR-107).
