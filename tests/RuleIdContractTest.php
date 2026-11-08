@@ -30,6 +30,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/lock-committed',
         'proctor/destructive-deploy',
         'proctor/crlf-deploy-script',
+        'proctor/case-clash',
         'proctor/overrides',
         'proctor/unbounded-constraints',
         'proctor/composer-config',

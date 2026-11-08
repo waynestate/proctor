@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added: `case-clash` fails when two paths differ only by letter case (`README.md` and `readme.md`), because they collide on macOS and Windows checkouts. It is not part of the deploy gate.
 - Changed: the deploy layer runs Squire's kit 0.7.1 (was 0.6.0): `.squire/php.ini` no longer sets the deprecated `session.sid_*` lines, web requests get a `disable_functions` list and Apache hardening (`.squire/php-web.ini`, `.squire/apache-hardening.conf`), and opcache gets production settings with `SQUIRE_OPCACHE_VALIDATE` as the one switch.
 - Docs: BEST_PRACTICES.md is current at 0.8.0: thirteen stale "How the stack holds it" lines fixed (override cap, abandoned packages, CI guard, gate, SARIF rule ids, test names), and the tag table lists Partially.
 - Changed: the front page deploy layer requires HELMET ^1.0 (lock at 1.0.1, was 0.4.0), like the rest of the stack; its shared front controller already runs on HELMET 1.0 in Squire, Sourdough and Pinstripe.

@@ -50,6 +50,7 @@ Details and fixes: [CI checks](check-ci.md).
 - `portability`: warns when code hard-codes a platform fact: an absolute host path, a hard-coded proxy address, a local-disk session store, or a php_value/php_flag line in .htaccess.
 - `destructive-deploy`: fails when a deploy script runs an artisan command that drops or rebuilds the database (`migrate:fresh`, `migrate:refresh`, `migrate:reset`, `db:wipe`), which erases production data on every deploy.
 - `crlf-deploy-script`: fails when a deploy script has Windows line endings (CRLF), which break it on Linux.
+- `case-clash`: fails when two paths differ only by letter case, which collide on macOS and Windows.
 - `instant-client-committed`: warns when Oracle Instant Client is committed to the repo: an archive, an unzipped install under an `instantclient` directory, or a loose client library.
 
 ## App code and files
