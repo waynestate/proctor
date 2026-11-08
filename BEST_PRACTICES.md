@@ -351,7 +351,7 @@ an advisory still downgrades that advisory to a warning, and a count warning (ru
 (`config.policy.advisories.ignore-id`, `config.policy.advisories.ignore`, `config.policy.advisories.ignore-severity`,
 `config.policy.abandoned.ignore`, or the legacy `config.audit.ignore`, `config.audit.ignore-severity` and
 `config.audit.ignore-abandoned` while their matching `config.policy` block is absent), never naming an id, package
-or reason, so they move to the dated override file. Since the next release, each entry must also be backed by an active `composer-audit` override (rule id `proctor/composer-audit/unbacked-ignore`): an unbacked entry fails, a backed one warns. Tests: `tests/IgnoreBackingTest.php`.
+or reason, so they move to the dated override file. Since 0.6.0, each entry must also be backed by an active `composer-audit` override (rule id `proctor/composer-audit/unbacked-ignore`): an unbacked entry fails, a backed one warns. Tests: `tests/IgnoreBackingTest.php`.
 Tests: `tests/ComposerAuditCheckTest.php` (`testIgnoreEntriesInComposerJsonAreReportedAsOneWarningWithoutNamingThem`,
 `testSeverityAndAbandonedIgnoresAreCountedInTheIgnoreEntriesWarning`, `testLegacyAuditSeverityAndAbandonedIgnoresAreCounted`,
 `testAuditFallbacksAreIgnoredWhenThePolicyBlockExists`).
@@ -863,7 +863,7 @@ see the server version.
 Practices tagged `Not yet` or `Documented`, each one line. Highest value first.
 
 1. 1.2: Bundle CREED's policy, and refuse `--policy` and `--today` in CI unless a trusted job sets them.
-2. 8.1: Partly done: the PHAR build exists and the Preflight job installs the app with `--no-plugins --no-scripts`; the PHAR is not published, the job still installs the app's dependencies, and the README still says `composer require` (see 8.1).
+2. 8.1: Partly done: the PHAR build exists and the Preflight job installs the app with `--no-plugins --no-scripts`; the PHAR is built and attached to each GitLab Release by the `release-phar` job, the job still installs the app's dependencies, and the README still says `composer require` (see 8.1).
 3. 4.4: Done (unreleased): a count warning (rule id `proctor/composer-audit/ignore-entries`) reports the ignore entries in `composer.json` (`config.policy.advisories.ignore-id`, `config.policy.advisories.ignore`, `config.policy.advisories.ignore-severity`, `config.policy.abandoned.ignore`, or the legacy `config.audit.ignore`, `config.audit.ignore-severity` and `config.audit.ignore-abandoned` while their matching `config.policy` block is absent) without naming them, and an ignore that matches still downgrades the advisory to a warning; the entries are reported, not moved or expired (see 4.4).
 4. 4.3: Partly done: unparsable audit output fails with a message that starts with `not audited:` (rule id `proctor/composer-audit/could-not-run`); a missing composer or lock is still an info note that exits 0, and the owner cannot choose otherwise in CI (see 4.3).
 5. 3.5: Done: the `lock-committed` check warns when the lock's `content-hash` differs from composer.json (rule id `proctor/lock-committed/out-of-sync`) (see 3.5).
