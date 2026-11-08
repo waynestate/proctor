@@ -89,7 +89,7 @@ Fix by reading the variable in a config file (`'url' => env('APP_URL')` in `conf
 
 ## raw-identity-header[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#raw-identity-header)
 
-`raw-identity-header` warns, never fails, when app code reads an identity header directly instead of taking the user from SESAME. DRAWBRIDGE, the gateway, signs the session into the `X-Sesame-Assertion` header and passes the user's claims as request headers (`REMOTE_USER`, `X-Authenticated-*`, `X-Drawbridge-*`, `OIDC_CLAIM_*`); only SESAME's gateway driver may open that pair, because it verifies the signature before a claim becomes the logged-in user (CREED auth-3). App code that reads the assertion or a claim header itself accepts whatever value the proxy, or a client, put there.
+`raw-identity-header` warns, never fails, when app code reads an identity header directly instead of taking the user from SESAME. Drawbridge, the gateway, signs the session into the `X-Sesame-Assertion` header and passes the user's claims as request headers (`REMOTE_USER`, `X-Authenticated-*`, `X-Drawbridge-*`, `OIDC_CLAIM_*`); only SESAME's gateway driver may open that pair, because it verifies the signature before a claim becomes the logged-in user (CREED auth-3). App code that reads the assertion or a claim header itself accepts whatever value the proxy, or a client, put there.
 
 It runs on every app and scans every `*.php` file except `vendor/`, `node_modules/`, `storage/`, `tests/` and `.git/` at any depth.
 
