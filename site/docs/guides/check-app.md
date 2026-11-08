@@ -153,6 +153,18 @@ Fix by converting the file to LF (`sed -i 's/\r$//' build.sh`, or the editor's l
 | --- | --- |
 | `crlf-deploy-script` | `proctor/crlf-deploy-script` |
 
+## case-clash[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#case-clash)
+
+`case-clash` fails when two paths differ only by letter case (`Docs/Guide.md` and `docs/guide.md`): macOS and Windows ignore case, so one checkout silently overwrites the other, and a Linux host then autoloads a different file than the developer edited.
+
+Scanned: every file and directory under the app path. Skipped at any depth: `vendor/`, `node_modules/` and `.git/`. One finding per topmost clash, naming every colliding path; a clash below a clashing directory is part of it, not its own finding.
+
+Fix by keeping one name and removing the duplicate: `git rm docs/guide.md`, or `git mv` it to a different name.
+
+| Check | Rule id |
+| --- | --- |
+| `case-clash` | `proctor/case-clash` |
+
 ## world-writable[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#world-writable)
 
 `world-writable` warns when the repository sets mode 777, which lets any process on the host change the file or folder:

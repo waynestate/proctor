@@ -25,6 +25,7 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `lock-committed` | `proctor/lock-committed/out-of-sync` |
 | `destructive-deploy` | `proctor/destructive-deploy` |
 | `crlf-deploy-script` | `proctor/crlf-deploy-script` |
+| `case-clash` | `proctor/case-clash` |
 | `overrides` | `proctor/overrides` |
 | `overrides` | `proctor/overrides/expiring` |
 | `overrides` | `proctor/overrides/unused` |

@@ -298,6 +298,24 @@
 </tr>
 </tbody>
 </table></div>
+<h2 id="case-clash">case-clash<a class="docs-heading-link" aria-label="Link to this section" href="#case-clash">#</a></h2>
+<p><code>case-clash</code> fails when two paths differ only by letter case (<code>Docs/Guide.md</code> and <code>docs/guide.md</code>): macOS and Windows ignore case, so one checkout silently overwrites the other, and a Linux host then autoloads a different file than the developer edited.</p>
+<p>Scanned: every file and directory under the app path. Skipped at any depth: <code>vendor/</code>, <code>node_modules/</code> and <code>.git/</code>. One finding per topmost clash, naming every colliding path; a clash below a clashing directory is part of it, not its own finding.</p>
+<p>Fix by keeping one name and removing the duplicate: <code>git rm docs/guide.md</code>, or <code>git mv</code> it to a different name.</p>
+<div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Rule id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>case-clash</code></td>
+<td><code>proctor/case-clash</code></td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="world-writable">world-writable<a class="docs-heading-link" aria-label="Link to this section" href="#world-writable">#</a></h2>
 <p><code>world-writable</code> warns when the repository sets mode 777, which lets any process on the host change the file or folder:</p>
 <ul>
@@ -331,7 +349,7 @@
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../../docs/guides/check-ci.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">CI checks</span></a><a class="docs-pager__link docs-pager__link--next" href="../../docs/guides/check-wayneui.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">WayneUI checks</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#node-eol">node-eol</a></li><li class="docs-toc__item"><a href="#mysql-eol">mysql-eol</a></li><li class="docs-toc__item"><a href="#env-outside-config">env-outside-config</a></li><li class="docs-toc__item"><a href="#raw-identity-header">raw-identity-header</a></li><li class="docs-toc__item"><a href="#app-key">app-key</a></li><li class="docs-toc__item"><a href="#served-folder">served-folder</a></li><li class="docs-toc__item"><a href="#crlf-deploy-script">crlf-deploy-script</a></li><li class="docs-toc__item"><a href="#world-writable">world-writable</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#node-eol">node-eol</a></li><li class="docs-toc__item"><a href="#mysql-eol">mysql-eol</a></li><li class="docs-toc__item"><a href="#env-outside-config">env-outside-config</a></li><li class="docs-toc__item"><a href="#raw-identity-header">raw-identity-header</a></li><li class="docs-toc__item"><a href="#app-key">app-key</a></li><li class="docs-toc__item"><a href="#served-folder">served-folder</a></li><li class="docs-toc__item"><a href="#crlf-deploy-script">crlf-deploy-script</a></li><li class="docs-toc__item"><a href="#case-clash">case-clash</a></li><li class="docs-toc__item"><a href="#world-writable">world-writable</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.8.0</span></span>
