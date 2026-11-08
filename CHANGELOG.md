@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added: the front page shows the supported versions from the bundled policy, written by `bin/supported-versions.php`; `composer ci` fails when the table is stale (PROCTOR-107).
 - Added: an override may run at most 90 days past today (CREED rules.override_max_days); a longer one fails the overrides check (proctor/overrides/too-long) and is not applied.
 - Fixed: the docs menu closes with Escape and hands focus back to its button (docs kit synced from Squire).
 - Fixed: the docs kit's copy button no longer covers the first line of code when it says Copied or Failed: over the code it keeps its resting width and shows a check or a cross when the word does not fit (docs kit synced from Squire).

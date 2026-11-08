@@ -794,3 +794,14 @@ li.desk:has(.part-link:hover) img { transform: translateY(-2px); }
    command, like the instructions on the back of an exam book. No motion. */
 .stack-note { max-width: 36rem; margin: 1rem 0 1.4rem; font-size: .9rem; color: var(--muted); }
 .stack-note strong { font-weight: 600; color: var(--ink); }
+
+/* ------------------------------------------------- supported versions table */
+/* The table is generated from the bundled policy by bin/supported-versions.php;
+   keep its markup in step with that script (composer site:versions-check). */
+.versions-wrap { overflow-x: auto; }
+.versions-wrap:focus-visible { outline: 3px solid var(--green); outline-offset: 3px; border-radius: 3px; }
+.versions { width: 100%; border-collapse: collapse; text-align: left; }
+.versions th, .versions td { padding: 8px 12px; border-bottom: 1px solid rgba(20, 37, 33, .25); font-size: .92rem; }
+.versions thead th { font-family: var(--f-mono); font-size: .74rem; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); border-bottom: 2px solid var(--green); }
+.versions tbody th { font-weight: 700; color: var(--green-ink); white-space: nowrap; }
+.versions td:nth-child(3), .versions td:nth-child(4) { font-variant-numeric: tabular-nums; }

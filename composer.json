@@ -47,6 +47,8 @@
         "creed-copy:check": "php scripts/creed-copy-check.php",
         "site:agent-ready": "php bin/agent-ready.php",
         "site:agent-ready-check": "php bin/agent-ready.php --check",
+        "site:versions": "php bin/supported-versions.php",
+        "site:versions-check": "php bin/supported-versions.php --check",
         "docs": "php bin/docs-site.php",
         "docs:check": "php bin/docs-site.php --check",
         "ci": [
@@ -54,6 +56,7 @@
             "phpunit",
             "pint --test",
             "phpstan analyse --memory-limit=1G",
+            "@site:versions-check",
             "@site:agent-ready-check",
             "@docs:check",
             "@composer audit"
@@ -65,7 +68,9 @@
         "docs": "Build the docs site from docs/ into site/docs/ (Squire's docs builder): render the pages, fill the generated command and environment reference, and stamp the current version.",
         "docs:check": "Fail when the built docs site is stale or the generated command or environment reference has drifted from the CLI or source.",
         "site:agent-ready": "Rewrite the Markdown twins, llms.txt, llms-full.txt, robots.txt and sitemap.xml in site/ (Squire's agent-ready kit).",
-        "site:agent-ready-check": "Fail when the agent-ready files are stale, a page lacks its Markdown link, a prompt drifts from the docs, or the kit was edited here."
+        "site:agent-ready-check": "Fail when the agent-ready files are stale, a page lacks its Markdown link, a prompt drifts from the docs, or the kit was edited here.",
+        "site:versions": "Write the supported-versions table on the front page from the bundled CREED policy (src/Creed/policy.json).",
+        "site:versions-check": "Fail when the supported-versions table on the front page is stale against the bundled policy."
     },
     "bin": [
         "bin/proctor"
