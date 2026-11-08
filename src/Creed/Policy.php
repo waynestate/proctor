@@ -27,6 +27,9 @@ final class Policy
     /** @var array<string, mixed> */
     private array $rules;
 
+    /** @var array<string, mixed> */
+    private array $gate;
+
     /**
      * Where this policy came from: the file path for fromFile(), 'bundled'
      * for bundled(), 'array' for fromArray().
@@ -44,6 +47,7 @@ final class Policy
         $this->components = $data['components'] ?? [];
         $this->tools = $data['tools'] ?? [];
         $this->rules = $data['rules'] ?? [];
+        $this->gate = $data['gate'] ?? [];
         $this->origin = $origin;
     }
 
@@ -398,6 +402,47 @@ final class Policy
             );
         }
         return $value;
+    }
+
+    /** The three deploy-gate stages, weakest first (ADR-0006 item 4). */
+    public const GATE_STAGES = ['report', 'warn', 'block'];
+
+    /**
+     * The deploy-gate stage of one PROCTOR check on a date.
+     *
+     * The entry in `gate.stages[$checkId]` with the latest `from` on or
+     * before $on wins; with none, `gate.default_stage`; with no gate block,
+     * 'block', so a policy shaped before stages existed keeps today's gate.
+     *
+     * @return 'report'|'warn'|'block'
+     *
+     * @throws InvalidArgumentException when the gate block is malformed
+     */
+    public function gateStage(string $checkId, DateTimeImmutable $on): string
+    {
+        $default = $this->gate['default_stage'] ?? 'block';
+        if (!in_array($default, self::GATE_STAGES, true)) {
+            throw new InvalidArgumentException('Policy "gate.default_stage" must be one of report, warn, block; got ' . var_export($default, true) . '.');
+        }
+        $entries = $this->gate['stages'][$checkId] ?? [];
+        if (!is_array($entries)) {
+            throw new InvalidArgumentException('Policy "gate.stages.' . $checkId . '" must be a list of {stage, from} entries.');
+        }
+        $day = $on->format('Y-m-d');
+        $best = null;
+        $bestFrom = '';
+        foreach ($entries as $entry) {
+            $stage = is_array($entry) ? ($entry['stage'] ?? null) : null;
+            $from = is_array($entry) ? ($entry['from'] ?? null) : null;
+            if (!in_array($stage, self::GATE_STAGES, true) || !is_string($from) || 1 !== preg_match('/^\d{4}-\d{2}-\d{2}$/', $from)) {
+                throw new InvalidArgumentException('Policy "gate.stages.' . $checkId . '" has an entry without a valid stage (report, warn, block) and from date (YYYY-MM-DD).');
+            }
+            if ($from <= $day && $from >= $bestFrom) {
+                $best = $stage;
+                $bestFrom = $from;
+            }
+        }
+        return $best ?? $default;
     }
 
     /**
