@@ -14,6 +14,9 @@ $ErrorActionPreference = "Stop"
 
 Set-Location -LiteralPath (Split-Path -Parent $PSScriptRoot)
 
+# The read-only repo mount cannot create the named volume's mount point.
+New-Item -ItemType Directory -Force -Path (Join-Path $PWD "tools/a11y/node_modules") | Out-Null
+
 # The a11y component's image default, digest included (templates/a11y/template.yml
 # of Preflight 0.3.1). Its tag sets the playwright npm version, so the package
 # and the image's browsers always match.
