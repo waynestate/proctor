@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Added: `crlf-deploy-script` fails when a deploy script (`build.sh`, `release.sh`, or a `.sh` under `deployments/`, `deploy_scripts/`, `deploy/` or `scripts/`) has Windows line endings, which break it on Linux (SQUIRE-17). It is not part of the deploy gate.
+- Changed: the front page's deploy layer (`deploy/`) runs Squire's kit 0.6.0 (was 0.5.0): `scripts/release.sh` asks PROCTOR's deploy gate for a go or no-go on each release (a report, not a stop, unless `SQUIRE_PROCTOR=enforce`), and `.env.squire.example` lists the new setting. The layer's pins move to HELMET `^0.4` (locked 0.4.0) and PROCTOR `^0.7` (locked 0.7.0).
 - Docs: the Docker commands in the README and docs mount the shared `stack-composer-cache` volume, so Composer downloads are cached between runs.
 - Changed: `raw-identity-header` also flags direct reads of `X-Sesame-Assertion`, the signed assertion Drawbridge sends; only SESAME's gateway driver should read it.
 - Fixed: the README and docs usage line for `proctor check` lists `--timeout` (seconds for `composer audit`, default 300), which the command has accepted all along.
