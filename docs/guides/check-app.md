@@ -138,6 +138,18 @@ No finding when the app has no `public/` folder. Fix by deleting the file, or mo
 | `served-folder` | `proctor/served-folder/debug-file` |
 | `served-folder` | `proctor/served-folder/phpinfo` |
 
+## crlf-deploy-script
+
+`crlf-deploy-script` fails when a deploy script has Windows line endings (CRLF): bash on Linux reads the carriage return as part of each command, so `set -e` becomes `set -e\r` and the script breaks on the host that runs it.
+
+Scanned: the top-level `build.sh` and `release.sh`, and every `.sh` file under a `deployments/`, `deploy_scripts/`, `deploy/` or `scripts/` directory at any depth. Skipped at any depth: `vendor/`, `node_modules/` and `.git/`. One finding per file, on the line of its first carriage return.
+
+Fix by converting the file to LF (`sed -i 's/\r$//' build.sh`, or the editor's line-ending setting) and adding `*.sh text eol=lf` to .gitattributes, so Git keeps it LF on every machine.
+
+| Check | Rule id |
+| --- | --- |
+| `crlf-deploy-script` | `proctor/crlf-deploy-script` |
+
 ## world-writable
 
 `world-writable` warns when the repository sets mode 777, which lets any process on the host change the file or folder:
