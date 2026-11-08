@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Changed: `mysql-eol` warns on a floating major tag such as `mysql:8` or `mysql:5` (pin a major.minor so it can be graded) instead of staying silent (SQUIRE-21c).
 - Tests: the MySQL EOL check proves bare-major tags, the last security-support day and MariaDB images (SQUIRE-21b).
 - Changed: the bundled CREED copy in `src/Creed` is refreshed from CREED 0.1.7-20: the policy gains the `sessions` block (SESAME and Drawbridge session lifetimes).
 - Added: an ADVISOR module (`Waynestate\Proctor\Advisor\ProctorModule`): a coding agent that runs ADVISOR gains two read-only tools, `proctor_rules` (every rule id, and which are in the deploy gate) and `proctor_check` (PROCTOR's file checks on an app folder, in-process; the subprocess and `.env` checks are skipped and listed).

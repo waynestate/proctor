@@ -22,9 +22,11 @@ use Waynestate\Proctor\Creed\State;
  * The major.minor is what the policy keys on, so `mysql:5.6.51` is judged as
  * 5.6 and `mysql:8.4.2` as 8.4. A bare `mysql:8` resolves to no line unless
  * the policy says otherwise, and the reader does not invent a mapping: it
- * stays silent. A registry prefix, a `library/` segment and an `@sha256:`
- * digest are all tolerated; another org's image named mysql (someorg/mysql)
- * carries its own versions and is not graded.
+ * warns with the pin advice, naming the highest line the policy lists in
+ * that major, and stays silent only when the policy lists no line in that
+ * major. A registry prefix, a `library/` segment and an `@sha256:` digest
+ * are all tolerated; another org's image named mysql (someorg/mysql) carries
+ * its own versions and is not graded.
  *
  * MariaDB images are graded only when the policy has a `mariadb` component;
  * otherwise they are ignored silently. Silent too when the policy has no
@@ -157,6 +159,14 @@ final class MysqlEolCheck implements CheckInterface
      */
     private function grade(string $path, int $line, string $engine, string $version, CheckContext $context): ?Finding
     {
+        // A bare major (mysql:8) names a family, not a line: the policy keys
+        // on major.minor, so the reader invents no mapping and grades
+        // nothing. When the policy lists lines in that major, the tag is
+        // floating and gets a warning asking for a major.minor pin.
+        if (!str_contains($version, '.') && $context->policy->resolveVersion($engine, $version) === null) {
+            return $this->floatingMajorWarning($path, $line, $engine, $version, $context);
+        }
+
         $state = $context->policy->tryStateOf($engine, $version, $context->today);
         if ($state === null || $state === State::Active) {
             return null;
@@ -175,6 +185,40 @@ final class MysqlEolCheck implements CheckInterface
             $path,
             $line,
             $state,
+        );
+    }
+
+    /**
+     * The warning for a bare major tag the policy cannot resolve, or null
+     * when the policy lists no line in that major (silent, as before).
+     *
+     * The finding carries no state: the reader invents no mapping from the
+     * family to a line, so there is nothing to grade.
+     */
+    private function floatingMajorWarning(string $path, int $line, string $engine, string $version, CheckContext $context): ?Finding
+    {
+        $prefix = $version . '.';
+        $lines = array_values(array_filter(
+            $context->policy->versions($engine),
+            static fn(string $listed): bool => str_starts_with($listed, $prefix),
+        ));
+        if ($lines === []) {
+            return null;
+        }
+        $highest = $lines[0];
+        foreach ($lines as $listed) {
+            if (version_compare($listed, $highest) > 0) {
+                $highest = $listed;
+            }
+        }
+
+        return new Finding(
+            $this->id(),
+            Finding::STATUS_WARNING,
+            sprintf('%s %s (%s) is a floating tag; pin a major.minor such as %s so the check can grade it', $engine, $version, $path, $highest),
+            $path,
+            $line,
+            null,
         );
     }
 

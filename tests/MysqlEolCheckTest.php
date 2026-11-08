@@ -115,10 +115,33 @@ final class MysqlEolCheckTest extends ProctorTestCase
 
         $lines = $this->mysqlLines($this->runProctor($dir, 'text', $this->policy(), null, '2026-11-08')['stdout']);
 
-        // A bare major (mysql:8) is not graded: the policy keys on
-        // major.minor, so 8 resolves to no line, the reader does not invent a
-        // mapping and stays silent (MysqlEolCheck.php:23-25).
-        self::assertSame([], $lines);
+        // A bare major (mysql:8) is a floating tag: the policy keys on
+        // major.minor, so 8 resolves to no line and the reader does not
+        // invent a mapping. The policy lists lines in major 8 (8.0 and 8.4),
+        // so the check warns instead of staying silent, naming the highest
+        // listed line as the pin advice (MysqlEolCheck.php:23-27).
+        self::assertSame([
+            'WARN mysql-eol: mysql 8 (docker-compose.yml) is a floating tag; pin a major.minor such as 8.4 so the check can grade it',
+        ], $lines);
+
+        unlink($dir . '/docker-compose.yml');
+        rmdir($dir);
+    }
+
+    public function testBareMajorOfAnEolLineWarnsToPin(): void
+    {
+        $dir = sys_get_temp_dir() . '/proctor-mysql-' . bin2hex(random_bytes(4));
+        mkdir($dir);
+        file_put_contents($dir . '/docker-compose.yml', "services:\n  db:\n    image: mysql:5\n");
+
+        $lines = $this->mysqlLines($this->runProctor($dir, 'text', $this->policy(), null, '2026-11-08')['stdout']);
+
+        // mysql:5 floats to 5.7, which is past end of life, but the check
+        // does not grade it as a guessed line: it warns with the pin advice,
+        // naming the highest 5.x line the fixture policy lists (5.7).
+        self::assertSame([
+            'WARN mysql-eol: mysql 5 (docker-compose.yml) is a floating tag; pin a major.minor such as 5.7 so the check can grade it',
+        ], $lines);
 
         unlink($dir . '/docker-compose.yml');
         rmdir($dir);
