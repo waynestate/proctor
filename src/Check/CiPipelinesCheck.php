@@ -434,7 +434,7 @@ final class CiPipelinesCheck implements CheckInterface
         foreach ($this->pipelineEnvSettings($data, $gitlab) as $name => $values) {
             $offending = false;
             foreach ($values as $value) {
-                if ($this->switchesComposerAuditOff($name, $value)) {
+                if ($this->switchesComposerAuditOff($name, (string) $value)) {
                     $offending = true;
                     break;
                 }
@@ -466,8 +466,10 @@ final class CiPipelinesCheck implements CheckInterface
      * warning per file, whatever the project kind: a warning, never a
      * fail. Read from the same places as the audit switches: the GitLab
      * top-level and job variables: and the GitHub top-level, job and
-     * step env:. Any other value (0, empty, false, yes) leaves the guard
-     * on: no finding.
+     * step env:. Warns only when the value is the string 1 or the number
+     * 1, the two shapes the runners export as the string 1 that the CI
+     * guard accepts; any other value (0, empty, false, yes, true) leaves
+     * the guard on: no finding.
      *
      * @param array<string, mixed> $data the parsed pipeline map
      */
@@ -475,7 +477,7 @@ final class CiPipelinesCheck implements CheckInterface
     {
         $values = $this->pipelineEnvSettings($data, $gitlab)['PROCTOR_ALLOW_OVERRIDES'] ?? [];
         foreach ($values as $value) {
-            if ($value === '1') {
+            if ($value === '1' || $value === 1) {
                 return new Finding(
                     $this->id(),
                     Finding::STATUS_WARNING,
@@ -493,15 +495,15 @@ final class CiPipelinesCheck implements CheckInterface
 
     /**
      * The pipeline environment settings the file sets, whatever the
-     * project kind: every value seen for a name, string-cast, in
-     * first-seen order. GitLab settings come from the top-level
-     * variables: and each job's variables:, where a value is a scalar or
-     * a map with a value key; GitHub's from the top-level env:, each
-     * job's env: and each step's env:.
+     * project kind: every value seen for a name, in first-seen order.
+     * GitLab settings come from the top-level variables: and each job's
+     * variables:, where a value is a scalar or a map with a value key;
+     * GitHub's from the top-level env:, each job's env: and each step's
+     * env:.
      *
      * @param array<string, mixed> $data the parsed pipeline map
      *
-     * @return array<string, list<string>>
+     * @return array<string, list<mixed>>
      */
     private function pipelineEnvSettings(array $data, bool $gitlab): array
     {
@@ -539,12 +541,12 @@ final class CiPipelinesCheck implements CheckInterface
 
     /**
      * Records the settings of one variables or env block in $settings:
-     * every value seen for a name, string-cast, in first-seen order. A
-     * value is a scalar, or a map with a value key (the GitLab shape);
-     * anything else is skipped.
+     * every value seen for a name, in first-seen order. A value is a
+     * scalar, or a map with a value key (the GitLab shape); anything
+     * else is skipped.
      *
-     * @param mixed                          $block
-     * @param array<string, list<string>>    $settings
+     * @param mixed                       $block
+     * @param array<string, list<mixed>>  $settings
      */
     private function recordEnvBlock(mixed $block, array &$settings): void
     {
@@ -564,7 +566,7 @@ final class CiPipelinesCheck implements CheckInterface
             if (!is_scalar($value)) {
                 continue;
             }
-            $settings[$name][] = (string) $value;
+            $settings[$name][] = $value;
         }
     }
 

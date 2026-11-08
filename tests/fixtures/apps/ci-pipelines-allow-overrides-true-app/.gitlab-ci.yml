@@ -1,0 +1,8 @@
+# A pipeline that sets PROCTOR_ALLOW_OVERRIDES to true, which the runners export as the string true, not 1.
+variables:
+  PROCTOR_ALLOW_OVERRIDES: true
+composer-ci:
+  image: composer:2.10.3
+  script:
+    - composer install --no-interaction --no-progress --prefer-dist
+    - composer ci

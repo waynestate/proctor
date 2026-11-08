@@ -445,6 +445,17 @@ YAML,
         self::assertSame('gitlab pipeline runs composer ci', $findings[0]->message);
     }
 
+    public function testAllowOverridesTrueDoesNotWarn(): void
+    {
+        $findings = (new CiPipelinesCheck())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/ci-pipelines-allow-overrides-true-app'),
+        );
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+        self::assertSame('gitlab pipeline runs composer ci', $findings[0]->message);
+    }
+
     public function testGitlabScriptLineWithComposerUpdateWarns(): void
     {
         $findings = (new CiPipelinesCheck())->run(
