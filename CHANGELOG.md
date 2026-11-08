@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Docs: the Docker commands in the README and docs mount the shared `stack-composer-cache` volume, so Composer downloads are cached between runs.
 - Changed: `raw-identity-header` also flags direct reads of `X-Sesame-Assertion`, the signed assertion Drawbridge sends; only SESAME's gateway driver should read it.
 - Fixed: the README and docs usage line for `proctor check` lists `--timeout` (seconds for `composer audit`, default 300), which the command has accepted all along.
 - Fixed: the front page says Sourdough starts all five app shapes with PROCTOR set up; it no longer says raw PHP only.

@@ -453,9 +453,11 @@ Maintainers: how to build, test and release this project, and where its data com
 No PHP is needed on the host:
 
 ```
-docker run --rm -v "${PWD}:/app" -w /app composer:2 composer install --no-interaction
+docker run --rm -v "${PWD}:/app" -v stack-composer-cache:/tmp/cache -w /app composer:2 composer install --no-interaction
 docker run --rm -v "${PWD}:/app" -w /app php:8.4-cli vendor/bin/phpunit
 ```
+
+The `stack-composer-cache` volume keeps Composer's downloads between runs; Docker creates it the first time.
 
 The same works with `php:8.3-cli` in place of `php:8.4-cli`.
 
