@@ -519,7 +519,7 @@ The `stack-composer-cache` volume keeps Composer's downloads between runs; Docke
 
 The same works with `php:8.3-cli` in place of `php:8.4-cli`.
 
-The site has its own accessibility gate (axe-core in Playwright, WCAG 2.2 AA, run in Docker over every HTML page in `site/`): `scripts/a11y.sh` on Linux and macOS, `scripts/a11y.ps1` on Windows.
+The site has its own accessibility gate: Preflight's a11y checker (vendored in `tools/a11y/check.mjs` from the same Preflight tag the CI job runs, pinned by `tests/A11yCheckerPinTest.php`), axe-core 4.14.0 in Playwright, WCAG 2.2 AA, run in Docker over every HTML page in `site/` in light and dark at 320 and 1280 px, with the WCAG 1.4.10 reflow check: `scripts/a11y.sh` on Linux and macOS, `scripts/a11y.ps1` on Windows.
 
 Strongly recommended: a git.wayne.edu instance runner.
 
