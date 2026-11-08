@@ -120,7 +120,7 @@
         </p>
 
         <ul class="cover__facts">
-          <li><strong>17</strong> checks</li>
+          <li><strong>30</strong> checks</li>
           <li><strong>4</strong> report formats</li>
           <li><strong>3</strong> exit codes</li>
           <li><strong>0</strong> policy of its own</li>
@@ -168,7 +168,7 @@
         </li>
         <li data-reveal>
           <h3>Notes from home expire.</h3>
-          <p>An override needs a reason, an expiry date and an approver, and it shows up in every report. Once a PHP version is past end of life plus the grace period, no override counts.</p>
+          <p>An override needs a reason, an expiry date and an approver who did not write it, and it shows up in every report. Once a PHP version is past end of life plus the grace period, no override counts.</p>
         </li>
       </ol>
     </div>
@@ -180,7 +180,7 @@
       <header class="sec-head">
         <p class="sec-head__part">Part A</p>
         <h2 id="questions-title">The questions</h2>
-        <p>Nine of PROCTOR's twenty-nine checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures.</p>
+        <p>Nine of PROCTOR's thirty checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures.</p>
       </header>
 
       <ol class="questions">
@@ -588,6 +588,7 @@ RESULT: fail (2 failures, 1 warnings)</code></pre>
 OVERRIDE lock-committed: fixture: expired (expires 2026-01-01, approved by tester)
 RESULT: fail (1 failures, 1 warnings)</code></pre>
           <p class="notes__rule"><span class="hand redpen-inline">No note excuses end of life plus grace.</span> A failure in the <code>eol_grace_expired</code> state stands, whatever the app carries.</p>
+          <p class="notes__rule"><span class="hand redpen-inline">No signing your own note.</span> In CI, <code>override-approver</code> reads git blame and flags an entry approved by someone who wrote it. The merge request approval is the real signature; PROCTOR checks the handwriting.</p>
         </div>
       </div>
     </div>
@@ -713,7 +714,7 @@ Task:
 
 Constraints:
 - PROCTOR holds no policy of its own; CREED's policy decides. Never guess a support date.
-- An override in policy-overrides.json needs a reason, an expiry and an approver. Never propose one to hide an end-of-life PHP: past end of life plus grace, no override counts.
+- An override in policy-overrides.json needs a reason, an expiry and an approver who did not write it. Never propose one to hide an end-of-life PHP: past end of life plus grace, no override counts.
 - Give separate commands for Windows (PowerShell), macOS and Linux wherever they differ.
 - Ask me before you guess, and before you touch anything that deploys.
 

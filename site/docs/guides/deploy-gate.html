@@ -55,6 +55,13 @@
 </ul>
 <h2 id="what-it-runs">What it runs<a class="docs-heading-link" aria-label="Link to this section" href="#what-it-runs">#</a></h2>
 <p>Eight of the checks, the deploy-time rule set: <code>php-floor</code>, <code>unpatched</code>, <code>laravel-eol</code>, <code>laravel-php</code>, <code>lock-committed</code>, <code>composer-audit</code>, <code>overrides</code> and <code>policy-age</code>. That covers the PHP floor and the runtime, the framework line and the PHP range it supports, the lock file, known advisories, and the overrides themselves. Style, portability, MySQL 5.6 safety, CI pipelines and the rest stay in <code>proctor check</code>, in CI.</p>
+<p><code>override-approver</code>, the check that flags an override approved by its own author, stays out of the gate on purpose:</p>
+<ul>
+<li>It reads git history. A deploy runs from a release, often an export with no <code>.git</code> or a shallow one, so at the door it would mostly say <code>not checked:</code>.</li>
+<li>The gate is offline-tolerant and fast, and blame walks history.</li>
+<li>Who approved an override is settled when the override reaches the default branch: in CI, on the merge request that added it. Nothing at deploy time changes that answer, while the expiry, which the gate does check, changes every day.</li>
+<li>On Citadel, the platform's own overrides are held by its admins, with their own approver.</li>
+</ul>
 <h2 id="how-it-decides">How it decides<a class="docs-heading-link" aria-label="Link to this section" href="#how-it-decides">#</a></h2>
 <p>The app's overrides are applied first, exactly as in <code>proctor check</code>. Then each failure is one of these:</p>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>

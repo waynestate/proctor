@@ -43,7 +43,7 @@
       <article class="docs-article"><h1 id="checks">Checks<a class="docs-heading-link" aria-label="Link to this section" href="#checks">#</a></h1>
 <p>This page lists every check PROCTOR runs in a single <code>vendor/bin/proctor check</code> run, and how each one reports. The proctor asks the same questions in the same order on every run; only the hall changes.</p>
 <p><img src="../readme/report.svg" alt="Nine real lines from PROCTOR's text report, one per check shown: FAIL php-floor, WARN unpatched, FAIL unbounded-constraints, PASS lock-committed, WARN portability, WARN mysql56, WARN ci-pipelines, PASS composer-audit, FAIL overrides. Each line is written in words; color only repeats what the word says." /></p>
-<p><em>Nine of the twenty-nine checks shown, asked in this order on every run; <code>policy-age</code> stays silent while the policy is fresh. The lines are real output from the test fixtures.</em></p>
+<p><em>Nine of the thirty checks shown, asked in this order on every run; <code>policy-age</code> stays silent while the policy is fresh. The lines are real output from the test fixtures.</em></p>
 <h2 id="how-a-check-reports">How a check reports<a class="docs-heading-link" aria-label="Link to this section" href="#how-a-check-reports">#</a></h2>
 <p>Every finding carries one of four statuses: <strong>pass</strong>, <strong>warning</strong>, <strong>info</strong> or <strong>fail</strong>. A fail is a resit; a warning is a note in the margin that never changes the exit code; an info is the proctor thinking out loud, such as a missing composer or a lookup that could not run.</p>
 <p>Every finding also carries a stable, namespaced rule id: <code>proctor/&lt;check-id&gt;</code> for a check's default finding, <code>proctor/&lt;check-id&gt;/&lt;rule&gt;</code> for a named rule. The id is the finding's identity in the machine formats: <code>rule_id</code> in <code>json</code>, <code>ruleId</code> in <code>sarif</code>, and <code>check_name</code> in <code>codequality</code>. A rule keeps the same id across runs and across formats even when its message changes. The full table lives on the <a href="../reference/rule-ids.html">Rule ids</a> page.</p>
@@ -99,6 +99,7 @@
 <h2 id="overrides">Overrides<a class="docs-heading-link" aria-label="Link to this section" href="#overrides">#</a></h2>
 <ul>
 <li><code>overrides</code>: fails for every expired entry in policy-overrides.json; warns for an active entry that expires within 14 days of <code>--today</code> and for an active entry that matches no failure. How the file works: <a href="overrides.html">Overrides</a>.</li>
+<li><code>override-approver</code>: in <code>proctor check</code> only, warns (or fails, per CREED's <code>rules.override_self_approval</code>) when an entry's <code>approved_by</code> names someone git blame says wrote it, and says <code>not checked:</code> instead of passing when there is no git history to read. How approval works: <a href="overrides.html#someone-else-signs-the-note">Overrides</a>.</li>
 </ul>
 <h2 id="related">Related<a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></h2>
 <ul>

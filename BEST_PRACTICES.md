@@ -609,11 +609,18 @@ Why: an approval that nobody checks is a note.
 
 Sources: [GitLab protected branches: Code Owner approval is Premium or Ultimate](https://docs.gitlab.com/user/project/repository/branches/protected/).
 
-**How the stack holds it: Not yet.** The stack's deploy-gate decision moves override storage to the platform admins for the deploy gate
-(Citadel's admins today, through Squire's `citadel` target). In CI there
-is no check that the approver exists or differs from the author, and git.wayne.edu runs GitLab Community Edition, which
-has no code owner approval. (Second pass: the GitLab protected-branches page still lists Code Owner approval as
-Premium and Ultimate.)
+**How the stack holds it: Partially.** Checked in CI: the `override-approver` check (`proctor check` only) reads git
+blame for each entry and reports `proctor/override-approver/self-approved` when `approved_by` names a person who wrote
+one of its lines (author name, email, its local part or a noreply username; a line holding only `approved_by` is the
+approver's signature). With no git history to read, including lines a shallow clone credits to its oldest commit, it
+reports `proctor/override-approver/could-not-run`, never a pass. CREED's `rules.override_self_approval` makes both
+`warn` (the default) or `fail`. Not checked: that the approver exists or really approved. git.wayne.edu runs GitLab
+Community Edition, which has no Code Owner approval (second pass: the protected-branches page still lists it as Premium
+and Ultimate), so the merge request approval is the human control and the check is its tripwire. The deploy gate keeps
+platform-held overrides with the platform admins (Citadel's today, through Squire's `citadel` target) and does not run
+the check. Tests: `tests/OverrideApproverCheckTest.php` (`testAnOverrideWrittenAndApprovedInOneCommitBySamePersonWarns`,
+`testAnApproverWhoExtendsTheirOwnApprovalIsSelfApproved`, `testAShallowCloneNeverCreditsOldLinesToTheBoundaryCommit`,
+`testTheFailPolicyMakesASelfApprovalAFailure`).
 
 ### 5.8 Report an override that matches nothing, and one close to expiry (second pass)
 Print a warning when an active override targets a check that raised no failure, and when an expiry is within a set
@@ -896,7 +903,7 @@ A practice that is now `Checked` or `Enforced` leaves the list; CHANGELOG.md rec
 1. 1.2: Partly done: in CI `--policy` and `--today` are refused unless `PROCTOR_ALLOW_OVERRIDES` is exactly `1` (0.6.0); Preflight's `proctor_command` input is still free text, an app's `.gitlab-ci.yml` can override included job keys, and nothing flags an app that sets `PROCTOR_ALLOW_OVERRIDES` itself (see 1.2).
 2. 8.1: Partly done: the PHAR build exists and the Preflight job installs the app with `--no-plugins --no-scripts`; the PHAR is built and attached to each GitLab Release by the `release-phar` job, the job still installs the app's dependencies, and the README still says `composer require` (see 8.1).
 3. 2.6: Partly done: PROCTOR's own pipeline runs the Preflight `proctor` component on `deploy/`, with `allow_failure` while findings remain; raise PROCTOR's floor from `^8.3` to `^8.4` before PHP 8.3 reaches end of life on 2027-12-31 (see 2.6).
-4. 5.7: Require an approver who is not the author (needs review rules on the app repo).
+4. 5.7: Partly done: the `override-approver` check flags an approver who wrote the entry (git blame; rule ids `proctor/override-approver/self-approved`, `proctor/override-approver/could-not-run`), warn or fail per CREED `rules.override_self_approval`; that the approver really approved still rests on the merge request, since GitLab Community Edition has no Code Owner approval (see 5.7).
 5. 4.7: Documented: Preflight's README carries the weekly "Run it on a schedule" steps, but nothing fails when an app has no schedule (see 4.7).
 6. 8.5: Partly done: releases are tagged (0.1.0 through 0.8.0); sign them and publish provenance that says where each was built (see 8.5).
 7. 7.2: Partly done: `proctor gate` (0.7.0) runs only the deploy-time checks with no app boot and a 60-second audit timeout; `composer-audit` still needs the network, so an offline gate only warns that advisory data is missing (see 7.2).

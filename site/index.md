@@ -20,7 +20,7 @@ Run `vendor/bin/proctor check` in a PHP app and it checks the app against CREED'
 
 [Sit the exam](https://proctor.apps.wayne.edu/#start-title) [Watch it mark a paper](https://proctor.apps.wayne.edu/#sheet-title)
 
-- **17** checks
+- **30** checks
 - **4** report formats
 - **3** exit codes
 - **0** policy of its own
@@ -40,13 +40,13 @@ Read these before you turn the page. The proctor will not repeat them.
 4. ### Three ways to leave the room.
    `0` pass, warnings allowed. `1` one or more failures. `2` a tool error: bad options, an unreadable policy, a malformed `composer.json`. Exit 2 means the proctor tripped, not you.
 5. ### Notes from home expire.
-   An override needs a reason, an expiry date and an approver, and it shows up in every report. Once a PHP version is past end of life plus the grace period, no override counts.
+   An override needs a reason, an expiry date and an approver who did not write it, and it shows up in every report. Once a PHP version is past end of life plus the grace period, no override counts.
 
 Part A
 
 ## The questions
 
-Nine of PROCTOR's twenty-nine checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures.
+Nine of PROCTOR's thirty checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures.
 
 1. Q1 `php-floor`
    ### Is the lowest PHP your `composer.json` allows still supported?
@@ -358,6 +358,8 @@ RESULT: fail (1 failures, 1 warnings)
 
 No note excuses end of life plus grace. A failure in the `eol_grace_expired` state stands, whatever the app carries.
 
+No signing your own note. In CI, `override-approver` reads git blame and flags an entry approved by someone who wrote it. The merge request approval is the real signature; PROCTOR checks the handwriting.
+
 Exam halls
 
 ## Sitting it in CI
@@ -447,7 +449,7 @@ Task:
 
 Constraints:
 - PROCTOR holds no policy of its own; CREED's policy decides. Never guess a support date.
-- An override in policy-overrides.json needs a reason, an expiry and an approver. Never propose one to hide an end-of-life PHP: past end of life plus grace, no override counts.
+- An override in policy-overrides.json needs a reason, an expiry and an approver who did not write it. Never propose one to hide an end-of-life PHP: past end of life plus grace, no override counts.
 - Give separate commands for Windows (PowerShell), macOS and Linux wherever they differ.
 - Ask me before you guess, and before you touch anything that deploys.
 

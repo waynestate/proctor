@@ -40,7 +40,7 @@ An explicit source (`--policy` or `PROCTOR_POLICY`) that points at a missing or 
 
 ### The message names policy-overrides.json
 
-The file is rejected before any check runs when it is malformed or unreadable, when an entry names a check that is not registered in the run, or when an entry names the `overrides` check itself: an override cannot exempt the check that polices overrides, and an entry for a check that does not exist would silently do nothing.
+The file is rejected before any check runs when it is malformed or unreadable, when an entry names a check that is not registered in the run, or when an entry names the `overrides` or `override-approver` check: an override cannot exempt the checks that police overrides, and an entry for a check that does not exist would silently do nothing.
 
 - Fix: repair the JSON, and use a check id that PROCTOR actually runs; the list of valid ids is built from the checks PROCTOR runs, so a new check needs no change to the guard.
 - Check: rerun; the file must parse and name only registered checks before any check runs.
@@ -123,6 +123,20 @@ The policy in use is more than 60 days old (its `refreshed_on` date is more than
 An active entry in policy-overrides.json that expires within 14 days of `--today` (the expiry day counts) warns `expiring`, so an approval that is about to lapse is visible instead of silent. An active entry that matches no failure warns `unused`, so a stale approval is removed instead of rotting.
 
 - Fix: renew the entry with a new `expires` date and approver, or delete it. A warning never changes the exit code; an expired entry, however, fails the `overrides` check.
+
+### proctor/override-approver/self-approved
+
+`approved_by` names someone git blame says wrote a line of the entry: the author name, email, email local part or noreply username. Renewing your own approval counts, because moving `expires` makes you an author of the entry.
+
+- Fix: ask someone who did not write the entry to review the merge request, approve it, and put their name in `approved_by` (on its own line). Do not rewrite history to change the author; the merge request is the record.
+- Check: rerun `proctor check`; the pass line says how many entries were checked.
+
+### proctor/override-approver/could-not-run
+
+The message starts `not checked:` and names why: git is not on PATH, the app path is not inside a git checkout, git could not read the repository (for example `detected dubious ownership`), or the clone is shallow and the entry's lines are credited to its oldest commit.
+
+- Fix: run `proctor check` in a full git checkout with git installed. In GitLab CI, set `GIT_DEPTH: 0` on the job. For dubious ownership, mark the checkout safe in the job (`git config --global --add safe.directory "$CI_PROJECT_DIR"`).
+- Check: rerun; the finding becomes a pass line or a `self-approved` finding. Under CREED's `override_self_approval: fail`, this finding fails the run.
 
 ### proctor/repo-url-credentials
 

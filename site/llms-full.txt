@@ -117,13 +117,14 @@ vendor/bin/proctor gate [--path=.] [--format=text|json] [--baseline=<report or d
 - `wayneui-forked-views`: warns when forked copies of WayneUI are committed: any file under `resources/views/vendor/wayne-ui/` (the published 1.x views) or `public/vendor/wayne-ui/` (the published 1.x assets). Those copies silently override the package, so an app keeps old layouts after a WayneUI upgrade and nobody sees it; WayneUI's MIGRATING.md says to delete them. Only committed files count: the git-tracked files when the app path sits in a git repository and git can be run, otherwise the files on disk. Skipped at any depth: `node_modules/` and `.git/`; skipped at the top level only: `vendor/` (Composer's), so the `vendor` segment inside `resources/views/vendor/wayne-ui/` still matches. One warning per folder, with its file count. Warning, not failure: a new check must not turn a passing app into a failing one. Fix by deleting the folder and running `git rm -r --cached` on it; if you changed the forked views on purpose, compare them with the package views first. The proctor confiscates the photocopied syllabus: the current one, with the errata, is already pinned to the board.
 - `wayneui-outdated`: warns when the WayneUI an app carries is behind the latest release. It reads the installed version from composer.lock (`waynestate/wayne-ui`), package-lock.json (`@waynestate/wayne-ui-css`, `@waynestate/wayne-ui-vue`) and committed copies of `wayne-ui.css` (the version in the banner of the first 400 bytes), asks composer once per run for the release list (`composer show waynestate/wayne-ui --all --format=json`), and warns, per source, when the installed version is behind the highest stable release of the same major. Pre-releases (-dev, alpha, beta, RC) and other majors are ignored. A locked WayneUI 1.x (`cit-web-infra/wayne-ui`) gets its own warning with no lookup: 1.x is Bootstrap 3 and predates the comparison. Only committed files count as copies: the git-tracked files when the app path sits in a git repository and git can be run, otherwise the files on disk; skipped at any depth: `node_modules/` and `.git/`, and the top-level `vendor/`. When the lookup cannot run (no composer on PATH, offline, or no parsable versions) the check reports one info finding with the skipped marker and nothing else, so an offline run never breaks; an app with nothing WayneUI-related runs no process at all. By default the check warns, not fails: being out of date must not turn a passing app into a failing one. An app that wants a hard stop on its pasted stylesheets sets `wayneui.copies` to `fail` in its composer.json, under `extra.proctor` next to `github-mirror`; the default is `warn`. In `fail` mode a behind committed copy is a failure, with a sentence naming the setting appended to its message, while findings from composer.lock and package-lock.json stay warnings: only committed copies are affected by the setting, and an offline run never fails in either mode, because an unknown latest is always just the info skipped finding. Fix by updating the lock file (`composer update waynestate/wayne-ui`, or `npm update` for the npm packages) or by replacing the pasted copy from the release. The proctor marks the paper against the current syllabus, not the one the student photocopied last semester.
 - `overrides`: fails for every expired entry in policy-overrides.json, and for every entry that runs past the policy's maximum duration (`rules.override_max_days`, 90 days when the key is absent): such an entry fails with `proctor/overrides/too-long` and is not applied, because an approval is a dated exception and CREED allows no permanent override. It warns (`proctor/overrides/expiring`) for an active entry that expires within 14 days of `--today` (the expiry day counts), so an approval that is about to lapse is visible instead of silent. An active entry that matches no failure warns (`proctor/overrides/unused`) so a stale approval is removed instead of rotting; the warning never changes the exit code. An entry that names a check that is not registered in the run, or that names the `overrides` check itself, is a tool error (exit 2): the file is rejected before any check runs. A policy whose `override_max_days` is not a positive integer is a tool error (exit 2) naming the key.
+- `override-approver`: warns when an entry in policy-overrides.json is approved by someone who wrote it. git blame (read-only, whitespace ignored, moved lines followed) names who last wrote each line of the entry, and `approved_by` must not name one of them: the git author name, the author email, its local part, or the username in a GitLab or GitHub noreply address, compared trimmed and case-insensitively, with a leading `@` and `Name ` understood. A line holding only `approved_by` is the approver's signature and does not count, so a reviewer may sign someone else's entry but not approve, or extend, one they wrote (`proctor/override-approver/self-approved`). Uncommitted lines count as the next commit's author's, so a local run warns before the commit. It never passes on a guess: with no git, no git checkout, or a line that a shallow clone credits to its oldest commit, it reports `proctor/override-approver/could-not-run` with a message that starts `not checked:` (set `GIT_DEPTH: 0` on the job). CREED's `rules.override_self_approval` makes both findings `warn` (the default, also when the key is absent) or `fail`. An override can neither target this check nor waive its failure. `proctor check` only: the deploy gate does not run it. A note from home does not count when the candidate signed it.
 - `policy-age`: warns when the policy in use is more than 60 days old (its `refreshed_on` date is more than 60 days before `--today`), or when a non-bundled policy has no `refreshed_on` date. Warning only: an old policy never fails a run, and the bundled policy may omit the date. It exists so a stopped CREED refresh robot is visible instead of silent.
 
 ### Exit codes
 
 - `0`: pass (warnings allowed)
 - `1`: one or more failures
-- `2`: tool error (bad options, unreadable policy, a present but malformed or unreadable composer.json, or an overrides file that is malformed, unreadable, or names a check that is not registered or the overrides check itself). A missing composer.json is not a tool error: the app gets a verdict, with php-floor failing.
+- `2`: tool error (bad options, unreadable policy, a present but malformed or unreadable composer.json, or an overrides file that is malformed, unreadable, or names a check that is not registered, the overrides check or the override-approver check). A missing composer.json is not a tool error: the app gets a verdict, with php-floor failing.
 
 On a tool error every format still writes its report to stdout, next to the message on stderr: `text` prints the message as a FAIL line, `json` writes the report shape with `result` set to `error`, an `error` field carrying the message and empty findings, `codequality` lists the error as one blocker issue, and `sarif` writes a log whose single run reports an unsuccessful invocation.
 
@@ -157,6 +158,8 @@ flowchart LR
 | `composer-audit` | no known advisory at or above the threshold |
 | `overrides` | every override is still in date |
 | `policy-age` | the policy itself is fresh (warns only) |
+
+`override-approver` stays out of the gate on purpose: it reads git history, which a release export may not carry, and whether an override was approved by someone else is settled once, in CI, on the merge request that added it.
 
 Overrides are applied first, as in `proctor check`. Each remaining failure is then blocked (no baseline, so a first deploy; a regression, because the baseline passed that rule; or an expired override, for any check), held (the baseline failed the same rule id too, so owners of an EOL app can still ship the fix) or waived (composer-audit had no advisory data, which only warns at deploy time). Any block is a no-go.
 
@@ -225,6 +228,9 @@ The full set, grouped by check:
 | `overrides` | `proctor/overrides/expiring` |
 | `overrides` | `proctor/overrides/too-long` |
 | `overrides` | `proctor/overrides/unused` |
+| `override-approver` | `proctor/override-approver` |
+| `override-approver` | `proctor/override-approver/self-approved` |
+| `override-approver` | `proctor/override-approver/could-not-run` |
 | `unbounded-constraints` | `proctor/unbounded-constraints` |
 | `unbounded-constraints` | `proctor/unbounded-constraints/unbounded` |
 | `unbounded-constraints` | `proctor/unbounded-constraints/repository` |
@@ -393,8 +399,8 @@ standing one, and CREED allows no permanent override. A policy whose
 naming the key.
 
 PROCTOR rejects the file (exit 2) when an entry names a check that is not
-registered in the run, or names the `overrides` check itself: an override
-cannot exempt the check that polices overrides, and an entry for a check
+registered in the run, or names the `overrides` or `override-approver` check:
+an override cannot exempt the checks that police overrides, and an entry for a check
 that does not exist would silently do nothing. The list of valid check ids
 is built from the checks PROCTOR runs, so a new check needs no change to
 the guard. An active override that expires within 14 days of `--today`
@@ -404,12 +410,26 @@ active override whose check raised no failure gets a warning finding
 (`proctor/overrides/unused`) so a stale approval is removed instead of
 rotting. A warning never changes the exit code.
 
+Someone other than the author approves an override. `proctor check` reads
+git blame for each entry and reports `proctor/override-approver/self-approved`
+when `approved_by` names a person who wrote one of its lines (a line that
+holds only `approved_by` is the approver's signature and does not count).
+With no git history to read, including a line that a shallow clone credits
+to its oldest commit, it reports `proctor/override-approver/could-not-run`,
+never a pass. CREED's `rules.override_self_approval` makes both `warn` (the
+default) or `fail`. git.wayne.edu runs GitLab Community Edition, which has no
+Code Owner approval, so the merge request is the human control: protect the
+default branch, and have the person named in `approved_by` approve the merge
+request that adds the entry. PROCTOR's check is the tripwire for the common
+slip, writing your own name. How it matches names, squash merges, bots and
+what it cannot see: [Overrides](https://proctor.apps.wayne.edu/docs/guides/overrides.html).
+
 ### Policy
 
 `--policy` takes a CREED-format policy file: schema_version 1, component
 versions with released, active_until and security_until dates, and rules
 (audit_severity_threshold, banned_constraints, eol_grace_days,
-override_max_days). The policy-file wiring to `waynestate/creed` is
+override_max_days, override_self_approval). The policy-file wiring to `waynestate/creed` is
 described below.
 
 Without `--policy`, PROCTOR resolves the policy in this order (first match
@@ -535,7 +555,7 @@ Run `vendor/bin/proctor check` in a PHP app and it checks the app against CREED'
 
 [Sit the exam](https://proctor.apps.wayne.edu/#start-title) [Watch it mark a paper](https://proctor.apps.wayne.edu/#sheet-title)
 
-- **17** checks
+- **30** checks
 - **4** report formats
 - **3** exit codes
 - **0** policy of its own
@@ -555,13 +575,13 @@ Read these before you turn the page. The proctor will not repeat them.
 4. ### Three ways to leave the room.
    `0` pass, warnings allowed. `1` one or more failures. `2` a tool error: bad options, an unreadable policy, a malformed `composer.json`. Exit 2 means the proctor tripped, not you.
 5. ### Notes from home expire.
-   An override needs a reason, an expiry date and an approver, and it shows up in every report. Once a PHP version is past end of life plus the grace period, no override counts.
+   An override needs a reason, an expiry date and an approver who did not write it, and it shows up in every report. Once a PHP version is past end of life plus the grace period, no override counts.
 
 Part A
 
 ### The questions
 
-Nine of PROCTOR's twenty-nine checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures.
+Nine of PROCTOR's thirty checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures.
 
 1. Q1 `php-floor`
    ### Is the lowest PHP your `composer.json` allows still supported?
@@ -873,6 +893,8 @@ RESULT: fail (1 failures, 1 warnings)
 
 No note excuses end of life plus grace. A failure in the `eol_grace_expired` state stands, whatever the app carries.
 
+No signing your own note. In CI, `override-approver` reads git blame and flags an entry approved by someone who wrote it. The merge request approval is the real signature; PROCTOR checks the handwriting.
+
 Exam halls
 
 ### Sitting it in CI
@@ -962,7 +984,7 @@ Task:
 
 Constraints:
 - PROCTOR holds no policy of its own; CREED's policy decides. Never guess a support date.
-- An override in policy-overrides.json needs a reason, an expiry and an approver. Never propose one to hide an end-of-life PHP: past end of life plus grace, no override counts.
+- An override in policy-overrides.json needs a reason, an expiry and an approver who did not write it. Never propose one to hide an end-of-life PHP: past end of life plus grace, no override counts.
 - Give separate commands for Windows (PowerShell), macOS and Linux wherever they differ.
 - Ask me before you guess, and before you touch anything that deploys.
 
@@ -1161,6 +1183,7 @@ Some checks cannot run inside ADVISOR's sandbox, so `proctor_check` leaves them 
 | `wayneui-forked-views` | `starts a subprocess` | `git ls-files` |
 | `wayneui-outdated` | `starts a subprocess` | `composer show` (which asks Packagist) and git |
 | `node-eol`, `env-outside-config`, `raw-identity-header`, `served-folder`, `world-writable` | `starts a subprocess` | `git ls-files`, to grade only committed files |
+| `override-approver` | `starts a subprocess` | `git blame`, to see who wrote each override |
 | `app-key` | `reads .env` | reads committed env files for an `APP_KEY` |
 
 `mysql-eol` does run: it reads `.env.example` and `.env.squire.example`, the committed placeholder files, never `.env`. An override in `policy-overrides.json` for a skipped check is not reported as unused, since its check did not run.
@@ -1772,7 +1795,7 @@ This page lists every check PROCTOR runs in a single `vendor/bin/proctor check` 
 
 ![Nine real lines from PROCTOR's text report, one per check shown: FAIL php-floor, WARN unpatched, FAIL unbounded-constraints, PASS lock-committed, WARN portability, WARN mysql56, WARN ci-pipelines, PASS composer-audit, FAIL overrides. Each line is written in words; color only repeats what the word says.](https://proctor.apps.wayne.edu/docs/readme/report.svg)
 
-*Nine of the twenty-nine checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
+*Nine of the thirty checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
 
 ### How a check reports[#](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html#how-a-check-reports)
 
@@ -1838,6 +1861,7 @@ Details and fixes: [WayneUI checks](https://proctor.apps.wayne.edu/docs/guides/c
 ### Overrides[#](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html#overrides)
 
 - `overrides`: fails for every expired entry in policy-overrides.json; warns for an active entry that expires within 14 days of `--today` and for an active entry that matches no failure. How the file works: [Overrides](https://proctor.apps.wayne.edu/docs/guides/overrides.html).
+- `override-approver`: in `proctor check` only, warns (or fails, per CREED's `rules.override_self_approval`) when an entry's `approved_by` names someone git blame says wrote it, and says `not checked:` instead of passing when there is no git history to read. How approval works: [Overrides](https://proctor.apps.wayne.edu/docs/guides/overrides.html#someone-else-signs-the-note).
 
 ### Related[#](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html#related)
 
@@ -1874,6 +1898,13 @@ vendor/bin/proctor gate [--path=.] [--format=text|json] [--baseline=<report or d
 ### What it runs[#](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html#what-it-runs)
 
 Eight of the checks, the deploy-time rule set: `php-floor`, `unpatched`, `laravel-eol`, `laravel-php`, `lock-committed`, `composer-audit`, `overrides` and `policy-age`. That covers the PHP floor and the runtime, the framework line and the PHP range it supports, the lock file, known advisories, and the overrides themselves. Style, portability, MySQL 5.6 safety, CI pipelines and the rest stay in `proctor check`, in CI.
+
+`override-approver`, the check that flags an override approved by its own author, stays out of the gate on purpose:
+
+- It reads git history. A deploy runs from a release, often an export with no `.git` or a shallow one, so at the door it would mostly say `not checked:`.
+- The gate is offline-tolerant and fast, and blame walks history.
+- Who approved an override is settled when the override reaches the default branch: in CI, on the merge request that added it. Nothing at deploy time changes that answer, while the expiry, which the gate does check, changes every day.
+- On Citadel, the platform's own overrides are held by its admins, with their own approver.
 
 ### How it decides[#](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html#how-it-decides)
 
@@ -2101,7 +2132,8 @@ This page explains how an app carries a `policy-overrides.json` file next to its
 - An active override turns the check's fail findings into warnings.
 - An override has a maximum duration: an entry whose expiry lies more than `rules.override_max_days` days after `--today` (90 days when the key is absent) fails the `overrides` check (`proctor/overrides/too-long`) and is not applied. The cap exists because an approval is a dated exception, not a standing one, and CREED allows no permanent override.
 - An override never waives a failure whose state is EOL plus grace (`eol_grace_expired`); that failure stands (the stack's version policy decision).
-- PROCTOR rejects the file (exit 2) when an entry names a check that is not registered in the run, or names the `overrides` check itself: an override cannot exempt the check that polices overrides, and an entry for a check that does not exist would silently do nothing.
+- PROCTOR rejects the file (exit 2) when an entry names a check that is not registered in the run, or names the `overrides` or `override-approver` check: an override cannot exempt the checks that police overrides, and an entry for a check that does not exist would silently do nothing.
+- In `proctor check`, the `override-approver` check flags an entry approved by someone who wrote it (see [Someone else signs the note](https://proctor.apps.wayne.edu/docs/guides/overrides.html#someone-else-signs-the-note)).
 - The list of valid check ids is built from the checks PROCTOR runs, so a new check needs no change to the guard.
 - An active override that expires within 14 days of `--today` (the expiry day counts) gets a warning finding (`proctor/overrides/expiring`) instead of lapsing without a trace, and an active override whose check raised no failure gets a warning finding (`proctor/overrides/unused`) so a stale approval is removed instead of rotting.
 - A warning never changes the exit code.
@@ -2111,6 +2143,40 @@ This page explains how an app carries a `policy-overrides.json` file next to its
 Warning
 
 An expired override fails the run. Renew it or delete it before the expiry date.
+
+### Someone else signs the note[#](https://proctor.apps.wayne.edu/docs/guides/overrides.html#someone-else-signs-the-note)
+
+`approved_by` names the person who approved the exception, and that person must not be the one who wrote it. A note from home signed by the candidate is not a note from home. `proctor check` holds that line with the `override-approver` check:
+
+- For each entry, git blame names who last wrote each of its lines, ignoring whitespace changes and following lines moved within the file. Only read-only git commands run.
+- The entry is self-approved when `approved_by` names one of those authors: the git author name, the author email, the email's local part, or the username in a GitLab (`123-name@users.noreply.<host>`) or GitHub noreply address. The comparison is trimmed and case-insensitive, and a leading `@` and the `Name <email>` form are understood.
+- A line that holds only `approved_by` is the approver's signature, so its own author does not count. A reviewer may write their name into someone else's entry; they may not approve an entry they wrote, or an extension of their own approval (moving `expires` makes you an author of the entry). Keep `approved_by` on a line of its own, as pretty-printed JSON does, so a signature stays a signature.
+- Uncommitted lines count as written by the author of the next commit (`git var GIT_AUTHOR_IDENT`), so a local run warns before you commit.
+- With squash merges, GitLab credits the squashed commit to the merge request's author, so every line of the entry is theirs. A reviewer who signs inside that merge request does not become an author, and a merge request author who names themselves is still caught.
+- A self-approval is `proctor/override-approver/self-approved`, on the entry's first line. When every entry checks out, one pass line says how many were checked.
+- The check never passes on a guess. When git is not on PATH, the app path is not inside a git checkout, or git cannot answer, it reports `proctor/override-approver/could-not-run` with a message that starts `not checked:`.
+- In a shallow clone, git credits every line older than the clone to the clone's oldest commit, whoever wrote it. An entry with such a line is `could-not-run` too, unless a self-approval inside the clone's history is already proven. GitLab clones shallow by default (`GIT_DEPTH`), so set `GIT_DEPTH: 0` on the job that runs `proctor check`.
+- CREED's `rules.override_self_approval` sets the status of both findings: `warn`, the default and the value when the key is absent, or `fail`. Under `fail`, an approval PROCTOR cannot check fails too, because a strict rule that a shallow clone could dodge is no rule. Any other value is a tool error (exit 2).
+- No override can target `override-approver`, and none downgrades its failure: an author could otherwise approve their own waiver.
+- `proctor gate` does not run it; see [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html) for why.
+
+A self-approved entry in the text report:
+
+```
+WARN override-approver: override for "lock-committed" is approved by "Avery Author", who also wrote it (commit 1a2b3c4d); someone who did not write the entry must approve it
+```
+
+#### What makes an approval real[#](https://proctor.apps.wayne.edu/docs/guides/overrides.html#what-makes-an-approval-real)
+
+git.wayne.edu runs GitLab Community Edition, which has no Code Owner approval rules, so no GitLab setting can require that the named person approves the file. The human control is the merge request:
+
+1. Protect the default branch so no one pushes to it directly. Every change, including one to `policy-overrides.json`, then arrives in a merge request.
+2. The person named in `approved_by` reviews that merge request and approves it. The Approve button exists in every GitLab tier, but Community Edition does not make it required, so the person who merges checks that the named approver approved.
+3. Write `approved_by` the way git knows the approver, ideally their WSU email, so PROCTOR can compare it.
+
+PROCTOR's check is the tripwire, not the control. It catches the common slip, writing your own name, and an approver extending their own approval. It cannot catch a name that is not the author's but never approved either, a different spelling of the same person, or a git identity typed as someone else's: `git config user.name` is whatever the committer set. The proctor reads the signature on the note; whether it was forged is a question for the merge request.
+
+A bot never approves. When a bot writes an entry, the bot is its author and a person still signs it; a whitespace-only reformat by a bot changes no authorship, because whitespace changes are ignored.
 
 ### When the audit cannot run[#](https://proctor.apps.wayne.edu/docs/guides/overrides.html#when-the-audit-cannot-run)
 
@@ -2165,6 +2231,9 @@ vendor/bin/proctor check --path=. --today=YYYY-MM-DD
 | `overrides` | `proctor/overrides/expiring` |
 | `overrides` | `proctor/overrides/too-long` |
 | `overrides` | `proctor/overrides/unused` |
+| `override-approver` | `proctor/override-approver` |
+| `override-approver` | `proctor/override-approver/self-approved` |
+| `override-approver` | `proctor/override-approver/could-not-run` |
 
 ### Related[#](https://proctor.apps.wayne.edu/docs/guides/overrides.html#related)
 
@@ -2533,7 +2602,7 @@ None of the settings on this page take a secret. PROCTOR reads paths, dates and 
 
 ### The policy file[#](https://proctor.apps.wayne.edu/docs/reference/configuration.html#the-policy-file)
 
-`--policy` takes a CREED-format policy file: schema_version 1, component versions with released, active_until and security_until dates, and rules (audit_severity_threshold, banned_constraints, eol_grace_days).
+`--policy` takes a CREED-format policy file: schema_version 1, component versions with released, active_until and security_until dates, and rules (audit_severity_threshold, banned_constraints, eol_grace_days, override_max_days, override_self_approval). `override_self_approval` is `warn` or `fail` (`warn` when the key is absent) and sets the status of the `override-approver` findings; any other value is a tool error (exit 2).
 
 Without `--policy`, PROCTOR resolves the policy in this order (first match wins):
 
@@ -2590,7 +2659,9 @@ When both are present, both must match the same advisory. Without either field t
 
 An expired override fails the `overrides` check. An active override turns the matching fail findings of its check into warnings. An override never waives a failure whose state is EOL plus grace (eol_grace_expired); that failure stands (the stack's version policy decision).
 
-PROCTOR rejects the file (exit 2) when an entry names a check that is not registered in the run, or names the `overrides` check itself: an override cannot exempt the check that polices overrides, and an entry for a check that does not exist would silently do nothing. The list of valid check ids is built from the checks PROCTOR runs, so a new check needs no change to the guard. An active override that expires within 14 days of `--today` (the expiry day counts) gets a warning finding (`proctor/overrides/expiring`) instead of lapsing without a trace, and an active override whose check raised no failure gets a warning finding (`proctor/overrides/unused`) so a stale approval is removed instead of rotting. A warning never changes the exit code.
+PROCTOR rejects the file (exit 2) when an entry names a check that is not registered in the run, or names the `overrides` or `override-approver` check: an override cannot exempt the checks that police overrides, and an entry for a check that does not exist would silently do nothing. The list of valid check ids is built from the checks PROCTOR runs, so a new check needs no change to the guard. An active override that expires within 14 days of `--today` (the expiry day counts) gets a warning finding (`proctor/overrides/expiring`) instead of lapsing without a trace, and an active override whose check raised no failure gets a warning finding (`proctor/overrides/unused`) so a stale approval is removed instead of rotting. A warning never changes the exit code.
+
+`approved_by` must name someone who did not write the entry; `proctor check` compares it with git blame (`override-approver`). Keep it on a line of its own and write it the way git knows the approver, ideally their WSU email. Details: [Overrides](https://proctor.apps.wayne.edu/docs/guides/overrides.html#someone-else-signs-the-note).
 
 ### Related[#](https://proctor.apps.wayne.edu/docs/reference/configuration.html#related)
 
@@ -2748,7 +2819,11 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `case-clash` | `proctor/case-clash` |
 | `overrides` | `proctor/overrides` |
 | `overrides` | `proctor/overrides/expiring` |
+| `overrides` | `proctor/overrides/too-long` |
 | `overrides` | `proctor/overrides/unused` |
+| `override-approver` | `proctor/override-approver` |
+| `override-approver` | `proctor/override-approver/self-approved` |
+| `override-approver` | `proctor/override-approver/could-not-run` |
 | `unbounded-constraints` | `proctor/unbounded-constraints` |
 | `unbounded-constraints` | `proctor/unbounded-constraints/unbounded` |
 | `unbounded-constraints` | `proctor/unbounded-constraints/repository` |
@@ -2880,7 +2955,7 @@ An explicit source (`--policy` or `PROCTOR_POLICY`) that points at a missing or 
 
 #### The message names policy-overrides.json[#](https://proctor.apps.wayne.edu/docs/troubleshooting.html#the-message-names-policy-overrides-json)
 
-The file is rejected before any check runs when it is malformed or unreadable, when an entry names a check that is not registered in the run, or when an entry names the `overrides` check itself: an override cannot exempt the check that polices overrides, and an entry for a check that does not exist would silently do nothing.
+The file is rejected before any check runs when it is malformed or unreadable, when an entry names a check that is not registered in the run, or when an entry names the `overrides` or `override-approver` check: an override cannot exempt the checks that police overrides, and an entry for a check that does not exist would silently do nothing.
 
 - Fix: repair the JSON, and use a check id that PROCTOR actually runs; the list of valid ids is built from the checks PROCTOR runs, so a new check needs no change to the guard.
 - Check: rerun; the file must parse and name only registered checks before any check runs.
@@ -2963,6 +3038,20 @@ The policy in use is more than 60 days old (its `refreshed_on` date is more than
 An active entry in policy-overrides.json that expires within 14 days of `--today` (the expiry day counts) warns `expiring`, so an approval that is about to lapse is visible instead of silent. An active entry that matches no failure warns `unused`, so a stale approval is removed instead of rotting.
 
 - Fix: renew the entry with a new `expires` date and approver, or delete it. A warning never changes the exit code; an expired entry, however, fails the `overrides` check.
+
+#### proctor/override-approver/self-approved[#](https://proctor.apps.wayne.edu/docs/troubleshooting.html#proctor-override-approver-self-approved)
+
+`approved_by` names someone git blame says wrote a line of the entry: the author name, email, email local part or noreply username. Renewing your own approval counts, because moving `expires` makes you an author of the entry.
+
+- Fix: ask someone who did not write the entry to review the merge request, approve it, and put their name in `approved_by` (on its own line). Do not rewrite history to change the author; the merge request is the record.
+- Check: rerun `proctor check`; the pass line says how many entries were checked.
+
+#### proctor/override-approver/could-not-run[#](https://proctor.apps.wayne.edu/docs/troubleshooting.html#proctor-override-approver-could-not-run)
+
+The message starts `not checked:` and names why: git is not on PATH, the app path is not inside a git checkout, git could not read the repository (for example `detected dubious ownership`), or the clone is shallow and the entry's lines are credited to its oldest commit.
+
+- Fix: run `proctor check` in a full git checkout with git installed. In GitLab CI, set `GIT_DEPTH: 0` on the job. For dubious ownership, mark the checkout safe in the job (`git config --global --add safe.directory "$CI_PROJECT_DIR"`).
+- Check: rerun; the finding becomes a pass line or a `self-approved` finding. Under CREED's `override_self_approval: fail`, this finding fails the run.
 
 #### proctor/repo-url-credentials[#](https://proctor.apps.wayne.edu/docs/troubleshooting.html#proctor-repo-url-credentials)
 

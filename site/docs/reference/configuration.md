@@ -21,7 +21,7 @@ None of the settings on this page take a secret. PROCTOR reads paths, dates and 
 
 ## The policy file[#](https://proctor.apps.wayne.edu/docs/reference/configuration.html#the-policy-file)
 
-`--policy` takes a CREED-format policy file: schema_version 1, component versions with released, active_until and security_until dates, and rules (audit_severity_threshold, banned_constraints, eol_grace_days).
+`--policy` takes a CREED-format policy file: schema_version 1, component versions with released, active_until and security_until dates, and rules (audit_severity_threshold, banned_constraints, eol_grace_days, override_max_days, override_self_approval). `override_self_approval` is `warn` or `fail` (`warn` when the key is absent) and sets the status of the `override-approver` findings; any other value is a tool error (exit 2).
 
 Without `--policy`, PROCTOR resolves the policy in this order (first match wins):
 
@@ -78,7 +78,9 @@ When both are present, both must match the same advisory. Without either field t
 
 An expired override fails the `overrides` check. An active override turns the matching fail findings of its check into warnings. An override never waives a failure whose state is EOL plus grace (eol_grace_expired); that failure stands (the stack's version policy decision).
 
-PROCTOR rejects the file (exit 2) when an entry names a check that is not registered in the run, or names the `overrides` check itself: an override cannot exempt the check that polices overrides, and an entry for a check that does not exist would silently do nothing. The list of valid check ids is built from the checks PROCTOR runs, so a new check needs no change to the guard. An active override that expires within 14 days of `--today` (the expiry day counts) gets a warning finding (`proctor/overrides/expiring`) instead of lapsing without a trace, and an active override whose check raised no failure gets a warning finding (`proctor/overrides/unused`) so a stale approval is removed instead of rotting. A warning never changes the exit code.
+PROCTOR rejects the file (exit 2) when an entry names a check that is not registered in the run, or names the `overrides` or `override-approver` check: an override cannot exempt the checks that police overrides, and an entry for a check that does not exist would silently do nothing. The list of valid check ids is built from the checks PROCTOR runs, so a new check needs no change to the guard. An active override that expires within 14 days of `--today` (the expiry day counts) gets a warning finding (`proctor/overrides/expiring`) instead of lapsing without a trace, and an active override whose check raised no failure gets a warning finding (`proctor/overrides/unused`) so a stale approval is removed instead of rotting. A warning never changes the exit code.
+
+`approved_by` must name someone who did not write the entry; `proctor check` compares it with git blame (`override-approver`). Keep it on a line of its own and write it the way git knows the approver, ideally their WSU email. Details: [Overrides](https://proctor.apps.wayne.edu/docs/guides/overrides.html#someone-else-signs-the-note).
 
 ## Related[#](https://proctor.apps.wayne.edu/docs/reference/configuration.html#related)
 

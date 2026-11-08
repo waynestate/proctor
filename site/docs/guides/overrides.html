@@ -48,7 +48,8 @@
 <li>An active override turns the check's fail findings into warnings.</li>
 <li>An override has a maximum duration: an entry whose expiry lies more than <code>rules.override_max_days</code> days after <code>--today</code> (90 days when the key is absent) fails the <code>overrides</code> check (<code>proctor/overrides/too-long</code>) and is not applied. The cap exists because an approval is a dated exception, not a standing one, and CREED allows no permanent override.</li>
 <li>An override never waives a failure whose state is EOL plus grace (<code>eol_grace_expired</code>); that failure stands (the stack's version policy decision).</li>
-<li>PROCTOR rejects the file (exit 2) when an entry names a check that is not registered in the run, or names the <code>overrides</code> check itself: an override cannot exempt the check that polices overrides, and an entry for a check that does not exist would silently do nothing.</li>
+<li>PROCTOR rejects the file (exit 2) when an entry names a check that is not registered in the run, or names the <code>overrides</code> or <code>override-approver</code> check: an override cannot exempt the checks that police overrides, and an entry for a check that does not exist would silently do nothing.</li>
+<li>In <code>proctor check</code>, the <code>override-approver</code> check flags an entry approved by someone who wrote it (see <a href="#someone-else-signs-the-note">Someone else signs the note</a>).</li>
 <li>The list of valid check ids is built from the checks PROCTOR runs, so a new check needs no change to the guard.</li>
 <li>An active override that expires within 14 days of <code>--today</code> (the expiry day counts) gets a warning finding (<code>proctor/overrides/expiring</code>) instead of lapsing without a trace, and an active override whose check raised no failure gets a warning finding (<code>proctor/overrides/unused</code>) so a stale approval is removed instead of rotting.</li>
 <li>A warning never changes the exit code.</li>
@@ -56,6 +57,33 @@
 <li>When the app has no <code>policy-overrides.json</code>, the check produces no findings at all: it passes and prints nothing. Every override, active or expired, is printed as an OVERRIDE line by the CLI in addition to these findings.</li>
 </ul>
 <aside class="docs-callout docs-callout--warning" role="note"><p class="docs-callout__label">Warning</p><p>An expired override fails the run. Renew it or delete it before the expiry date.</p></aside>
+<h2 id="someone-else-signs-the-note">Someone else signs the note<a class="docs-heading-link" aria-label="Link to this section" href="#someone-else-signs-the-note">#</a></h2>
+<p><code>approved_by</code> names the person who approved the exception, and that person must not be the one who wrote it. A note from home signed by the candidate is not a note from home. <code>proctor check</code> holds that line with the <code>override-approver</code> check:</p>
+<ul>
+<li>For each entry, git blame names who last wrote each of its lines, ignoring whitespace changes and following lines moved within the file. Only read-only git commands run.</li>
+<li>The entry is self-approved when <code>approved_by</code> names one of those authors: the git author name, the author email, the email's local part, or the username in a GitLab (<code>123-name@users.noreply.&lt;host&gt;</code>) or GitHub noreply address. The comparison is trimmed and case-insensitive, and a leading <code>@</code> and the <code>Name &lt;email&gt;</code> form are understood.</li>
+<li>A line that holds only <code>approved_by</code> is the approver's signature, so its own author does not count. A reviewer may write their name into someone else's entry; they may not approve an entry they wrote, or an extension of their own approval (moving <code>expires</code> makes you an author of the entry). Keep <code>approved_by</code> on a line of its own, as pretty-printed JSON does, so a signature stays a signature.</li>
+<li>Uncommitted lines count as written by the author of the next commit (<code>git var GIT_AUTHOR_IDENT</code>), so a local run warns before you commit.</li>
+<li>With squash merges, GitLab credits the squashed commit to the merge request's author, so every line of the entry is theirs. A reviewer who signs inside that merge request does not become an author, and a merge request author who names themselves is still caught.</li>
+<li>A self-approval is <code>proctor/override-approver/self-approved</code>, on the entry's first line. When every entry checks out, one pass line says how many were checked.</li>
+<li>The check never passes on a guess. When git is not on PATH, the app path is not inside a git checkout, or git cannot answer, it reports <code>proctor/override-approver/could-not-run</code> with a message that starts <code>not checked:</code>.</li>
+<li>In a shallow clone, git credits every line older than the clone to the clone's oldest commit, whoever wrote it. An entry with such a line is <code>could-not-run</code> too, unless a self-approval inside the clone's history is already proven. GitLab clones shallow by default (<code>GIT_DEPTH</code>), so set <code>GIT_DEPTH: 0</code> on the job that runs <code>proctor check</code>.</li>
+<li>CREED's <code>rules.override_self_approval</code> sets the status of both findings: <code>warn</code>, the default and the value when the key is absent, or <code>fail</code>. Under <code>fail</code>, an approval PROCTOR cannot check fails too, because a strict rule that a shallow clone could dodge is no rule. Any other value is a tool error (exit 2).</li>
+<li>No override can target <code>override-approver</code>, and none downgrades its failure: an author could otherwise approve their own waiver.</li>
+<li><code>proctor gate</code> does not run it; see <a href="deploy-gate.html">Deploy gate</a> for why.</li>
+</ul>
+<p>A self-approved entry in the text report:</p>
+<pre tabindex="0"><code>WARN override-approver: override for &quot;lock-committed&quot; is approved by &quot;Avery Author&quot;, who also wrote it (commit 1a2b3c4d); someone who did not write the entry must approve it
+</code></pre>
+<h3 id="what-makes-an-approval-real">What makes an approval real<a class="docs-heading-link" aria-label="Link to this section" href="#what-makes-an-approval-real">#</a></h3>
+<p>git.wayne.edu runs GitLab Community Edition, which has no Code Owner approval rules, so no GitLab setting can require that the named person approves the file. The human control is the merge request:</p>
+<ol>
+<li>Protect the default branch so no one pushes to it directly. Every change, including one to <code>policy-overrides.json</code>, then arrives in a merge request.</li>
+<li>The person named in <code>approved_by</code> reviews that merge request and approves it. The Approve button exists in every GitLab tier, but Community Edition does not make it required, so the person who merges checks that the named approver approved.</li>
+<li>Write <code>approved_by</code> the way git knows the approver, ideally their WSU email, so PROCTOR can compare it.</li>
+</ol>
+<p>PROCTOR's check is the tripwire, not the control. It catches the common slip, writing your own name, and an approver extending their own approval. It cannot catch a name that is not the author's but never approved either, a different spelling of the same person, or a git identity typed as someone else's: <code>git config user.name</code> is whatever the committer set. The proctor reads the signature on the note; whether it was forged is a question for the merge request.</p>
+<p>A bot never approves. When a bot writes an entry, the bot is its author and a person still signs it; a whitespace-only reformat by a bot changes no authorship, because whitespace changes are ignored.</p>
 <h2 id="when-the-audit-cannot-run">When the audit cannot run<a class="docs-heading-link" aria-label="Link to this section" href="#when-the-audit-cannot-run">#</a></h2>
 <p><code>composer-audit</code> fails (<code>proctor/composer-audit/skipped</code>) with a message that starts with <code>not audited:</code> in two cases: the composer executable is not on PATH, and the app path has no composer.lock. Until Composer is installed or the lock is committed, an active <code>composer-audit</code> entry downgrades those fails to warnings:</p>
 <pre tabindex="0"><code class="language-json">[
@@ -111,6 +139,18 @@
 <td><code>overrides</code></td>
 <td><code>proctor/overrides/unused</code></td>
 </tr>
+<tr>
+<td><code>override-approver</code></td>
+<td><code>proctor/override-approver</code></td>
+</tr>
+<tr>
+<td><code>override-approver</code></td>
+<td><code>proctor/override-approver/self-approved</code></td>
+</tr>
+<tr>
+<td><code>override-approver</code></td>
+<td><code>proctor/override-approver/could-not-run</code></td>
+</tr>
 </tbody>
 </table></div>
 <h2 id="related">Related<a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></h2>
@@ -122,7 +162,7 @@
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../../docs/guides/check-wayneui.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">WayneUI checks</span></a><a class="docs-pager__link docs-pager__link--next" href="../../docs/guides/deploy-gate.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">Deploy gate</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#how-overrides-work">How overrides work</a></li><li class="docs-toc__item"><a href="#when-the-audit-cannot-run">When the audit cannot run</a></li><li class="docs-toc__item"><a href="#backing-an-audit-ignore-entry">Backing an audit ignore entry</a></li><li class="docs-toc__item"><a href="#verify-the-date-window">Verify the date window</a></li><li class="docs-toc__item"><a href="#rule-ids">Rule ids</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#how-overrides-work">How overrides work</a></li><li class="docs-toc__item"><a href="#someone-else-signs-the-note">Someone else signs the note</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#what-makes-an-approval-real">What makes an approval real</a></li><li class="docs-toc__item"><a href="#when-the-audit-cannot-run">When the audit cannot run</a></li><li class="docs-toc__item"><a href="#backing-an-audit-ignore-entry">Backing an audit ignore entry</a></li><li class="docs-toc__item"><a href="#verify-the-date-window">Verify the date window</a></li><li class="docs-toc__item"><a href="#rule-ids">Rule ids</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.8.0</span></span>

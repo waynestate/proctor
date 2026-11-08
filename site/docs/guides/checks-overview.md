@@ -12,7 +12,7 @@ This page lists every check PROCTOR runs in a single `vendor/bin/proctor check` 
 
 ![Nine real lines from PROCTOR's text report, one per check shown: FAIL php-floor, WARN unpatched, FAIL unbounded-constraints, PASS lock-committed, WARN portability, WARN mysql56, WARN ci-pipelines, PASS composer-audit, FAIL overrides. Each line is written in words; color only repeats what the word says.](https://proctor.apps.wayne.edu/docs/readme/report.svg)
 
-*Nine of the twenty-nine checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
+*Nine of the thirty checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
 
 ## How a check reports[#](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html#how-a-check-reports)
 
@@ -78,6 +78,7 @@ Details and fixes: [WayneUI checks](https://proctor.apps.wayne.edu/docs/guides/c
 ## Overrides[#](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html#overrides)
 
 - `overrides`: fails for every expired entry in policy-overrides.json; warns for an active entry that expires within 14 days of `--today` and for an active entry that matches no failure. How the file works: [Overrides](https://proctor.apps.wayne.edu/docs/guides/overrides.html).
+- `override-approver`: in `proctor check` only, warns (or fails, per CREED's `rules.override_self_approval`) when an entry's `approved_by` names someone git blame says wrote it, and says `not checked:` instead of passing when there is no git history to read. How approval works: [Overrides](https://proctor.apps.wayne.edu/docs/guides/overrides.html#someone-else-signs-the-note).
 
 ## Related[#](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html#related)
 

@@ -91,7 +91,7 @@ vendor/bin/proctor gate [--path=.] [--format=text|json] [--baseline=<report or d
 <div align="center">
   <img src="docs/readme/report.svg" width="100%" alt="Nine real lines from PROCTOR's text report, one per check shown: FAIL php-floor, WARN unpatched, FAIL unbounded-constraints, PASS lock-committed, WARN portability, WARN mysql56, WARN ci-pipelines, PASS composer-audit, FAIL overrides. Each line is written in words; color only repeats what the word says.">
 </div>
-<div align="center"><sub>Nine of the twenty-nine checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.</sub></div>
+<div align="center"><sub>Nine of the thirty checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.</sub></div>
 
 - `php-floor`: fails when the lowest PHP version allowed by `require.php` is past security support plus the grace window, when composer.json has no usable php constraint, or when there is no composer.json at all.
 - `unpatched`: warns when a locked component is behind the policy's `latest_patch` for its version line, and passes when it is current. Reads laravel from composer.lock (`laravel/framework`), vue and inertia from package-lock.json (`vue`, `@inertiajs/vue3`), and the PHP runtime from `--php-runtime`. No finding when the component, its version line, or `latest_patch` is absent from the policy.
@@ -121,13 +121,14 @@ vendor/bin/proctor gate [--path=.] [--format=text|json] [--baseline=<report or d
 - `wayneui-forked-views`: warns when forked copies of WayneUI are committed: any file under `resources/views/vendor/wayne-ui/` (the published 1.x views) or `public/vendor/wayne-ui/` (the published 1.x assets). Those copies silently override the package, so an app keeps old layouts after a WayneUI upgrade and nobody sees it; WayneUI's MIGRATING.md says to delete them. Only committed files count: the git-tracked files when the app path sits in a git repository and git can be run, otherwise the files on disk. Skipped at any depth: `node_modules/` and `.git/`; skipped at the top level only: `vendor/` (Composer's), so the `vendor` segment inside `resources/views/vendor/wayne-ui/` still matches. One warning per folder, with its file count. Warning, not failure: a new check must not turn a passing app into a failing one. Fix by deleting the folder and running `git rm -r --cached` on it; if you changed the forked views on purpose, compare them with the package views first. The proctor confiscates the photocopied syllabus: the current one, with the errata, is already pinned to the board.
 - `wayneui-outdated`: warns when the WayneUI an app carries is behind the latest release. It reads the installed version from composer.lock (`waynestate/wayne-ui`), package-lock.json (`@waynestate/wayne-ui-css`, `@waynestate/wayne-ui-vue`) and committed copies of `wayne-ui.css` (the version in the banner of the first 400 bytes), asks composer once per run for the release list (`composer show waynestate/wayne-ui --all --format=json`), and warns, per source, when the installed version is behind the highest stable release of the same major. Pre-releases (-dev, alpha, beta, RC) and other majors are ignored. A locked WayneUI 1.x (`cit-web-infra/wayne-ui`) gets its own warning with no lookup: 1.x is Bootstrap 3 and predates the comparison. Only committed files count as copies: the git-tracked files when the app path sits in a git repository and git can be run, otherwise the files on disk; skipped at any depth: `node_modules/` and `.git/`, and the top-level `vendor/`. When the lookup cannot run (no composer on PATH, offline, or no parsable versions) the check reports one info finding with the skipped marker and nothing else, so an offline run never breaks; an app with nothing WayneUI-related runs no process at all. By default the check warns, not fails: being out of date must not turn a passing app into a failing one. An app that wants a hard stop on its pasted stylesheets sets `wayneui.copies` to `fail` in its composer.json, under `extra.proctor` next to `github-mirror`; the default is `warn`. In `fail` mode a behind committed copy is a failure, with a sentence naming the setting appended to its message, while findings from composer.lock and package-lock.json stay warnings: only committed copies are affected by the setting, and an offline run never fails in either mode, because an unknown latest is always just the info skipped finding. Fix by updating the lock file (`composer update waynestate/wayne-ui`, or `npm update` for the npm packages) or by replacing the pasted copy from the release. The proctor marks the paper against the current syllabus, not the one the student photocopied last semester.
 - `overrides`: fails for every expired entry in policy-overrides.json, and for every entry that runs past the policy's maximum duration (`rules.override_max_days`, 90 days when the key is absent): such an entry fails with `proctor/overrides/too-long` and is not applied, because an approval is a dated exception and CREED allows no permanent override. It warns (`proctor/overrides/expiring`) for an active entry that expires within 14 days of `--today` (the expiry day counts), so an approval that is about to lapse is visible instead of silent. An active entry that matches no failure warns (`proctor/overrides/unused`) so a stale approval is removed instead of rotting; the warning never changes the exit code. An entry that names a check that is not registered in the run, or that names the `overrides` check itself, is a tool error (exit 2): the file is rejected before any check runs. A policy whose `override_max_days` is not a positive integer is a tool error (exit 2) naming the key.
+- `override-approver`: warns when an entry in policy-overrides.json is approved by someone who wrote it. git blame (read-only, whitespace ignored, moved lines followed) names who last wrote each line of the entry, and `approved_by` must not name one of them: the git author name, the author email, its local part, or the username in a GitLab or GitHub noreply address, compared trimmed and case-insensitively, with a leading `@` and `Name <email>` understood. A line holding only `approved_by` is the approver's signature and does not count, so a reviewer may sign someone else's entry but not approve, or extend, one they wrote (`proctor/override-approver/self-approved`). Uncommitted lines count as the next commit's author's, so a local run warns before the commit. It never passes on a guess: with no git, no git checkout, or a line that a shallow clone credits to its oldest commit, it reports `proctor/override-approver/could-not-run` with a message that starts `not checked:` (set `GIT_DEPTH: 0` on the job). CREED's `rules.override_self_approval` makes both findings `warn` (the default, also when the key is absent) or `fail`. An override can neither target this check nor waive its failure. `proctor check` only: the deploy gate does not run it. A note from home does not count when the candidate signed it.
 - `policy-age`: warns when the policy in use is more than 60 days old (its `refreshed_on` date is more than 60 days before `--today`), or when a non-bundled policy has no `refreshed_on` date. Warning only: an old policy never fails a run, and the bundled policy may omit the date. It exists so a stopped CREED refresh robot is visible instead of silent.
 
 ## Exit codes
 
 - `0`: pass (warnings allowed)
 - `1`: one or more failures
-- `2`: tool error (bad options, unreadable policy, a present but malformed or unreadable composer.json, or an overrides file that is malformed, unreadable, or names a check that is not registered or the overrides check itself). A missing composer.json is not a tool error: the app gets a verdict, with php-floor failing.
+- `2`: tool error (bad options, unreadable policy, a present but malformed or unreadable composer.json, or an overrides file that is malformed, unreadable, or names a check that is not registered, the overrides check or the override-approver check). A missing composer.json is not a tool error: the app gets a verdict, with php-floor failing.
 
 On a tool error every format still writes its report to stdout, next to the message on stderr: `text` prints the message as a FAIL line, `json` writes the report shape with `result` set to `error`, an `error` field carrying the message and empty findings, `codequality` lists the error as one blocker issue, and `sarif` writes a log whose single run reports an unsuccessful invocation.
 
@@ -167,6 +168,8 @@ flowchart LR
 | `composer-audit` | no known advisory at or above the threshold |
 | `overrides` | every override is still in date |
 | `policy-age` | the policy itself is fresh (warns only) |
+
+`override-approver` stays out of the gate on purpose: it reads git history, which a release export may not carry, and whether an override was approved by someone else is settled once, in CI, on the merge request that added it.
 
 Overrides are applied first, as in `proctor check`. Each remaining failure is then blocked (no baseline, so a first deploy; a regression, because the baseline passed that rule; or an expired override, for any check), held (the baseline failed the same rule id too, so owners of an EOL app can still ship the fix) or waived (composer-audit had no advisory data, which only warns at deploy time). Any block is a no-go.
 
@@ -408,8 +411,8 @@ standing one, and CREED allows no permanent override. A policy whose
 naming the key.
 
 PROCTOR rejects the file (exit 2) when an entry names a check that is not
-registered in the run, or names the `overrides` check itself: an override
-cannot exempt the check that polices overrides, and an entry for a check
+registered in the run, or names the `overrides` or `override-approver` check:
+an override cannot exempt the checks that police overrides, and an entry for a check
 that does not exist would silently do nothing. The list of valid check ids
 is built from the checks PROCTOR runs, so a new check needs no change to
 the guard. An active override that expires within 14 days of `--today`
@@ -419,12 +422,26 @@ active override whose check raised no failure gets a warning finding
 (`proctor/overrides/unused`) so a stale approval is removed instead of
 rotting. A warning never changes the exit code.
 
+Someone other than the author approves an override. `proctor check` reads
+git blame for each entry and reports `proctor/override-approver/self-approved`
+when `approved_by` names a person who wrote one of its lines (a line that
+holds only `approved_by` is the approver's signature and does not count).
+With no git history to read, including a line that a shallow clone credits
+to its oldest commit, it reports `proctor/override-approver/could-not-run`,
+never a pass. CREED's `rules.override_self_approval` makes both `warn` (the
+default) or `fail`. git.wayne.edu runs GitLab Community Edition, which has no
+Code Owner approval, so the merge request is the human control: protect the
+default branch, and have the person named in `approved_by` approve the merge
+request that adds the entry. PROCTOR's check is the tripwire for the common
+slip, writing your own name. How it matches names, squash merges, bots and
+what it cannot see: [Overrides](https://proctor.apps.wayne.edu/docs/guides/overrides.html).
+
 ## Policy
 
 `--policy` takes a CREED-format policy file: schema_version 1, component
 versions with released, active_until and security_until dates, and rules
 (audit_severity_threshold, banned_constraints, eol_grace_days,
-override_max_days). The policy-file wiring to `waynestate/creed` is
+override_max_days, override_self_approval). The policy-file wiring to `waynestate/creed` is
 described below.
 
 Without `--policy`, PROCTOR resolves the policy in this order (first match

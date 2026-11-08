@@ -28,6 +28,13 @@ vendor/bin/proctor gate [--path=.] [--format=text|json] [--baseline=<report or d
 
 Eight of the checks, the deploy-time rule set: `php-floor`, `unpatched`, `laravel-eol`, `laravel-php`, `lock-committed`, `composer-audit`, `overrides` and `policy-age`. That covers the PHP floor and the runtime, the framework line and the PHP range it supports, the lock file, known advisories, and the overrides themselves. Style, portability, MySQL 5.6 safety, CI pipelines and the rest stay in `proctor check`, in CI.
 
+`override-approver`, the check that flags an override approved by its own author, stays out of the gate on purpose:
+
+- It reads git history. A deploy runs from a release, often an export with no `.git` or a shallow one, so at the door it would mostly say `not checked:`.
+- The gate is offline-tolerant and fast, and blame walks history.
+- Who approved an override is settled when the override reaches the default branch: in CI, on the merge request that added it. Nothing at deploy time changes that answer, while the expiry, which the gate does check, changes every day.
+- On Citadel, the platform's own overrides are held by its admins, with their own approver.
+
 ## How it decides[#](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html#how-it-decides)
 
 The app's overrides are applied first, exactly as in `proctor check`. Then each failure is one of these:
