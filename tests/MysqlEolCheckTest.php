@@ -34,10 +34,10 @@ final class MysqlEolCheckTest extends ProctorTestCase
         // The third line is the digest-pinned image: its tag 5.7 is graded
         // even though the reference carries a sha256 digest.
         self::assertSame([
-            'FAIL mysql-eol: mysql 5.6 (docker-compose.yml) is eol_grace_expired (security support ended 2021-02-28)',
-            'FAIL mysql-eol: mysql 8.0 (docker-compose.yml) is eol_grace_expired (security support ended 2026-04-30)',
-            'FAIL mysql-eol: mysql 5.7 (docker-compose.yml) is eol_grace_expired (security support ended 2023-10-31)',
-            'FAIL mysql-eol: mysql 8.0 (.env.squire.example) is eol_grace_expired (security support ended 2026-04-30)',
+            'WARN mysql-eol: mysql 5.6 (docker-compose.yml) is eol_grace_expired (security support ended 2021-02-28)',
+            'WARN mysql-eol: mysql 8.0 (docker-compose.yml) is eol_grace_expired (security support ended 2026-04-30)',
+            'WARN mysql-eol: mysql 5.7 (docker-compose.yml) is eol_grace_expired (security support ended 2023-10-31)',
+            'WARN mysql-eol: mysql 8.0 (.env.squire.example) is eol_grace_expired (security support ended 2026-04-30)',
         ], $this->mysqlLines($result['stdout']));
     }
 
@@ -69,7 +69,7 @@ final class MysqlEolCheckTest extends ProctorTestCase
         $stdout = $this->runProctor($this->app('mysql-eol-app'), 'text', $this->policy())['stdout'];
 
         self::assertMatchesRegularExpression(
-            '/^FAIL mysql-eol: mysql 5\.7 \(docker-compose\.yml\) is eol_grace_expired \(security support ended 2023-10-31\)$/m',
+            '/^WARN mysql-eol: mysql 5\.7 \(docker-compose\.yml\) is eol_grace_expired \(security support ended 2023-10-31\)$/m',
             $stdout,
         );
     }
@@ -119,7 +119,7 @@ final class MysqlEolCheckTest extends ProctorTestCase
         // major.minor, so 8 resolves to no line and the reader does not
         // invent a mapping. The policy lists lines in major 8 (8.0 and 8.4),
         // so the check warns instead of staying silent, naming the highest
-        // listed line as the pin advice (MysqlEolCheck.php:23-27).
+        // listed line as the pin advice (MysqlEolCheck.php:25-29).
         self::assertSame([
             'WARN mysql-eol: mysql 8 (docker-compose.yml) is a floating tag; pin a major.minor such as 8.4 so the check can grade it',
         ], $lines);
@@ -157,8 +157,8 @@ final class MysqlEolCheckTest extends ProctorTestCase
 
         // 2026-04-30 is the policy's security_until for 8.0 and the boundary
         // is inclusive (Policy.php:168, $day <= $securityUntil), so the state
-        // is still Security on that day: MysqlEolCheck.php:166 maps Security
-        // to a warning and MysqlEolCheck.php:203 reads the zero days as
+        // is still Security on that day: MysqlEolCheck.php:179 warns every
+        // graded state and MysqlEolCheck.php:248 reads the zero days as
         // "ends today".
         self::assertSame([
             'WARN mysql-eol: mysql 8.0 (docker-compose.yml) is in security-only support until 2026-04-30 (ends today)',
@@ -176,12 +176,51 @@ final class MysqlEolCheckTest extends ProctorTestCase
 
         $lines = $this->mysqlLines($this->runProctor($dir, 'text', $this->policy(), null, '2026-11-08')['stdout']);
 
-        // The image pattern matches mariadb (MysqlEolCheck.php:51), but the
+        // The image pattern matches mariadb (MysqlEolCheck.php:55), but the
         // fixture policy has no mariadb component, so the image is ignored
-        // silently (MysqlEolCheck.php:66-70).
+        // silently (MysqlEolCheck.php:70-74).
         self::assertSame([], $lines);
 
         unlink($dir . '/docker-compose.yml');
+        rmdir($dir);
+    }
+
+    public function test_an_end_of_life_mysql_warns_and_the_run_still_passes(): void
+    {
+        // A minimal app whose only finding is an eol MySQL image: the
+        // composer pair mirrors pass-app (config.platform.php keeps
+        // composer-config quiet) and the GitLab pipeline runs composer ci.
+        $dir = sys_get_temp_dir() . '/proctor-mysql-' . bin2hex(random_bytes(4));
+        mkdir($dir);
+        file_put_contents($dir . '/docker-compose.yml', "services:\n  db:\n    image: mysql:8.0\n");
+        file_put_contents($dir . '/composer.json', "{\n    \"config\": {\n        \"platform\": {\n            \"php\": \"8.4.0\"\n        }\n    },\n    \"require\": {\n        \"php\": \"^8.4\",\n        \"symfony/console\": \"^7.1\"\n    }\n}\n");
+        file_put_contents($dir . '/composer.lock', "{\n    \"packages\": [],\n    \"packages-dev\": [],\n    \"content-hash\": \"fixture\"\n}\n");
+        file_put_contents($dir . '/.gitlab-ci.yml', "# composer ci is the contract: the checks are defined there, and this pipeline only wraps them.\ncomposer-ci:\n  image: composer:2.10.3\n  script:\n    - composer install --no-interaction --no-progress --prefer-dist\n    - composer ci\n");
+
+        // A stub composer on PATH answers the audit with a clean result and
+        // the version probe with a current version, so composer-audit and
+        // composer-version pass and the eol MySQL warning stays the run's
+        // only note.
+        $bin = sys_get_temp_dir() . '/proctor-mysql-bin-' . bin2hex(random_bytes(4));
+        mkdir($bin);
+        $composer = $bin . '/composer';
+        file_put_contents($composer, "#!/bin/sh\nfor arg in \"\$@\"; do\n  if [ \"\$arg\" = audit ]; then\n    printf '{\"advisories\": [], \"abandoned\": []}\\n'\n    exit 0\n  fi\ndone\necho \"Composer version 2.10.3 2026-05-19 13:50:22\"\nexit 0\n");
+        chmod($composer, 0755);
+
+        $result = $this->runProctor($dir, 'text', $this->policy(), null, null, $bin);
+
+        self::assertSame(0, $result['exit'], $result['stdout'] . $result['stderr']);
+        self::assertMatchesRegularExpression(
+            '/^WARN mysql-eol: mysql 8\.0 \(docker-compose\.yml\) is eol_grace_expired \(security support ended 2026-04-30\)$/m',
+            $result['stdout'],
+        );
+        self::assertSame(['mysql-eol'], $this->nonPassCheckIds($result['stdout']));
+
+        unlink($composer);
+        rmdir($bin);
+        foreach (['docker-compose.yml', 'composer.json', 'composer.lock', '.gitlab-ci.yml'] as $file) {
+            unlink($dir . '/' . $file);
+        }
         rmdir($dir);
     }
 }

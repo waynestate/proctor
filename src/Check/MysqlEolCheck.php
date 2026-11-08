@@ -14,10 +14,12 @@ use Waynestate\Proctor\Creed\State;
  * `mariadb:<ver>` in a `docker-compose*.yml` or `compose*.yml` at the repo
  * root, and a `SQUIRE_MYSQL_IMAGE=mysql:<ver>` line in `.env.squire.example`
  * or `.env.example`. Each name is graded on its own through the CREED state
- * table: still in active support is silent, past `active_until` only warns
- * with the days left, and past `security_until` fails as eol or, beyond the
- * grace window, eol_grace_expired. Unlike node-eol, a supported version earns
- * no PASS line: a database that is fine is not news.
+ * table: still in active support is silent, past `active_until` warns with
+ * the days left, and past `security_until` warns as eol or, beyond the grace
+ * window, eol_grace_expired. Every finding warns, never fails, until
+ * Citadel offers a supported MySQL (D-008); then eol fails again. Unlike
+ * node-eol, a supported version earns no PASS line: a database that is fine
+ * is not news.
  *
  * The major.minor is what the policy keys on, so `mysql:5.6.51` is judged as
  * 5.6 and `mysql:8.4.2` as 8.4. A bare `mysql:8` resolves to no line unless
@@ -172,10 +174,9 @@ final class MysqlEolCheck implements CheckInterface
             return null;
         }
 
-        $status = match ($state) {
-            State::Security => Finding::STATUS_WARNING,
-            default => Finding::STATUS_FAIL,
-        };
+        // Every graded state warns, never fails, until Citadel offers a
+        // supported MySQL (D-008); eol fails again once it does (D-053).
+        $status = Finding::STATUS_WARNING;
         $subject = sprintf('%s %s (%s)', $engine, $version, $path);
 
         return new Finding(

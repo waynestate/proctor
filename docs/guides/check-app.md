@@ -7,7 +7,7 @@ description: The checks that read an app's own files for an end-of-life Node lin
 
 This page covers the seven PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, files a stranger can download from `public/`, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
 
-`node-eol` and `mysql-eol` can fail a run. The other five warn, never fail: a new check must not turn a passing app into a failing one.
+`node-eol` can fail a run. The other six warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.
 
 ## node-eol
 
@@ -54,10 +54,10 @@ A `@sha256:` digest after the tag is tolerated: the version still comes from the
 | --- | --- |
 | Active | silent |
 | Security only | warning, naming the security end date and the days left |
-| End of life | fail, naming the security end date |
-| Past the security end date plus the grace window | fail as `eol_grace_expired` |
+| End of life | warning, naming the security end date |
+| Past the security end date plus the grace window | warning as `eol_grace_expired` |
 
-An active override downgrades the eol fail to a warning, never the grace-expired one.
+Every row warns, never fails, until Citadel offers a supported MySQL (D-008). No override is needed while that holds: every graded state already warns.
 
 No finding when the policy has no `mysql` or `mariadb` component, when the repository names no database version, or for another organization's image that happens to be called mysql (`someorg/mysql:8.0`). A bare major tag such as `mysql:8` is a floating tag and gets a warning to pin a major.minor; it is not graded as a guessed line.
 
