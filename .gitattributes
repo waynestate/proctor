@@ -5,3 +5,4 @@
 /tests export-ignore
 /docs/readme export-ignore
 /scripts/readme-art export-ignore
+tools/a11y/check.mjs text eol=lf
