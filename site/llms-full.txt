@@ -881,7 +881,7 @@ Hall G GitLab, through Preflight
 
 ```
 include:
-  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.3.0
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.3.1
     inputs:
       proctor_command: vendor/bin/proctor check --format=codequality --policy=vendor/waynestate/creed/policy/policy.json
 ```
