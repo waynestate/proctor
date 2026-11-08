@@ -51,6 +51,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/env-outside-config',
         'proctor/raw-identity-header',
         'proctor/app-key',
+        'proctor/app-debug',
         'proctor/served-folder',
         'proctor/world-writable',
         // node-eol
@@ -62,6 +63,8 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/app-key/committed-env',
         'proctor/app-key/committed-key',
         'proctor/app-key/cookie-sessions',
+        // app-debug
+        'proctor/app-debug/enabled',
         // served-folder
         'proctor/served-folder/debug-file',
         'proctor/served-folder/phpinfo',

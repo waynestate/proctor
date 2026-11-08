@@ -75,6 +75,7 @@ final class CheckSet
             new EnvOutsideConfigCheck(),
             new RawIdentityHeaderCheck(),
             new AppKeyCheck(),
+            new AppDebugCheck(),
             new ServedFolderCheck(),
             new WorldWritableCheck(),
             new WayneUiForkedViewsCheck(),

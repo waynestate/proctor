@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>App checks | PROCTOR docs</title>
-<meta name="description" content="The checks that read an app&#039;s own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, debug files in public/ and chmod 777.">
+<meta name="description" content="The checks that read an app&#039;s own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, debug files in public/ and chmod 777.">
 <meta name="docs-version" content="0.9.0">
 <link rel="stylesheet" href="../../assets/wayne-ui/wayne-ui.css">
 <link rel="stylesheet" href="../../assets/docs.css">
@@ -41,8 +41,8 @@
   <div class="docs-content">
     <main id="main">
       <article class="docs-article"><h1 id="app-checks">App checks<a class="docs-heading-link" aria-label="Link to this section" href="#app-checks">#</a></h1>
-<p>This page covers the seven PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, <code>env()</code> calls outside config, identity headers read directly, a committed APP_KEY, files a stranger can download from <code>public/</code>, and <code>chmod 777</code>. Each one holds a CREED practice. Run <code>vendor/bin/proctor check</code> against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.</p>
-<p><code>node-eol</code> can fail a run. The other six warn, never fail: <code>mysql-eol</code> warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.</p>
+<p>This page covers the eight PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, <code>env()</code> calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, files a stranger can download from <code>public/</code>, and <code>chmod 777</code>. Each one holds a CREED practice. Run <code>vendor/bin/proctor check</code> against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.</p>
+<p><code>node-eol</code> can fail a run. The other seven warn, never fail: <code>mysql-eol</code> warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.</p>
 <h2 id="node-eol">node-eol<a class="docs-heading-link" aria-label="Link to this section" href="#node-eol">#</a></h2>
 <p><code>node-eol</code> grades every Node version the repository pins against the policy's <code>node</code> lines as of <code>--today</code>. The sources:</p>
 <ul>
@@ -251,6 +251,28 @@
 </tr>
 </tbody>
 </table></div>
+<h2 id="app-debug">app-debug<a class="docs-heading-link" aria-label="Link to this section" href="#app-debug">#</a></h2>
+<p><code>app-debug</code> warns, never fails, when a committed env, deploy or CI file sets <code>APP_DEBUG</code> to a truthy value: <code>true</code> or <code>1</code>, case-insensitive, with optional spaces around <code>=</code> or <code>:</code>. A debug build shows stack traces and environment values to whoever requests the page, so it must stay off in production; Laravel reads <code>APP_DEBUG</code> in <code>config/app.php</code>. It reports, and is not in the deploy gate.</p>
+<p>Scanned: <code>.env.example</code>, <code>.env.production</code> and <code>.env.squire.example</code> at the root, every file under a top-level <code>deploy/</code> or <code>deployments/</code> directory at any depth, and the CI pipelines (<code>.gitlab-ci.yml</code> and every <code>.github/workflows/*.yml</code>). Skipped at any depth: <code>vendor/</code>, <code>node_modules/</code> and <code>.git/</code>. One warning per file, on the line of its first true value; a file that cannot be read is skipped. It never reads <code>.env</code>: a committed <code>.env</code> is the app-key check's finding.</p>
+<p>Fix by setting <code>APP_DEBUG=false</code> in the file the report names.</p>
+<div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Rule id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>app-debug</code></td>
+<td><code>proctor/app-debug</code></td>
+</tr>
+<tr>
+<td><code>app-debug</code></td>
+<td><code>proctor/app-debug/enabled</code></td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="served-folder">served-folder<a class="docs-heading-link" aria-label="Link to this section" href="#served-folder">#</a></h2>
 <p><code>served-folder</code> warns when a committed file under the top-level <code>public/</code> is something a stranger should not be able to download:</p>
 <ul>
@@ -349,7 +371,7 @@
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../../docs/guides/check-ci.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">CI checks</span></a><a class="docs-pager__link docs-pager__link--next" href="../../docs/guides/check-wayneui.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">WayneUI checks</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#node-eol">node-eol</a></li><li class="docs-toc__item"><a href="#mysql-eol">mysql-eol</a></li><li class="docs-toc__item"><a href="#env-outside-config">env-outside-config</a></li><li class="docs-toc__item"><a href="#raw-identity-header">raw-identity-header</a></li><li class="docs-toc__item"><a href="#app-key">app-key</a></li><li class="docs-toc__item"><a href="#served-folder">served-folder</a></li><li class="docs-toc__item"><a href="#crlf-deploy-script">crlf-deploy-script</a></li><li class="docs-toc__item"><a href="#case-clash">case-clash</a></li><li class="docs-toc__item"><a href="#world-writable">world-writable</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#node-eol">node-eol</a></li><li class="docs-toc__item"><a href="#mysql-eol">mysql-eol</a></li><li class="docs-toc__item"><a href="#env-outside-config">env-outside-config</a></li><li class="docs-toc__item"><a href="#raw-identity-header">raw-identity-header</a></li><li class="docs-toc__item"><a href="#app-key">app-key</a></li><li class="docs-toc__item"><a href="#app-debug">app-debug</a></li><li class="docs-toc__item"><a href="#served-folder">served-folder</a></li><li class="docs-toc__item"><a href="#crlf-deploy-script">crlf-deploy-script</a></li><li class="docs-toc__item"><a href="#case-clash">case-clash</a></li><li class="docs-toc__item"><a href="#world-writable">world-writable</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.9.0</span></span>

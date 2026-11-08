@@ -110,6 +110,7 @@ final class ProctorModule implements Module
         'instant-client-committed' => 'check-ci',
         'wayneui-forked-views' => 'check-wayneui',
         'wayneui-outdated' => 'check-wayneui',
+        'app-debug' => 'check-app',
     ];
 
     /** The bundled CREED policy, the copy PolicyResolver falls back to. */

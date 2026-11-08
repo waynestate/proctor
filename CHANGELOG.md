@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Added: the `ci-pipelines` check warns (`proctor/ci-pipelines/allow-overrides`) when an app's pipeline sets `PROCTOR_ALLOW_OVERRIDES` to 1, which lets it pass `--policy` and `--today` in CI (BEST_PRACTICES 1.2); any other value leaves the guard on.
+- Added: the `app-debug` check warns when a committed env, deploy or CI file sets APP_DEBUG=true (CREED practice 12); it reports, and is not in the deploy gate.
 
 ## 0.9.0 (2026-11-08)
 

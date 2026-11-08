@@ -1,13 +1,13 @@
 ---
 title: App checks
-description: The checks that read an app's own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, debug files in public/ and chmod 777.
+description: The checks that read an app's own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, debug files in public/ and chmod 777.
 ---
 
 # App checks
 
-This page covers the seven PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, files a stranger can download from `public/`, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
+This page covers the eight PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, files a stranger can download from `public/`, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
 
-`node-eol` can fail a run. The other six warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.
+`node-eol` can fail a run. The other seven warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.
 
 ## node-eol
 
@@ -122,6 +122,19 @@ Fix by running `git rm --cached` on the file, adding it to .gitignore and commit
 | `app-key` | `proctor/app-key/committed-env` |
 | `app-key` | `proctor/app-key/committed-key` |
 | `app-key` | `proctor/app-key/cookie-sessions` |
+
+## app-debug
+
+`app-debug` warns, never fails, when a committed env, deploy or CI file sets `APP_DEBUG` to a truthy value: `true` or `1`, case-insensitive, with optional spaces around `=` or `:`. A debug build shows stack traces and environment values to whoever requests the page, so it must stay off in production; Laravel reads `APP_DEBUG` in `config/app.php`. It reports, and is not in the deploy gate.
+
+Scanned: `.env.example`, `.env.production` and `.env.squire.example` at the root, every file under a top-level `deploy/` or `deployments/` directory at any depth, and the CI pipelines (`.gitlab-ci.yml` and every `.github/workflows/*.yml`). Skipped at any depth: `vendor/`, `node_modules/` and `.git/`. One warning per file, on the line of its first true value; a file that cannot be read is skipped. It never reads `.env`: a committed `.env` is the app-key check's finding.
+
+Fix by setting `APP_DEBUG=false` in the file the report names.
+
+| Check | Rule id |
+| --- | --- |
+| `app-debug` | `proctor/app-debug` |
+| `app-debug` | `proctor/app-debug/enabled` |
 
 ## served-folder
 
