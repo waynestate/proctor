@@ -428,6 +428,15 @@ running CREED's `bin/export.php` against `src/Creed/`.
 
 Proof runs against real Wayne State applications are on a private site, [proof.apps.wayne.edu/proctor](https://proof.apps.wayne.edu/proctor/), behind a Wayne State employee sign-in.
 
+## Coding agents (ADVISOR)
+
+PROCTOR ships a module for [ADVISOR](https://github.com/waynestate/advisor), the stack's read-only MCP server. With
+`waynestate/advisor` installed as a dev dependency and the class `Waynestate\Proctor\Advisor\ProctorModule` listed in the
+app's `modules.json`, a coding agent gains two read-only tools: `proctor_rules` (every rule id, and which are in the deploy
+gate) and `proctor_check` (PROCTOR's file checks on an app folder, in-process, with the subprocess and `.env` checks
+skipped and listed). PROCTOR does not require ADVISOR. The whole story:
+[Use PROCTOR from your coding agent](https://proctor.apps.wayne.edu/docs/guides/advisor.html).
+
 ## Docs
 
 The documentation lives at [proctor.apps.wayne.edu/docs](https://proctor.apps.wayne.edu/docs/) and is built from `docs/` by Squire's docs builder:

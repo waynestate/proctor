@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added: an ADVISOR module (`Waynestate\Proctor\Advisor\ProctorModule`): a coding agent that runs ADVISOR gains two read-only tools, `proctor_rules` (every rule id, and which are in the deploy gate) and `proctor_check` (PROCTOR's file checks on an app folder, in-process; the subprocess and `.env` checks are skipped and listed).
 - Changed: the front page's deploy layer (`deploy/`) runs Squire's kit 0.6.0 (was 0.5.0): `scripts/release.sh` asks PROCTOR's deploy gate for a go or no-go on each release (a report, not a stop, unless `SQUIRE_PROCTOR=enforce`), and `.env.squire.example` lists the new setting. The layer's pins move to HELMET `^0.4` (locked 0.4.0) and PROCTOR `^0.7` (locked 0.7.0).
 - Docs: the Docker commands in the README and docs mount the shared `stack-composer-cache` volume, so Composer downloads are cached between runs.
 - Changed: `raw-identity-header` also flags direct reads of `X-Sesame-Assertion`, the signed assertion Drawbridge sends; only SESAME's gateway driver should read it.

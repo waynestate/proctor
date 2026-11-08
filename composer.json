@@ -29,6 +29,9 @@
         "league/commonmark": "^2.10",
         "waynestate/advisor": "^0.1.6"
     },
+    "suggest": {
+        "waynestate/advisor": "ADVISOR module: lets your coding agent read proctor_rules and proctor_check, read-only."
+    },
     "config": {
         "platform": {
             "php": "8.3.0"
