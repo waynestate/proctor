@@ -5,9 +5,9 @@ description: The checks that read an app's own files for an end-of-life Node lin
 
 # App checks
 
-This page covers the eight PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, files a stranger can download from `public/`, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
+This page covers the eleven PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
 
-`node-eol` can fail a run. The other seven warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.
+`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other eight warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.
 
 ## node-eol
 
