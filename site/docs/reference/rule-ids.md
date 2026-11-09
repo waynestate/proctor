@@ -108,6 +108,9 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `app-key` | `proctor/app-key/cookie-sessions` |
 | `app-debug` | `proctor/app-debug` |
 | `app-debug` | `proctor/app-debug/enabled` |
+| `display-errors` | `proctor/display-errors` |
+| `display-errors` | `proctor/display-errors/on` |
+| `display-errors` | `proctor/display-errors/log-off` |
 | `served-folder` | `proctor/served-folder` |
 | `served-folder` | `proctor/served-folder/debug-file` |
 | `served-folder` | `proctor/served-folder/phpinfo` |

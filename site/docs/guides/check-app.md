@@ -1,6 +1,6 @@
 ---
 title: "App checks | PROCTOR docs"
-description: "The checks that read an app's own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, secret-looking VITE_ variables, debug files in public/ and chmod 777."
+description: "The checks that read an app's own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, secret-looking VITE_ variables, debug files in public/ and chmod 777."
 url: https://proctor.apps.wayne.edu/docs/guides/check-app.html
 llms: https://proctor.apps.wayne.edu/llms.txt
 generator: Squire agent-ready
@@ -8,9 +8,9 @@ generator: Squire agent-ready
 
 # App checks[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-checks)
 
-This page covers the thirteen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, secret-looking `VITE_` variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
+This page covers the fourteen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, secret-looking `VITE_` variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
 
-`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other ten warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.
+`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other eleven warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.
 
 ## node-eol[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#node-eol)
 
@@ -151,6 +151,22 @@ Fix by setting `APP_DEBUG=false` in the file the report names.
 | --- | --- |
 | `app-debug` | `proctor/app-debug` |
 | `app-debug` | `proctor/app-debug/enabled` |
+
+## display-errors[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#display-errors)
+
+`display-errors` warns, never fails, when a committed php.ini, .user.ini or .htaccess turns `display_errors` on or `log_errors` off. CREED runtime-and-headers keeps `display_errors` Off and `log_errors` On in production: a committed ini or .htaccess that flips them ships stack traces to users and closes the log. It reports, and is not in the deploy gate.
+
+Scanned: any `*.ini` file at the app root and at any depth under a top-level `public/`, `deploy/`, `deployments/` or `docker/` directory, and every `.htaccess` at the root or at any depth under those folders. Skipped at any depth: `vendor/`, `node_modules/`, `.git/` and anything under `tests/`; a file whose base name contains `dev`, `local` or `development` (case-insensitive), such as `php.dev.ini`, is the local-development template and is skipped too. A line whose first non-space character is `;` or `#` is ignored; a file that cannot be read is skipped.
+
+In an ini file, `display_errors = <v>` (spaces optional, key case-insensitive) is on when `<v>`, with optional quotes, is `On`, `1`, `true`, `yes`, `stdout` or `stderr` (`proctor/display-errors/on`); `log_errors = <v>` is off when `<v>` is `Off`, `0`, `false` or `no` (`proctor/display-errors/log-off`). In an .htaccess, `php_flag display_errors on` or `php_value display_errors 1` (case-insensitive) is on, and `php_flag log_errors off` or `php_value log_errors 0` is off. One warning per file per rule, on the line of its first match.
+
+Fix by keeping `display_errors` Off and `log_errors` On in the file the report names.
+
+| Check | Rule id |
+| --- | --- |
+| `display-errors` | `proctor/display-errors` |
+| `display-errors` | `proctor/display-errors/on` |
+| `display-errors` | `proctor/display-errors/log-off` |
 
 ## vite-secrets[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#vite-secrets)
 

@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>App checks | PROCTOR docs</title>
-<meta name="description" content="The checks that read an app&#039;s own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, secret-looking VITE_ variables, debug files in public/ and chmod 777.">
+<meta name="description" content="The checks that read an app&#039;s own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, secret-looking VITE_ variables, debug files in public/ and chmod 777.">
 <meta name="docs-version" content="0.9.0">
 <link rel="stylesheet" href="../../assets/wayne-ui/wayne-ui.css">
 <link rel="stylesheet" href="../../assets/docs.css">
@@ -41,8 +41,8 @@
   <div class="docs-content">
     <main id="main">
       <article class="docs-article"><h1 id="app-checks">App checks<a class="docs-heading-link" aria-label="Link to this section" href="#app-checks">#</a></h1>
-<p>This page covers the thirteen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, <code>env()</code> calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, secret-looking <code>VITE_</code> variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from <code>public/</code>, deploy scripts with Windows line endings, paths that differ only by letter case, and <code>chmod 777</code>. Each one holds a CREED practice. Run <code>vendor/bin/proctor check</code> against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.</p>
-<p><code>node-eol</code>, <code>crlf-deploy-script</code> and <code>case-clash</code> can fail a run. The other ten warn, never fail: <code>mysql-eol</code> warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.</p>
+<p>This page covers the fourteen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, <code>env()</code> calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, secret-looking <code>VITE_</code> variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from <code>public/</code>, deploy scripts with Windows line endings, paths that differ only by letter case, and <code>chmod 777</code>. Each one holds a CREED practice. Run <code>vendor/bin/proctor check</code> against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.</p>
+<p><code>node-eol</code>, <code>crlf-deploy-script</code> and <code>case-clash</code> can fail a run. The other eleven warn, never fail: <code>mysql-eol</code> warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.</p>
 <h2 id="node-eol">node-eol<a class="docs-heading-link" aria-label="Link to this section" href="#node-eol">#</a></h2>
 <p><code>node-eol</code> grades every Node version the repository pins against the policy's <code>node</code> lines as of <code>--today</code>. The sources:</p>
 <ul>
@@ -295,6 +295,33 @@
 </tr>
 </tbody>
 </table></div>
+<h2 id="display-errors">display-errors<a class="docs-heading-link" aria-label="Link to this section" href="#display-errors">#</a></h2>
+<p><code>display-errors</code> warns, never fails, when a committed php.ini, .user.ini or .htaccess turns <code>display_errors</code> on or <code>log_errors</code> off. CREED runtime-and-headers keeps <code>display_errors</code> Off and <code>log_errors</code> On in production: a committed ini or .htaccess that flips them ships stack traces to users and closes the log. It reports, and is not in the deploy gate.</p>
+<p>Scanned: any <code>*.ini</code> file at the app root and at any depth under a top-level <code>public/</code>, <code>deploy/</code>, <code>deployments/</code> or <code>docker/</code> directory, and every <code>.htaccess</code> at the root or at any depth under those folders. Skipped at any depth: <code>vendor/</code>, <code>node_modules/</code>, <code>.git/</code> and anything under <code>tests/</code>; a file whose base name contains <code>dev</code>, <code>local</code> or <code>development</code> (case-insensitive), such as <code>php.dev.ini</code>, is the local-development template and is skipped too. A line whose first non-space character is <code>;</code> or <code>#</code> is ignored; a file that cannot be read is skipped.</p>
+<p>In an ini file, <code>display_errors = &lt;v&gt;</code> (spaces optional, key case-insensitive) is on when <code>&lt;v&gt;</code>, with optional quotes, is <code>On</code>, <code>1</code>, <code>true</code>, <code>yes</code>, <code>stdout</code> or <code>stderr</code> (<code>proctor/display-errors/on</code>); <code>log_errors = &lt;v&gt;</code> is off when <code>&lt;v&gt;</code> is <code>Off</code>, <code>0</code>, <code>false</code> or <code>no</code> (<code>proctor/display-errors/log-off</code>). In an .htaccess, <code>php_flag display_errors on</code> or <code>php_value display_errors 1</code> (case-insensitive) is on, and <code>php_flag log_errors off</code> or <code>php_value log_errors 0</code> is off. One warning per file per rule, on the line of its first match.</p>
+<p>Fix by keeping <code>display_errors</code> Off and <code>log_errors</code> On in the file the report names.</p>
+<div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Rule id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>display-errors</code></td>
+<td><code>proctor/display-errors</code></td>
+</tr>
+<tr>
+<td><code>display-errors</code></td>
+<td><code>proctor/display-errors/on</code></td>
+</tr>
+<tr>
+<td><code>display-errors</code></td>
+<td><code>proctor/display-errors/log-off</code></td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="vite-secrets">vite-secrets<a class="docs-heading-link" aria-label="Link to this section" href="#vite-secrets">#</a></h2>
 <p><code>vite-secrets</code> warns, never fails, when a secret-looking variable carries Vite's <code>VITE_</code> prefix. Vite exposes every <code>VITE_</code> variable to the client code it bundles, so the value ships to every visitor's browser, and a name that says it holds a secret is a leak waiting for a value. It reports, and is not in the deploy gate.</p>
 <p>Two places are read:</p>
@@ -452,7 +479,7 @@
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../../docs/guides/check-ci.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">CI checks</span></a><a class="docs-pager__link docs-pager__link--next" href="../../docs/guides/check-wayneui.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">WayneUI checks</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#node-eol">node-eol</a></li><li class="docs-toc__item"><a href="#mysql-eol">mysql-eol</a></li><li class="docs-toc__item"><a href="#mysql-minimum">mysql-minimum</a></li><li class="docs-toc__item"><a href="#env-outside-config">env-outside-config</a></li><li class="docs-toc__item"><a href="#raw-identity-header">raw-identity-header</a></li><li class="docs-toc__item"><a href="#app-key">app-key</a></li><li class="docs-toc__item"><a href="#app-debug">app-debug</a></li><li class="docs-toc__item"><a href="#vite-secrets">vite-secrets</a></li><li class="docs-toc__item"><a href="#entrypoint-migrate">entrypoint-migrate</a></li><li class="docs-toc__item"><a href="#served-folder">served-folder</a></li><li class="docs-toc__item"><a href="#crlf-deploy-script">crlf-deploy-script</a></li><li class="docs-toc__item"><a href="#case-clash">case-clash</a></li><li class="docs-toc__item"><a href="#world-writable">world-writable</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#node-eol">node-eol</a></li><li class="docs-toc__item"><a href="#mysql-eol">mysql-eol</a></li><li class="docs-toc__item"><a href="#mysql-minimum">mysql-minimum</a></li><li class="docs-toc__item"><a href="#env-outside-config">env-outside-config</a></li><li class="docs-toc__item"><a href="#raw-identity-header">raw-identity-header</a></li><li class="docs-toc__item"><a href="#app-key">app-key</a></li><li class="docs-toc__item"><a href="#app-debug">app-debug</a></li><li class="docs-toc__item"><a href="#display-errors">display-errors</a></li><li class="docs-toc__item"><a href="#vite-secrets">vite-secrets</a></li><li class="docs-toc__item"><a href="#entrypoint-migrate">entrypoint-migrate</a></li><li class="docs-toc__item"><a href="#served-folder">served-folder</a></li><li class="docs-toc__item"><a href="#crlf-deploy-script">crlf-deploy-script</a></li><li class="docs-toc__item"><a href="#case-clash">case-clash</a></li><li class="docs-toc__item"><a href="#world-writable">world-writable</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.9.0</span></span>
