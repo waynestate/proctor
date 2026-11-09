@@ -1,11 +1,11 @@
 ---
 title: CI checks
-description: The checks that verify CI pipelines run composer ci and that Preflight includes are pinned to a release tag or a commit SHA.
+description: The checks that verify CI pipelines run composer ci, that Preflight includes are pinned to a release tag or a commit SHA, and that its gates run and block.
 ---
 
 # CI checks
 
-This page covers the PROCTOR checks that verify CI pipelines run `composer ci`, that Preflight includes are pinned, and that deploy scripts and committed files keep the app portable. Run `vendor/bin/proctor check` against the app path, then fix the finding the report names. PROCTOR watches the exam and does not hand out answers.
+This page covers the PROCTOR checks that verify CI pipelines run `composer ci`, that Preflight includes are pinned and its gates are present and blocking, and that deploy scripts and committed files keep the app portable. Run `vendor/bin/proctor check` against the app path, then fix the finding the report names. PROCTOR watches the exam and does not hand out answers.
 
 ## ci-pipelines
 
@@ -53,6 +53,23 @@ With nothing to flag it passes: `Preflight includes are pinned`, or `no Prefligh
 | `preflight-pinned` | `proctor/preflight-pinned` |
 | `preflight-pinned` | `proctor/preflight-pinned/unpinned` |
 | `preflight-pinned` | `proctor/preflight-pinned/script-override` |
+
+## preflight-gates
+
+`preflight-gates` warns, and never fails, when `.gitlab-ci.yml` skips or weakens Preflight, the flags Preflight's practice 3.3 asks for. An include at a moving ref is `preflight-pinned`'s finding; this check covers the rest.
+
+- No `include:` entry whose `component:` path contains `/preflight/` warns (`proctor/preflight-gates/no-include`): none of the stack's gates run. Include `php-test`, `composer-audit` and `proctor` from Preflight, pinned to a release tag.
+- A gate that can fail while the pipeline passes warns (`proctor/preflight-gates/allow-failure`), once per place it is set: a gate component included with the `allow_failure` input set to `true`, or a job the app re-declares under the gate's job name (its `job_name` input, or the component name) with `allow_failure` set to anything but `false`, the exit-codes form included. Every Preflight component is a gate except `renovate` (a bot) and `package-publish` (a release step); php-test's advisory job may fail by design and is not one.
+- No job that runs PROCTOR warns (`proctor/preflight-gates/no-proctor-job`): the Preflight `proctor` component is not included and no job's `script` runs `proctor check` or `proctor gate` (`vendor/bin/proctor`, `proctor.phar` or a path to either).
+
+No finding when there is no `.gitlab-ci.yml` or it does not parse; `ci-pipelines` reports both. With nothing to flag it passes: `Preflight gates are included, none may fail softly, and PROCTOR runs`. It reports, and is not in the deploy gate. A warning on purpose: a repository fixing its first findings may keep `allow_failure` for a while, with a comment saying why, the way PROCTOR's own pipeline does on its deploy layer.
+
+| Check | Rule id |
+| --- | --- |
+| `preflight-gates` | `proctor/preflight-gates` |
+| `preflight-gates` | `proctor/preflight-gates/no-include` |
+| `preflight-gates` | `proctor/preflight-gates/allow-failure` |
+| `preflight-gates` | `proctor/preflight-gates/no-proctor-job` |
 
 ## portability
 

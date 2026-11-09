@@ -189,13 +189,14 @@ final class MysqlEolCheckTest extends ProctorTestCase
     {
         // A minimal app whose only finding is an eol MySQL image: the
         // composer pair mirrors pass-app (config.platform.php keeps
-        // composer-config quiet) and the GitLab pipeline runs composer ci.
+        // composer-config quiet) and the GitLab pipeline runs composer ci
+        // and includes the Preflight proctor gate, so preflight-gates passes.
         $dir = sys_get_temp_dir() . '/proctor-mysql-' . bin2hex(random_bytes(4));
         mkdir($dir);
         file_put_contents($dir . '/docker-compose.yml', "services:\n  db:\n    image: mysql:8.0\n");
         file_put_contents($dir . '/composer.json', "{\n    \"config\": {\n        \"platform\": {\n            \"php\": \"8.4.0\"\n        }\n    },\n    \"require\": {\n        \"php\": \"^8.4\",\n        \"symfony/console\": \"^7.1\"\n    }\n}\n");
         file_put_contents($dir . '/composer.lock', "{\n    \"packages\": [],\n    \"packages-dev\": [],\n    \"content-hash\": \"fixture\"\n}\n");
-        file_put_contents($dir . '/.gitlab-ci.yml', "# composer ci is the contract: the checks are defined there, and this pipeline only wraps them.\ncomposer-ci:\n  image: composer:2.10.3\n  script:\n    - composer install --no-interaction --no-progress --prefer-dist\n    - composer ci\n");
+        file_put_contents($dir . '/.gitlab-ci.yml', "# composer ci is the contract: the checks are defined there, and this pipeline only wraps them.\ninclude:\n  - component: \$CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.4.0\ncomposer-ci:\n  image: composer:2.10.3\n  script:\n    - composer install --no-interaction --no-progress --prefer-dist\n    - composer ci\n");
 
         // A stub composer on PATH answers the audit with a clean result and
         // the version probe with a current version, so composer-audit and

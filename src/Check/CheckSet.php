@@ -70,6 +70,7 @@ final class CheckSet
             new CaseClashCheck(),
             new CiPipelinesCheck(),
             new PreflightPinnedCheck(),
+            new PreflightGatesCheck(),
             new ComposerAuditCheck(),
             $composerVersion ?? new ComposerVersionCheck(policy: $resolved->policy),
             new RepoUrlCredentialsCheck(),

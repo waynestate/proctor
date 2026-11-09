@@ -105,6 +105,7 @@ final class ProctorModule implements Module
         'repo-url-credentials' => 'check-composer',
         'ci-pipelines' => 'check-ci',
         'preflight-pinned' => 'check-ci',
+        'preflight-gates' => 'check-ci',
         'portability' => 'check-ci',
         'destructive-deploy' => 'check-ci',
         'instant-client-committed' => 'check-ci',

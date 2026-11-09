@@ -41,6 +41,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/mysql56',
         'proctor/ci-pipelines',
         'proctor/preflight-pinned',
+        'proctor/preflight-gates',
         'proctor/composer-audit',
         'proctor/composer-version',
         'proctor/repo-url-credentials',
@@ -129,6 +130,10 @@ final class RuleIdContractTest extends ProctorTestCase
         // preflight-pinned
         'proctor/preflight-pinned/unpinned',
         'proctor/preflight-pinned/script-override',
+        // preflight-gates
+        'proctor/preflight-gates/no-include',
+        'proctor/preflight-gates/allow-failure',
+        'proctor/preflight-gates/no-proctor-job',
         // composer-audit
         'proctor/composer-audit/advisory',
         'proctor/composer-audit/abandoned',

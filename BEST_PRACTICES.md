@@ -1060,6 +1060,22 @@ declares one of the Preflight job names (`proctor`, `php-test`, `composer-audit`
 included (`proctor/preflight-pinned/script-override`). `PreflightPinnedCheckTest` pins the fixture outcomes for
 pinned and unpinned includes and for overridden jobs.
 
+### Flag a pipeline that skips or weakens Preflight
+Preflight's practice 3.3 asks for a check that flags an app with no Preflight include, an unpinned include,
+`allow_failure` on a gate, or no `proctor` job: on GitLab Community Edition an app can leave an include out or soften
+it, and a standard nobody can see being skipped is not a standard. The unpinned include is `preflight-pinned`'s
+finding (above).
+
+**How the stack holds it: Checked.** The `preflight-gates` check reads `.gitlab-ci.yml` as YAML and warns, never
+fails, on the other three: no `component:` include whose path contains `/preflight/`
+(`proctor/preflight-gates/no-include`); a gate component (every Preflight component but `renovate` and
+`package-publish`) included with the `allow_failure` input set to `true`, or its job re-declared with `allow_failure`
+set to anything but `false` (`proctor/preflight-gates/allow-failure`); and no Preflight `proctor` include and no job
+whose `script` runs `proctor check` or `proctor gate` (`proctor/preflight-gates/no-proctor-job`). A warning, not a
+fail: PROCTOR's own pipeline and Sourdough's keep `allow_failure` on the deploy layer's proctor job while its findings
+are fixed. `PreflightGatesCheckTest` pins each rule, its line and its message. What remains: the check sees only the
+committed file, so a fleet view across every app is ROLLCALL's to build.
+
 ## Framework lines
 
 ### The laravel-eol check

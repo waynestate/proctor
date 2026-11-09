@@ -1,0 +1,373 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Waynestate\Proctor\Check;
+
+use Symfony\Component\Yaml\Exception\ParseException;
+use Symfony\Component\Yaml\Yaml;
+
+/**
+ * Warns when an app's GitLab pipeline skips or weakens Preflight: no
+ * Preflight component included at all, a gate that may fail without failing
+ * the pipeline, or no job that runs PROCTOR.
+ *
+ * Preflight practice 3.3 asks for these flags because a standard nobody can
+ * see being skipped is not a standard. The fourth flag it names, an include
+ * at a moving ref, is preflight-pinned's job; this check covers the rest:
+ *
+ * - no-include: .gitlab-ci.yml has no include: entry whose component: path
+ *   contains /preflight/, so none of the stack's gates run.
+ * - allow-failure: a gate component (every Preflight component but the
+ *   renovate bot and package-publish) is included with the allow_failure
+ *   input set to true, or the app re-declares the gate's job (its job_name
+ *   input, or the component name) with allow_failure set to anything but
+ *   false. One warning per place it is set.
+ * - no-proctor-job: the Preflight proctor component is not included and no
+ *   job's script runs `proctor check` or `proctor gate` (vendor/bin/proctor,
+ *   proctor.phar or a path to either).
+ *
+ * Warns, never fails, and is not in the deploy gate: PROCTOR's own pipeline
+ * and Sourdough's both keep allow_failure on the proctor job while their
+ * findings are fixed, on purpose and with a comment, and a check that failed
+ * them would only teach people to switch it off. No finding when there is
+ * no .gitlab-ci.yml or it does not parse: ci-pipelines reports both. With
+ * nothing to flag, one pass. The file is parsed as YAML, never grepped, and
+ * nothing here reads the environment: the pipeline file is the only witness.
+ */
+final class PreflightGatesCheck implements CheckInterface
+{
+    /** The GitLab pipeline file, relative to the app root. */
+    private const GITLAB_CI = '.gitlab-ci.yml';
+
+    /**
+     * The Preflight components whose job is a gate: when it fails, the
+     * pipeline should stop. renovate (a bot) and package-publish (a release
+     * step) are not gates, and php-test's advisory job is meant to fail
+     * softly, so neither is listed.
+     */
+    private const GATE_COMPONENTS = [
+        'a11y',
+        'composer-audit',
+        'eslint',
+        'php-test',
+        'phpstan',
+        'pint',
+        'portability',
+        'proctor',
+        'sbom',
+        'secret-detection',
+        'squire-kit',
+    ];
+
+    /** Top-level keys GitLab reserves; none of them is a job. */
+    private const RESERVED_KEYS = ['default', 'include', 'stages', 'variables', 'workflow', 'spec'];
+
+    /**
+     * A command segment that runs PROCTOR's check or gate: proctor,
+     * vendor/bin/proctor, proctor.phar or any path ending in one of them,
+     * optionally behind php.
+     */
+    private const PROCTOR_COMMAND_PATTERN = '/(^|[\s\/])proctor(\.phar)?\s+(check|gate)(\s|$)/';
+
+    public function id(): string
+    {
+        return 'preflight-gates';
+    }
+
+    public function run(CheckContext $context): array
+    {
+        $appPath = rtrim($context->appPath, '/\\');
+        $absolutePath = $appPath . '/' . self::GITLAB_CI;
+
+        if (!is_file($absolutePath)) {
+            return [];
+        }
+
+        $data = $this->parseYaml($absolutePath);
+        if ($data === null) {
+            return [];
+        }
+
+        $lines = $this->lines($absolutePath);
+        $findings = [];
+        $includes = $this->preflightIncludes($data['include'] ?? null);
+
+        if ($includes === []) {
+            $findings[] = new Finding(
+                $this->id(),
+                Finding::STATUS_WARNING,
+                'preflight-gates-no-include: .gitlab-ci.yml includes no Preflight component, so none of the stack\'s gates run; include php-test, composer-audit and proctor from Preflight, pinned to a release tag',
+                self::GITLAB_CI,
+                1,
+                null,
+                'no-include',
+            );
+        }
+
+        $runsProctor = false;
+        foreach ($includes as [$componentPath, $name, $inputs]) {
+            if ($name === 'proctor') {
+                $runsProctor = true;
+            }
+            if (!in_array($name, self::GATE_COMPONENTS, true)) {
+                continue;
+            }
+            if (($inputs['allow_failure'] ?? null) === true) {
+                $start = $this->lineOf($componentPath, $lines);
+                $findings[] = new Finding(
+                    $this->id(),
+                    Finding::STATUS_WARNING,
+                    sprintf(
+                        'preflight-gates-allow-failure: the Preflight %s component is included with allow_failure: true, so the gate can fail and the pipeline still passes; remove the input once its findings are fixed',
+                        $name,
+                    ),
+                    self::GITLAB_CI,
+                    $this->lineAfter($start, '/^\s*allow_failure\s*:/', $lines),
+                    null,
+                    'allow-failure',
+                );
+            }
+        }
+
+        foreach ($this->gateJobNames($includes) as $jobName => $component) {
+            $job = $data[$jobName] ?? null;
+            if (!is_array($job) || !array_key_exists('allow_failure', $job) || $job['allow_failure'] === false) {
+                continue;
+            }
+            $start = $this->jobLine($jobName, $lines);
+            $findings[] = new Finding(
+                $this->id(),
+                Finding::STATUS_WARNING,
+                sprintf(
+                    'preflight-gates-allow-failure: job %s (the Preflight %s gate) sets allow_failure, so the gate can fail and the pipeline still passes; remove it once the findings are fixed',
+                    $jobName,
+                    $component,
+                ),
+                self::GITLAB_CI,
+                $this->lineAfter($start, '/^\s+allow_failure\s*:/', $lines),
+                null,
+                'allow-failure',
+            );
+        }
+
+        if (!$runsProctor) {
+            $runsProctor = $this->aJobRunsProctor($data);
+        }
+        if (!$runsProctor) {
+            $findings[] = new Finding(
+                $this->id(),
+                Finding::STATUS_WARNING,
+                'preflight-gates-no-proctor-job: no job in .gitlab-ci.yml runs PROCTOR; include the Preflight proctor component, pinned to a release tag, so every pipeline checks the app against the policy',
+                self::GITLAB_CI,
+                1,
+                null,
+                'no-proctor-job',
+            );
+        }
+
+        if ($findings === []) {
+            return [new Finding(
+                $this->id(),
+                Finding::STATUS_PASS,
+                'Preflight gates are included, none may fail softly, and PROCTOR runs',
+            )];
+        }
+
+        // Stable on every OS: by line, then message.
+        usort($findings, static function (Finding $a, Finding $b): int {
+            return ($a->line <=> $b->line) ?: strcmp($a->message, $b->message);
+        });
+
+        return $findings;
+    }
+
+    /**
+     * The Preflight component includes: each entry's component path, the
+     * component name (the path segment after /preflight/, before the @) and
+     * its inputs map.
+     *
+     * @return list<array{0: string, 1: string, 2: array<mixed, mixed>}>
+     */
+    private function preflightIncludes(mixed $include): array
+    {
+        if (!is_array($include)) {
+            // A single string include is a file, never a component.
+            return [];
+        }
+        // include: as one map rather than a list of entries.
+        if (isset($include['component'])) {
+            $include = [$include];
+        }
+
+        $found = [];
+        foreach ($include as $entry) {
+            if (!is_array($entry)) {
+                continue;
+            }
+            $component = $entry['component'] ?? null;
+            if (!is_string($component)) {
+                continue;
+            }
+            $marker = strrpos($component, '/preflight/');
+            if ($marker === false) {
+                continue;
+            }
+            $name = substr($component, $marker + strlen('/preflight/'));
+            $at = strpos($name, '@');
+            if ($at !== false) {
+                $name = substr($name, 0, $at);
+            }
+            $inputs = $entry['inputs'] ?? [];
+            $found[] = [$component, $name, is_array($inputs) ? $inputs : []];
+        }
+
+        return $found;
+    }
+
+    /**
+     * The job name each included gate component defines: its job_name
+     * input, or the component name (every Preflight component's default),
+     * mapped to the component.
+     *
+     * @param list<array{0: string, 1: string, 2: array<mixed, mixed>}> $includes
+     *
+     * @return array<string, string>
+     */
+    private function gateJobNames(array $includes): array
+    {
+        $names = [];
+        foreach ($includes as [, $name, $inputs]) {
+            if (!in_array($name, self::GATE_COMPONENTS, true)) {
+                continue;
+            }
+            $jobName = $inputs['job_name'] ?? null;
+            $names[is_string($jobName) && $jobName !== '' ? $jobName : $name] = $name;
+        }
+
+        return $names;
+    }
+
+    /**
+     * Whether any job's script runs PROCTOR's check or gate. Hidden jobs
+     * (a leading dot) and GitLab's reserved keys are not jobs. A segment
+     * that starts with # is a comment inside a block string.
+     *
+     * @param array<mixed, mixed> $data
+     */
+    private function aJobRunsProctor(array $data): bool
+    {
+        foreach ($data as $jobName => $job) {
+            $jobName = (string) $jobName;
+            if (!is_array($job) || str_starts_with($jobName, '.') || in_array($jobName, self::RESERVED_KEYS, true)) {
+                continue;
+            }
+            $script = $job['script'] ?? null;
+            $scriptLines = is_string($script) ? [$script] : (is_array($script) ? $script : []);
+            foreach ($scriptLines as $line) {
+                if (!is_string($line)) {
+                    continue;
+                }
+                $segments = preg_split('/&&|\|\||;|\n/', $line) ?: [];
+                foreach ($segments as $segment) {
+                    $segment = trim($segment);
+                    if ($segment === '' || str_starts_with($segment, '#')) {
+                        continue;
+                    }
+                    if (preg_match(self::PROCTOR_COMMAND_PATTERN, $segment) === 1) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Parses the file as a YAML map, or null when it cannot be read, does
+     * not parse, or is not a map.
+     *
+     * @return array<mixed, mixed>|null
+     */
+    private function parseYaml(string $absolutePath): ?array
+    {
+        $raw = file_get_contents($absolutePath);
+        if ($raw === false) {
+            return null;
+        }
+
+        try {
+            $data = Yaml::parse($raw);
+        } catch (ParseException) {
+            return null;
+        }
+
+        return is_array($data) ? $data : null;
+    }
+
+    /**
+     * The file's raw lines, or an empty list when it cannot be read.
+     *
+     * @return list<string>
+     */
+    private function lines(string $absolutePath): array
+    {
+        $lines = file($absolutePath, FILE_IGNORE_NEW_LINES);
+
+        return $lines === false ? [] : array_map('strval', $lines);
+    }
+
+    /**
+     * The 1-based line of the first raw line containing $needle, or 1.
+     *
+     * @param list<string> $lines
+     */
+    private function lineOf(string $needle, array $lines): int
+    {
+        foreach ($lines as $index => $line) {
+            if (str_contains($line, $needle)) {
+                return $index + 1;
+            }
+        }
+
+        return 1;
+    }
+
+    /**
+     * The 1-based line of the top-level key for the named job, or 1.
+     *
+     * @param list<string> $lines
+     */
+    private function jobLine(string $jobName, array $lines): int
+    {
+        $pattern = '/^["\']?' . preg_quote($jobName, '/') . '["\']?\s*:/';
+        foreach ($lines as $index => $line) {
+            if (preg_match($pattern, $line) === 1) {
+                return $index + 1;
+            }
+        }
+
+        return 1;
+    }
+
+    /**
+     * The 1-based line of the first line at or after $start that matches
+     * $pattern, or $start when none does. The proctor reads on down the
+     * page until it finds the note, and points at the heading if it never
+     * turns up.
+     *
+     * @param list<string> $lines
+     */
+    private function lineAfter(int $start, string $pattern, array $lines): int
+    {
+        $count = count($lines);
+        for ($index = $start - 1; $index < $count; $index++) {
+            if ($index >= 0 && preg_match($pattern, $lines[$index]) === 1) {
+                return $index + 1;
+            }
+        }
+
+        return $start;
+    }
+}
