@@ -115,6 +115,7 @@ final class ProctorModule implements Module
         'wayneui-outdated' => 'check-wayneui',
         'app-debug' => 'check-app',
         'display-errors' => 'check-app',
+        'directory-listing' => 'check-app',
         'vite-secrets' => 'check-app',
         'mysql-minimum' => 'check-app',
         'entrypoint-migrate' => 'check-app',

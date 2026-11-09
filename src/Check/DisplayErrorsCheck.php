@@ -203,12 +203,35 @@ final class DisplayErrorsCheck implements CheckInterface
     }
 
     /**
-     * The value of an ini line, trimmed and without one pair of surrounding
-     * quotes, lower-cased so the comparison is case-insensitive.
+     * The value of an ini line: the part before the first ; that is outside
+     * quotes (PHP reads the rest as an inline comment), trimmed and without
+     * one pair of surrounding quotes, lower-cased so the comparison is
+     * case-insensitive.
      */
     private function iniValue(string $raw): string
     {
-        $value = trim($raw);
+        $value = '';
+        $quote = null;
+        foreach (str_split($raw) as $char) {
+            if ($quote !== null) {
+                if ($char === $quote) {
+                    $quote = null;
+                }
+                $value .= $char;
+                continue;
+            }
+            if ($char === '"' || $char === "'") {
+                $quote = $char;
+                $value .= $char;
+                continue;
+            }
+            if ($char === ';') {
+                break;
+            }
+            $value .= $char;
+        }
+
+        $value = trim($value);
         if (strlen($value) >= 2
             && (($value[0] === '"' && $value[strlen($value) - 1] === '"')
                 || ($value[0] === "'" && $value[strlen($value) - 1] === "'"))

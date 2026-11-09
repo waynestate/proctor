@@ -57,6 +57,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/app-key',
         'proctor/app-debug',
         'proctor/display-errors',
+        'proctor/directory-listing',
         'proctor/vite-secrets',
         'proctor/served-folder',
         'proctor/world-writable',
@@ -76,6 +77,8 @@ final class RuleIdContractTest extends ProctorTestCase
         // display-errors
         'proctor/display-errors/on',
         'proctor/display-errors/log-off',
+        // directory-listing
+        'proctor/directory-listing/indexes',
         // vite-secrets
         'proctor/vite-secrets/env-file',
         'proctor/vite-secrets/source',

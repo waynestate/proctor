@@ -115,6 +115,34 @@ final class DisplayErrorsCheckTest extends TestCase
         self::assertSame('proctor/display-errors', $findings[0]->ruleId);
     }
 
+    public function testAnInlineCommentAfterTheValueIsDropped(): void
+    {
+        $this->writeFile('php.ini', "display_errors = On ; temporary\n");
+
+        $findings = $this->runCheck();
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertSame('proctor/display-errors/on', $findings[0]->ruleId);
+        self::assertSame('php.ini', $findings[0]->path);
+        self::assertSame(1, $findings[0]->line);
+        self::assertSame(
+            'display_errors is On in php.ini:1; production must keep it Off and log_errors On (CREED runtime-and-headers)',
+            $findings[0]->message,
+        );
+    }
+
+    public function testASemicolonInsideQuotesIsPartOfTheValue(): void
+    {
+        $this->writeFile('php.ini', "display_errors = \"On;x\"\n");
+
+        $findings = $this->runCheck();
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+        self::assertSame('proctor/display-errors', $findings[0]->ruleId);
+    }
+
     public function testAFileUnderVendorIsNotRead(): void
     {
         $this->writeFile('vendor/pkg/php.ini', "display_errors = On\n");

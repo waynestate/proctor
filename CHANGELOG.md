@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added: `directory-listing` warns when a committed .htaccess or server config turns on directory listing (Apache Options Indexes or All, nginx autoindex on) (CREED production).
+- Fixed: `display-errors` reads an ini value without its inline comment, so `display_errors = On ; note` warns.
 - Added: `display-errors` warns when a committed php.ini, .user.ini or .htaccess turns display_errors on or log_errors off (CREED runtime-and-headers).
 - Docs: the CI examples on the front page, in the README, on the GitHub code scanning page and in the agent prompts no longer pass `--policy`, which PROCTOR refuses in CI (exit 2): they leave Preflight's proctor command at its default, install from the lock instead of `composer require`, pin every GitHub action to a commit SHA, upload SARIF under `if: always()`, and pin Preflight's proctor component to 0.4.0 (was 0.3.1). The front page counts thirty-six checks (was thirty-two) and gains "the whole paper", every check in run order with the eight gate checks and the five new since 0.9.0 marked, each linked to its docs section; its report samples are fresh runs. The docs Rule ids table gains the twelve rows it had fallen behind the README, and `RuleIdContractTest` now holds it to the README's rows. The checks overview adds `mysql-minimum` and `entrypoint-migrate`, says `composer-audit` fails (not informs) when it cannot audit, and names the gate's eight. The PHAR pages say each tag carries it since 0.6.0, and the docs overview no longer says "Version: Unreleased".
 - Changed: the weekly creed-copy-refresh job runs composer ci with the CREED clone it already made, so the handbook check-id test runs every week instead of skipping.

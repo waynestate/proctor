@@ -80,6 +80,7 @@ final class CheckSet
             new AppKeyCheck(),
             new AppDebugCheck(),
             new DisplayErrorsCheck(),
+            new DirectoryListingCheck(),
             new ViteSecretsCheck(),
             new ServedFolderCheck(),
             new WorldWritableCheck(),
