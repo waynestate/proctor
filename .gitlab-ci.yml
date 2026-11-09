@@ -20,12 +20,10 @@ include:
     inputs:
       image: "composer:2@sha256:b6dcd72ca98fa19d0e5b8476de179859704891fad06dd9e0b96833d4c430a5fc"
   # The front page deploy layer (ADR-0017): PROCTOR checks deploy/ against CREED's policy.
-  # allow_failure: current findings: unbounded dev-main constraints; CI files missing in deploy/.
   - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.4.0
     inputs:
       working_dir: deploy
       proctor_command: vendor/bin/proctor check --policy=vendor/waynestate/creed/policy/policy.json --format=codequality
-      allow_failure: true
       # Full history (0.4.0's default, spelled out): override-approver reads git blame on every override line,
       # and a shallow clone would credit old lines to its oldest commit and report could-not-run.
       git_depth: "0"

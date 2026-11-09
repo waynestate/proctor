@@ -6,6 +6,7 @@
 - Changed: the deploy kit is Squire 0.10.2 (was 0.10.0): the fallback base image names every image in full and copies Composer 2.11.1 (by digest) from a `COMPOSER_IMAGE` build argument, `php.ini` sets `session.cookie_samesite = Lax`, and the portable image drops `node_modules/` after the build unless `SQUIRE_KEEP_NODE_MODULES=1`. BEST_PRACTICES 4.11 records that PROCTOR's CI, phar scripts and deploy layer are on 2.11.1.
 - Changed: the deploy layer requires HELMET ^1.3 (lock 1.3.0, was 1.0.1) and CREED ^0.1.8 (lock 0.1.8, was 0.1.7); the dev dependency Pinstripe is ^0.1.4 (lock 0.1.4, was 0.1.0, with phpstan-strict-rules 2.1.1).
 - Changed: the deploy layer requires PROCTOR ^0.11.1 (lock 0.11.1, was ^0.8 at 0.8.0), so the pipeline's `proctor` job on `deploy/` grades it with the current release.
+- Changed: the `proctor` job on `deploy/` blocks the pipeline: `allow_failure` and its stale comment are gone, because `proctor check` with CREED's policy passes there on PROCTOR 0.11.1 (warnings only). BEST_PRACTICES 2.6, MAINTAINING and the CI checks guide say so.
 - Docs: MAINTAINING names the maintainer as a role, the stack maintainer, reached through an issue on git.wayne.edu, and BEST_PRACTICES credits decisions to that role rather than a person.
 - Docs: internal decision numbers come out of the current README, docs pages, BEST_PRACTICES, CI comments, code comments and tests; the sentences around them already say what was decided. Released CHANGELOG entries keep theirs.
 

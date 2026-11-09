@@ -176,7 +176,7 @@ Why: a tool that cannot meet its own rule has no standing to enforce it.
 Sources: [PHP supported versions](https://www.php.net/supported-versions.php); the stack's version-policy decision.
 
 **How the stack holds it: Partially.** PROCTOR's own pipeline includes the Preflight `proctor` component; it checks
-`deploy/` against CREED's policy, currently with `allow_failure` while findings remain. What remains: PROCTOR requires
+`deploy/` against CREED's policy and blocks the pipeline when that check fails. What remains: PROCTOR requires
 `php: ^8.3`, and its pipeline tests 8.3, 8.4 and 8.5. PHP 8.3 is security-only and reaches end of life on 2027-12-31,
 so the floor must move to `^8.4` before then or the floor check fails on PROCTOR itself.
 
@@ -910,7 +910,7 @@ A practice that is now `Checked` or `Enforced` leaves the list; CHANGELOG.md rec
 
 1. 1.2: Partly done: in CI `--policy` and `--today` are refused unless `PROCTOR_ALLOW_OVERRIDES` is exactly `1` (0.6.0); Preflight's `proctor_command` input is still free text, an app's `.gitlab-ci.yml` can override included job keys; the `ci-pipelines` check warns (`proctor/ci-pipelines/allow-overrides`) when an app's pipeline sets `PROCTOR_ALLOW_OVERRIDES` to `1` (see 1.2).
 2. 8.1: Partly done: the PHAR build exists and the Preflight job installs the app with `--no-plugins --no-scripts`; the PHAR is built and attached to each GitLab Release by the `release-phar` job, the job still installs the app's dependencies, and the README still says `composer require` (see 8.1).
-3. 2.6: Partly done: PROCTOR's own pipeline runs the Preflight `proctor` component on `deploy/`, with `allow_failure` while findings remain; raise PROCTOR's floor from `^8.3` to `^8.4` before PHP 8.3 reaches end of life on 2027-12-31 (see 2.6).
+3. 2.6: Partly done: PROCTOR's own pipeline runs the Preflight `proctor` component on `deploy/`, and the job blocks the pipeline; raise PROCTOR's floor from `^8.3` to `^8.4` before PHP 8.3 reaches end of life on 2027-12-31 (see 2.6).
 4. 5.7: Partly done: the `override-approver` check flags an approver who wrote the entry (git blame; rule ids `proctor/override-approver/self-approved`, `proctor/override-approver/could-not-run`), warn or fail per CREED `rules.override_self_approval`; that the approver really approved still rests on the merge request, since GitLab Community Edition has no Code Owner approval (see 5.7).
 5. 4.7: Documented: Preflight's README carries the weekly "Run it on a schedule" steps, but nothing fails when an app has no schedule (see 4.7).
 6. 8.5: Partly done: releases are tagged (0.1.0 through 0.11.1); sign them and publish provenance that says where each was built (see 8.5).
@@ -1076,8 +1076,8 @@ fails, on the other three: no `component:` include whose path contains `/preflig
 `package-publish`) included with the `allow_failure` input set to `true`, or its job re-declared with `allow_failure`
 set to anything but `false` (`proctor/preflight-gates/allow-failure`); and no Preflight `proctor` include and no job
 whose `script` runs `proctor check` or `proctor gate` (`proctor/preflight-gates/no-proctor-job`). A warning, not a
-fail: PROCTOR's own pipeline and Sourdough's keep `allow_failure` on the deploy layer's proctor job while its findings
-are fixed. `PreflightGatesCheckTest` pins each rule, its line and its message. What remains: the check sees only the
+fail: Sourdough's pipeline keeps `allow_failure` on its deploy layer's proctor job while its findings are fixed
+(PROCTOR's own dropped it once its deploy layer passed). `PreflightGatesCheckTest` pins each rule, its line and its message. What remains: the check sees only the
 committed file, so a fleet view across every app is ROLLCALL's to build.
 
 ## Framework lines

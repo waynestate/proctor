@@ -1760,7 +1760,7 @@ With nothing to flag it passes: `Preflight includes are pinned`, or `no Prefligh
 - A gate that can fail while the pipeline passes warns (`proctor/preflight-gates/allow-failure`), once per place it is set: a gate component included with the `allow_failure` input set to `true`, or a job the app re-declares under the gate's job name (its `job_name` input, or the component name) with `allow_failure` set to anything but `false`, the exit-codes form included. Every Preflight component is a gate except `renovate` (a bot) and `package-publish` (a release step); php-test's advisory job may fail by design and is not one.
 - No job that runs PROCTOR warns (`proctor/preflight-gates/no-proctor-job`): the Preflight `proctor` component is not included and no job's `script` runs `proctor check` or `proctor gate` (`vendor/bin/proctor`, `proctor.phar` or a path to either).
 
-No finding when there is no `.gitlab-ci.yml` or it does not parse; `ci-pipelines` reports both. With nothing to flag it passes: `Preflight gates are included, none may fail softly, and PROCTOR runs`. It reports, and is not in the deploy gate. A warning on purpose: a repository fixing its first findings may keep `allow_failure` for a while, with a comment saying why, the way PROCTOR's own pipeline does on its deploy layer.
+No finding when there is no `.gitlab-ci.yml` or it does not parse; `ci-pipelines` reports both. With nothing to flag it passes: `Preflight gates are included, none may fail softly, and PROCTOR runs`. It reports, and is not in the deploy gate. A warning on purpose: a repository fixing its first findings may keep `allow_failure` for a while, with a comment saying why, the way Sourdough's pipeline does on its deploy layer.
 
 | Check | Rule id |
 | --- | --- |
