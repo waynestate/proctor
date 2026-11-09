@@ -1,6 +1,6 @@
 ---
 title: "App checks | PROCTOR docs"
-description: "The checks that read an app's own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, debug files in public/ and chmod 777."
+description: "The checks that read an app's own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, secret-looking VITE_ variables, debug files in public/ and chmod 777."
 url: https://proctor.apps.wayne.edu/docs/guides/check-app.html
 llms: https://proctor.apps.wayne.edu/llms.txt
 generator: Squire agent-ready
@@ -8,9 +8,9 @@ generator: Squire agent-ready
 
 # App checks[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-checks)
 
-This page covers the twelve PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
+This page covers the thirteen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, secret-looking `VITE_` variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
 
-`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other nine warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.
+`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other ten warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.
 
 ## node-eol[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#node-eol)
 
@@ -151,6 +151,27 @@ Fix by setting `APP_DEBUG=false` in the file the report names.
 | --- | --- |
 | `app-debug` | `proctor/app-debug` |
 | `app-debug` | `proctor/app-debug/enabled` |
+
+## vite-secrets[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#vite-secrets)
+
+`vite-secrets` warns, never fails, when a secret-looking variable carries Vite's `VITE_` prefix. Vite exposes every `VITE_` variable to the client code it bundles, so the value ships to every visitor's browser, and a name that says it holds a secret is a leak waiting for a value. It reports, and is not in the deploy gate.
+
+Two places are read:
+
+- Env files (`proctor/vite-secrets/env-file`): a line that declares a secret-looking `VITE_` name, `export` allowed. Example files (`.env.example`, `.env.squire.example`, and any `.env.*` whose name has an `example`, `dist`, `sample` or `template` part) are meant to be committed and are always read, at any depth. Every other `.env*` file is read only when PROCTOR knows it is committed: git lists it, or `CI`, `GITLAB_CI` or `GITHUB_ACTIONS` is set. The `.env` on a developer's laptop is never opened.
+- Front-end code (`proctor/vite-secrets/source`): a `.js`, `.mjs`, `.cjs`, `.jsx`, `.ts`, `.mts`, `.cts`, `.tsx`, `.vue` or `.svelte` file under the top-level `resources/js/` or `src/` that reads one as `import.meta.env.VITE_...` or `import.meta.env['VITE_...']`. Lines that start with `//`, `/*` or `*` are comments and are skipped.
+
+A name is secret-looking when a word of it after `VITE_` (words split on `_`, any case) is `SECRET`, `TOKEN`, `PASSWORD`, `PASSWD`, `PASSPHRASE`, `CREDENTIAL` (or a plural) or `APIKEY`, or starts with `PRIVATE`; when `KEY` follows `API`, `ACCESS`, `SIGNING` or `ENCRYPTION`; or when the name is `VITE_APP_KEY`, Laravel's own key. Pusher and Reverb app keys (`VITE_PUSHER_APP_KEY`, `VITE_REVERB_APP_KEY`) are public by design and pass; their `..._APP_SECRET` does not.
+
+Only the name is matched: the value after `=` is never parsed or printed, and the process environment is never read. Skipped at any depth: `vendor/`, `node_modules/` and `.git/`. One warning per line (one per name when a line reads two). With nothing to flag, one pass when the app uses Vite (a root `vite.config.*`, or `vite` in package.json `dependencies` or `devDependencies`): `no secret-looking VITE_ variable is committed or read by the front-end code`; otherwise no finding.
+
+Fix by keeping the secret on the PHP side under a name without the `VITE_` prefix, and having the front end call a route that uses it. A value that is public by design (a maps browser key restricted by referrer) can keep its prefix under a name that does not say secret.
+
+| Check | Rule id |
+| --- | --- |
+| `vite-secrets` | `proctor/vite-secrets` |
+| `vite-secrets` | `proctor/vite-secrets/env-file` |
+| `vite-secrets` | `proctor/vite-secrets/source` |
 
 ## entrypoint-migrate[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#entrypoint-migrate)
 
