@@ -12,6 +12,7 @@ use Waynestate\Proctor\Check\CheckSet;
 use Waynestate\Proctor\Check\ComposerVersionCheck;
 use Waynestate\Proctor\Check\Finding;
 use Waynestate\Proctor\Console\GateCommand;
+use Waynestate\Proctor\Console\RecordFile;
 use Waynestate\Proctor\Console\RunOptions;
 use Waynestate\Proctor\Override\OverrideFile;
 use Waynestate\Proctor\Report\CodeQualityWriter;
@@ -79,6 +80,7 @@ $application->addCommand(new class () extends Command {
             ->setDescription('Measure a PHP app against the version policy.')
             ->addOption('path', null, InputOption::VALUE_REQUIRED, 'Path to the application to check.', '.')
             ->addOption('format', null, InputOption::VALUE_REQUIRED, 'Output format (text, json, codequality, sarif).', 'text')
+            ->addOption('record', null, InputOption::VALUE_REQUIRED, 'Also write the JSON report (what --format=json prints) to this file (its folder is created), whatever --format says. A CI job keeps it as an artifact.')
             ->addOption('policy', null, InputOption::VALUE_REQUIRED, "Path to the CREED-format policy file. Without it, PROCTOR checks the PROCTOR_POLICY environment variable, then the app's vendor/waynestate/creed/policy/policy.json, then its own bundled copy. In CI this option is refused unless PROCTOR_ALLOW_OVERRIDES=1.")
             ->addOption('today', null, InputOption::VALUE_REQUIRED, "Override today's date (YYYY-MM-DD). In CI this option is refused unless PROCTOR_ALLOW_OVERRIDES=1.")
             ->addOption('php-runtime', null, InputOption::VALUE_REQUIRED, 'The PHP version that will serve the app (X.Y.Z), for the unpatched check.')
@@ -89,12 +91,16 @@ $application->addCommand(new class () extends Command {
     {
         $errorOutput = $output instanceof ConsoleOutput ? $output->getErrorOutput() : $output;
 
+        // --record: the JSON report also goes to a file, whatever --format
+        // prints, so one run feeds the merge request and Rollcall alike.
+        $record = $input->getOption('record');
+        $record = null === $record || '' === $record ? null : (string) $record;
+
         $format = (string) $input->getOption('format');
         if (!in_array($format, ['text', 'json', 'codequality', 'sarif'], true)) {
-            $errorOutput->writeln(sprintf(
-                'Invalid format "%s". Allowed values: text, json, codequality, sarif.',
-                $format
-            ));
+            $message = sprintf('Invalid format "%s". Allowed values: text, json, codequality, sarif.', $format);
+            $errorOutput->writeln($message);
+            $this->recordToolError($record, $message, (string) $input->getOption('path'), $errorOutput);
             return 2;
         }
 
@@ -104,6 +110,7 @@ $application->addCommand(new class () extends Command {
             $options = RunOptions::fromInput($input, $errorOutput);
         } catch (ToolError $e) {
             $errorOutput->writeln($e->getMessage(), OutputInterface::OUTPUT_RAW);
+            $this->recordToolError($record, $e->getMessage(), (string) $input->getOption('path'), $errorOutput);
             $output->writeln(
                 $this->toolErrorReport($format, $e->getMessage(), (string) $input->getOption('path')),
                 OutputInterface::OUTPUT_RAW
@@ -133,6 +140,7 @@ $application->addCommand(new class () extends Command {
             $findings = $runner->run();
         } catch (ToolError $e) {
             $errorOutput->writeln($e->getMessage(), OutputInterface::OUTPUT_RAW);
+            $this->recordToolError($record, $e->getMessage(), $appPath, $errorOutput);
             $output->writeln(
                 $this->toolErrorReport($format, $e->getMessage(), $appPath),
                 OutputInterface::OUTPUT_RAW
@@ -157,18 +165,52 @@ $application->addCommand(new class () extends Command {
             ['composer' => $composerVersionCheck->composerVersion]
         );
 
+        // The record is written before stdout, so a run that could not keep
+        // its record never prints a passing report next to exit 2.
         try {
-            $output->writeln($this->writerFor($format)->write($report), OutputInterface::OUTPUT_RAW);
+            $rendered = $this->writerFor($format)->write($report);
+            $json = null === $record ? null : ('json' === $format ? $rendered : (new JsonWriter())->write($report));
         } catch (ToolError $e) {
             $errorOutput->writeln($e->getMessage(), OutputInterface::OUTPUT_RAW);
+            $this->recordToolError($record, $e->getMessage(), $report->path, $errorOutput);
             $output->writeln(
                 $this->toolErrorReport($format, $e->getMessage(), $report->path),
                 OutputInterface::OUTPUT_RAW
             );
             return 2;
         }
+        if (null !== $record && null !== $json) {
+            try {
+                RecordFile::write($record, $json);
+            } catch (ToolError $e) {
+                $errorOutput->writeln($e->getMessage(), OutputInterface::OUTPUT_RAW);
+                $output->writeln(
+                    $this->toolErrorReport($format, $e->getMessage(), $report->path),
+                    OutputInterface::OUTPUT_RAW
+                );
+                return 2;
+            }
+        }
+        $output->writeln($rendered, OutputInterface::OUTPUT_RAW);
 
         return $report->exitCode;
+    }
+
+    /**
+     * On a tool error, --record still gets a document: the JSON tool-error
+     * report, so a CI artifact says why the run stopped. A record that
+     * cannot be written only adds its own line to stderr; the exit stays 2.
+     */
+    private function recordToolError(?string $record, string $message, string $path, OutputInterface $errorOutput): void
+    {
+        if (null === $record) {
+            return;
+        }
+        try {
+            RecordFile::write($record, (new JsonWriter())->writeToolError($message, $path));
+        } catch (ToolError $e) {
+            $errorOutput->writeln($e->getMessage(), OutputInterface::OUTPUT_RAW);
+        }
     }
 
     /**

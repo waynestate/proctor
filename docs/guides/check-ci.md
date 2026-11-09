@@ -18,6 +18,8 @@ include:
 
 The default command is `vendor/bin/proctor check --format=codequality`, so the findings show on the merge request as Code Quality. Do not add `--policy` or `--today` to `proctor_command`: in CI PROCTOR refuses both (exit 2) unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`, and without them it reads CREED's policy from the app's `vendor/waynestate/creed`. Preflight 0.4.0 clones the full history for this job (`git_depth: "0"`), so `override-approver` can read git blame. Strongly recommended: a git.wayne.edu instance runner. Preflight's own page lists every input: [preflight.apps.wayne.edu](https://preflight.apps.wayne.edu/).
 
+To keep PROCTOR's full JSON report from the same run, add `--record`: `vendor/bin/proctor check --format=codequality --record="$CI_PROJECT_DIR/proctor.json"` prints Code Quality for the merge request and writes the JSON report (byte for byte what `--format=json` prints) to `proctor.json`, without running the checks twice. Rollcall, the fleet census, reads each app's latest `proctor.json` from its `proctor` job's artifacts, so the job must keep the file as an artifact under `when: always` (a failing check still has a report worth reading). The exit code is the check's own; a record PROCTOR cannot write is exit 2.
+
 ## ci-pipelines
 
 `ci-pipelines` enforces the CI contract. For a stack package (a composer.json `name` starting with `waynestate/`), both `.gitlab-ci.yml` and `.github/workflows/ci.yml` must exist and run `composer ci`; a missing or incomplete file is a failure. For any other project, a missing or incomplete `.gitlab-ci.yml` is a warning and `.github/workflows/ci.yml` is optional.

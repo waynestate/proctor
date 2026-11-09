@@ -70,11 +70,12 @@ printing PROCTOR's version.
 ## Usage
 
 ```
-vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--policy=<file>] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z] [--timeout=300]
+vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--record=<file>] [--policy=<file>] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z] [--timeout=300]
 ```
 
 - `--path`: path to the application to check (default `.`).
 - `--format`: output format: `text` (default), `json`, `codequality`, or `sarif`.
+- `--record`: also write the JSON report (exactly what `--format=json` prints) to this file, whatever `--format` says; its folder is created. A CI job keeps it as an artifact, so one run serves the merge request and Rollcall. A file it cannot write is a tool error (exit 2).
 - `--policy`: path to the CREED-format policy file. Optional: without it, PROCTOR resolves the policy from the `PROCTOR_POLICY` environment variable, then the app's `vendor/waynestate/creed/policy/policy.json`, then the copy bundled with PROCTOR (see [Policy](#policy)). In CI this option is refused unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`.
 - `--today`: override today's date (YYYY-MM-DD) so runs are deterministic. In CI this option is refused unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`.
 - `--php-runtime`: the PHP version that will serve the app (X.Y.Z), used by the `unpatched` check. CI should pass the deploy image's PHP, not the runner's.

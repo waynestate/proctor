@@ -89,6 +89,19 @@ abstract class ProctorTestCase extends TestCase
     }
 
     /**
+     * Runs bin/proctor check with the given arguments. Like runGate(), it
+     * adds nothing: pass --path, --policy and --today yourself.
+     *
+     * @param list<string> $args the arguments after `check`
+     *
+     * @return array{exit: int, stdout: string, stderr: string}
+     */
+    protected function runCheck(array $args): array
+    {
+        return $this->runCommand([PHP_BINARY, dirname(__DIR__) . '/bin/proctor', 'check', ...$args]);
+    }
+
+    /**
      * Runs bin/proctor gate with the given arguments. Unlike runProctor(), it
      * adds nothing: pass --path, --policy and --today yourself.
      *

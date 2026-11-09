@@ -13,7 +13,7 @@ This page lists the three exit codes `proctor check` and `proctor gate` end with
 | --- | --- |
 | `0` | pass (warnings allowed) |
 | `1` | one or more failures |
-| `2` | tool error (bad options, unreadable policy, a present but malformed or unreadable composer.json, or an overrides file that is malformed, unreadable, or names a check that is not registered or the overrides check itself) |
+| `2` | tool error (bad options, unreadable policy, a present but malformed or unreadable composer.json, an overrides file that is malformed, unreadable, or names a check that is not registered or the overrides check itself, or a `--record` file it could not write) |
 
 A missing composer.json is not a tool error: the app gets a verdict, with php-floor failing.
 

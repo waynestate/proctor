@@ -205,12 +205,6 @@ final class GateCommand extends Command
      */
     private function writeRecord(string $file, string $json): void
     {
-        $dir = dirname($file);
-        if (!is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir)) {
-            throw new ToolError(sprintf('Could not create the folder for --record "%s".', $file));
-        }
-        if (false === @file_put_contents($file, $json . "\n")) {
-            throw new ToolError(sprintf('Could not write --record "%s".', $file));
-        }
+        RecordFile::write($file, $json);
     }
 }
