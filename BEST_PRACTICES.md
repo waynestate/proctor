@@ -1160,6 +1160,20 @@ session driver makes a leaked key worse.
 or the run is in CI), so a developer's own `.env` never raises a flag. Rotation after a leak stays a process.
 `AppKeyCheckTest` pins every rule, the local-only skip and the CI grading.
 
+### The vite-secrets check
+Vite exposes every variable whose name starts with `VITE_` to the client code it bundles, so the value reaches every
+visitor's browser. Sourdough's practice treats the prefix as public and keeps secrets on the PHP side.
+
+**How the stack holds it: Checked.** The `vite-secrets` check warns, never fails, on a secret-looking `VITE_` name
+(a word `SECRET`, `TOKEN`, `PASSWORD`, `PASSWD`, `PASSPHRASE`, `CREDENTIAL` or `APIKEY`, a word starting with
+`PRIVATE`, `API_KEY` and its kin, or `VITE_APP_KEY`) declared in a committed env file
+(`proctor/vite-secrets/env-file`) or read through `import.meta.env` in `resources/js/` or `src/`
+(`proctor/vite-secrets/source`). Example env files are always read; any other `.env*` only when git lists it or the
+run is in CI, and only the name is matched, never the value. Pusher and Reverb app keys are public by design and pass.
+`ViteSecretsCheckTest` pins both rules, the name list, the look-alikes that pass and the local-only skip. What
+remains: a name that does not say secret (`VITE_STRIPE`) is not caught, and Vite's `envPrefix` option, which can widen
+the exposed prefix, is not read.
+
 ### The served-folder and world-writable checks
 A file in `public/` can be downloaded by anyone, and a world-writable folder can be changed by any process on the host.
 

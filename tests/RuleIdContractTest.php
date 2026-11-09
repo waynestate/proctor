@@ -56,6 +56,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/raw-identity-header',
         'proctor/app-key',
         'proctor/app-debug',
+        'proctor/vite-secrets',
         'proctor/served-folder',
         'proctor/world-writable',
         // node-eol
@@ -71,6 +72,9 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/app-key/cookie-sessions',
         // app-debug
         'proctor/app-debug/enabled',
+        // vite-secrets
+        'proctor/vite-secrets/env-file',
+        'proctor/vite-secrets/source',
         // entrypoint-migrate
         'proctor/entrypoint-migrate/runs',
         // served-folder

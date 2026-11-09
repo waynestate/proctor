@@ -79,6 +79,7 @@ final class CheckSet
             new RawIdentityHeaderCheck(),
             new AppKeyCheck(),
             new AppDebugCheck(),
+            new ViteSecretsCheck(),
             new ServedFolderCheck(),
             new WorldWritableCheck(),
             new WayneUiForkedViewsCheck(),

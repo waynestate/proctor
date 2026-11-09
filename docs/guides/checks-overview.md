@@ -9,7 +9,7 @@ This page lists every check PROCTOR runs in a single `vendor/bin/proctor check` 
 
 ![Nine real lines from PROCTOR's text report, one per check shown: FAIL php-floor, WARN unpatched, FAIL unbounded-constraints, PASS lock-committed, WARN portability, WARN mysql56, WARN ci-pipelines, PASS composer-audit, FAIL overrides. Each line is written in words; color only repeats what the word says.](../readme/report.svg)
 
-*Nine of the thirty-five checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
+*Nine of the thirty-six checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
 
 ## How a check reports
 
@@ -57,7 +57,7 @@ Details and fixes: [CI checks](check-ci.md).
 
 ## App code and files
 
-The checks that read the app's own files: the Node line it builds on, the MySQL or MariaDB image it runs, `env()` outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, files in `public/`, a container entrypoint that runs migrations and `chmod 777`. Details and fixes: [App checks](check-app.md).
+The checks that read the app's own files: the Node line it builds on, the MySQL or MariaDB image it runs, `env()` outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, secret-looking `VITE_` variables, files in `public/`, a container entrypoint that runs migrations and `chmod 777`. Details and fixes: [App checks](check-app.md).
 
 - `node-eol`: grades every Node version the repository pins (`.nvmrc`, `.node-version`, package.json `volta.node`, an official `node` image in `.gitlab-ci.yml` or a Dockerfile) with php-floor's table: active passes, security-only warns, eol fails, and past the grace window it fails as `eol_grace_expired`. `engines.node` warns at worst and an odd major always warns. Silent when the policy has no node component.
 - `mysql-eol`: grades every MySQL or MariaDB version the repository names (an official `mysql` or `mariadb` image in a root compose file, and `SQUIRE_MYSQL_IMAGE=mysql:<version>` in an env example) with php-floor's table, except an active version stays silent: security-only warns, and eol and `eol_grace_expired` warn until Citadel offers a supported MySQL (D-008). Silent when the policy has no mysql or mariadb component.
@@ -65,6 +65,7 @@ The checks that read the app's own files: the Node line it builds on, the MySQL 
 - `raw-identity-header`: warns, never fails, when app code reads an identity header directly: a string key on `$_SERVER` or `$_ENV`, the quoted argument of `getenv()` or `apache_getenv()`, a quoted first argument of the request's `header()`, `server()`, `hasHeader()`, `getHeader()` or `getHeaderLine()` methods, or a key on the `getallheaders()` result. Only SESAME's gateway driver may read those headers: it verifies the signed assertion first (CREED auth-3).
 - `app-key`: warns on a committed real env file, a real APP_KEY committed in an env file or `config/app.php` (never printed), and the cookie session driver. A real env file is graded only when git lists it or the run is in CI.
 - `app-debug`: warns, never fails, when a committed env, deploy or CI file sets `APP_DEBUG` to `true` or `1`; one warning per file, on the line of its first true value. It never reads `.env`.
+- `vite-secrets`: warns, never fails, when a committed env file declares a secret-looking `VITE_` variable (`VITE_API_KEY`, `VITE_*_SECRET`, `VITE_*_TOKEN`, `VITE_*_PASSWORD`, `VITE_*_PRIVATE*`) or front-end code under `resources/js/` or `src/` reads one through `import.meta.env`: Vite ships every `VITE_` variable to the browser. Only names are read, never values.
 - `served-folder`: warns when a committed file under `public/` is a dump, backup, editor copy, log, env file or `adminer*.php`, or calls `phpinfo()`.
 - `world-writable`: warns on `chmod 777` (and `0777`, `a+rwx`, `ugo+rwx`) in scripts, Dockerfiles, Makefiles, CI and composer or npm scripts, and on a PHP `chmod()` with `0777`.
 
