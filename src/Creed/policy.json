@@ -202,7 +202,8 @@
             "*"
         ],
         "eol_grace_days": 90,
-        "override_max_days": 90
+        "override_max_days": 90,
+        "override_self_approval": "warn"
     },
     "gate": {
         "default_stage": "block",

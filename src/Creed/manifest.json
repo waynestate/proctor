@@ -1,17 +1,17 @@
 {
     "schema_version": 1,
     "source": "creed",
-    "creed_version": "0.1.7-38-g66791ef",
+    "creed_version": "0.1.8-12-gc833826",
     "namespace": "Waynestate\\Proctor\\Creed",
     "files": {
         "Policy.php": {
-            "sha256": "3adca0ea23d568d336c6c41df4ae5c498ea2b2e60ef84ed3c536ae2b212234f3"
+            "sha256": "0c4e19f7f66444f1013bd8be9266cdfd97c4416fcdf29c58b6dc45b6df815d98"
         },
         "State.php": {
             "sha256": "40d908d348ce312584e299702cc62fb59e042b6893d9b364df2fbc6529408893"
         },
         "policy.json": {
-            "sha256": "6cb1d36abfd693926547cd7983f30a3757886fcc9a461b7145b4560766b5f627"
+            "sha256": "7cfc9b6d973b4dd6cc4ff3284c5b84ac4206b50be27be3a2f8610970a5aaa6ab"
         }
     }
 }

@@ -349,6 +349,28 @@ final class Policy
     }
 
     /**
+     * The oldest patch release the stack accepts in a version line, from the
+     * policy's minimum_patch field.
+     *
+     * The dates say a branch is supported until when; minimum_patch says
+     * which patch is the floor in it. Null when the line has no
+     * minimum_patch, or the component or version is unknown, because the
+     * field is optional and the reader does not guess.
+     */
+    public function minimumPatch(string $component, string $version): ?string
+    {
+        $versions = $this->components[$component]['versions'] ?? null;
+        if ($versions === null) {
+            return null;
+        }
+        if (!array_key_exists($version, $versions)) {
+            return null;
+        }
+        $minimum = $versions[$version]['minimum_patch'] ?? null;
+        return is_string($minimum) ? $minimum : null;
+    }
+
+    /**
      * The rules block, as an array.
      *
      * @return array<string, mixed>
@@ -399,6 +421,28 @@ final class Policy
         if (!is_int($value) || $value < 1) {
             throw new InvalidArgumentException(
                 'Policy rules carry an invalid "override_max_days" value: ' . var_export($value, true) . '; expected a positive integer.',
+            );
+        }
+        return $value;
+    }
+
+    /**
+     * What PROCTOR's override-approver check does with a self-approved
+     * override, and with one whose author it cannot read: warn or fail.
+     *
+     * From the rules block; 'warn' when the key is absent, so a policy
+     * shaped before the rule existed reports a self-approval without
+     * failing the run.
+     *
+     * @throws InvalidArgumentException when the value is neither warn nor
+     *                                  fail
+     */
+    public function overrideSelfApproval(): string
+    {
+        $value = $this->rules['override_self_approval'] ?? 'warn';
+        if ($value !== 'warn' && $value !== 'fail') {
+            throw new InvalidArgumentException(
+                'Policy rules carry an invalid "override_self_approval" value: ' . var_export($value, true) . '; expected "warn" or "fail".',
             );
         }
         return $value;
@@ -504,11 +548,12 @@ final class Policy
     }
 
     /**
-     * One version line, with exactly the five fields the policy may carry.
+     * One version line, with exactly the five fields below.
      *
      * The date and patch fields are strings or null, as in the JSON. current
-     * is true when the line is marked current, null otherwise. Null when the
-     * component or version is unknown.
+     * is true when the line is marked current, null otherwise. A line may
+     * also carry minimum_patch, which this method does not report; read it
+     * with minimumPatch(). Null when the component or version is unknown.
      *
      * @return array{active_until: ?string, security_until: ?string, latest_patch: ?string, latest_patch_checked: ?string, current: ?bool}|null
      */
