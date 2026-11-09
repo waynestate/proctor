@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c948dae326b8426ef4c082928fb7c056",
+    "content-hash": "a638d8e1ea87eeec1855d492cbb67526",
     "packages": [
         {
             "name": "composer/semver",
@@ -81,7 +81,8 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-10-29T09:13:34+00:00"
+            "time": "2026-10-29T09:13:34+00:00",
+            "published-time": "2026-10-29T09:14:11+00:00"
         },
         {
             "name": "monolog/monolog",
@@ -244,7 +245,8 @@
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
                 "source": "https://github.com/nikic/PHP-Parser/tree/v5.9.0"
             },
-            "time": "2026-09-13T18:51:52+00:00"
+            "time": "2026-09-13T18:51:52+00:00",
+            "published-time": "2026-09-13T18:53:16+00:00"
         },
         {
             "name": "opis/json-schema",
@@ -692,7 +694,8 @@
                 "issues": "https://github.com/php-fig/container/issues",
                 "source": "https://github.com/php-fig/container/tree/2.0.2"
             },
-            "time": "2021-11-05T16:47:00+00:00"
+            "time": "2021-11-05T16:47:00+00:00",
+            "published-time": "2021-11-05T16:53:27+00:00"
         },
         {
             "name": "psr/http-factory",
@@ -1066,7 +1069,8 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-11-03T21:47:07+00:00"
+            "time": "2026-11-03T21:47:07+00:00",
+            "published-time": "2026-11-04T11:27:31+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",
@@ -1304,7 +1308,8 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-04-10T16:19:22+00:00"
+            "time": "2026-04-10T16:19:22+00:00",
+            "published-time": "2026-04-26T14:44:50+00:00"
         },
         {
             "name": "symfony/polyfill-intl-grapheme",
@@ -1386,7 +1391,8 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-10-15T09:18:53+00:00"
+            "time": "2026-10-15T09:18:53+00:00",
+            "published-time": "2026-10-28T10:07:44+00:00"
         },
         {
             "name": "symfony/polyfill-intl-normalizer",
@@ -1471,7 +1477,8 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-09-23T22:02:09+00:00"
+            "time": "2026-09-23T22:02:09+00:00",
+            "published-time": "2026-09-30T10:23:47+00:00"
         },
         {
             "name": "symfony/polyfill-mbstring",
@@ -1644,7 +1651,8 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-10-20T17:38:25+00:00"
+            "time": "2026-10-20T17:38:25+00:00",
+            "published-time": "2026-11-04T11:25:33+00:00"
         },
         {
             "name": "symfony/string",
@@ -1735,7 +1743,8 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-10-23T16:51:52+00:00"
+            "time": "2026-10-23T16:51:52+00:00",
+            "published-time": "2026-10-28T18:21:18+00:00"
         },
         {
             "name": "symfony/yaml",
@@ -1811,7 +1820,8 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-11-04T08:27:22+00:00"
+            "time": "2026-11-04T08:27:22+00:00",
+            "published-time": "2026-11-04T11:28:41+00:00"
         },
         {
             "name": "waynestate/creed",
@@ -1946,16 +1956,16 @@
         },
         {
             "name": "waynestate/proctor",
-            "version": "0.8.0",
+            "version": "0.11.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/waynestate/proctor.git",
-                "reference": "29a9060e9929af73b0d23869a15fe73cbf46bf9b"
+                "reference": "6a1aa83c0ed1d68b357eab2e014005252863265d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/waynestate/proctor/zipball/29a9060e9929af73b0d23869a15fe73cbf46bf9b",
-                "reference": "29a9060e9929af73b0d23869a15fe73cbf46bf9b",
+                "url": "https://api.github.com/repos/waynestate/proctor/zipball/6a1aa83c0ed1d68b357eab2e014005252863265d",
+                "reference": "6a1aa83c0ed1d68b357eab2e014005252863265d",
                 "shasum": ""
             },
             "require": {
@@ -2006,7 +2016,8 @@
                 "issues": "https://git.wayne.edu/enterprise-apps/proctor/-/issues",
                 "source": "https://github.com/waynestate/proctor"
             },
-            "time": "2026-11-08T08:00:24+00:00"
+            "time": "2026-11-09T14:51:03+00:00",
+            "published-time": "2026-11-09T15:03:46+00:00"
         }
     ],
     "packages-dev": [],
