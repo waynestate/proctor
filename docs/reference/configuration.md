@@ -19,7 +19,7 @@ This page lists every setting PROCTOR reads: the policy file and how it is found
 
 ## The policy file
 
-`--policy` takes a CREED-format policy file: schema_version 1, component versions with released, active_until and security_until dates, and rules (audit_severity_threshold, banned_constraints, eol_grace_days, override_max_days, override_self_approval). `override_self_approval` is `warn` or `fail` (`warn` when the key is absent) and sets the status of the `override-approver` findings; any other value is a tool error (exit 2).
+`--policy` takes a CREED-format policy file: schema_version 1, component versions with released, active_until and security_until dates, and rules (abandoned_packages, audit_severity_threshold, banned_constraints, eol_grace_days, override_max_days, override_self_approval). `override_self_approval` is `warn` or `fail` (`warn` when the key is absent) and sets the status of the `override-approver` findings; any other value is a tool error (exit 2).
 
 Without `--policy`, PROCTOR resolves the policy in this order (first match wins):
 

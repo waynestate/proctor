@@ -23,7 +23,7 @@ The new check only warns, never fails, and is not in the deploy gate:
 | --- | --- | --- |
 | `gitattributes-eol` | `proctor/gitattributes-eol`, `proctor/gitattributes-eol/not-pinned`, `proctor/gitattributes-eol/crlf` | `.gitattributes` does not pin the app's shell scripts, `*.conf` files and Dockerfiles to `eol=lf`, or a Dockerfile or `.conf` under `deploy/` or `.squire/` has Windows line endings |
 
-`proctor check --record=<file>` also writes the JSON report (byte for byte what `--format=json` prints) to a file, whatever `--format` prints, so one CI run can feed both the merge request's Code Quality and Rollcall, which reads `proctor.json` from the `proctor` job's artifacts (see [CI checks](guides/check-ci.md)). The exit code is the check's own; a record PROCTOR cannot write is a tool error (exit 2). `proctor gate --record` shares the same writer.
+`proctor check --record=<file>` also writes the JSON report (byte for byte what `--format=json` prints) to a file, whatever `--format` prints, so one CI run can feed both the merge request's Code Quality and Rollcall, which reads `proctor.json` from the `proctor` job's artifacts (see [CI checks](guides/check-ci.md)). The exit code is the check's own; a record PROCTOR cannot write is a tool error (exit 2). `proctor gate --record` shares the same file writer but writes the gate's verdict (`command: gate`, `verdict`, `summary`, each finding's `gate` outcome), a different JSON from the check report; keep it for the next `--baseline`, and do not hand it to Rollcall.
 
 ### Changed
 
@@ -42,7 +42,7 @@ The new check only warns, never fails, and is not in the deploy gate:
    vendor/bin/proctor check
    ```
 
-3. Optional: when Rollcall should read your app, add `--record="$CI_PROJECT_DIR/proctor.json"` to the `proctor` job and keep the file as an artifact under `when: always`.
+3. Optional: when Rollcall should read your app, add `--record="$CI_PROJECT_DIR/proctor.json"` to the `proctor check` command of the `proctor` job and keep the file as an artifact under `when: always`. Preflight 0.4.0's component keeps only the Code Quality report, so set its `proctor_command` input and add `artifacts: paths: [proctor.json]` to a `proctor:` job of your own (see [CI checks](guides/check-ci.md)); Preflight's next release does both for you.
 
 ### How to verify
 

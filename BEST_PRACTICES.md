@@ -1,6 +1,6 @@
 # PROCTOR best practices
 
-Written against PROCTOR as of 0.8.0; later changes are in CHANGELOG.md.
+Written against PROCTOR as of 0.8.0 and checked against 0.11.0 on 2026-11-09 (the truth pass); later changes are in CHANGELOG.md.
 Items marked "(second pass)" were added or changed in the second pass; see the section of that name near the end.
 
 ## What this covers
@@ -160,7 +160,10 @@ Sources: [PHP supported versions](https://www.php.net/supported-versions.php); t
 **How the stack holds it: Partially.** `proctor gate` ships (registered in `bin/proctor`, implemented in
 `src/Console/GateCommand.php`): it runs the deploy-time checks, ratchets them against `--baseline`, and exits 0
 for go, 1 for no-go and 2 when it could not decide. Its `--php-runtime` names the PHP that will serve the app,
-which the `unpatched` check grades, but nothing in the stack's own deploy path sets it yet. The gate is
+which the `unpatched` check grades, and since Squire 0.9.0 Squire's release script passes it by default
+(`SQUIRE_PHP_RUNTIME`: `auto`, the PHP that runs the script, or `skip`, or an `X.Y.Z`). What keeps this Partially:
+the runtime is graded only for patch currency (a warning from `unpatched`), not for its support state, which
+`php-floor` judges from the declared constraint alone. The gate is
 platform-neutral: on Citadel, Squire's release script (`scripts/release.sh`) calls it on every release (a report,
 not a stop, unless `SQUIRE_PROCTOR=enforce`), and other hosts run the same gate as a CI job.
 
@@ -506,10 +509,12 @@ The claim that most compromises are found within days is mine and is not backed 
 
 **How the stack holds it: Not yet.** Composer 2.11 is stable: 2.11.0 shipped on 2026-10-29 and 2.11.1 on 2026-10-30
 (getcomposer.org download page and the composer/composer releases page, read 2026-11-08), and the 2.11.0 notes add the
-`cooldown` policy (`config.policy.cooldown.period`, default `null`, so off). The base images do not ship it yet: the
-stack repos pin `composer:2.10.3` by digest in their CI and Docker files, Preflight's `php-test` and `proctor` jobs
-install `composer_version` 2.10.3 by default, and the one 2.11 pin is the vendor build stage of Drawbridge's gateway
-image (`composer:2.11.1`). Decision (Adam, 2026-11-03): when 2.11 is in the base images, Sourdough apps set a 3-day
+`cooldown` policy (`config.policy.cooldown.period`, default `null`, so off). The move to 2.11 has started but is not done
+(read 2026-11-09): Squire's kit pins `composer:2.11.1` by digest in its base fallback image since 0.10.1, and so do
+the deploy layers already regenerated from it (HELMET, SESAME); Squire's own CI jobs use `composer:2.11.1`;
+Preflight's main branch moves the `php-test` and `proctor` default `composer_version` to 2.11.1, while its 0.4.0
+release still installs 2.10.3; and PROCTOR's own CI jobs and deploy layer (Squire 0.10.0), like most stack repos',
+still use `composer:2.10.3`. Decision (Adam, 2026-11-03): when 2.11 is in the base images, Sourdough apps set a 3-day
 cooldown and PROCTOR warns when an app has none. Nothing is built before then: no policy rule, no check, no Sourdough
 default.
 
@@ -661,7 +666,7 @@ a separate tool-error code. Composer's process exit codes are 0 OK, 1 generic er
 The three-code split here is PROCTOR's own design and is a sound one, but these two sources do not prove it.)
 
 **How the stack holds it: Enforced.** `bin/proctor` returns 2 for tool errors (unknown command included) and `Report`
-accepts only 0 or 1. `CheckCommandTest` asserts the codes on 15 fixture apps.
+accepts only 0 or 1. `CheckCommandTest` asserts the codes on 16 fixture apps.
 
 ### 6.2 Publish results in the platform's native report format
 For GitLab, emit Code Quality JSON and declare it as `artifacts:reports:codequality`. Import results directly, not
@@ -685,7 +690,7 @@ Why: a line number changes with every edit, which would make old findings look n
 
 Sources: [GitLab Code Quality: fingerprints](https://docs.gitlab.com/ci/testing/code_quality/).
 
-**How the stack holds it: Enforced.** `Fingerprint::of` hashes the check id, path and message with SHA-256.
+**How the stack holds it: Enforced.** `Fingerprint::of` hashes the rule id, path and message with SHA-256 (`src/Report/Fingerprint.php`).
 
 ### 6.4 Always write a valid report, even when the tool fails
 On exit 2 the report file should still be valid JSON (`[]` or one finding that names the error).
@@ -724,7 +729,7 @@ Sources: the stack's version-policy decision.
 
 **How the stack holds it: Enforced.** `--today` is validated as a real `YYYY-MM-DD` date, and every CLI test runs with a
 fixed date and a fixed fixture policy. Since 0.6.0, `--policy` and `--today` are refused in CI unless
-`PROCTOR_ALLOW_OVERRIDES` is exactly `1` (`src/Policy/CiGuard.php`, used by `RunOptions` and `GateCommand`). Tests:
+`PROCTOR_ALLOW_OVERRIDES` is exactly `1` (`src/Policy/CiGuard.php`, called from `RunOptions`, which `proctor check` and `proctor gate` both use). Tests:
 `tests/CiGuardTest.php` (`testTodayIsRefusedInCiWithTheExactMessage`, `testAllowOverridesExactlyOneAllowsTheOptions`).
 
 ### 6.7 Never carry meaning by color alone (second pass)
@@ -774,7 +779,7 @@ Sources: [Semgrep: diff-aware scanning and baseline commit](https://docs.semgrep
 baseline: blocked on a first deploy, held when the baseline failed the same rule id, blocked as a regression when the
 baseline passed it, waived when it only says the advisory data was unavailable, and staged (logged, deploy goes ahead)
 when the policy's gate stage for its check is `report` or `warn` today. The stage comes from the policy via
-`Policy::gateStage()` (`src/Creed/Policy.php:421`), which reads `gate.stages` and falls back to `gate.default_stage`,
+`Policy::gateStage()` (`src/Creed/Policy.php:465`), which reads `gate.stages` and falls back to `gate.default_stage`,
 then to `block`.
 
 ### 7.2 Keep gate mode small, offline and fast, and let a checker bug fail open
@@ -910,7 +915,7 @@ A practice that is now `Checked` or `Enforced` leaves the list; CHANGELOG.md rec
 5. 4.7: Documented: Preflight's README carries the weekly "Run it on a schedule" steps, but nothing fails when an app has no schedule (see 4.7).
 6. 8.5: Partly done: releases are tagged (0.1.0 through 0.11.0); sign them and publish provenance that says where each was built (see 8.5).
 7. 7.2: Partly done: `proctor gate` (0.7.0) runs only the deploy-time checks with no app boot and a 60-second audit timeout; `composer-audit` still needs the network, so an offline gate only warns that advisory data is missing (see 7.2).
-8. 2.5: Partly done: `proctor gate --php-runtime` grades the PHP that will serve the app, but Squire's release script does not pass it (`gate_args` in `scripts/release.sh`), so the deploy path never sets it (see 2.5).
+8. 2.5: Partly done: `proctor gate --php-runtime` grades the PHP that will serve the app, and Squire's release script passes it by default since Squire 0.9.0 (`SQUIRE_PHP_RUNTIME` in `scripts/release.sh`), but only `unpatched` reads it, as a patch-level warning; an end-of-life runtime under a supported constraint is not flagged (see 2.5).
 
 Added in the second pass (2026-10-27):
 
@@ -918,7 +923,7 @@ Added in the second pass (2026-10-27):
 10. 3.7: Partly done: the Preflight `proctor` component installs from the lock, and the `ci-pipelines` check warns (`proctor/ci-pipelines/composer-update`) when CI runs `composer update` or `composer require`; the finding is a warning, not a fail, and only `.gitlab-ci.yml` and `.github/workflows/ci.yml` are read (see 3.7).
 11. 4.12: Partly done: `composer-audit` (0.6.0) warns instead of failing for an advisory on a package that composer.lock lists only in packages-dev, marked ` [dev dependency]`, and a name in both lists still fails; the policy file carries no rule for it (see 4.12).
 12. 8.7: Documented: the floor is GitLab 18.7 (`spec:component`), named in the install page's requirements; patch status on 18.x is the owner's to check (see 8.7).
-13. 4.11: Not yet: Composer 2.11 is stable (2.11.1, 2026-10-30) and carries the `cooldown` policy, but the stack's images and Preflight's jobs still use 2.10.3; once 2.11 is in the base images, Sourdough apps set a 3-day cooldown and PROCTOR warns when an app has none (Adam, 2026-11-03) (see 4.11).
+13. 4.11: Not yet: Composer 2.11 is stable (2.11.1, 2026-10-30) and carries the `cooldown` policy, and the move has started (Squire's kit 0.10.1 and Preflight's main branch use 2.11.1), but released Preflight (0.4.0) and most stack CI jobs still use 2.10.3; once 2.11 is in the base images, Sourdough apps set a 3-day cooldown and PROCTOR warns when an app has none (Adam, 2026-11-03) (see 4.11).
 
 ## Second pass (2026-10-27)
 
@@ -1093,11 +1098,11 @@ composer.lock. `LaravelEolCheckTest` pins the fixture outcomes for every state a
 CREED's handbook asks an app to match its framework release to a PHP version it supports. The policy records each
 Laravel major's PHP range; what was missing was a check that compares the range with the app's declared floor.
 
-**How the stack holds it: Checked.** The `laravel-php` check fails when composer.json's `require.php` allows a PHP
-version outside the policy range for the locked Laravel major, and passes when the constraint fits (rule id
-`proctor/laravel-php`). No finding without `laravel/framework` in composer.lock, without a recorded range, or without a
+**How the stack holds it: Checked.** The `laravel-php` check fails when composer.json's `require.php` allows no PHP
+version inside the policy range for the locked Laravel major, or when its lowest allowed version is below the range's
+floor, and passes otherwise; the upper end is open by design, so `^8.2` passes (rule id `proctor/laravel-php`). No finding without `laravel/framework` in composer.lock, without a recorded range, or without a
 `require.php`: php-floor owns the missing-constraint verdict. `LaravelPhpCheckTest` pins the fixture outcomes for the
-pass, both out-of-range directions, the override and the skips.
+passes (the skeleton, a caret above the floor, a tilde), both fail rules (below the floor, no overlap), the override and the skips.
 
 ### The node-eol check
 CREED's handbook asks an app to build and run on a Node line that still gets security fixes, and the policy records

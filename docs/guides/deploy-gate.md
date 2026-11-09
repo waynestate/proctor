@@ -15,8 +15,8 @@ It follows CREED's deploy-gate chapter (the stack's deploy-gate decision): the r
 vendor/bin/proctor gate [--path=.] [--format=text|json] [--baseline=<report or directory>] [--record=<file>] [--policy=<file>] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z] [--timeout=60]
 ```
 
-- `--baseline`: what the running deployment already fails. Either a PROCTOR JSON report (the file `--record` wrote last time, or `proctor check --format=json` output) or the running deployment's source directory, which the gate checks with the same rules. Leave it out for a first deploy.
-- `--record`: also write the JSON verdict to this file, whatever `--format` says; its folder is created. Next time, pass the same file as `--baseline`.
+- `--baseline`: what the running deployment already fails. Either a PROCTOR JSON report (the verdict `gate --record` wrote last time, or a `proctor check` report from `--format=json` or `check --record`) or the running deployment's source directory, which the gate checks with the same rules. Leave it out for a first deploy.
+- `--record`: also write the JSON verdict to this file, whatever `--format` says; its folder is created. Next time, pass the same file as `--baseline`. This is the gate's verdict (shape below), not the check report `proctor check --record` writes; Rollcall reads the check report, so do not point it at this file.
 - `--format`: `text` (default), a short verdict for the deploy log, or `json`.
 - `--policy`, `--today`, `--php-runtime`: as for `proctor check`, including the CI guard on `--policy` and `--today`.
 - `--timeout`: seconds for `composer audit` before it is killed; 60 by default here, because a deploy should not wait five minutes.

@@ -93,7 +93,7 @@ vendor/bin/proctor gate [--path=.] [--format=text|json] [--baseline=<report or d
 - `php-floor`: fails when the lowest PHP version allowed by `require.php` is past security support plus the grace window, when composer.json has no usable php constraint, or when there is no composer.json at all.
 - `unpatched`: warns when a locked component is behind the policy's `latest_patch` for its version line, and passes when it is current. Reads laravel from composer.lock (`laravel/framework`), vue and inertia from package-lock.json (`vue`, `@inertiajs/vue3`), and the PHP runtime from `--php-runtime`. No finding when the component, its version line, or `latest_patch` is absent from the policy.
 - `laravel-eol`: classifies the locked `laravel/framework` version against the policy as of `--today`: active passes, naming the line's end date when it has one; security-only warns, naming the end date and the days left (`ends today`, `1 day left`, or `N days left`); eol fails, and past the security end date plus the policy's grace window it fails as `eol_grace_expired`, each naming the security end date when the line has one. It reads the version from composer.lock (`packages`, then `packages-dev`); a leading `v` is stripped, and a version that is not plain numeric (a dev alias) earns no finding. No finding when the lock has no `laravel/framework` or the version resolves to no policy line. An active override downgrades the eol fail to a warning, never the grace-expired one. The proctor keeps the hall on a textbook the publisher still corrects.
-- `laravel-php`: fails when composer.json's `require.php` allows a PHP version outside the range the policy records for the locked Laravel major, and passes when the constraint fits the range; the message names the app's constraint, the policy range and the Laravel major. The range's max counts as supported, so a max of `8.5` admits everything below `8.6`. No finding when the lock has no `laravel/framework`, the line has no recorded range, or composer.json declares no `require.php` (php-floor owns the missing-constraint verdict); a present `require.php` that is not a valid version constraint is a tool error. The proctor checks the desk before the student sits, because a book that will not open on the declared desk is a fail.
+- `laravel-php`: fails when composer.json's `require.php` allows no PHP version inside the range the policy records for the locked Laravel major, or when its lowest allowed version is below the range's floor, and passes otherwise: the upper end is open by design, so `^8.2` passes a Laravel whose range is 8.2 to 8.5; the message names the app's constraint, the policy range and the Laravel major. The range's max counts as supported, so a max of `8.5` admits everything below `8.6`. No finding when the lock has no `laravel/framework`, the line has no recorded range, or composer.json declares no `require.php` (php-floor owns the missing-constraint verdict); a present `require.php` that is not a valid version constraint is a tool error. The proctor checks the desk before the student sits, because a book that will not open on the declared desk is a fail.
 - `node-eol`: grades every Node version the repository pins against the policy as of `--today`: `.nvmrc`, `.node-version`, package.json `volta.node`, an official `node` image in `.gitlab-ci.yml` (`image:` or `name:`, a registry host or `$CI_DEPENDENCY_PROXY_...` prefix allowed), and an official `node` image on a Dockerfile `FROM` line. Each one gets the CREED state table: active passes, security-only warns with the days left, eol fails, and past the grace window it fails as `eol_grace_expired`, which no override softens. package.json `engines.node` is a declaration, not what runs, so its lowest allowed major is graded the same way but warns at worst (`proctor/node-eol/engines`). An odd major is never an LTS line and never a target, so it warns wherever it is named (`proctor/node-eol/odd-major`). Silent when the policy has no node component or the repository names no Node version, and for aliases (`lts/*`, `node`), tags without a version (`lts-alpine`) and another org's image named node. The proctor checks which calculator is on the desk, not only the one the syllabus allows.
 - `mysql-eol`: grades every MySQL or MariaDB version the repository names against the policy as of `--today`: an official `mysql` or `mariadb` image on an `image:` line in a root `docker-compose*.yml` or `compose*.yml` (a registry host or a `$VAR` prefix allowed, a `@sha256:` digest after the tag tolerated), and `SQUIRE_MYSQL_IMAGE=mysql:` in `.env.squire.example` or `.env.example`. Each one gets the CREED state table: active stays silent, security-only warns with the days left, and eol and `eol_grace_expired` warn, never fail, until Citadel's shared database server offers a supported MySQL (D-008). Silent when the policy has no mysql or mariadb component, or the repository names no database version. The proctor checks which textbook the desk is set up for, not only the one the syllabus allows.
 - `mysql-minimum`: warns, never fails, when the app's MySQL or MariaDB image is below the minimum the policy records for its Laravel line (`proctor/mysql-minimum/below`).
@@ -136,7 +136,7 @@ vendor/bin/proctor gate [--path=.] [--format=text|json] [--baseline=<report or d
 
 - `0`: pass (warnings allowed)
 - `1`: one or more failures
-- `2`: tool error (bad options, unreadable policy, a present but malformed or unreadable composer.json, or an overrides file that is malformed, unreadable, or names a check that is not registered, the overrides check or the override-approver check). A missing composer.json is not a tool error: the app gets a verdict, with php-floor failing.
+- `2`: tool error (bad options, unreadable policy, a present but malformed or unreadable composer.json, or an overrides file that is malformed, unreadable, or names a check that is not registered, the overrides check or the override-approver check, or a `--record` file it could not write). A missing composer.json is not a tool error: the app gets a verdict, with php-floor failing.
 
 On a tool error every format still writes its report to stdout, next to the message on stderr: `text` prints the message as a FAIL line, `json` writes the report shape with `result` set to `error`, an `error` field carrying the message and empty findings, `codequality` lists the error as one blocker issue, and `sarif` writes a log whose single run reports an unsuccessful invocation.
 
@@ -175,8 +175,8 @@ flowchart LR
 
 Overrides are applied first, as in `proctor check`. Each remaining failure is then blocked (no baseline, so a first deploy; a regression, because the baseline passed that rule; or an expired override, for any check), held (the baseline failed the same rule id too, so owners of an EOL app can still ship the fix) or waived (composer-audit had no advisory data, which only warns at deploy time). Any block is a no-go.
 
-- `--baseline`: a PROCTOR JSON report (the file `--record` wrote last time) or the running deployment's source directory. Without it, every failure blocks.
-- `--record`: also write the JSON verdict to a file; pass it as `--baseline` next time.
+- `--baseline`: any PROCTOR JSON with its findings (the verdict `gate --record` wrote last time, or a `proctor check` report from `--format=json` or `check --record`) or the running deployment's source directory. Without it, every failure blocks.
+- `--record`: also write the JSON verdict to a file, whatever `--format` prints; pass it as `--baseline` next time. This is the gate's verdict (`command: gate`, `verdict`, `summary`, and each finding's `gate` outcome), not the check report that `proctor check --record` writes, and it is not the `proctor.json` Rollcall reads.
 - Exit codes: `0` go, `1` no-go, `2` the gate could not decide. A platform hook fails open on 2, with an alert, so a gate bug never takes down deploys.
 - Staged rules: when CREED's policy stages a check as `report` or `warn`, a failure that would block is logged as `STAGE` and the deploy goes ahead (ADR-0006 item 4). The policy ships with no stages, so every check blocks today.
 
@@ -479,7 +479,7 @@ what it cannot see: [Overrides](https://proctor.apps.wayne.edu/docs/guides/overr
 
 `--policy` takes a CREED-format policy file: schema_version 1, component
 versions with released, active_until and security_until dates, and rules
-(audit_severity_threshold, banned_constraints, eol_grace_days,
+(abandoned_packages, audit_severity_threshold, banned_constraints, eol_grace_days,
 override_max_days, override_self_approval). The policy-file wiring to `waynestate/creed` is
 described below.
 
@@ -1240,7 +1240,7 @@ PROCTOR does not require ADVISOR, and ADVISOR does not require PROCTOR: the modu
 
 ### The two read-only tools[#](https://proctor.apps.wayne.edu/docs/guides/advisor.html#the-two-read-only-tools)
 
-Both tools run in-process: no subprocess, no network, nothing written, and neither reads `.env`. `proctor_rules` takes no arguments. `proctor_check` takes exactly one, `path`: the app folder, inside the project root (default: the root itself). A path outside the root, or one that is not a folder, is refused.
+Both tools run in-process: no subprocess, no network, nothing written, and neither reads `.env` itself (four checks that do run read other env files; see the list under [What is skipped, and why](https://proctor.apps.wayne.edu/docs/guides/advisor.html#what-is-skipped-and-why)). `proctor_rules` takes no arguments. `proctor_check` takes exactly one, `path`: the app folder, inside the project root (default: the root itself). A path outside the root, or one that is not a folder, is refused.
 
 #### proctor_rules[#](https://proctor.apps.wayne.edu/docs/guides/advisor.html#proctor-rules)
 
@@ -1289,7 +1289,15 @@ Some checks cannot run inside ADVISOR's sandbox, so `proctor_check` leaves them 
 | `override-approver` | `starts a subprocess` | `git blame`, to see who wrote each override |
 | `app-key`, `vite-secrets` | `reads .env` | reads committed env files for an `APP_KEY`, or for `VITE_` variables that look like secrets |
 
-`mysql-eol` does run: it reads `.env.example` and `.env.squire.example`, the committed placeholder files, never `.env`. An override in `policy-overrides.json` for a skipped check is not reported as unused, since its check did not run.
+Four checks that do run read env files other than `.env`, from the app folder on disk, whether git lists them or not:
+
+| Check | Files it reads | What it reads in them |
+| --- | --- | --- |
+| `mysql-eol`, `mysql-minimum` | `.env.squire.example`, `.env.example` | the `SQUIRE_MYSQL_IMAGE=` line |
+| `app-debug` | `.env.production`, `.env.squire.example` | the `APP_DEBUG` value |
+| `csp-unsafe-inline` | `.env.example`, `.env.production`, `.env.squire.example` | the `HELMET_CSP=` lines |
+
+None of them reads `.env`. A finding names the file and the line; the MySQL checks add the engine and version from the image name, and no other value from these files comes back. An override in `policy-overrides.json` for a skipped check is not reported as unused, since its check did not run.
 
 So a `pass` from `proctor_check` is a partial pass. Run `vendor/bin/proctor check` for every check, or ADVISOR's own `run_proctor_check` tool, which starts PROCTOR as a subprocess under ADVISOR's allowlist.
 
@@ -1689,6 +1697,8 @@ The default command is `vendor/bin/proctor check --format=codequality`, so the f
 
 To keep PROCTOR's full JSON report from the same run, add `--record`: `vendor/bin/proctor check --format=codequality --record="$CI_PROJECT_DIR/proctor.json"` prints Code Quality for the merge request and writes the JSON report (byte for byte what `--format=json` prints) to `proctor.json`, without running the checks twice. Rollcall, the fleet census, reads each app's latest `proctor.json` from its `proctor` job's artifacts, so the job must keep the file as an artifact under `when: always` (a failing check still has a report worth reading). The exit code is the check's own; a record PROCTOR cannot write is exit 2.
 
+On Preflight 0.4.0 the component keeps only the Code Quality report, so do both halves yourself: put the `--record` command above in the `proctor_command` input, and add `artifacts: paths: [proctor.json]` to a `proctor:` job in your own `.gitlab-ci.yml`, next to the include. GitLab merges that key into the component's job, which already keeps its artifacts `when: always`; it re-declares no `script`, so `preflight-pinned` has nothing to flag. Preflight's next release does this on its own: it adds `--record` to a `proctor check` command when the app's PROCTOR lists the option, keeps `proctor.json`, and never adds it to a `proctor gate` command, whose record is a deploy verdict, not the report Rollcall reads.
+
 ### ci-pipelines[#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#ci-pipelines)
 
 `ci-pipelines` enforces the CI contract. For a stack package (a composer.json `name` starting with `waynestate/`), both `.gitlab-ci.yml` and `.github/workflows/ci.yml` must exist and run `composer ci`; a missing or incomplete file is a failure. For any other project, a missing or incomplete `.gitlab-ci.yml` is a warning and `.github/workflows/ci.yml` is optional.
@@ -1697,9 +1707,10 @@ The files are parsed as YAML, not grepped: a `composer ci` that only appears in 
 
 A private stack package that sets `extra.proctor.github-mirror` to `false` in composer.json must never be on GitHub: a missing `.github/workflows/ci.yml` then gives no finding, and a present one warns (`proctor/ci-pipelines/github-private`) along with the warning-only rules.
 
-Three more rules warn, and never fail, for stack packages and other projects alike:
+Four more rules warn, and never fail, for stack packages and other projects alike:
 
 - A GitHub `uses:` ref that is not a 40-hex commit SHA (`proctor/ci-pipelines/unpinned-uses`).
+- A GitLab job's `script`, `before_script` or `after_script` line, or a GitHub step's `run`, with a command that starts with `composer update` or `composer require` (`proctor/ci-pipelines/composer-update`), once per line: CI installs from the lock with `composer install`. A line that is a `#` comment inside a block string never fires.
 - A pipeline environment that switches Composer's audit or blocking policy off (`proctor/ci-pipelines/composer-audit-off`): `COMPOSER_NO_AUDIT` or `COMPOSER_NO_BLOCKING` set to anything but an empty string, `0` or `false`, or `COMPOSER_AUDIT_ABANDONED` set to `ignore`. On GitLab these come from the top-level or job `variables:` (a scalar or a map with a `value` key); on GitHub from the top-level, job or step `env:`.
 - A pipeline environment that sets `PROCTOR_ALLOW_OVERRIDES` to `1` (`proctor/ci-pipelines/allow-overrides`): the variable lets the app pass `--policy` and `--today` in CI (BEST_PRACTICES 1.2), so it could grade itself against a policy or a date it picks. Any other value leaves the guard on. On GitLab it is read from the top-level or job `variables:` (a scalar or a map with a `value` key); on GitHub from the top-level, job or step `env:`. Remove the variable; only PROCTOR's own pipeline needs it.
 
@@ -1717,9 +1728,10 @@ When nothing needs fixing the check passes with `both pipelines run composer ci`
 | `ci-pipelines` | `proctor/ci-pipelines/github-private` |
 | `ci-pipelines` | `proctor/ci-pipelines/unpinned-uses` |
 | `ci-pipelines` | `proctor/ci-pipelines/composer-audit-off` |
+| `ci-pipelines` | `proctor/ci-pipelines/composer-update` |
 | `ci-pipelines` | `proctor/ci-pipelines/allow-overrides` |
 
-Fix a failing pipeline by adding a GitLab job whose `script` runs `composer ci`, adding a GitHub workflow that runs `composer ci` or calls a reusable workflow with `ci-command: composer ci`, pinning every `uses:` ref to a commit SHA, and removing `PROCTOR_ALLOW_OVERRIDES` from the pipeline environment, which only PROCTOR's own pipeline needs.
+Fix a failing pipeline by adding a GitLab job whose `script` runs `composer ci`, adding a GitHub workflow that runs `composer ci` or calls a reusable workflow with `ci-command: composer ci`, pinning every `uses:` ref to a commit SHA, running `composer install` instead of `composer update` or `composer require`, and removing `PROCTOR_ALLOW_OVERRIDES` from the pipeline environment, which only PROCTOR's own pipeline needs.
 
 ### preflight-pinned[#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#preflight-pinned)
 
@@ -1915,7 +1927,7 @@ A package pattern in `config.policy.advisories.ignore` may use `*`, matched the 
 
 ### composer-version[#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-version)
 
-`composer-version` fails when the Composer on PATH carries the command-injection holes CVE-2024-35241 and CVE-2024-35242 (2.2.x below 2.2.24, or any other 2.x below 2.7.7) or is Composer 1, which is end of life. It warns when composer cannot be run: `proctor/composer-version/not-found` when there is no composer executable on PATH, and `proctor/composer-version/could-not-determine` when the version could not be determined.
+`composer-version` fails when the Composer on PATH carries the command-injection holes CVE-2024-35241 and CVE-2024-35242 (2.2.x below 2.2.24, or any other 2.x below 2.7.7) or is Composer 1, which is end of life. When the policy sets `tools.composer.minimum` above the CVE floor for the version's line, it fails below that minimum too, and the message names the policy setting (the bundled policy sets 2.8.0). It warns when composer cannot be run: `proctor/composer-version/not-found` when there is no composer executable on PATH, and `proctor/composer-version/could-not-determine` when the version could not be determined.
 
 The invigilator checks its own pen: [GHSA-47f6-5gq3-vx9c](https://github.com/advisories/GHSA-47f6-5gq3-vx9c) and [GHSA-v9qv-c7wm-wgmf](https://github.com/advisories/GHSA-v9qv-c7wm-wgmf).
 
@@ -2165,7 +2177,7 @@ The `portability` and `destructive-deploy` checks also read PHP and deploy scrip
 
 Details and fixes: [CI checks](https://proctor.apps.wayne.edu/docs/guides/check-ci.html).
 
-- `ci-pipelines`: for stack packages (composer.json `name` starting with `waynestate/`), fails when `.gitlab-ci.yml` or `.github/workflows/ci.yml` is missing or runs no `composer ci`; for any other project, a missing or incomplete `.gitlab-ci.yml` is a warning and `.github/workflows/ci.yml` is optional. Warns when a GitHub `uses:` ref is not a 40-hex commit SHA, and when the pipeline environment switches Composer's audit or blocking policy off.
+- `ci-pipelines`: for stack packages (composer.json `name` starting with `waynestate/`), fails when `.gitlab-ci.yml` or `.github/workflows/ci.yml` is missing or runs no `composer ci`; for any other project, a missing or incomplete `.gitlab-ci.yml` is a warning and `.github/workflows/ci.yml` is optional. Warns when a GitHub `uses:` ref is not a 40-hex commit SHA, when a CI script runs `composer update` or `composer require`, when the pipeline environment switches Composer's audit or blocking policy off, and when it sets `PROCTOR_ALLOW_OVERRIDES` to `1`.
 - `preflight-pinned`: warns, never fails, when an app includes a Preflight component at a moving ref or re-declares what an included Preflight job runs.
 - `preflight-gates`: warns, never fails, when `.gitlab-ci.yml` includes no Preflight component, lets a Preflight gate fail with `allow_failure`, or has no job that runs PROCTOR.
 - `portability`: warns when code hard-codes a platform fact: an absolute host path, a hard-coded proxy address, a local-disk session store, or a php_value/php_flag line in .htaccess.
@@ -2233,8 +2245,8 @@ It follows CREED's deploy-gate chapter (the stack's deploy-gate decision): the r
 vendor/bin/proctor gate [--path=.] [--format=text|json] [--baseline=<report or directory>] [--record=<file>] [--policy=<file>] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z] [--timeout=60]
 ```
 
-- `--baseline`: what the running deployment already fails. Either a PROCTOR JSON report (the file `--record` wrote last time, or `proctor check --format=json` output) or the running deployment's source directory, which the gate checks with the same rules. Leave it out for a first deploy.
-- `--record`: also write the JSON verdict to this file, whatever `--format` says; its folder is created. Next time, pass the same file as `--baseline`.
+- `--baseline`: what the running deployment already fails. Either a PROCTOR JSON report (the verdict `gate --record` wrote last time, or a `proctor check` report from `--format=json` or `check --record`) or the running deployment's source directory, which the gate checks with the same rules. Leave it out for a first deploy.
+- `--record`: also write the JSON verdict to this file, whatever `--format` says; its folder is created. Next time, pass the same file as `--baseline`. This is the gate's verdict (shape below), not the check report `proctor check --record` writes; Rollcall reads the check report, so do not point it at this file.
 - `--format`: `text` (default), a short verdict for the deploy log, or `json`.
 - `--policy`, `--today`, `--php-runtime`: as for `proctor check`, including the CI guard on `--policy` and `--today`.
 - `--timeout`: seconds for `composer audit` before it is killed; 60 by default here, because a deploy should not wait five minutes.
@@ -2602,7 +2614,7 @@ This page explains which CREED-format policy file PROCTOR checks against, and ho
 
 ### What a policy file contains[#](https://proctor.apps.wayne.edu/docs/guides/policy.html#what-a-policy-file-contains)
 
-`--policy` takes a CREED-format policy file: schema_version 1, component versions with released, active_until and security_until dates, and rules (audit_severity_threshold, abandoned_packages, banned_constraints, eol_grace_days). The policy-file wiring to `waynestate/creed` is described in [The CREED reader copy](https://proctor.apps.wayne.edu/docs/guides/policy.html#the-creed-reader-copy) below.
+`--policy` takes a CREED-format policy file: schema_version 1, component versions with released, active_until and security_until dates, and rules (abandoned_packages, audit_severity_threshold, banned_constraints, eol_grace_days, override_max_days, override_self_approval). The policy-file wiring to `waynestate/creed` is described in [The CREED reader copy](https://proctor.apps.wayne.edu/docs/guides/policy.html#the-creed-reader-copy) below.
 
 ### Resolution order[#](https://proctor.apps.wayne.edu/docs/guides/policy.html#resolution-order)
 
@@ -2767,7 +2779,7 @@ composer require waynestate/proctor --dev
 The command is then `vendor/bin/proctor`. Run it against the app:
 
 ```
-vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--policy=<file>] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z] [--timeout=300]
+vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--record=<file>] [--policy=<file>] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z] [--timeout=300]
 ```
 
 A clean hall exits 0 (warnings allowed), a resit exits 1, and a tripped proctor exits 2.
@@ -2965,7 +2977,7 @@ None of the settings on this page take a secret. PROCTOR reads paths, dates and 
 
 ### The policy file[#](https://proctor.apps.wayne.edu/docs/reference/configuration.html#the-policy-file)
 
-`--policy` takes a CREED-format policy file: schema_version 1, component versions with released, active_until and security_until dates, and rules (audit_severity_threshold, banned_constraints, eol_grace_days, override_max_days, override_self_approval). `override_self_approval` is `warn` or `fail` (`warn` when the key is absent) and sets the status of the `override-approver` findings; any other value is a tool error (exit 2).
+`--policy` takes a CREED-format policy file: schema_version 1, component versions with released, active_until and security_until dates, and rules (abandoned_packages, audit_severity_threshold, banned_constraints, eol_grace_days, override_max_days, override_self_approval). `override_self_approval` is `warn` or `fail` (`warn` when the key is absent) and sets the status of the `override-approver` findings; any other value is a tool error (exit 2).
 
 Without `--policy`, PROCTOR resolves the policy in this order (first match wins):
 
@@ -3049,7 +3061,7 @@ This page lists the three exit codes `proctor check` and `proctor gate` end with
 | --- | --- |
 | `0` | pass (warnings allowed) |
 | `1` | one or more failures |
-| `2` | tool error (bad options, unreadable policy, a present but malformed or unreadable composer.json, an overrides file that is malformed, unreadable, or names a check that is not registered or the overrides check itself, or a `--record` file it could not write) |
+| `2` | tool error (bad options, unreadable policy, a present but malformed or unreadable composer.json, an overrides file that is malformed, unreadable, or names a check that is not registered, the overrides check or the override-approver check, or a `--record` file it could not write) |
 
 A missing composer.json is not a tool error: the app gets a verdict, with php-floor failing.
 
@@ -3543,7 +3555,7 @@ The new check only warns, never fails, and is not in the deploy gate:
 | --- | --- | --- |
 | `gitattributes-eol` | `proctor/gitattributes-eol`, `proctor/gitattributes-eol/not-pinned`, `proctor/gitattributes-eol/crlf` | `.gitattributes` does not pin the app's shell scripts, `*.conf` files and Dockerfiles to `eol=lf`, or a Dockerfile or `.conf` under `deploy/` or `.squire/` has Windows line endings |
 
-`proctor check --record=<file>` also writes the JSON report (byte for byte what `--format=json` prints) to a file, whatever `--format` prints, so one CI run can feed both the merge request's Code Quality and Rollcall, which reads `proctor.json` from the `proctor` job's artifacts (see [CI checks](https://proctor.apps.wayne.edu/docs/guides/check-ci.html)). The exit code is the check's own; a record PROCTOR cannot write is a tool error (exit 2). `proctor gate --record` shares the same writer.
+`proctor check --record=<file>` also writes the JSON report (byte for byte what `--format=json` prints) to a file, whatever `--format` prints, so one CI run can feed both the merge request's Code Quality and Rollcall, which reads `proctor.json` from the `proctor` job's artifacts (see [CI checks](https://proctor.apps.wayne.edu/docs/guides/check-ci.html)). The exit code is the check's own; a record PROCTOR cannot write is a tool error (exit 2). `proctor gate --record` shares the same file writer but writes the gate's verdict (`command: gate`, `verdict`, `summary`, each finding's `gate` outcome), a different JSON from the check report; keep it for the next `--baseline`, and do not hand it to Rollcall.
 
 #### Changed[#](https://proctor.apps.wayne.edu/docs/upgrading.html#changed)
 
@@ -3560,7 +3572,7 @@ The new check only warns, never fails, and is not in the deploy gate:
    ```bash
    vendor/bin/proctor check
    ```
-3. Optional: when Rollcall should read your app, add `--record="$CI_PROJECT_DIR/proctor.json"` to the `proctor` job and keep the file as an artifact under `when: always`.
+3. Optional: when Rollcall should read your app, add `--record="$CI_PROJECT_DIR/proctor.json"` to the `proctor check` command of the `proctor` job and keep the file as an artifact under `when: always`. Preflight 0.4.0's component keeps only the Code Quality report, so set its `proctor_command` input and add `artifacts: paths: [proctor.json]` to a `proctor:` job of your own (see [CI checks](https://proctor.apps.wayne.edu/docs/guides/check-ci.html)); Preflight's next release does both for you.
 
 #### How to verify[#](https://proctor.apps.wayne.edu/docs/upgrading.html#how-to-verify)
 

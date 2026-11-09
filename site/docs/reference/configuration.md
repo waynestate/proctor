@@ -21,7 +21,7 @@ None of the settings on this page take a secret. PROCTOR reads paths, dates and 
 
 ## The policy file[#](https://proctor.apps.wayne.edu/docs/reference/configuration.html#the-policy-file)
 
-`--policy` takes a CREED-format policy file: schema_version 1, component versions with released, active_until and security_until dates, and rules (audit_severity_threshold, banned_constraints, eol_grace_days, override_max_days, override_self_approval). `override_self_approval` is `warn` or `fail` (`warn` when the key is absent) and sets the status of the `override-approver` findings; any other value is a tool error (exit 2).
+`--policy` takes a CREED-format policy file: schema_version 1, component versions with released, active_until and security_until dates, and rules (abandoned_packages, audit_severity_threshold, banned_constraints, eol_grace_days, override_max_days, override_self_approval). `override_self_approval` is `warn` or `fail` (`warn` when the key is absent) and sets the status of the `override-approver` findings; any other value is a tool error (exit 2).
 
 Without `--policy`, PROCTOR resolves the policy in this order (first match wins):
 

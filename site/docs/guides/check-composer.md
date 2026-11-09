@@ -109,7 +109,7 @@ A package pattern in `config.policy.advisories.ignore` may use `*`, matched the 
 
 ## composer-version[#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-version)
 
-`composer-version` fails when the Composer on PATH carries the command-injection holes CVE-2024-35241 and CVE-2024-35242 (2.2.x below 2.2.24, or any other 2.x below 2.7.7) or is Composer 1, which is end of life. It warns when composer cannot be run: `proctor/composer-version/not-found` when there is no composer executable on PATH, and `proctor/composer-version/could-not-determine` when the version could not be determined.
+`composer-version` fails when the Composer on PATH carries the command-injection holes CVE-2024-35241 and CVE-2024-35242 (2.2.x below 2.2.24, or any other 2.x below 2.7.7) or is Composer 1, which is end of life. When the policy sets `tools.composer.minimum` above the CVE floor for the version's line, it fails below that minimum too, and the message names the policy setting (the bundled policy sets 2.8.0). It warns when composer cannot be run: `proctor/composer-version/not-found` when there is no composer executable on PATH, and `proctor/composer-version/could-not-determine` when the version could not be determined.
 
 The invigilator checks its own pen: [GHSA-47f6-5gq3-vx9c](https://github.com/advisories/GHSA-47f6-5gq3-vx9c) and [GHSA-v9qv-c7wm-wgmf](https://github.com/advisories/GHSA-v9qv-c7wm-wgmf).
 

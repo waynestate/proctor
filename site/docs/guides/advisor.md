@@ -32,7 +32,7 @@ PROCTOR does not require ADVISOR, and ADVISOR does not require PROCTOR: the modu
 
 ## The two read-only tools[#](https://proctor.apps.wayne.edu/docs/guides/advisor.html#the-two-read-only-tools)
 
-Both tools run in-process: no subprocess, no network, nothing written, and neither reads `.env`. `proctor_rules` takes no arguments. `proctor_check` takes exactly one, `path`: the app folder, inside the project root (default: the root itself). A path outside the root, or one that is not a folder, is refused.
+Both tools run in-process: no subprocess, no network, nothing written, and neither reads `.env` itself (four checks that do run read other env files; see the list under [What is skipped, and why](https://proctor.apps.wayne.edu/docs/guides/advisor.html#what-is-skipped-and-why)). `proctor_rules` takes no arguments. `proctor_check` takes exactly one, `path`: the app folder, inside the project root (default: the root itself). A path outside the root, or one that is not a folder, is refused.
 
 ### proctor_rules[#](https://proctor.apps.wayne.edu/docs/guides/advisor.html#proctor-rules)
 
@@ -81,7 +81,15 @@ Some checks cannot run inside ADVISOR's sandbox, so `proctor_check` leaves them 
 | `override-approver` | `starts a subprocess` | `git blame`, to see who wrote each override |
 | `app-key`, `vite-secrets` | `reads .env` | reads committed env files for an `APP_KEY`, or for `VITE_` variables that look like secrets |
 
-`mysql-eol` does run: it reads `.env.example` and `.env.squire.example`, the committed placeholder files, never `.env`. An override in `policy-overrides.json` for a skipped check is not reported as unused, since its check did not run.
+Four checks that do run read env files other than `.env`, from the app folder on disk, whether git lists them or not:
+
+| Check | Files it reads | What it reads in them |
+| --- | --- | --- |
+| `mysql-eol`, `mysql-minimum` | `.env.squire.example`, `.env.example` | the `SQUIRE_MYSQL_IMAGE=` line |
+| `app-debug` | `.env.production`, `.env.squire.example` | the `APP_DEBUG` value |
+| `csp-unsafe-inline` | `.env.example`, `.env.production`, `.env.squire.example` | the `HELMET_CSP=` lines |
+
+None of them reads `.env`. A finding names the file and the line; the MySQL checks add the engine and version from the image name, and no other value from these files comes back. An override in `policy-overrides.json` for a skipped check is not reported as unused, since its check did not run.
 
 So a `pass` from `proctor_check` is a partial pass. Run `vendor/bin/proctor check` for every check, or ADVISOR's own `run_proctor_check` tool, which starts PROCTOR as a subprocess under ADVISOR's allowlist.
 

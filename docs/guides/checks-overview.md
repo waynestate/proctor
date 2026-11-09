@@ -48,7 +48,7 @@ The `portability` and `destructive-deploy` checks also read PHP and deploy scrip
 
 Details and fixes: [CI checks](check-ci.md).
 
-- `ci-pipelines`: for stack packages (composer.json `name` starting with `waynestate/`), fails when `.gitlab-ci.yml` or `.github/workflows/ci.yml` is missing or runs no `composer ci`; for any other project, a missing or incomplete `.gitlab-ci.yml` is a warning and `.github/workflows/ci.yml` is optional. Warns when a GitHub `uses:` ref is not a 40-hex commit SHA, and when the pipeline environment switches Composer's audit or blocking policy off.
+- `ci-pipelines`: for stack packages (composer.json `name` starting with `waynestate/`), fails when `.gitlab-ci.yml` or `.github/workflows/ci.yml` is missing or runs no `composer ci`; for any other project, a missing or incomplete `.gitlab-ci.yml` is a warning and `.github/workflows/ci.yml` is optional. Warns when a GitHub `uses:` ref is not a 40-hex commit SHA, when a CI script runs `composer update` or `composer require`, when the pipeline environment switches Composer's audit or blocking policy off, and when it sets `PROCTOR_ALLOW_OVERRIDES` to `1`.
 - `preflight-pinned`: warns, never fails, when an app includes a Preflight component at a moving ref or re-declares what an included Preflight job runs.
 - `preflight-gates`: warns, never fails, when `.gitlab-ci.yml` includes no Preflight component, lets a Preflight gate fail with `allow_failure`, or has no job that runs PROCTOR.
 - `portability`: warns when code hard-codes a platform fact: an absolute host path, a hard-coded proxy address, a local-disk session store, or a php_value/php_flag line in .htaccess.

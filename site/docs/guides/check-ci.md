@@ -23,6 +23,8 @@ The default command is `vendor/bin/proctor check --format=codequality`, so the f
 
 To keep PROCTOR's full JSON report from the same run, add `--record`: `vendor/bin/proctor check --format=codequality --record="$CI_PROJECT_DIR/proctor.json"` prints Code Quality for the merge request and writes the JSON report (byte for byte what `--format=json` prints) to `proctor.json`, without running the checks twice. Rollcall, the fleet census, reads each app's latest `proctor.json` from its `proctor` job's artifacts, so the job must keep the file as an artifact under `when: always` (a failing check still has a report worth reading). The exit code is the check's own; a record PROCTOR cannot write is exit 2.
 
+On Preflight 0.4.0 the component keeps only the Code Quality report, so do both halves yourself: put the `--record` command above in the `proctor_command` input, and add `artifacts: paths: [proctor.json]` to a `proctor:` job in your own `.gitlab-ci.yml`, next to the include. GitLab merges that key into the component's job, which already keeps its artifacts `when: always`; it re-declares no `script`, so `preflight-pinned` has nothing to flag. Preflight's next release does this on its own: it adds `--record` to a `proctor check` command when the app's PROCTOR lists the option, keeps `proctor.json`, and never adds it to a `proctor gate` command, whose record is a deploy verdict, not the report Rollcall reads.
+
 ## ci-pipelines[#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#ci-pipelines)
 
 `ci-pipelines` enforces the CI contract. For a stack package (a composer.json `name` starting with `waynestate/`), both `.gitlab-ci.yml` and `.github/workflows/ci.yml` must exist and run `composer ci`; a missing or incomplete file is a failure. For any other project, a missing or incomplete `.gitlab-ci.yml` is a warning and `.github/workflows/ci.yml` is optional.
@@ -31,9 +33,10 @@ The files are parsed as YAML, not grepped: a `composer ci` that only appears in 
 
 A private stack package that sets `extra.proctor.github-mirror` to `false` in composer.json must never be on GitHub: a missing `.github/workflows/ci.yml` then gives no finding, and a present one warns (`proctor/ci-pipelines/github-private`) along with the warning-only rules.
 
-Three more rules warn, and never fail, for stack packages and other projects alike:
+Four more rules warn, and never fail, for stack packages and other projects alike:
 
 - A GitHub `uses:` ref that is not a 40-hex commit SHA (`proctor/ci-pipelines/unpinned-uses`).
+- A GitLab job's `script`, `before_script` or `after_script` line, or a GitHub step's `run`, with a command that starts with `composer update` or `composer require` (`proctor/ci-pipelines/composer-update`), once per line: CI installs from the lock with `composer install`. A line that is a `#` comment inside a block string never fires.
 - A pipeline environment that switches Composer's audit or blocking policy off (`proctor/ci-pipelines/composer-audit-off`): `COMPOSER_NO_AUDIT` or `COMPOSER_NO_BLOCKING` set to anything but an empty string, `0` or `false`, or `COMPOSER_AUDIT_ABANDONED` set to `ignore`. On GitLab these come from the top-level or job `variables:` (a scalar or a map with a `value` key); on GitHub from the top-level, job or step `env:`.
 - A pipeline environment that sets `PROCTOR_ALLOW_OVERRIDES` to `1` (`proctor/ci-pipelines/allow-overrides`): the variable lets the app pass `--policy` and `--today` in CI (BEST_PRACTICES 1.2), so it could grade itself against a policy or a date it picks. Any other value leaves the guard on. On GitLab it is read from the top-level or job `variables:` (a scalar or a map with a `value` key); on GitHub from the top-level, job or step `env:`. Remove the variable; only PROCTOR's own pipeline needs it.
 
@@ -51,9 +54,10 @@ When nothing needs fixing the check passes with `both pipelines run composer ci`
 | `ci-pipelines` | `proctor/ci-pipelines/github-private` |
 | `ci-pipelines` | `proctor/ci-pipelines/unpinned-uses` |
 | `ci-pipelines` | `proctor/ci-pipelines/composer-audit-off` |
+| `ci-pipelines` | `proctor/ci-pipelines/composer-update` |
 | `ci-pipelines` | `proctor/ci-pipelines/allow-overrides` |
 
-Fix a failing pipeline by adding a GitLab job whose `script` runs `composer ci`, adding a GitHub workflow that runs `composer ci` or calls a reusable workflow with `ci-command: composer ci`, pinning every `uses:` ref to a commit SHA, and removing `PROCTOR_ALLOW_OVERRIDES` from the pipeline environment, which only PROCTOR's own pipeline needs.
+Fix a failing pipeline by adding a GitLab job whose `script` runs `composer ci`, adding a GitHub workflow that runs `composer ci` or calls a reusable workflow with `ci-command: composer ci`, pinning every `uses:` ref to a commit SHA, running `composer install` instead of `composer update` or `composer require`, and removing `PROCTOR_ALLOW_OVERRIDES` from the pipeline environment, which only PROCTOR's own pipeline needs.
 
 ## preflight-pinned[#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#preflight-pinned)
 

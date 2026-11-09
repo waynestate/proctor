@@ -27,7 +27,7 @@ composer require waynestate/proctor --dev
 The command is then `vendor/bin/proctor`. Run it against the app:
 
 ```
-vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--policy=<file>] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z] [--timeout=300]
+vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--record=<file>] [--policy=<file>] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z] [--timeout=300]
 ```
 
 A clean hall exits 0 (warnings allowed), a resit exits 1, and a tripped proctor exits 2.

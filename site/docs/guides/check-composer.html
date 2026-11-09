@@ -243,7 +243,7 @@
 </tbody>
 </table></div>
 <h2 id="composer-version">composer-version<a class="docs-heading-link" aria-label="Link to this section" href="#composer-version">#</a></h2>
-<p><code>composer-version</code> fails when the Composer on PATH carries the command-injection holes CVE-2024-35241 and CVE-2024-35242 (2.2.x below 2.2.24, or any other 2.x below 2.7.7) or is Composer 1, which is end of life. It warns when composer cannot be run: <code>proctor/composer-version/not-found</code> when there is no composer executable on PATH, and <code>proctor/composer-version/could-not-determine</code> when the version could not be determined.</p>
+<p><code>composer-version</code> fails when the Composer on PATH carries the command-injection holes CVE-2024-35241 and CVE-2024-35242 (2.2.x below 2.2.24, or any other 2.x below 2.7.7) or is Composer 1, which is end of life. When the policy sets <code>tools.composer.minimum</code> above the CVE floor for the version's line, it fails below that minimum too, and the message names the policy setting (the bundled policy sets 2.8.0). It warns when composer cannot be run: <code>proctor/composer-version/not-found</code> when there is no composer executable on PATH, and <code>proctor/composer-version/could-not-determine</code> when the version could not be determined.</p>
 <p>The invigilator checks its own pen: <a rel="noopener" href="https://github.com/advisories/GHSA-47f6-5gq3-vx9c">GHSA-47f6-5gq3-vx9c</a> and <a rel="noopener" href="https://github.com/advisories/GHSA-v9qv-c7wm-wgmf">GHSA-v9qv-c7wm-wgmf</a>.</p>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
 <thead>

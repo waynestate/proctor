@@ -40,11 +40,16 @@ docker run --rm -v "${PWD}:/app" -w /app composer:2.10.3 sh -c "composer install
 docker run --rm -v "${PWD}:/app" -w /app php:8.5-cli vendor/bin/phpunit
 ```
 
-`composer ci` runs `composer validate --strict`, PHPUnit, Pint, PHPStan and `composer audit`.
+`composer ci` runs `composer validate --strict`, PHPUnit, Pint, PHPStan, the supported-versions table check
+(`site:versions-check`), the agent-ready files check (`site:agent-ready-check`), the docs site check (`docs:check`)
+and `composer audit`. After a docs change, run `composer docs` and `composer site:agent-ready` first, or the two
+site checks fail on stale files.
 
 ## CI
 
-- **GitLab:** Preflight's `php-test` (PHP 8.3, 8.4, 8.5) and `composer-audit` components, plus a `composer-ci` job.
+- **GitLab:** Preflight 0.4.0's `php-test` (PHP 8.3, 8.4, 8.5), `composer-audit`, `proctor` (on the `deploy/` layer,
+  `allow_failure` while its findings are fixed) and `a11y` (every page under `site/`) components, plus the
+  `composer-ci`, `wayneui-copies`, `creed-copy-refresh` (scheduled) and `release-phar` (tags) jobs.
 - **GitHub:** `.github/workflows/ci.yml` calls Preflight's reusable workflow with `composer ci`.
 - Green means `composer ci` passed on all three PHP versions on both.
 

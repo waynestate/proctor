@@ -66,7 +66,7 @@
 </tr>
 </tbody>
 </table></div>
-<p><code>proctor check --record=&lt;file&gt;</code> also writes the JSON report (byte for byte what <code>--format=json</code> prints) to a file, whatever <code>--format</code> prints, so one CI run can feed both the merge request's Code Quality and Rollcall, which reads <code>proctor.json</code> from the <code>proctor</code> job's artifacts (see <a href="guides/check-ci.html">CI checks</a>). The exit code is the check's own; a record PROCTOR cannot write is a tool error (exit 2). <code>proctor gate --record</code> shares the same writer.</p>
+<p><code>proctor check --record=&lt;file&gt;</code> also writes the JSON report (byte for byte what <code>--format=json</code> prints) to a file, whatever <code>--format</code> prints, so one CI run can feed both the merge request's Code Quality and Rollcall, which reads <code>proctor.json</code> from the <code>proctor</code> job's artifacts (see <a href="guides/check-ci.html">CI checks</a>). The exit code is the check's own; a record PROCTOR cannot write is a tool error (exit 2). <code>proctor gate --record</code> shares the same file writer but writes the gate's verdict (<code>command: gate</code>, <code>verdict</code>, <code>summary</code>, each finding's <code>gate</code> outcome), a different JSON from the check report; keep it for the next <code>--baseline</code>, and do not hand it to Rollcall.</p>
 <h3 id="changed">Changed<a class="docs-heading-link" aria-label="Link to this section" href="#changed">#</a></h3>
 <ul>
 <li>None that changes a run.</li>
@@ -86,7 +86,7 @@
 </code></pre>
 </li>
 <li>
-<p>Optional: when Rollcall should read your app, add <code>--record=&quot;$CI_PROJECT_DIR/proctor.json&quot;</code> to the <code>proctor</code> job and keep the file as an artifact under <code>when: always</code>.</p>
+<p>Optional: when Rollcall should read your app, add <code>--record=&quot;$CI_PROJECT_DIR/proctor.json&quot;</code> to the <code>proctor check</code> command of the <code>proctor</code> job and keep the file as an artifact under <code>when: always</code>. Preflight 0.4.0's component keeps only the Code Quality report, so set its <code>proctor_command</code> input and add <code>artifacts: paths: [proctor.json]</code> to a <code>proctor:</code> job of your own (see <a href="guides/check-ci.html">CI checks</a>); Preflight's next release does both for you.</p>
 </li>
 </ol>
 <h3 id="how-to-verify">How to verify<a class="docs-heading-link" aria-label="Link to this section" href="#how-to-verify">#</a></h3>
