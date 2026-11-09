@@ -8,9 +8,9 @@ generator: Squire agent-ready
 
 # App checks[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-checks)
 
-This page covers the eight PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, files a stranger can download from `public/`, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
+This page covers the eleven PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
 
-`node-eol` can fail a run. The other seven warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.
+`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other eight warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.
 
 ## node-eol[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#node-eol)
 
@@ -139,6 +139,19 @@ Fix by setting `APP_DEBUG=false` in the file the report names.
 | `app-debug` | `proctor/app-debug` |
 | `app-debug` | `proctor/app-debug/enabled` |
 
+## entrypoint-migrate[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#entrypoint-migrate)
+
+`entrypoint-migrate` warns, never fails, when a container entrypoint runs migrations at start: with two replicas both would run `migrate` at the same moment, and a failed migration crash-loops the container, so WELD practice W24 runs migrations once per release as a job, never in an entrypoint. It reports, and is not in the deploy gate.
+
+Scanned: every file whose name contains `entrypoint` (case-insensitive) at any depth; Dockerfiles themselves are not read. Skipped at any depth: `vendor/`, `node_modules/` and `.git/`. A line is flagged when, after removing a trailing shell comment, it contains `artisan migrate` followed by whitespace, `;`, `&`, `|`, a quote or the end of the line, so `migrate --force` and a bare `migrate` flag while `migrate:status`, `migrate:fresh` and the other subcommands do not; a line whose first non-space character is `#` is ignored. A line inside a shell `case` branch whose label is `migrate)` or `migrate|...)`, with optional spaces before it, is not flagged: the branch runs from its label line to the next line ending in `;;`, or to `esac`. That is the shape Squire's own entrypoint takes, where the `migrate` role runs once as a job. One warning per file, on the line of its first flagged line; a file that cannot be read is skipped.
+
+Fix by moving the migration out of the entrypoint and running it once per release as a job.
+
+| Check | Rule id |
+| --- | --- |
+| `entrypoint-migrate` | `proctor/entrypoint-migrate` |
+| `entrypoint-migrate` | `proctor/entrypoint-migrate/runs` |
+
 ## served-folder[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#served-folder)
 
 `served-folder` warns when a committed file under the top-level `public/` is something a stranger should not be able to download:
@@ -160,11 +173,14 @@ No finding when the app has no `public/` folder. Fix by deleting the file, or mo
 
 Scanned: the top-level `build.sh` and `release.sh`, and every `.sh` file under a `deployments/`, `deploy_scripts/`, `deploy/` or `scripts/` directory at any depth. Skipped at any depth: `vendor/`, `node_modules/` and `.git/`. One finding per file, on the line of its first carriage return.
 
+Warns (`proctor/crlf-deploy-script/no-gitattributes`) when the app has a deploy script and `.gitattributes` has no `*.sh`, `**/*.sh` or `*` line with `eol=lf`.
+
 Fix by converting the file to LF (`sed -i 's/\r$//' build.sh`, or the editor's line-ending setting) and adding `*.sh text eol=lf` to .gitattributes, so Git keeps it LF on every machine.
 
 | Check | Rule id |
 | --- | --- |
 | `crlf-deploy-script` | `proctor/crlf-deploy-script` |
+| `crlf-deploy-script` | `proctor/crlf-deploy-script/no-gitattributes` |
 
 ## case-clash[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#case-clash)
 

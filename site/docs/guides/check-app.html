@@ -41,8 +41,8 @@
   <div class="docs-content">
     <main id="main">
       <article class="docs-article"><h1 id="app-checks">App checks<a class="docs-heading-link" aria-label="Link to this section" href="#app-checks">#</a></h1>
-<p>This page covers the eight PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, <code>env()</code> calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, files a stranger can download from <code>public/</code>, and <code>chmod 777</code>. Each one holds a CREED practice. Run <code>vendor/bin/proctor check</code> against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.</p>
-<p><code>node-eol</code> can fail a run. The other seven warn, never fail: <code>mysql-eol</code> warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.</p>
+<p>This page covers the eleven PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, <code>env()</code> calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, migrations run by a container entrypoint, files a stranger can download from <code>public/</code>, deploy scripts with Windows line endings, paths that differ only by letter case, and <code>chmod 777</code>. Each one holds a CREED practice. Run <code>vendor/bin/proctor check</code> against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.</p>
+<p><code>node-eol</code>, <code>crlf-deploy-script</code> and <code>case-clash</code> can fail a run. The other eight warn, never fail: <code>mysql-eol</code> warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.</p>
 <h2 id="node-eol">node-eol<a class="docs-heading-link" aria-label="Link to this section" href="#node-eol">#</a></h2>
 <p><code>node-eol</code> grades every Node version the repository pins against the policy's <code>node</code> lines as of <code>--today</code>. The sources:</p>
 <ul>
@@ -273,6 +273,28 @@
 </tr>
 </tbody>
 </table></div>
+<h2 id="entrypoint-migrate">entrypoint-migrate<a class="docs-heading-link" aria-label="Link to this section" href="#entrypoint-migrate">#</a></h2>
+<p><code>entrypoint-migrate</code> warns, never fails, when a container entrypoint runs migrations at start: with two replicas both would run <code>migrate</code> at the same moment, and a failed migration crash-loops the container, so WELD practice W24 runs migrations once per release as a job, never in an entrypoint. It reports, and is not in the deploy gate.</p>
+<p>Scanned: every file whose name contains <code>entrypoint</code> (case-insensitive) at any depth; Dockerfiles themselves are not read. Skipped at any depth: <code>vendor/</code>, <code>node_modules/</code> and <code>.git/</code>. A line is flagged when, after removing a trailing shell comment, it contains <code>artisan migrate</code> followed by whitespace, <code>;</code>, <code>&amp;</code>, <code>|</code>, a quote or the end of the line, so <code>migrate --force</code> and a bare <code>migrate</code> flag while <code>migrate:status</code>, <code>migrate:fresh</code> and the other subcommands do not; a line whose first non-space character is <code>#</code> is ignored. A line inside a shell <code>case</code> branch whose label is <code>migrate)</code> or <code>migrate|...)</code>, with optional spaces before it, is not flagged: the branch runs from its label line to the next line ending in <code>;;</code>, or to <code>esac</code>. That is the shape Squire's own entrypoint takes, where the <code>migrate</code> role runs once as a job. One warning per file, on the line of its first flagged line; a file that cannot be read is skipped.</p>
+<p>Fix by moving the migration out of the entrypoint and running it once per release as a job.</p>
+<div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Rule id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>entrypoint-migrate</code></td>
+<td><code>proctor/entrypoint-migrate</code></td>
+</tr>
+<tr>
+<td><code>entrypoint-migrate</code></td>
+<td><code>proctor/entrypoint-migrate/runs</code></td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="served-folder">served-folder<a class="docs-heading-link" aria-label="Link to this section" href="#served-folder">#</a></h2>
 <p><code>served-folder</code> warns when a committed file under the top-level <code>public/</code> is something a stranger should not be able to download:</p>
 <ul>
@@ -305,6 +327,7 @@
 <h2 id="crlf-deploy-script">crlf-deploy-script<a class="docs-heading-link" aria-label="Link to this section" href="#crlf-deploy-script">#</a></h2>
 <p><code>crlf-deploy-script</code> fails when a deploy script has Windows line endings (CRLF): bash on Linux reads the carriage return as part of each command, so <code>set -e</code> becomes <code>set -e\r</code> and the script breaks on the host that runs it.</p>
 <p>Scanned: the top-level <code>build.sh</code> and <code>release.sh</code>, and every <code>.sh</code> file under a <code>deployments/</code>, <code>deploy_scripts/</code>, <code>deploy/</code> or <code>scripts/</code> directory at any depth. Skipped at any depth: <code>vendor/</code>, <code>node_modules/</code> and <code>.git/</code>. One finding per file, on the line of its first carriage return.</p>
+<p>Warns (<code>proctor/crlf-deploy-script/no-gitattributes</code>) when the app has a deploy script and <code>.gitattributes</code> has no <code>*.sh</code>, <code>**/*.sh</code> or <code>*</code> line with <code>eol=lf</code>.</p>
 <p>Fix by converting the file to LF (<code>sed -i 's/\r$//' build.sh</code>, or the editor's line-ending setting) and adding <code>*.sh text eol=lf</code> to .gitattributes, so Git keeps it LF on every machine.</p>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
 <thead>
@@ -317,6 +340,10 @@
 <tr>
 <td><code>crlf-deploy-script</code></td>
 <td><code>proctor/crlf-deploy-script</code></td>
+</tr>
+<tr>
+<td><code>crlf-deploy-script</code></td>
+<td><code>proctor/crlf-deploy-script/no-gitattributes</code></td>
 </tr>
 </tbody>
 </table></div>
@@ -371,7 +398,7 @@
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../../docs/guides/check-ci.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">CI checks</span></a><a class="docs-pager__link docs-pager__link--next" href="../../docs/guides/check-wayneui.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">WayneUI checks</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#node-eol">node-eol</a></li><li class="docs-toc__item"><a href="#mysql-eol">mysql-eol</a></li><li class="docs-toc__item"><a href="#env-outside-config">env-outside-config</a></li><li class="docs-toc__item"><a href="#raw-identity-header">raw-identity-header</a></li><li class="docs-toc__item"><a href="#app-key">app-key</a></li><li class="docs-toc__item"><a href="#app-debug">app-debug</a></li><li class="docs-toc__item"><a href="#served-folder">served-folder</a></li><li class="docs-toc__item"><a href="#crlf-deploy-script">crlf-deploy-script</a></li><li class="docs-toc__item"><a href="#case-clash">case-clash</a></li><li class="docs-toc__item"><a href="#world-writable">world-writable</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#node-eol">node-eol</a></li><li class="docs-toc__item"><a href="#mysql-eol">mysql-eol</a></li><li class="docs-toc__item"><a href="#env-outside-config">env-outside-config</a></li><li class="docs-toc__item"><a href="#raw-identity-header">raw-identity-header</a></li><li class="docs-toc__item"><a href="#app-key">app-key</a></li><li class="docs-toc__item"><a href="#app-debug">app-debug</a></li><li class="docs-toc__item"><a href="#entrypoint-migrate">entrypoint-migrate</a></li><li class="docs-toc__item"><a href="#served-folder">served-folder</a></li><li class="docs-toc__item"><a href="#crlf-deploy-script">crlf-deploy-script</a></li><li class="docs-toc__item"><a href="#case-clash">case-clash</a></li><li class="docs-toc__item"><a href="#world-writable">world-writable</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.9.0</span></span>

@@ -102,7 +102,8 @@ vendor/bin/proctor gate [--path=.] [--format=text|json] [--baseline=<report or d
 - `portability`: warns when code hard-codes a platform fact: an absolute host path, a hard-coded proxy address, a local-disk session store, or a php_value/php_flag line in .htaccess. PHP files are matched on the syntax tree (nikic/php-parser with names resolved), not with regular expressions, so a comment or string that merely mentions a banned call is not flagged and a call split over several lines, or hidden behind a `use function ... as ...` alias, is. A call through a variable (`$f()`) is reported as an info note, never as a pass. Scanned: every *.php file, every file under the top-level `config/` directory, and every `.htaccess`. Skipped at any depth: `vendor/`, `node_modules/`, `storage/`, `tests/` and `.git/`; in a Laravel app (an `artisan` file at the project root) also the top-level `bootstrap/cache/`, which holds the generated output of `php artisan optimize` (config.php, routes-v7.php, services.php, packages.php, events.php) instead of app code. A raw-PHP app that keeps its own `bootstrap/cache/` folder is scanned as before.
 - `mysql56`: warns when migrations or app code use MySQL features the shared 5.6 server rejects: JSON columns (in `database/`) and JSON queries, generated columns, `renameColumn`/`renameIndex`, vector, invisible and spatial columns, `Schema::hasColumn`-style introspection, raw SQL with 5.7+ syntax, the upsert row alias, indexed strings over 191 characters, date columns defaulting to the current time, and the `db:show`/`db:monitor` commands. Citadel's shared MySQL server is 5.6, so migrations must avoid newer features. Warnings, not failures: an app on its own newer database is not affected. Fix by avoiding the feature (a raw `ALTER TABLE ... CHANGE` instead of `renameColumn`, `timestamp` instead of a date column defaulting to now, `Schema::defaultStringLength(191)` in `boot()`) or by moving the app to its own database. HTTP `->json()` calls are not flagged, and a long string only warns when the same migration indexes it.
 - `destructive-deploy`: fails when a deploy script runs an artisan command that drops or rebuilds the database (`migrate:fresh`, `migrate:refresh`, `migrate:reset`, `db:wipe`), which erases production data on every deploy. Scans `.sh` and `.php` files under a top-level `deployments/`, `deploy_scripts/`, `deploy/` or `scripts/` directory, the top-level `build.sh`, `release.sh` and `.gitlab-ci.yml`, and the `scripts` section of composer.json; shell comments are ignored. Fix by running plain `php artisan migrate --force` in the deploy.
-- `crlf-deploy-script`: fails when a deploy script has Windows line endings (CRLF): bash on Linux reads the carriage return as part of each command, so the script breaks on Citadel's Linux hosts. Scans the top-level `build.sh` and `release.sh`, and every `.sh` file under a `deployments/`, `deploy_scripts/`, `deploy/` or `scripts/` directory at any depth; `vendor/`, `node_modules/` and `.git/` are skipped at any depth. One finding per file, on the line of its first carriage return. Fix by converting the file to LF (`sed -i 's/\r$//' build.sh`) and adding `*.sh text eol=lf` to .gitattributes.
+- `crlf-deploy-script`: fails when a deploy script has Windows line endings (CRLF): bash on Linux reads the carriage return as part of each command, so the script breaks on Citadel's Linux hosts. Scans the top-level `build.sh` and `release.sh`, and every `.sh` file under a `deployments/`, `deploy_scripts/`, `deploy/` or `scripts/` directory at any depth; `vendor/`, `node_modules/` and `.git/` are skipped at any depth. One finding per file, on the line of its first carriage return. Fix by converting the file to LF (`sed -i 's/\r$//' build.sh`) and adding `*.sh text eol=lf` to .gitattributes. Warns (`proctor/crlf-deploy-script/no-gitattributes`) when the app has a deploy script and `.gitattributes` has no `*.sh`, `**/*.sh` or `*` line with `eol=lf`.
+- `entrypoint-migrate`: warns, never fails, when a container entrypoint runs migrations at start: with two replicas both would run `migrate` at the same moment, and a failed migration crash-loops the container, so migrations run once per release as a job (WELD W24). Scanned: every file whose name contains `entrypoint` (case-insensitive) at any depth; `vendor/`, `node_modules/` and `.git/` are skipped at any depth, and Dockerfiles themselves are not read. A line is flagged when it runs `artisan migrate` (a bare `migrate`; `migrate:status`, `migrate:fresh` and the other subcommands are not), after removing a trailing shell comment; a line whose first non-space character is `#` is ignored, and a line inside a `migrate)` case branch, to the branch's `;;` or `esac`, is not. One warning per file, on the line of its first flagged line. Fix by moving the migration out of the entrypoint and running it once per release as a job, the way Squire's entrypoint takes a `migrate` role. It reports, and is not in the deploy gate.
 - `case-clash`: fails when two paths differ only by letter case (`README.md` and `readme.md`): macOS and Windows checkouts ignore case, so one silently replaces the other, and a Linux host then loads a different file than the developer edited. Scanned: every file and directory under the app path; skipped at any depth: `vendor/`, `node_modules/` and `.git/`. One finding per topmost clash, naming every colliding path; a clash below a clashing directory is part of it, not its own finding. Fix by keeping one name and deleting or renaming the duplicate.
 - `ci-pipelines`: for stack packages (composer.json `name` starting with `waynestate/`), fails when `.gitlab-ci.yml` or `.github/workflows/ci.yml` is missing or runs no `composer ci`; for any other project, a missing or incomplete `.gitlab-ci.yml` is a warning and `.github/workflows/ci.yml` is optional. A private stack package that sets `extra.proctor.github-mirror` to `false` in composer.json must never be on GitHub: a missing `.github/workflows/ci.yml` then gives no finding, and a present one warns (`proctor/ci-pipelines/github-private`) along with the warning-only rules. Warns when a GitHub `uses:` ref is not a 40-hex commit SHA. Warns (`proctor/ci-pipelines/composer-audit-off`) when the pipeline environment switches Composer's audit or blocking policy off: `COMPOSER_NO_AUDIT` or `COMPOSER_NO_BLOCKING` set to anything but an empty string, `0` or `false`, or `COMPOSER_AUDIT_ABANDONED` set to `ignore`, in the GitLab top-level or job `variables:` (a scalar or a map with a `value` key) or the GitHub top-level, job or step `env:`. Warns (`proctor/ci-pipelines/composer-update`) once per line when a command segment of a GitLab job script line (`script`, `before_script` or `after_script`) or a GitHub step run starts with `composer update` or `composer require`: CI must install from the lock (rule 3.7). Warns (`proctor/ci-pipelines/allow-overrides`) once per file when the pipeline environment sets `PROCTOR_ALLOW_OVERRIDES` to `1`, which lets the app pass `--policy` and `--today` in CI (BEST_PRACTICES 1.2) and grade itself against a policy or a date it picks; any other value leaves the guard on. A warning, never a fail, for stack packages and other projects alike. The proctor fails the stack's own exam halls, and only leaves a note for everyone else's.
 - `preflight-pinned`: warns, never fails, when an app includes a Preflight component at a moving ref or re-declares what an included Preflight job runs. A Preflight include is an `include:` entry whose `component:` path contains `/preflight/`; when the ref after the last `@` is neither a full release tag (`MAJOR.MINOR.PATCH` such as `0.3.0`, optional leading `v`) nor a 40-lowercase-hex commit SHA it warns (`proctor/preflight-pinned/unpinned`), and a branch such as `main`, `~latest`, a partial version such as `0.3` or `1`, or no `@` at all all count as moving. Pin a release tag such as `@0.3.0` or a commit SHA; published stack tags are never moved or deleted, so a release tag is a pin (D-054). When the app declares one of the Preflight job names (`proctor`, `php-test`, `composer-audit`, `sbom`, `pint`, `phpstan`, `eslint`, `renovate`, `package-publish`) with `script`, `before_script` or `after_script` while a Preflight component is included, it warns (`proctor/preflight-pinned/script-override`). With nothing to flag it passes: `Preflight includes are pinned`, or `no Preflight components included` when there is no pipeline, a parse error or no Preflight include. The proctor checks the boarding pass against the manifest, so the app cannot board a different flight mid-run.
@@ -225,6 +226,9 @@ The full set, grouped by check:
 | `lock-committed` | `proctor/lock-committed/out-of-sync` |
 | `destructive-deploy` | `proctor/destructive-deploy` |
 | `crlf-deploy-script` | `proctor/crlf-deploy-script` |
+| `crlf-deploy-script` | `proctor/crlf-deploy-script/no-gitattributes` |
+| `entrypoint-migrate` | `proctor/entrypoint-migrate` |
+| `entrypoint-migrate` | `proctor/entrypoint-migrate/runs` |
 | `case-clash` | `proctor/case-clash` |
 | `overrides` | `proctor/overrides` |
 | `overrides` | `proctor/overrides/expiring` |
@@ -1215,9 +1219,9 @@ Source: https://proctor.apps.wayne.edu/docs/guides/check-app.html
 
 ## App checks[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-checks)
 
-This page covers the eight PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, files a stranger can download from `public/`, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
+This page covers the eleven PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
 
-`node-eol` can fail a run. The other seven warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.
+`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other eight warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.
 
 ### node-eol[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#node-eol)
 
@@ -1346,6 +1350,19 @@ Fix by setting `APP_DEBUG=false` in the file the report names.
 | `app-debug` | `proctor/app-debug` |
 | `app-debug` | `proctor/app-debug/enabled` |
 
+### entrypoint-migrate[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#entrypoint-migrate)
+
+`entrypoint-migrate` warns, never fails, when a container entrypoint runs migrations at start: with two replicas both would run `migrate` at the same moment, and a failed migration crash-loops the container, so WELD practice W24 runs migrations once per release as a job, never in an entrypoint. It reports, and is not in the deploy gate.
+
+Scanned: every file whose name contains `entrypoint` (case-insensitive) at any depth; Dockerfiles themselves are not read. Skipped at any depth: `vendor/`, `node_modules/` and `.git/`. A line is flagged when, after removing a trailing shell comment, it contains `artisan migrate` followed by whitespace, `;`, `&`, `|`, a quote or the end of the line, so `migrate --force` and a bare `migrate` flag while `migrate:status`, `migrate:fresh` and the other subcommands do not; a line whose first non-space character is `#` is ignored. A line inside a shell `case` branch whose label is `migrate)` or `migrate|...)`, with optional spaces before it, is not flagged: the branch runs from its label line to the next line ending in `;;`, or to `esac`. That is the shape Squire's own entrypoint takes, where the `migrate` role runs once as a job. One warning per file, on the line of its first flagged line; a file that cannot be read is skipped.
+
+Fix by moving the migration out of the entrypoint and running it once per release as a job.
+
+| Check | Rule id |
+| --- | --- |
+| `entrypoint-migrate` | `proctor/entrypoint-migrate` |
+| `entrypoint-migrate` | `proctor/entrypoint-migrate/runs` |
+
 ### served-folder[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#served-folder)
 
 `served-folder` warns when a committed file under the top-level `public/` is something a stranger should not be able to download:
@@ -1367,11 +1384,14 @@ No finding when the app has no `public/` folder. Fix by deleting the file, or mo
 
 Scanned: the top-level `build.sh` and `release.sh`, and every `.sh` file under a `deployments/`, `deploy_scripts/`, `deploy/` or `scripts/` directory at any depth. Skipped at any depth: `vendor/`, `node_modules/` and `.git/`. One finding per file, on the line of its first carriage return.
 
+Warns (`proctor/crlf-deploy-script/no-gitattributes`) when the app has a deploy script and `.gitattributes` has no `*.sh`, `**/*.sh` or `*` line with `eol=lf`.
+
 Fix by converting the file to LF (`sed -i 's/\r$//' build.sh`, or the editor's line-ending setting) and adding `*.sh text eol=lf` to .gitattributes, so Git keeps it LF on every machine.
 
 | Check | Rule id |
 | --- | --- |
 | `crlf-deploy-script` | `proctor/crlf-deploy-script` |
+| `crlf-deploy-script` | `proctor/crlf-deploy-script/no-gitattributes` |
 
 ### case-clash[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#case-clash)
 
@@ -1835,7 +1855,7 @@ This page lists every check PROCTOR runs in a single `vendor/bin/proctor check` 
 
 ![Nine real lines from PROCTOR's text report, one per check shown: FAIL php-floor, WARN unpatched, FAIL unbounded-constraints, PASS lock-committed, WARN portability, WARN mysql56, WARN ci-pipelines, PASS composer-audit, FAIL overrides. Each line is written in words; color only repeats what the word says.](https://proctor.apps.wayne.edu/docs/readme/report.svg)
 
-*Nine of the thirty-two checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
+*Nine of the thirty-three checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
 
 ### How a check reports[#](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html#how-a-check-reports)
 
@@ -1882,7 +1902,7 @@ Details and fixes: [CI checks](https://proctor.apps.wayne.edu/docs/guides/check-
 
 ### App code and files[#](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html#app-code-and-files)
 
-The checks that read the app's own files: the Node line it builds on, the MySQL or MariaDB image it runs, `env()` outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, files in `public/` and `chmod 777`. Details and fixes: [App checks](https://proctor.apps.wayne.edu/docs/guides/check-app.html).
+The checks that read the app's own files: the Node line it builds on, the MySQL or MariaDB image it runs, `env()` outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, files in `public/`, a container entrypoint that runs migrations and `chmod 777`. Details and fixes: [App checks](https://proctor.apps.wayne.edu/docs/guides/check-app.html).
 
 - `node-eol`: grades every Node version the repository pins (`.nvmrc`, `.node-version`, package.json `volta.node`, an official `node` image in `.gitlab-ci.yml` or a Dockerfile) with php-floor's table: active passes, security-only warns, eol fails, and past the grace window it fails as `eol_grace_expired`. `engines.node` warns at worst and an odd major always warns. Silent when the policy has no node component.
 - `mysql-eol`: grades every MySQL or MariaDB version the repository names (an official `mysql` or `mariadb` image in a root compose file, and `SQUIRE_MYSQL_IMAGE=mysql:<version>` in an env example) with php-floor's table, except an active version stays silent: security-only warns, and eol and `eol_grace_expired` warn until Citadel offers a supported MySQL (D-008). Silent when the policy has no mysql or mariadb component.
