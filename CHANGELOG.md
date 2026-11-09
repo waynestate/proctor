@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Docs: the ADVISOR guide lists `vite-secrets` among the checks `proctor_check` skips because they read env files, next to `app-key` (ADVISOR already skipped it).
+
 ## 0.10.0 (2026-11-09)
 
 - Fixed: scripts/a11y.ps1 works on a Windows checkout with CRLF line endings; it strips the carriage returns from the shell command it hands to Docker, which sh rejected with a syntax error.
