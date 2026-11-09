@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Changed: CI pins the Preflight components to 0.4.0 (was 0.3.1): the proctor job clones the full history (`git_depth: "0"`, spelled out), so override-approver can read git blame on every override line, and php-test and proctor refuse a Composer older than 2.9.6.
 - Added: the `mysql-minimum` check warns (`proctor/mysql-minimum/below`) when the app's MySQL or MariaDB image is below the minimum the policy records for its Laravel line; it reports, and is not in the deploy gate.
 - Added: `crlf-deploy-script` warns (`proctor/crlf-deploy-script/no-gitattributes`) when the app has a deploy script and .gitattributes does not pin `*.sh` to `eol=lf` (CREED practice 34).
 - Added: the `entrypoint-migrate` check warns when a container entrypoint runs `artisan migrate` at start; run migrations once per release as a job (WELD W24). It reports, and is not in the deploy gate.

@@ -443,9 +443,10 @@ line, and the `composer-version` check (see 4.6) fails when the Composer on PATH
 CVE-2024-35241 and CVE-2024-35242 or is Composer 1. Since 0.7.0, the same check also fails when the
 Composer on PATH is below the CREED policy's `tools.composer.minimum` (2.8.0 in the bundled policy), naming the
 policy in the message; the CVE floors stay as absolute floors underneath it. Preflight's `php-test` and `proctor` jobs
-install the Composer release named by their `composer_version` input (default `2.10.3` in Preflight 0.3.1), which
-carries the 2026 Perforce fixes. What remains: the policy minimum (2.8.0) sits below those fixes in 2.9.6 and 2.10.3,
-so the check passes a Composer that lacks them, and an app can set `composer_version` to an older release.
+install the Composer release named by their `composer_version` input (default `2.10.3` in Preflight 0.4.0, the pin
+PROCTOR's own pipeline uses), which carries the 2026 Perforce fixes, and since Preflight 0.4.0 that input refuses a
+release older than 2.9.6. What remains: the policy minimum (2.8.0) sits below those fixes in 2.9.6 and 2.10.3, so the
+check passes a Composer that lacks them, and an app on an older Preflight pin can still set `composer_version` lower.
 
 ### 4.9 Report an app that switches the dependency policy off (second pass)
 Look for `config.policy` set to `false`, `policy.malware` or `policy.advisories` set to `false`, and the matching
