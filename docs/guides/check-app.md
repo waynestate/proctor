@@ -136,6 +136,19 @@ Fix by setting `APP_DEBUG=false` in the file the report names.
 | `app-debug` | `proctor/app-debug` |
 | `app-debug` | `proctor/app-debug/enabled` |
 
+## entrypoint-migrate
+
+`entrypoint-migrate` warns, never fails, when a container entrypoint runs migrations at start: with two replicas both would run `migrate` at the same moment, and a failed migration crash-loops the container, so WELD practice W24 runs migrations once per release as a job, never in an entrypoint. It reports, and is not in the deploy gate.
+
+Scanned: every file whose name contains `entrypoint` (case-insensitive) at any depth; Dockerfiles themselves are not read. Skipped at any depth: `vendor/`, `node_modules/` and `.git/`. A line is flagged when, after removing a trailing shell comment, it contains `artisan migrate` followed by whitespace, `;`, `&`, `|`, a quote or the end of the line, so `migrate --force` and a bare `migrate` flag while `migrate:status`, `migrate:fresh` and the other subcommands do not; a line whose first non-space character is `#` is ignored. A line inside a shell `case` branch whose label is `migrate)` or `migrate|...)`, with optional spaces before it, is not flagged: the branch runs from its label line to the next line ending in `;;`, or to `esac`. That is the shape Squire's own entrypoint takes, where the `migrate` role runs once as a job. One warning per file, on the line of its first flagged line; a file that cannot be read is skipped.
+
+Fix by moving the migration out of the entrypoint and running it once per release as a job.
+
+| Check | Rule id |
+| --- | --- |
+| `entrypoint-migrate` | `proctor/entrypoint-migrate` |
+| `entrypoint-migrate` | `proctor/entrypoint-migrate/runs` |
+
 ## served-folder
 
 `served-folder` warns when a committed file under the top-level `public/` is something a stranger should not be able to download:

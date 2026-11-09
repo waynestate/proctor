@@ -30,6 +30,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/lock-committed',
         'proctor/destructive-deploy',
         'proctor/crlf-deploy-script',
+        'proctor/entrypoint-migrate',
         'proctor/case-clash',
         'proctor/overrides',
         'proctor/unbounded-constraints',
@@ -65,6 +66,8 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/app-key/cookie-sessions',
         // app-debug
         'proctor/app-debug/enabled',
+        // entrypoint-migrate
+        'proctor/entrypoint-migrate/runs',
         // served-folder
         'proctor/served-folder/debug-file',
         'proctor/served-folder/phpinfo',

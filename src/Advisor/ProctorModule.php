@@ -111,6 +111,7 @@ final class ProctorModule implements Module
         'wayneui-forked-views' => 'check-wayneui',
         'wayneui-outdated' => 'check-wayneui',
         'app-debug' => 'check-app',
+        'entrypoint-migrate' => 'check-app',
     ];
 
     /** The bundled CREED policy, the copy PolicyResolver falls back to. */
