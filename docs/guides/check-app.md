@@ -7,7 +7,7 @@ description: The checks that read an app's own files for an end-of-life Node lin
 
 This page covers the eighteen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a robots.txt that is missing or lets every crawler in, secret-looking `VITE_` variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, shell scripts, server config and Dockerfiles that `.gitattributes` does not pin to LF, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
 
-`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other fifteen warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.
+`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other fifteen warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL, and a new check must not turn a passing app into a failing one.
 
 ## node-eol
 
@@ -57,7 +57,7 @@ A `@sha256:` digest after the tag is tolerated: the version still comes from the
 | End of life | warning, naming the security end date |
 | Past the security end date plus the grace window | warning as `eol_grace_expired` |
 
-Every row warns, never fails, until Citadel offers a supported MySQL (D-008). No override is needed while that holds: every graded state already warns.
+Every row warns, never fails, until Citadel offers a supported MySQL. No override is needed while that holds: every graded state already warns.
 
 No finding when the policy has no `mysql` or `mariadb` component, when the repository names no database version, or for another organization's image that happens to be called mysql (`someorg/mysql:8.0`). A bare major tag such as `mysql:8` is a floating tag and gets a warning to pin a major.minor; it is not graded as a guessed line.
 

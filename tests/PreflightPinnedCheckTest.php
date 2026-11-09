@@ -95,7 +95,7 @@ YAML);
     }
 
     /**
-     * Full release tags are pins (D-054): published tags are never moved.
+     * Full release tags are pins: published tags are never moved.
      *
      * @return array<string, array{0: string}>
      */

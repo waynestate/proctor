@@ -138,7 +138,7 @@ Released 2026-11-08. This is a pre-1.0 minor: consumers that pin `^0.8` stay on 
 
 - `dev-only-packages` warns on Telescope and on test tools (PHPUnit, Pest, Mockery, Sail, Pail, Collision) in `require`.
 - `override-approver` warns by default (`rules.override_self_approval` absent), and reports `could-not-run`, never a pass, without git history; Preflight's proctor component clones the full history by default since its `git_depth` input.
-- The deploy gate honors CREED's gate stages (D-071): a failure whose check the policy puts at `report` or `warn` is logged as `staged` and the deploy goes ahead. The JSON summary gains `staged` and each finding `stage`.
+- The deploy gate honors CREED's gate stages: a failure whose check the policy puts at `report` or `warn` is logged as `staged` and the deploy goes ahead. The JSON summary gains `staged` and each finding `stage`.
 - The front page lists the supported versions from the bundled policy.
 
 ### Deprecated
@@ -168,9 +168,9 @@ Released 2026-11-08. This is a pre-1.0 minor: consumers that pin `^0.7` stay on 
 
 ### Changed
 
-- `mysql-eol` is new and warns, never fails, while Citadel's shared database server is MySQL 5.6 (D-008, D-053). It grades the MySQL or MariaDB version named in a root compose file and in `SQUIRE_MYSQL_IMAGE` in `.env.example` or `.env.squire.example`: a security-only line warns with the days left, an end-of-life line warns as `eol_grace_expired` and says to move to MySQL 8.4 or later, and a floating major tag such as `mysql:8` warns until you pin a major.minor. It turns into a fail once Citadel offers a supported MySQL, so treat these warnings as the to-do list for that day.
+- `mysql-eol` is new and warns, never fails, while Citadel's shared database server is MySQL 5.6. It grades the MySQL or MariaDB version named in a root compose file and in `SQUIRE_MYSQL_IMAGE` in `.env.example` or `.env.squire.example`: a security-only line warns with the days left, an end-of-life line warns as `eol_grace_expired` and says to move to MySQL 8.4 or later, and a floating major tag such as `mysql:8` warns until you pin a major.minor. It turns into a fail once Citadel offers a supported MySQL, so treat these warnings as the to-do list for that day.
 - `raw-identity-header` also warns on a direct read of `X-Sesame-Assertion`, the signed assertion Drawbridge sends. Only SESAME's gateway driver should read it; take the user from SESAME instead.
-- `preflight-pinned` accepts a Preflight component pinned to a full release tag such as `@0.3.0` as well as a commit SHA (D-054), so a tag pin no longer warns. A branch, `~latest` or a partial version such as `@0.3` still warns.
+- `preflight-pinned` accepts a Preflight component pinned to a full release tag such as `@0.3.0` as well as a commit SHA, so a tag pin no longer warns. A branch, `~latest` or a partial version such as `@0.3` still warns.
 
 ### Deprecated
 

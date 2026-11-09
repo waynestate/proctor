@@ -182,7 +182,7 @@ final class GateCommand extends Command
     }
 
     /**
-     * The CREED gate stage of a check on the run date (ADR-0006 item 4, D-071).
+     * The CREED gate stage of a check on the run date (ADR-0006 item 4).
      *
      * @return Closure(string): string
      */

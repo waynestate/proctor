@@ -17,7 +17,7 @@ use Symfony\Component\Yaml\Yaml;
  * app, and a job that re-declares a script hides what the component was
  * meant to run. Both are worth a yellow light, not a red one.
  *
- * A full release tag (0.3.0, v1.2.3) counts as a pin (D-054): published tags
+ * A full release tag (0.3.0, v1.2.3) counts as a pin: published tags
  * in the stack are never moved or deleted, so the tag names one commit for
  * good. A partial version such as 0.3 or 1 does not: GitLab resolves it to
  * the newest matching release, which moves on every release.

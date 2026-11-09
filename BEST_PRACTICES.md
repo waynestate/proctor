@@ -1053,8 +1053,7 @@ finding at all. A GitHub `uses:` ref that is not a 40-hex commit SHA is a warnin
 An app that includes a Preflight component should pin it to a release tag (such as `@0.3.0`) or a commit SHA rather
 than a branch, `~latest` or a partial version, so the pipeline cannot change out from under the app between releases,
 and it should not re-declare the `script` of a job the component already defines, because that hides what the
-component was meant to run. A release tag is a pin because published tags in the stack are never moved or deleted
-(D-054); a partial version such as `0.3` is not, because GitLab resolves it to the newest matching release.
+component was meant to run. A release tag is a pin because published tags in the stack are never moved or deleted; a partial version such as `0.3` is not, because GitLab resolves it to the newest matching release.
 
 **How the stack holds it: Checked.** The `preflight-pinned` check warns, never fails, when a `.gitlab-ci.yml` include
 of a Preflight component (a `component:` path containing `/preflight/`) is at a ref that is neither a full release tag
@@ -1125,7 +1124,7 @@ each MySQL and MariaDB line's dates. What was missing was a check that reads whi
 `SQUIRE_MYSQL_IMAGE=mysql:<version>` in `.env.squire.example` or `.env.example`) with the same table as `php-floor`,
 except a supported version stays silent instead of passing and nothing fails: active is silent, security-only warns
 with the days left, and eol and `eol_grace_expired` warn until Citadel's shared database server offers a supported
-MySQL (D-008, D-053); then eol fails again. A `@sha256:` digest
+MySQL; then eol fails again. A `@sha256:` digest
 after the tag is tolerated; the version comes from the tag. Silent when the policy has no mysql or mariadb component.
 `MysqlEolCheckTest` pins every source and state.
 

@@ -220,7 +220,7 @@
 <ul>
 <li><code>dev-only-packages</code> warns on Telescope and on test tools (PHPUnit, Pest, Mockery, Sail, Pail, Collision) in <code>require</code>.</li>
 <li><code>override-approver</code> warns by default (<code>rules.override_self_approval</code> absent), and reports <code>could-not-run</code>, never a pass, without git history; Preflight's proctor component clones the full history by default since its <code>git_depth</code> input.</li>
-<li>The deploy gate honors CREED's gate stages (D-071): a failure whose check the policy puts at <code>report</code> or <code>warn</code> is logged as <code>staged</code> and the deploy goes ahead. The JSON summary gains <code>staged</code> and each finding <code>stage</code>.</li>
+<li>The deploy gate honors CREED's gate stages: a failure whose check the policy puts at <code>report</code> or <code>warn</code> is logged as <code>staged</code> and the deploy goes ahead. The JSON summary gains <code>staged</code> and each finding <code>stage</code>.</li>
 <li>The front page lists the supported versions from the bundled policy.</li>
 </ul>
 <h3 id="deprecated-3">Deprecated<a class="docs-heading-link" aria-label="Link to this section" href="#deprecated-3">#</a></h3>
@@ -250,9 +250,9 @@
 </ul>
 <h3 id="changed-4">Changed<a class="docs-heading-link" aria-label="Link to this section" href="#changed-4">#</a></h3>
 <ul>
-<li><code>mysql-eol</code> is new and warns, never fails, while Citadel's shared database server is MySQL 5.6 (D-008, D-053). It grades the MySQL or MariaDB version named in a root compose file and in <code>SQUIRE_MYSQL_IMAGE</code> in <code>.env.example</code> or <code>.env.squire.example</code>: a security-only line warns with the days left, an end-of-life line warns as <code>eol_grace_expired</code> and says to move to MySQL 8.4 or later, and a floating major tag such as <code>mysql:8</code> warns until you pin a major.minor. It turns into a fail once Citadel offers a supported MySQL, so treat these warnings as the to-do list for that day.</li>
+<li><code>mysql-eol</code> is new and warns, never fails, while Citadel's shared database server is MySQL 5.6. It grades the MySQL or MariaDB version named in a root compose file and in <code>SQUIRE_MYSQL_IMAGE</code> in <code>.env.example</code> or <code>.env.squire.example</code>: a security-only line warns with the days left, an end-of-life line warns as <code>eol_grace_expired</code> and says to move to MySQL 8.4 or later, and a floating major tag such as <code>mysql:8</code> warns until you pin a major.minor. It turns into a fail once Citadel offers a supported MySQL, so treat these warnings as the to-do list for that day.</li>
 <li><code>raw-identity-header</code> also warns on a direct read of <code>X-Sesame-Assertion</code>, the signed assertion Drawbridge sends. Only SESAME's gateway driver should read it; take the user from SESAME instead.</li>
-<li><code>preflight-pinned</code> accepts a Preflight component pinned to a full release tag such as <code>@0.3.0</code> as well as a commit SHA (D-054), so a tag pin no longer warns. A branch, <code>~latest</code> or a partial version such as <code>@0.3</code> still warns.</li>
+<li><code>preflight-pinned</code> accepts a Preflight component pinned to a full release tag such as <code>@0.3.0</code> as well as a commit SHA, so a tag pin no longer warns. A branch, <code>~latest</code> or a partial version such as <code>@0.3</code> still warns.</li>
 </ul>
 <h3 id="deprecated-4">Deprecated<a class="docs-heading-link" aria-label="Link to this section" href="#deprecated-4">#</a></h3>
 <ul>

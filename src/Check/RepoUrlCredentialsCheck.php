@@ -10,7 +10,7 @@ namespace Waynestate\Proctor\Check;
  * Many WSU apps install private libraries through vcs repository entries
  * whose URL carries a deploy token (https://gitlab+deploy-token-12:SECRET@
  * host/group/lib.git), and the same URL then lands in composer.lock. The
- * stack decided (D-034) that PROCTOR flags this as a warning, not a
+ * stack decided that PROCTOR flags this as a warning, not a
  * failure, because about sixteen production apps carry such URLs today.
  *
  * Scanned when present: composer.json repositories[*].url (array or object

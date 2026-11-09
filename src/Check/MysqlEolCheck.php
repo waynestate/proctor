@@ -18,7 +18,7 @@ use Waynestate\Proctor\Creed\State;
  * state table: still in active support is silent, past `active_until` warns
  * with the days left, and past `security_until` warns as eol or, beyond the
  * grace window, eol_grace_expired. Every finding warns, never fails, until
- * Citadel offers a supported MySQL (D-008); then eol fails again. Unlike
+ * Citadel offers a supported MySQL; then eol fails again. Unlike
  * node-eol, a supported version earns no PASS line: a database that is fine
  * is not news.
  *
@@ -87,7 +87,7 @@ final class MysqlEolCheck implements CheckInterface
         }
 
         // Every graded state warns, never fails, until Citadel offers a
-        // supported MySQL (D-008); eol fails again once it does (D-053).
+        // supported MySQL; eol fails again once it does.
         $status = Finding::STATUS_WARNING;
         $subject = sprintf('%s %s (%s)', $engine, $version, $path);
 
