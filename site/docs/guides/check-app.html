@@ -41,8 +41,8 @@
   <div class="docs-content">
     <main id="main">
       <article class="docs-article"><h1 id="app-checks">App checks<a class="docs-heading-link" aria-label="Link to this section" href="#app-checks">#</a></h1>
-<p>This page covers the eleven PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, <code>env()</code> calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, migrations run by a container entrypoint, files a stranger can download from <code>public/</code>, deploy scripts with Windows line endings, paths that differ only by letter case, and <code>chmod 777</code>. Each one holds a CREED practice. Run <code>vendor/bin/proctor check</code> against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.</p>
-<p><code>node-eol</code>, <code>crlf-deploy-script</code> and <code>case-clash</code> can fail a run. The other eight warn, never fail: <code>mysql-eol</code> warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.</p>
+<p>This page covers the twelve PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, <code>env()</code> calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, migrations run by a container entrypoint, files a stranger can download from <code>public/</code>, deploy scripts with Windows line endings, paths that differ only by letter case, and <code>chmod 777</code>. Each one holds a CREED practice. Run <code>vendor/bin/proctor check</code> against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.</p>
+<p><code>node-eol</code>, <code>crlf-deploy-script</code> and <code>case-clash</code> can fail a run. The other nine warn, never fail: <code>mysql-eol</code> warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.</p>
 <h2 id="node-eol">node-eol<a class="docs-heading-link" aria-label="Link to this section" href="#node-eol">#</a></h2>
 <p><code>node-eol</code> grades every Node version the repository pins against the policy's <code>node</code> lines as of <code>--today</code>. The sources:</p>
 <ul>
@@ -151,6 +151,28 @@
 <tr>
 <td><code>mysql-eol</code></td>
 <td><code>proctor/mysql-eol</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="mysql-minimum">mysql-minimum<a class="docs-heading-link" aria-label="Link to this section" href="#mysql-minimum">#</a></h2>
+<p><code>mysql-minimum</code> warns, never fails, when the app's MySQL or MariaDB image is below the minimum the policy records for its Laravel line: an app on Laravel 12 with <code>mysql:5.6</code> passes <code>mysql-eol</code>'s line lookup but cannot run its migrations. It reads the locked <code>laravel/framework</code> version from composer.lock, resolves its policy line, and takes the line's recorded <code>requires.mysql</code> and <code>requires.mariadb</code> minimums. The image is found the way <code>mysql-eol</code> finds it: an official <code>mysql</code> or <code>mariadb</code> image on an <code>image:</code> line in a root <code>docker-compose*.yml</code> or <code>compose*.yml</code>, and <code>SQUIRE_MYSQL_IMAGE=mysql:&lt;version&gt;</code> in <code>.env.squire.example</code> or <code>.env.example</code>; the version the tag names is what is compared.</p>
+<p>Each declared image whose engine has a recorded minimum is compared with it: below the minimum, one warning per declaration (<code>proctor/mysql-minimum/below</code>) naming the declaration, such as <code>mysql 5.6 is below the 5.7 minimum Laravel 12 needs (docker-compose.yml:7)</code>. With at least one image graded and none below, one pass finding names the first graded image: <code>mysql 8.4 meets the 5.7 minimum Laravel 12 needs</code>. No finding when composer.lock has no <code>laravel/framework</code>, the line resolves to no policy line, the line records no minimums, or the repository names no database image with a version.</p>
+<p>Fix by moving the image to a supported version, in every place the report names: the compose file and the env example should agree.</p>
+<div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Rule id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mysql-minimum</code></td>
+<td><code>proctor/mysql-minimum</code></td>
+</tr>
+<tr>
+<td><code>mysql-minimum</code></td>
+<td><code>proctor/mysql-minimum/below</code></td>
 </tr>
 </tbody>
 </table></div>
@@ -398,7 +420,7 @@
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../../docs/guides/check-ci.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">CI checks</span></a><a class="docs-pager__link docs-pager__link--next" href="../../docs/guides/check-wayneui.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">WayneUI checks</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#node-eol">node-eol</a></li><li class="docs-toc__item"><a href="#mysql-eol">mysql-eol</a></li><li class="docs-toc__item"><a href="#env-outside-config">env-outside-config</a></li><li class="docs-toc__item"><a href="#raw-identity-header">raw-identity-header</a></li><li class="docs-toc__item"><a href="#app-key">app-key</a></li><li class="docs-toc__item"><a href="#app-debug">app-debug</a></li><li class="docs-toc__item"><a href="#entrypoint-migrate">entrypoint-migrate</a></li><li class="docs-toc__item"><a href="#served-folder">served-folder</a></li><li class="docs-toc__item"><a href="#crlf-deploy-script">crlf-deploy-script</a></li><li class="docs-toc__item"><a href="#case-clash">case-clash</a></li><li class="docs-toc__item"><a href="#world-writable">world-writable</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#node-eol">node-eol</a></li><li class="docs-toc__item"><a href="#mysql-eol">mysql-eol</a></li><li class="docs-toc__item"><a href="#mysql-minimum">mysql-minimum</a></li><li class="docs-toc__item"><a href="#env-outside-config">env-outside-config</a></li><li class="docs-toc__item"><a href="#raw-identity-header">raw-identity-header</a></li><li class="docs-toc__item"><a href="#app-key">app-key</a></li><li class="docs-toc__item"><a href="#app-debug">app-debug</a></li><li class="docs-toc__item"><a href="#entrypoint-migrate">entrypoint-migrate</a></li><li class="docs-toc__item"><a href="#served-folder">served-folder</a></li><li class="docs-toc__item"><a href="#crlf-deploy-script">crlf-deploy-script</a></li><li class="docs-toc__item"><a href="#case-clash">case-clash</a></li><li class="docs-toc__item"><a href="#world-writable">world-writable</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.9.0</span></span>
