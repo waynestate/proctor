@@ -7,6 +7,35 @@ description: How to upgrade PROCTOR to a newer release and note the changes that
 
 PROCTOR is the invigilator, so upgrading it is a seat change, not a new exam: same hall, fresher pen. This page tells you how to move an app from one PROCTOR release to the next and which changes affect your runs. Start with the release that has a break, then work down to the additive ones.
 
+## 0.11.1
+
+Released 2026-11-09. A patch: `^0.11` picks it up with `composer update waynestate/proctor`. `proctor check` and `proctor gate` run exactly as on 0.11.0, so every verdict and exit code stays the same. The one change is inside ADVISOR: its in-process `proctor_check` no longer opens an env file git does not list. The proctor still walks the hall, but no longer reads a paper that was never handed in.
+
+### Breaking
+
+- None.
+
+### Added
+
+- `proctor_check` answers carry `skipped_files`: each env file a check that ran did not open, with `id`, `file` and `reason` (`not tracked by git`, or `no git index to read`). See [Use PROCTOR from your coding agent](guides/advisor.md#what-is-skipped-and-why).
+
+### Changed
+
+- In ADVISOR, `app-debug`, `csp-unsafe-inline`, `mysql-eol` and `mysql-minimum` grade an env file (`.env.production`, `.env.example`, `.env.squire.example`) only when git lists it, the rule `app-key` and `vite-secrets` follow in a full run. PROCTOR reads git's index in PHP for this, so the tool still starts no subprocess. An agent that saw an `app-debug` or `csp-unsafe-inline` warning on a local, uncommitted `.env.production` no longer sees it there; `vendor/bin/proctor check` still reports it.
+
+### Deprecated
+
+- None.
+
+### Steps
+
+1. Run `composer update waynestate/proctor`.
+2. If your agent should grade an env file through ADVISOR, commit it (`git add`); an example file such as `.env.example` is meant to be committed anyway.
+
+### How to verify
+
+- Run `vendor/bin/proctor check --format=json` and confirm the `version` field reads `0.11.1`.
+
 ## 0.11.0
 
 Released 2026-11-09. This is a pre-1.0 minor: consumers that pin `^0.10` stay on 0.10.x until they move their constraint to `^0.11`. Nothing breaks: the one new check only warns and is not in the deploy gate, and the new `--record` option changes nothing until you pass it, so a run that passed on 0.10.0 still passes and a deploy that went ahead still goes ahead. Expect a new warning when `.gitattributes` does not pin your server files to LF.
