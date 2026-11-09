@@ -88,6 +88,14 @@ Then check it. Windows: `$env:CREED_PATH = "..\creed"; composer creed-copy:check
 checkout, so run it by hand after each refresh. Commit the copy with the CREED commit it came from in the message
 (the manifest records `creed_version` as `unknown` when the export cannot see a tag).
 
+**Handbook check ids.** `tests/CreedHandbookCheckIdsTest.php` reads CREED's `handbook/*.md` and fails when a
+"PROCTOR check: `<id>`" tag, or prose such as "PROCTOR's `<id>` check", names an id `CheckSet::all()` does not
+register. It finds the handbook through `CREED_PATH`, then the sibling `../creed`, then `vendor/waynestate/creed`, and
+skips with a message when none is there (the Composer package ships without `handbook/`, so a plain `composer ci`
+in a fresh clone skips it). Run it with a checkout in reach after renaming or removing a check:
+`CREED_PATH=../creed vendor/bin/phpunit --filter CreedHandbook`. A failure means the fix belongs in CREED's
+handbook, or the check still has to ship.
+
 **Weekly CREED copy refresh.** The `creed-copy-refresh` job (`scripts/creed-copy-refresh.sh`) does this without a
 person every Monday at 07:03 America/Detroit, one hour after CREED's policy robot. It clones CREED main with the job
 token, re-exports the copy, reruns the docs builder and the agent-ready builder, then runs `composer creed-copy:check`
