@@ -50,6 +50,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/policy-age',
         'proctor/node-eol',
         'proctor/mysql-eol',
+        'proctor/mysql-minimum',
         'proctor/env-outside-config',
         'proctor/raw-identity-header',
         'proctor/app-key',
@@ -59,6 +60,8 @@ final class RuleIdContractTest extends ProctorTestCase
         // node-eol
         'proctor/node-eol/engines',
         'proctor/node-eol/odd-major',
+        // mysql-minimum
+        'proctor/mysql-minimum/below',
         // env-outside-config
         'proctor/env-outside-config/suppressed',
         // app-key

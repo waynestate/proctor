@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added: the `mysql-minimum` check warns (`proctor/mysql-minimum/below`) when the app's MySQL or MariaDB image is below the minimum the policy records for its Laravel line; it reports, and is not in the deploy gate.
 - Added: `crlf-deploy-script` warns (`proctor/crlf-deploy-script/no-gitattributes`) when the app has a deploy script and .gitattributes does not pin `*.sh` to `eol=lf` (CREED practice 34).
 - Added: the `entrypoint-migrate` check warns when a container entrypoint runs `artisan migrate` at start; run migrations once per release as a job (WELD W24). It reports, and is not in the deploy gate.
 - Added: the `ci-pipelines` check warns (`proctor/ci-pipelines/allow-overrides`) when an app's pipeline sets `PROCTOR_ALLOW_OVERRIDES` to 1, which lets it pass `--policy` and `--today` in CI (BEST_PRACTICES 1.2); any other value leaves the guard on.

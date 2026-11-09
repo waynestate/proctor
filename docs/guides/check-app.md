@@ -5,9 +5,9 @@ description: The checks that read an app's own files for an end-of-life Node lin
 
 # App checks
 
-This page covers the eleven PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
+This page covers the twelve PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
 
-`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other eight warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.
+`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other nine warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.
 
 ## node-eol
 
@@ -66,6 +66,19 @@ Fix by moving the image to an active line, in every place the report names: the 
 | Check | Rule id |
 | --- | --- |
 | `mysql-eol` | `proctor/mysql-eol` |
+
+## mysql-minimum
+
+`mysql-minimum` warns, never fails, when the app's MySQL or MariaDB image is below the minimum the policy records for its Laravel line: an app on Laravel 12 with `mysql:5.6` passes `mysql-eol`'s line lookup but cannot run its migrations. It reads the locked `laravel/framework` version from composer.lock, resolves its policy line, and takes the line's recorded `requires.mysql` and `requires.mariadb` minimums. The image is found the way `mysql-eol` finds it: an official `mysql` or `mariadb` image on an `image:` line in a root `docker-compose*.yml` or `compose*.yml`, and `SQUIRE_MYSQL_IMAGE=mysql:<version>` in `.env.squire.example` or `.env.example`; the version the tag names is what is compared.
+
+Each declared image whose engine has a recorded minimum is compared with it: below the minimum, one warning per declaration (`proctor/mysql-minimum/below`) naming the declaration, such as `mysql 5.6 is below the 5.7 minimum Laravel 12 needs (docker-compose.yml:7)`. With at least one image graded and none below, one pass finding names the first graded image: `mysql 8.4 meets the 5.7 minimum Laravel 12 needs`. No finding when composer.lock has no `laravel/framework`, the line resolves to no policy line, the line records no minimums, or the repository names no database image with a version.
+
+Fix by moving the image to a supported version, in every place the report names: the compose file and the env example should agree.
+
+| Check | Rule id |
+| --- | --- |
+| `mysql-minimum` | `proctor/mysql-minimum` |
+| `mysql-minimum` | `proctor/mysql-minimum/below` |
 
 ## env-outside-config
 
