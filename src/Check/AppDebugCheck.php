@@ -20,7 +20,8 @@ use SplFileInfo;
  * .env.squire.example; .env.example is the local-development template,
  * where debug is expected to be on), every file under deploy/ or
  * deployments/, and the CI pipelines, where a debug switch would ship
- * with the release.
+ * with the release. When the run carries an EnvFileFilter (ADVISOR's
+ * in-process run), an env template it refuses is not opened.
  *
  * Emits proctor/app-debug on pass and proctor/app-debug/enabled on warning.
  *
@@ -61,6 +62,9 @@ final class AppDebugCheck implements CheckInterface
     {
         $findings = [];
         foreach ($this->filesToScan($context->appPath) as $relativePath) {
+            if (in_array($relativePath, self::ENV_FILES, true) && !$context->mayReadEnvFile($this->id(), $relativePath)) {
+                continue;
+            }
             $raw = file_get_contents($context->appPath . '/' . $relativePath);
             if ($raw === false) {
                 continue;

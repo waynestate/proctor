@@ -34,7 +34,8 @@ and `modules.json` names it.
 
 ## The two read-only tools
 
-Both tools run in-process: no subprocess, no network, nothing written, and neither reads `.env` itself (four checks that do run read other env files; see the list under
+Both tools run in-process: no subprocess, no network, nothing written, and neither reads `.env` itself (four checks
+that do run read other env files, and only the ones git lists; see
 [What is skipped, and why](#what-is-skipped-and-why)). `proctor_rules` takes
 no arguments. `proctor_check` takes exactly one, `path`: the app folder, inside the project root (default: the root
 itself). A path outside the root, or one that is not a folder, is refused.
@@ -72,6 +73,8 @@ It returns:
 - `counts`: the number of findings per status.
 - `verdict`: `fail` when any finding fails, else `pass`.
 - `skipped`: the checks it left out, each with `id` and `reason` (see below).
+- `skipped_files`: the env files a check that ran did not open because git does not list them, each with `id` (the
+  check), `file` (relative to the app) and `reason` (see below). Empty when every env file on disk is tracked.
 - `ran`, `app` and `source`: what ran, on which folder (relative to the root), against which policy and for which date.
 
 A missing or malformed `composer.json` or `policy-overrides.json` comes back as a tool error with PROCTOR's own
@@ -92,16 +95,25 @@ Some checks cannot run inside ADVISOR's sandbox, so `proctor_check` leaves them 
 | `override-approver` | `starts a subprocess` | `git blame`, to see who wrote each override |
 | `app-key`, `vite-secrets` | `reads .env` | reads committed env files for an `APP_KEY`, or for `VITE_` variables that look like secrets |
 
-Four checks that do run read env files other than `.env`, from the app folder on disk, whether git lists them or not:
+Four checks that do run read env files other than `.env`. Inside ADVISOR every one of them grades an env file only
+when git lists it, the rule `app-key` and `vite-secrets` follow in a full run, so the `.env.production` on a
+developer's laptop, which can hold real secrets, is never opened:
 
-| Check | Files it reads | What it reads in them |
+| Check | Files it reads, when git lists them | What it reads in them |
 |---|---|---|
 | `mysql-eol`, `mysql-minimum` | `.env.squire.example`, `.env.example` | the `SQUIRE_MYSQL_IMAGE=` line |
 | `app-debug` | `.env.production`, `.env.squire.example` | the `APP_DEBUG` value |
 | `csp-unsafe-inline` | `.env.example`, `.env.production`, `.env.squire.example` | the `HELMET_CSP=` lines |
 
+To know what git lists without starting git, PROCTOR reads the repository's index file in PHP (the same list
+`git ls-files` prints), from the first `.git` folder or `.git` file at or above the app folder. A file on disk that
+the index does not list is not opened and comes back under `skipped_files`, with the reason `not tracked by git`, or
+`no git index to read` when there is no repository or its index is in a shape PROCTOR does not read (a split index).
+Add the file with `git add`, or run `vendor/bin/proctor check`, to have it graded.
+
 None of them reads `.env`. A finding names the file and the line; the MySQL checks add the engine and version from
-the image name, and no other value from these files comes back.
+the image name, and no other value from these files comes back. `vendor/bin/proctor check` reads these files from disk
+whether git lists them or not, as it always has: in CI the checkout holds only what the repository holds.
 An override in `policy-overrides.json` for a skipped check is not reported as unused, since its check did not run.
 
 So a `pass` from `proctor_check` is a partial pass. Run `vendor/bin/proctor check` for every check, or ADVISOR's own

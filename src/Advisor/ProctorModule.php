@@ -31,11 +31,19 @@ use Waynestate\Proctor\ToolError;
  *    bundled CREED policy, today's date, the app's policy-overrides.json).
  *
  * The checks that start a subprocess (composer audit, composer --version, and
- * every check that asks git which files are committed) and the one that reads
- * .env files (app-key) are left out and listed under `skipped`, so an agent
- * knows exactly what it did not see. No subprocess, no network, nothing
- * written. The full run is still `vendor/bin/proctor check`, in CI, where
- * PROCTOR decides.
+ * every check that asks git which files are committed) and the two that read
+ * every committed env file, `.env` included (app-key, vite-secrets), are left
+ * out and listed under `skipped`, so an agent knows exactly what it did not
+ * see. No subprocess, no network, nothing written, and `.env` is never read.
+ *
+ * Four checks that do run read env files other than `.env`: mysql-eol and
+ * mysql-minimum (`.env.squire.example`, `.env.example`), app-debug
+ * (`.env.production`, `.env.squire.example`) and csp-unsafe-inline
+ * (`.env.example`, `.env.production`, `.env.squire.example`). Here every one
+ * of them grades an env file only when git lists it (TrackedEnvFiles reads
+ * git's index in PHP, without starting git); a file on disk that git does
+ * not list is not opened, and comes back under `skipped_files`. The full run
+ * is still `vendor/bin/proctor check`, in CI, where PROCTOR decides.
  *
  * The module only loads inside ADVISOR (a dev dependency PROCTOR suggests
  * and never requires), so its waynestate/advisor imports resolve there.
@@ -62,8 +70,8 @@ final class ProctorModule implements Module
      * instant-client-committed, the WayneUI checks and every check built on
      * RepoFiles (node-eol, env-outside-config, raw-identity-header,
      * robots-txt, served-folder, world-writable) run git, and override-approver runs git
-     * blame. app-key and vite-secrets read committed .env files (and run git
-     * too).
+     * blame. app-key and vite-secrets read every committed env file, .env
+     * included (and run git too).
      *
      * @var array<string, string>
      */
@@ -216,7 +224,7 @@ final class ProctorModule implements Module
         return new ToolDefinition(
             name: 'proctor_check',
             title: 'Run PROCTOR\'s file checks on an app folder',
-            description: 'Runs PROCTOR\'s checks on the app folder in-process with PROCTOR\'s own CheckRunner, the way proctor check runs them by default: the CREED policy PROCTOR bundles, today\'s date and the app\'s policy-overrides.json. Returns each finding (rule id, status, message, file, line), the counts per status and a pass or fail verdict. The checks that start a subprocess (composer audit, composer --version, the ones that ask git which files are committed) and the one that reads .env files (app-key) are left out and listed under skipped; run proctor check for the full set. No subprocess, no network, nothing written, and it never reads .env. The path must be inside the project. PROCTOR decides.',
+            description: 'Runs PROCTOR\'s checks on the app folder in-process with PROCTOR\'s own CheckRunner, the way proctor check runs them by default: the CREED policy PROCTOR bundles, today\'s date and the app\'s policy-overrides.json. Returns each finding (rule id, status, message, file, line), the counts per status and a pass or fail verdict. The checks that start a subprocess (composer audit, composer --version, the ones that ask git which files are committed) and the two that read committed .env files (app-key, vite-secrets) are left out and listed under skipped; run proctor check for the full set. Four checks that run read env files other than .env: mysql-eol and mysql-minimum (.env.squire.example, .env.example), app-debug (.env.production, .env.squire.example) and csp-unsafe-inline (.env.example, .env.production, .env.squire.example). All four grade an env file only when git lists it (git\'s index is read in PHP); one git does not list is not opened and is listed under skipped_files. No subprocess, no network, nothing written, and it never reads .env. The path must be inside the project. PROCTOR decides.',
             inputSchema: [
                 'type' => 'object',
                 'properties' => [
@@ -243,10 +251,11 @@ final class ProctorModule implements Module
                     }
                 }
 
+                $envFiles = new TrackedEnvFiles($app);
                 try {
                     $overrides = OverrideFile::load($app);
                     OverrideFile::assertKnownChecks($overrides, CheckSet::ids($all));
-                    $findings = (new CheckRunner($app, $resolved->policy, $today, $checks, $overrides))->run();
+                    $findings = (new CheckRunner($app, $resolved->policy, $today, $checks, $overrides, envFiles: $envFiles))->run();
                 } catch (ToolError $e) {
                     throw new ToolInputError(self::hideRoot($context, $e->getMessage()));
                 }
@@ -275,7 +284,7 @@ final class ProctorModule implements Module
                 return [
                     'tool' => self::TOOL,
                     'ran' => sprintf(
-                        'Ran %d of PROCTOR %s\'s %d checks in-process with CheckRunner on %s, against the bundled CREED policy, for %s (no subprocess, no network, nothing written, no .env read).',
+                        'Ran %d of PROCTOR %s\'s %d checks in-process with CheckRunner on %s, against the bundled CREED policy, for %s (no subprocess, no network, nothing written, no .env read, other env files only when git lists them).',
                         count($checks),
                         $version,
                         count($all),
@@ -288,6 +297,7 @@ final class ProctorModule implements Module
                     'counts' => $counts,
                     'verdict' => $counts[Finding::STATUS_FAIL] > 0 ? 'fail' : 'pass',
                     'skipped' => $skipped,
+                    'skipped_files' => $envFiles->refused(),
                     'source' => [
                         'code' => 'waynestate/proctor ' . $version . ': src/Check/CheckRunner.php and src/Check/CheckSet.php',
                         'policy' => 'waynestate/proctor ' . $version . ': src/Creed/policy.json (bundled)',

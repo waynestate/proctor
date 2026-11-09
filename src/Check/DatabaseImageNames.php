@@ -42,11 +42,13 @@ final class DatabaseImageNames
 
     /**
      * Every named database version: [path, line, engine, version], in file
-     * order (compose files first, then the env examples).
+     * order (compose files first, then the env examples). With a context
+     * and a check id, an env example the context's EnvFileFilter refuses
+     * is not opened.
      *
      * @return list<array{0: string, 1: int, 2: string, 3: string}>
      */
-    public static function namedVersions(string $appPath): array
+    public static function namedVersions(string $appPath, ?CheckContext $context = null, string $checkId = ''): array
     {
         $appPath = rtrim($appPath, '/\\');
         $named = [];
@@ -64,6 +66,9 @@ final class DatabaseImageNames
         }
 
         foreach (self::ENV_FILES as $file) {
+            if ($context !== null && is_file($appPath . '/' . $file) && !$context->mayReadEnvFile($checkId, $file)) {
+                continue;
+            }
             $pattern = '~^\s*SQUIRE_MYSQL_IMAGE\s*=\s*["\']?' . self::IMAGE_PATTERN . '["\']?\s*(?:#.*)?$~';
             foreach (self::lines($appPath, $file) as $index => $raw) {
                 if (preg_match($pattern, (string) $raw, $m) === 1) {

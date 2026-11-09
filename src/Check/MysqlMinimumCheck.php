@@ -52,7 +52,7 @@ final class MysqlMinimumCheck implements CheckInterface
 
         $graded = [];
         $findings = [];
-        foreach (DatabaseImageNames::namedVersions($context->appPath) as [$path, $lineNo, $engine, $imageVersion]) {
+        foreach (DatabaseImageNames::namedVersions($context->appPath, $context, $this->id()) as [$path, $lineNo, $engine, $imageVersion]) {
             $minimum = $requires[$engine] ?? null;
             if (!is_string($minimum) || trim($minimum) === '') {
                 continue;

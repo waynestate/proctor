@@ -25,6 +25,8 @@ final class CheckRunner
      *                                         (composer audit) before it is killed
      * @param string|null          $phpRuntime the PHP version that will serve the app
      *                                         (--php-runtime), or null when not given
+     * @param EnvFileFilter|null   $envFiles   which env files the checks may read; null
+     *                                         (the CLI) lets each check read its own
      */
     public function __construct(
         private readonly string $appPath,
@@ -34,6 +36,7 @@ final class CheckRunner
         private readonly array $overrides = [],
         private readonly int $timeout = 300,
         private readonly ?string $phpRuntime = null,
+        private readonly ?EnvFileFilter $envFiles = null,
     ) {}
 
     /**
@@ -64,6 +67,7 @@ final class CheckRunner
             $this->overrides,
             $this->timeout,
             $this->phpRuntime,
+            $this->envFiles,
         );
         $unapplied = [];
         foreach ($this->checks as $check) {

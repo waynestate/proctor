@@ -60,7 +60,8 @@ Both answers come from PROCTOR's own classes. Next, see <a href="checks-overview
 <p>PROCTOR does not require ADVISOR, and ADVISOR does not require PROCTOR: the module only loads when both are installed
 and <code>modules.json</code> names it.</p>
 <h2 id="the-two-read-only-tools">The two read-only tools<a class="docs-heading-link" aria-label="Link to this section" href="#the-two-read-only-tools">#</a></h2>
-<p>Both tools run in-process: no subprocess, no network, nothing written, and neither reads <code>.env</code> itself (four checks that do run read other env files; see the list under
+<p>Both tools run in-process: no subprocess, no network, nothing written, and neither reads <code>.env</code> itself (four checks
+that do run read other env files, and only the ones git lists; see
 <a href="#what-is-skipped-and-why">What is skipped, and why</a>). <code>proctor_rules</code> takes
 no arguments. <code>proctor_check</code> takes exactly one, <code>path</code>: the app folder, inside the project root (default: the root
 itself). A path outside the root, or one that is not a folder, is refused.</p>
@@ -92,6 +93,8 @@ It returns:</p>
 <li><code>counts</code>: the number of findings per status.</li>
 <li><code>verdict</code>: <code>fail</code> when any finding fails, else <code>pass</code>.</li>
 <li><code>skipped</code>: the checks it left out, each with <code>id</code> and <code>reason</code> (see below).</li>
+<li><code>skipped_files</code>: the env files a check that ran did not open because git does not list them, each with <code>id</code> (the
+check), <code>file</code> (relative to the app) and <code>reason</code> (see below). Empty when every env file on disk is tracked.</li>
 <li><code>ran</code>, <code>app</code> and <code>source</code>: what ran, on which folder (relative to the root), against which policy and for which date.</li>
 </ul>
 <p>A missing or malformed <code>composer.json</code> or <code>policy-overrides.json</code> comes back as a tool error with PROCTOR's own
@@ -149,12 +152,14 @@ message, the same one <code>proctor check</code> prints before it exits 2.</p>
 </tr>
 </tbody>
 </table></div>
-<p>Four checks that do run read env files other than <code>.env</code>, from the app folder on disk, whether git lists them or not:</p>
+<p>Four checks that do run read env files other than <code>.env</code>. Inside ADVISOR every one of them grades an env file only
+when git lists it, the rule <code>app-key</code> and <code>vite-secrets</code> follow in a full run, so the <code>.env.production</code> on a
+developer's laptop, which can hold real secrets, is never opened:</p>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
 <thead>
 <tr>
 <th>Check</th>
-<th>Files it reads</th>
+<th>Files it reads, when git lists them</th>
 <th>What it reads in them</th>
 </tr>
 </thead>
@@ -176,8 +181,14 @@ message, the same one <code>proctor check</code> prints before it exits 2.</p>
 </tr>
 </tbody>
 </table></div>
+<p>To know what git lists without starting git, PROCTOR reads the repository's index file in PHP (the same list
+<code>git ls-files</code> prints), from the first <code>.git</code> folder or <code>.git</code> file at or above the app folder. A file on disk that
+the index does not list is not opened and comes back under <code>skipped_files</code>, with the reason <code>not tracked by git</code>, or
+<code>no git index to read</code> when there is no repository or its index is in a shape PROCTOR does not read (a split index).
+Add the file with <code>git add</code>, or run <code>vendor/bin/proctor check</code>, to have it graded.</p>
 <p>None of them reads <code>.env</code>. A finding names the file and the line; the MySQL checks add the engine and version from
-the image name, and no other value from these files comes back.
+the image name, and no other value from these files comes back. <code>vendor/bin/proctor check</code> reads these files from disk
+whether git lists them or not, as it always has: in CI the checkout holds only what the repository holds.
 An override in <code>policy-overrides.json</code> for a skipped check is not reported as unused, since its check did not run.</p>
 <p>So a <code>pass</code> from <code>proctor_check</code> is a partial pass. Run <code>vendor/bin/proctor check</code> for every check, or ADVISOR's own
 <code>run_proctor_check</code> tool, which starts PROCTOR as a subprocess under ADVISOR's allowlist.</p>

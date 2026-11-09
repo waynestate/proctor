@@ -52,7 +52,7 @@ final class MysqlEolCheck implements CheckInterface
         }
 
         $findings = [];
-        foreach (DatabaseImageNames::namedVersions($context->appPath) as [$path, $line, $engine, $version]) {
+        foreach (DatabaseImageNames::namedVersions($context->appPath, $context, $this->id()) as [$path, $line, $engine, $version]) {
             // Each engine is graded only against its own component; a policy
             // without mariadb ignores mariadb images silently.
             if (!$context->policy->hasComponent($engine)) {

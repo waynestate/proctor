@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Waynestate\Proctor\Tests\Advisor;
 
+use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use RuntimeException;
@@ -18,7 +19,13 @@ use Waynestate\Advisor\Security\ProcessOutput;
 use Waynestate\Advisor\Security\ProcessRunner;
 use Waynestate\Advisor\Support\FixedClock;
 use Waynestate\Proctor\Advisor\ProctorModule;
+use Waynestate\Proctor\Advisor\TrackedEnvFiles;
+use Waynestate\Proctor\Check\AppDebugCheck;
+use Waynestate\Proctor\Check\CheckRunner;
 use Waynestate\Proctor\Check\CheckSet;
+use Waynestate\Proctor\Check\ProcessRunner as CheckProcessRunner;
+use Waynestate\Proctor\Code\RepoFiles;
+use Waynestate\Proctor\Creed\Policy;
 use Waynestate\Proctor\Policy\PolicyResolver;
 
 /**
@@ -237,6 +244,113 @@ final class ProctorModuleTest extends TestCase
         self::assertNotEmpty($seen);
     }
 
+    public function testAnUntrackedEnvProductionIsNotReadByAppDebug(): void
+    {
+        $app = $this->gitApp('debug-app', ".env.production", "APP_NAME=Acme\nAPP_DEBUG=true\n", track: false);
+
+        $result = $this->check(['path' => 'debug-app']);
+
+        self::assertNotContains('proctor/app-debug/enabled', array_column($result['findings'], 'rule_id'));
+        self::assertContains('proctor/app-debug', array_column($result['findings'], 'rule_id'));
+        self::assertContains(
+            ['id' => 'app-debug', 'file' => '.env.production', 'reason' => TrackedEnvFiles::REASON_UNTRACKED],
+            $result['skipped_files'],
+        );
+        self::assertFileExists($app . '/.env.production');
+    }
+
+    public function testATrackedEnvProductionIsGradedByAppDebug(): void
+    {
+        $this->gitApp('debug-app', ".env.production", "APP_NAME=Acme\nAPP_DEBUG=true\n", track: true);
+
+        $result = $this->check(['path' => 'debug-app']);
+
+        $debug = array_values(array_filter($result['findings'], static fn(array $f): bool => $f['rule_id'] === 'proctor/app-debug/enabled'));
+        self::assertCount(1, $debug);
+        self::assertSame('warning', $debug[0]['status']);
+        self::assertSame('.env.production', $debug[0]['file']);
+        self::assertSame(2, $debug[0]['line']);
+        self::assertSame([], array_values(array_filter($result['skipped_files'], static fn(array $s): bool => $s['file'] === '.env.production')));
+    }
+
+    public function testAnUntrackedEnvProductionIsNotReadByCspUnsafeInline(): void
+    {
+        $this->gitApp('csp-app', ".env.production", "HELMET_CSP=default-src 'self'; script-src 'self' 'unsafe-inline'\n", track: false);
+
+        $result = $this->check(['path' => 'csp-app']);
+
+        self::assertNotContains('proctor/csp-unsafe-inline/script-src', array_column($result['findings'], 'rule_id'));
+        self::assertContains('proctor/csp-unsafe-inline', array_column($result['findings'], 'rule_id'));
+        self::assertContains(
+            ['id' => 'csp-unsafe-inline', 'file' => '.env.production', 'reason' => TrackedEnvFiles::REASON_UNTRACKED],
+            $result['skipped_files'],
+        );
+    }
+
+    public function testATrackedEnvProductionIsGradedByCspUnsafeInline(): void
+    {
+        $this->gitApp('csp-app', ".env.production", "HELMET_CSP=default-src 'self'; script-src 'self' 'unsafe-inline'\n", track: true);
+
+        $result = $this->check(['path' => 'csp-app']);
+
+        $csp = array_values(array_filter($result['findings'], static fn(array $f): bool => $f['rule_id'] === 'proctor/csp-unsafe-inline/script-src'));
+        self::assertCount(1, $csp);
+        self::assertSame('.env.production', $csp[0]['file']);
+        self::assertSame(1, $csp[0]['line']);
+        self::assertNotContains('csp-unsafe-inline', array_column($result['skipped_files'], 'id'));
+    }
+
+    public function testAnUntrackedEnvExampleIsNotReadByTheMysqlChecks(): void
+    {
+        $this->gitApp('db-app', '.env.example', "SQUIRE_MYSQL_IMAGE=mysql:5.6\n", track: false);
+
+        $result = $this->check(['path' => 'db-app']);
+
+        foreach ($result['findings'] as $finding) {
+            self::assertNotSame('.env.example', $finding['file'], $finding['rule_id']);
+        }
+        $asked = array_column(array_filter($result['skipped_files'], static fn(array $s): bool => $s['file'] === '.env.example'), 'id');
+        // mysql-minimum reads the same files through the same code, but only for a Laravel app.
+        self::assertContains('mysql-eol', $asked);
+        self::assertContains('csp-unsafe-inline', $asked);
+    }
+
+    public function testAnAppOutsideAnyRepositoryReadsNoEnvFile(): void
+    {
+        $app = $this->cleanApp();
+        file_put_contents($app . '/.env.production', "APP_DEBUG=true\n");
+        // A .git file whose gitdir is gone: there is no index to read.
+        file_put_contents($app . '/.git', "gitdir: ./missing-git-dir\n");
+
+        $result = $this->check(['path' => 'clean-app']);
+
+        self::assertNotContains('proctor/app-debug/enabled', array_column($result['findings'], 'rule_id'));
+        self::assertContains(
+            ['id' => 'app-debug', 'file' => '.env.production', 'reason' => TrackedEnvFiles::REASON_NO_INDEX],
+            $result['skipped_files'],
+        );
+    }
+
+    public function testACleanAppSkipsNoFile(): void
+    {
+        $this->cleanApp();
+
+        self::assertSame([], $this->check(['path' => 'clean-app'])['skipped_files']);
+    }
+
+    /**
+     * The CLI passes no EnvFileFilter, so app-debug still reads an untracked
+     * .env.production there, as it did before.
+     */
+    public function testTheCliPathStillReadsAnUntrackedEnvProduction(): void
+    {
+        $app = $this->gitApp('debug-app', ".env.production", "APP_DEBUG=true\n", track: false);
+
+        $findings = (new CheckRunner($app, Policy::bundled(), new DateTimeImmutable(self::TODAY), [new AppDebugCheck()]))->run();
+
+        self::assertSame(['proctor/app-debug/enabled'], array_map(static fn($f): string => $f->ruleId, $findings));
+    }
+
     public function testAPathOutsideTheRootIsRefused(): void
     {
         $this->expectException(ToolInputError::class);
@@ -364,6 +478,31 @@ final class ProctorModuleTest extends TestCase
     {
         $app = $this->app('clean-app', ['name' => 'acme/clean', 'require' => ['php' => '^8.3']]);
         file_put_contents($app . '/composer.lock', json_encode(['packages' => [], 'packages-dev' => []], JSON_THROW_ON_ERROR));
+
+        return $app;
+    }
+
+    /**
+     * A clean app in a real git repository of its own, with one env file
+     * written to disk and, when $track is true, added to the index. Every
+     * other file is added, so only the env file's state differs.
+     */
+    private function gitApp(string $name, string $envFile, string $contents, bool $track): string
+    {
+        $git = RepoFiles::findGit();
+        if ($git === null) {
+            self::markTestSkipped('git is not on PATH');
+        }
+        $app = $this->app($name, ['name' => 'acme/' . $name, 'require' => ['php' => '^8.3']]);
+        file_put_contents($app . '/composer.lock', json_encode(['packages' => [], 'packages-dev' => []], JSON_THROW_ON_ERROR));
+        $runner = new CheckProcessRunner();
+        foreach ([['init', '-q'], ['add', 'composer.json', 'composer.lock']] as $args) {
+            self::assertSame(0, $runner->run(array_merge([$git, '-C', $app], $args), $app)->exitCode);
+        }
+        file_put_contents($app . '/' . $envFile, $contents);
+        if ($track) {
+            self::assertSame(0, $runner->run([$git, '-C', $app, 'add', '-f', $envFile], $app)->exitCode);
+        }
 
         return $app;
     }

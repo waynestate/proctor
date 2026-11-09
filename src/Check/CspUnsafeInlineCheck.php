@@ -21,7 +21,9 @@ use SplFileInfo;
  * under app/; every .htaccess at the app root and at any depth under
  * public/, deploy/, deployments/ and docker/, and every *.conf at any
  * depth under deploy/, deployments/ and docker/; and the HELMET_CSP= lines
- * of .env.example, .env.production and .env.squire.example.
+ * of .env.example, .env.production and .env.squire.example. When the run
+ * carries an EnvFileFilter (ADVISOR's in-process run), an env file it
+ * refuses is not opened.
  *
  * A directive counts when its name is script-src, script-src-elem or
  * script-src-attr (case-insensitive). style-src and its -elem and -attr
@@ -81,6 +83,9 @@ final class CspUnsafeInlineCheck implements CheckInterface
     {
         $findings = [];
         foreach ($this->filesToScan($context->appPath) as $relativePath) {
+            if (in_array($relativePath, self::ENV_FILES, true) && !$context->mayReadEnvFile($this->id(), $relativePath)) {
+                continue;
+            }
             $raw = file_get_contents($context->appPath . '/' . $relativePath);
             if ($raw === false) {
                 continue;

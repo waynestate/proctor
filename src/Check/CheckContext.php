@@ -32,5 +32,16 @@ final class CheckContext
         public readonly int $timeout = 300,
         /** The PHP version that will serve the app (--php-runtime), or null. */
         public readonly ?string $phpRuntime = null,
+        /** Which env files a check may read; null (the CLI) lets every check read its own. */
+        public readonly ?EnvFileFilter $envFiles = null,
     ) {}
+
+    /**
+     * Whether the check may read the env file (relative to the app path,
+     * forward slashes). Always true without a filter.
+     */
+    public function mayReadEnvFile(string $checkId, string $relativePath): bool
+    {
+        return $this->envFiles === null || $this->envFiles->allows($checkId, $relativePath);
+    }
 }
