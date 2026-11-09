@@ -344,7 +344,7 @@ with a message that starts with `not audited:` and carries the first stderr line
 readable is red instead of green. A missing `composer` or a missing lock fails the same way (rule id
 `proctor/composer-audit/skipped`, message `not audited: ...`). The owner chooses otherwise by recording a
 `composer-audit` entry in `policy-overrides.json` with a reason and an expiry, which turns the failure into a warning
-until it expires (Adam's decision of 2026-11-03). Preflight's `composer-audit` job also fails on Composer's own exit code.
+until it expires (the stack maintainer's decision of 2026-11-03). Preflight's `composer-audit` job also fails on Composer's own exit code.
 
 ### 4.4 Keep advisory ignores out of `composer.json`
 Composer lets an app silence advisories in its own `composer.json` (`config.audit.ignore`, or in Composer 2.10
@@ -514,7 +514,7 @@ The claim that most compromises are found within days is mine and is not backed 
 the deploy layers already regenerated from it (HELMET, SESAME); Squire's own CI jobs use `composer:2.11.1`;
 Preflight's main branch moves the `php-test` and `proctor` default `composer_version` to 2.11.1, while its 0.4.0
 release still installs 2.10.3; and PROCTOR's own CI jobs, phar build scripts and deploy layer (Squire 0.10.2) pin
-`composer:2.11.1` by digest. Decision (Adam, 2026-11-03): when 2.11 is in the base images, Sourdough apps set a 3-day
+`composer:2.11.1` by digest. Decision (the stack maintainer, 2026-11-03): when 2.11 is in the base images, Sourdough apps set a 3-day
 cooldown and PROCTOR warns when an app has none. Nothing is built before then: no policy rule, no check, no Sourdough
 default.
 
@@ -923,7 +923,7 @@ Added in the second pass (2026-10-27):
 10. 3.7: Partly done: the Preflight `proctor` component installs from the lock, and the `ci-pipelines` check warns (`proctor/ci-pipelines/composer-update`) when CI runs `composer update` or `composer require`; the finding is a warning, not a fail, and only `.gitlab-ci.yml` and `.github/workflows/ci.yml` are read (see 3.7).
 11. 4.12: Partly done: `composer-audit` (0.6.0) warns instead of failing for an advisory on a package that composer.lock lists only in packages-dev, marked ` [dev dependency]`, and a name in both lists still fails; the policy file carries no rule for it (see 4.12).
 12. 8.7: Documented: the floor is GitLab 18.7 (`spec:component`), named in the install page's requirements; patch status on 18.x is the owner's to check (see 8.7).
-13. 4.11: Not yet: Composer 2.11 is stable (2.11.1, 2026-10-30) and carries the `cooldown` policy, and the move has started (Squire's kit 0.10.1 and Preflight's main branch use 2.11.1), but released Preflight (0.4.0) and most stack CI jobs still use 2.10.3; once 2.11 is in the base images, Sourdough apps set a 3-day cooldown and PROCTOR warns when an app has none (Adam, 2026-11-03) (see 4.11).
+13. 4.11: Not yet: Composer 2.11 is stable (2.11.1, 2026-10-30) and carries the `cooldown` policy, and the move has started (Squire's kit 0.10.1 and Preflight's main branch use 2.11.1), but released Preflight (0.4.0) and most stack CI jobs still use 2.10.3; once 2.11 is in the base images, Sourdough apps set a 3-day cooldown and PROCTOR warns when an app has none (stack maintainer, 2026-11-03) (see 4.11).
 
 ## Second pass (2026-10-27)
 

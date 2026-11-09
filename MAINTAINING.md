@@ -141,5 +141,6 @@ raw-PHP `deploy/` layer generated with Squire (one per stack project); regenerat
 
 ## Who maintains it
 
-Adam Perkins, Wayne State University Enterprise Applications. Internal runbook (accounts, tokens, mirrors, deploy
-access): ask Enterprise Applications.
+The stack maintainer (a role, not a named person), Wayne State University Enterprise Applications. To reach them, open
+an issue on git.wayne.edu ([enterprise-apps/proctor](https://git.wayne.edu/enterprise-apps/proctor/-/issues)). Internal
+runbook (accounts, tokens, mirrors, deploy access): ask Enterprise Applications.
