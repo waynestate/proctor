@@ -44,11 +44,11 @@ The command is then `vendor/bin/proctor`.
 ### Single-file download
 
 The single-file PHAR is how Preflight and apps without Composer access run
-PROCTOR as one file, and from the next release it is attached to each GitLab
-Release with its `proctor.phar.sha256` checksum file. Both files come from the
-`release-phar` job in `.gitlab-ci.yml`; the lead tags, and no tag means no
-release. The `composer require` install above stays the current method; the
-phar is the one-file alternative.
+PROCTOR as one file. Since 0.6.0, every tag runs the `release-phar` job in
+`.gitlab-ci.yml`, which attaches `proctor.phar` and its `proctor.phar.sha256`
+checksum file to that tag's GitLab Release; the maintainer tags, and no tag
+means no release. The `composer require` install above stays the main method;
+the phar is the one-file alternative.
 
 Download both files for the tag you want, verify the checksum, then run it.
 Replace `` with the base URL of the release's asset links (the
@@ -62,8 +62,8 @@ Windows (PowerShell), one line, no bash needed:
 
     Invoke-WebRequest "/proctor.phar" -OutFile proctor.phar; Invoke-WebRequest "/proctor.phar.sha256" -OutFile proctor.phar.sha256; if ((Get-FileHash proctor.phar -Algorithm SHA256).Hash -ne (Get-Content proctor.phar.sha256 -TotalCount 1).Trim().Split(' ')[0]) { throw "sha256 mismatch" }; php proctor.phar --version
 
-Until the first tagged release that runs the job, build it from a checkout
-with the script for your OS (both need Docker, and no PHP or Composer on the
+For a commit between tags, or a release whose job did not attach the files,
+build it from a checkout with the script for your OS (both need Docker, and no PHP or Composer on the
 host): `.\scripts\build-phar.ps1` on Windows, `scripts/build-phar.sh` on
 Linux / macOS. Each script writes `build/proctor.phar` and verifies it by
 printing PROCTOR's version.
@@ -345,28 +345,36 @@ id, fails the suite too.
 ### GitHub code scanning
 
 The `sarif` format feeds GitHub code scanning on the GitHub mirror. Upload the
-log with the official action, pinned to a full commit SHA:
+log with the official action. Every `uses:` is pinned to a full commit SHA, the
+way the `ci-pipelines` check asks, and the job installs from the lock, the way
+`proctor/ci-pipelines/composer-update` asks (PROCTOR and CREED are already dev
+dependencies of the app):
 
 ```yaml
 name: proctor
 on: [push, pull_request]
 permissions:
+  contents: read
   security-events: write
 jobs:
   proctor:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: '8.4'
-      - run: composer require waynestate/proctor --dev
-      # policy.json is the CREED policy file
-      - run: vendor/bin/proctor check --format=sarif --policy=policy.json > proctor.sarif
+      - run: composer install --no-interaction --no-progress
+      # No --policy here: CI refuses it, and PROCTOR reads vendor/waynestate/creed's policy itself.
+      - run: vendor/bin/proctor check --format=sarif > proctor.sarif
       - uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        if: always()
         with:
           sarif_file: proctor.sarif
 ```
+
+`if: always()` uploads the log even when the check exits 1, which is exactly
+when you want to read it.
 
 PROCTOR now files the mark sheet in the format the head office already reads.
 No more translating the exam results by hand.
@@ -583,8 +591,9 @@ Run `vendor/bin/proctor check` in a PHP app and it checks the app against CREED'
 
 [Sit the exam](https://proctor.apps.wayne.edu/#start-title) [Watch it mark a paper](https://proctor.apps.wayne.edu/#sheet-title)
 
-- **32** checks
-- **4** report formats
+- [**36** checks](https://proctor.apps.wayne.edu/#paper-title)
+- **8** at the gate
+- **4** formats
 - **3** exit codes
 - **0** policy of its own
 
@@ -609,7 +618,7 @@ Part A
 
 ### The questions
 
-Nine of PROCTOR's thirty-two checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures.
+Nine of PROCTOR's thirty-six checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures. [The whole paper](https://proctor.apps.wayne.edu/#paper-title) is further down.
 
 1. Q1 `php-floor`
    ### Is the lowest PHP your `composer.json` allows still supported?
@@ -666,6 +675,54 @@ Last term these were on the coming-soon list. They are built and released now, s
    #### Is this release safe to deploy?
    Runs the deploy-time checks and ratchets them against what is live now. A new failure blocks; one the live release already had is held, so old problems never stop a fix. Exit 0 is go, 1 is no-go. Squire's release script asks it before every deploy.
    BLOCK php-floor: php floor 7.4 is eol_grace_expired \[regression: this rule passed on the baseline\]
+
+The whole paper
+
+#### All thirty-six questions
+
+Every check `proctor check` asks, in the order it asks them. Each id opens its page in the docs.
+
+- Gate also asked by `proctor gate` before a deploy
+- New on main since 0.9.0, in the next release
+
+1. [`php-floor`](https://proctor.apps.wayne.edu/docs/guides/check-php.html#php-floor): Is the lowest PHP you allow still supported? Gate
+2. [`unpatched`](https://proctor.apps.wayne.edu/docs/guides/check-php.html#unpatched): Is each locked line on its latest patch? Gate
+3. [`laravel-eol`](https://proctor.apps.wayne.edu/docs/guides/check-php.html#laravel-eol): Is the locked Laravel line still supported? Gate
+4. [`laravel-php`](https://proctor.apps.wayne.edu/docs/guides/check-php.html#laravel-php): Does your PHP range fit that Laravel? Gate
+5. [`node-eol`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#node-eol): Is every Node version you pin supported?
+6. [`mysql-eol`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#mysql-eol): Is your MySQL or MariaDB image supported?
+7. [`mysql-minimum`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#mysql-minimum): Is it new enough for your Laravel? New
+8. [`unbounded-constraints`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#unbounded-constraints): Is every requirement a released range?
+9. [`dev-only-packages`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#dev-only-packages): Are dev tools kept out of `require`?
+10. [`composer-config`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-config): Are Composer's safety settings left on?
+11. [`lock-committed`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#lock-committed): Is `composer.lock` committed, and in sync? Gate
+12. [`portability`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#portability): Would the app run on another host?
+13. [`mysql56`](https://proctor.apps.wayne.edu/docs/guides/check-php.html#mysql56): Will the migrations survive MySQL 5.6?
+14. [`destructive-deploy`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#destructive-deploy): Does a deploy ever wipe the database?
+15. [`crlf-deploy-script`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#crlf-deploy-script): Do the deploy scripts end lines in LF?
+16. [`entrypoint-migrate`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#entrypoint-migrate): Does a container migrate as it starts? New
+17. [`case-clash`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#case-clash): Do two paths differ only by case?
+18. [`ci-pipelines`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#ci-pipelines): Do the pipelines run `composer ci`?
+19. [`preflight-pinned`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#preflight-pinned): Is Preflight pinned to a release?
+20. [`preflight-gates`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#preflight-gates): Do Preflight's gates run, and block? New
+21. [`composer-audit`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-audit): Does the lock carry a known advisory? Gate
+22. [`composer-version`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-version): Is the Composer on PATH safe?
+23. [`repo-url-credentials`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#repo-url-credentials): Is a token written into a package URL?
+24. [`instant-client-committed`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#instant-client-committed): Is Oracle Instant Client committed?
+25. [`env-outside-config`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#env-outside-config): Is `env()` called outside config?
+26. [`raw-identity-header`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#raw-identity-header): Does code read identity headers itself?
+27. [`app-key`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-key): Is the APP_KEY given away?
+28. [`app-debug`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-debug): Does a production file turn APP_DEBUG on? New
+29. [`vite-secrets`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#vite-secrets): Does a `VITE_` name carry a secret? New
+30. [`served-folder`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#served-folder): Can a stranger download a dump from `public/`?
+31. [`world-writable`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#world-writable): Does anything `chmod 777`?
+32. [`wayneui-forked-views`](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html#wayneui-forked-views): Are forked WayneUI views committed?
+33. [`wayneui-outdated`](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html#wayneui-outdated): Is your WayneUI the latest of its line?
+34. [`overrides`](https://proctor.apps.wayne.edu/docs/guides/overrides.html#how-overrides-work): Has any note from home expired? Gate
+35. [`override-approver`](https://proctor.apps.wayne.edu/docs/guides/overrides.html#someone-else-signs-the-note): Did someone sign their own note?
+36. [`policy-age`](https://proctor.apps.wayne.edu/docs/guides/check-php.html#policy-age): Is the policy itself fresh? Gate
+
+36 questions, no multiple choice. The [Checks](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html) page has every rule, and [Rule ids](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html) has every id a finding can carry.
 
 #### Part C: next term Coming soon
 
@@ -770,21 +827,21 @@ Pick the copy your reader needs with `--format`. The findings are the same in al
 White copy · for people · `--format=text` (the default)
 
 ```
-proctor 0.8.0 | composer: 2.10.3
-Policy: bundled (/app/src/Creed/policy.json), refreshed 2026-10-29, 0 days ago
+proctor 0.9.0 | composer: 2.10.3
+Policy: bundled (/app/src/Creed/policy.json), refreshed 2026-11-08, 1 days ago
 PASS php-floor: php floor 8.4 is active
 FAIL unbounded-constraints: vendor/dev constraint "dev-master" is unbounded
 FAIL unbounded-constraints: vendor/any constraint "*" is unbounded
+PASS dev-only-packages: no development tool is in require
 INFO composer-config: require.php is set but config.platform.php is not, so the lock resolves against the local PHP
 PASS lock-committed: composer.lock is present
-PASS portability: no hard-coded platform facts found
-PASS mysql56: no Laravel migrations found; skipped
-PASS destructive-deploy: no destructive deploy commands found
-PASS ci-pipelines: both pipelines run composer ci
-WARN composer-audit: composer audit could not run: No installed packages found. …
-PASS composer-version: composer 2.10.3 is at or above the 2.7.7 floor
-PASS repo-url-credentials: no credentials found in repository URLs
-RESULT: fail (2 failures, 1 warnings)
+… eight more PASS lines, portability to preflight-pinned
+WARN preflight-gates: preflight-gates-no-include: .gitlab-ci.yml includes no Preflight component, so none of the stack's gates run; …
+WARN preflight-gates: preflight-gates-no-proctor-job: no job in .gitlab-ci.yml runs PROCTOR; …
+FAIL composer-audit: not audited: composer audit could not run: No installed packages found. …
+PASS composer-version: composer 2.10.3 is at or above the 2.8.0 floor
+… six more PASS lines, repo-url-credentials to wayneui-forked-views
+RESULT: fail (3 failures, 2 warnings)
 ```
 
 **json**
@@ -794,9 +851,9 @@ Canary copy · for scripts · `--format=json`
 ```
 {
     "tool": "proctor",
-    "version": "0.8.0",
+    "version": "0.9.0",
     "path": "tests/fixtures/apps/unbounded-app",
-    "today": "2026-10-29",
+    "today": "2026-11-09",
     "result": "fail",
     "exit": 1,
     "tools": {
@@ -805,8 +862,8 @@ Canary copy · for scripts · `--format=json`
     "policy": {
         "origin": "bundled",
         "path": "/app/src/Creed/policy.json",
-        "refreshed_on": "2026-10-29",
-        "age_days": 0
+        "refreshed_on": "2026-11-08",
+        "age_days": 1
     },
     "findings": [
         {
@@ -825,7 +882,7 @@ Canary copy · for scripts · `--format=json`
             "path": "composer.json",
             "line": 4
         },
-        … ten more findings
+        … twenty-two more findings
     ],
     "overrides": []
 }
@@ -849,7 +906,7 @@ Green copy · for the merge request · `--format=codequality`
             }
         }
     },
-    … three more findings
+    … five more findings
 ]
 ```
 
@@ -865,7 +922,7 @@ Gold copy · for GitHub code scanning · `--format=sarif`
     "version": "2.1.0",
     "runs": [
         {
-            "tool": { "driver": { "name": "proctor", "version": "0.8.0", … } },
+            "tool": { "driver": { "name": "proctor", "version": "0.9.0", … } },
             "results": [
                 {
                     "ruleId": "proctor/unbounded-constraints/unbounded",
@@ -933,27 +990,25 @@ Hall G GitLab, through Preflight
 
 ```
 include:
-  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.3.1
-    inputs:
-      proctor_command: vendor/bin/proctor check --format=codequality --policy=vendor/waynestate/creed/policy/policy.json
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.4.0
 ```
 
-The job publishes a Code Quality report, so findings show on the merge request. We strongly recommend a git.wayne.edu instance runner.
+The default command is `vendor/bin/proctor check --format=codequality`, so findings show on the merge request. It clones the full history, so `override-approver` can read git blame. We strongly recommend a git.wayne.edu instance runner.
 
 Hall H GitHub code scanning
 
 ```
-- run: composer require waynestate/proctor --dev
-# policy.json is the CREED policy file
-- run: vendor/bin/proctor check --format=sarif --policy=policy.json > proctor.sarif
+- run: composer install --no-interaction --no-progress
+- run: vendor/bin/proctor check --format=sarif > proctor.sarif
 - uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+  if: always()
   with:
     sarif_file: proctor.sarif
 ```
 
-Pinned to a full commit SHA, the way `ci-pipelines` asks. Needs `permissions: security-events: write`.
+Installs from the lock and pins every action to a full commit SHA, the way `ci-pipelines` asks. Needs `permissions: security-events: write`. [The whole workflow](https://proctor.apps.wayne.edu/docs/guides/github-code-scanning.html).
 
-In CI, give `--php-runtime` the PHP version of the deploy image, because that image serves the app. The runner's PHP doesn't matter.
+No answers brought from home: in CI, PROCTOR refuses `--policy` and `--today` (exit 2) and reads CREED's policy from `vendor/` itself. Give `--php-runtime` the PHP version of the deploy image, because that image serves the app. The runner's PHP doesn't matter.
 
 Begin
 
@@ -966,23 +1021,23 @@ Install PROCTOR and CREED's policy as dev dependencies, then run the check from 
 1. Install, in a terminal:
    `composer require waynestate/proctor waynestate/creed --dev`
 2. Sit the exam:
-   `vendor/bin/proctor check --policy=vendor/waynestate/creed/policy/policy.json`
+   `vendor/bin/proctor check`
 
 **Windows**
 
 1. Install, in PowerShell:
    `composer require waynestate/proctor waynestate/creed --dev`
 2. Sit the exam:
-   `vendor\bin\proctor check --policy=vendor\waynestate\creed\policy\policy.json`
+   `vendor\bin\proctor check`
 
 **No PHP (Docker)**
 
 1. Install, from the app's folder (PowerShell, macOS or Linux):
    `docker run --rm -v "${PWD}:/app" -w /app composer:2 composer require waynestate/proctor waynestate/creed --dev`
 2. Sit the exam. The `composer:2` image brings PHP and Composer, so `composer-audit` runs too:
-   `docker run --rm -v "${PWD}:/app" -w /app composer:2 vendor/bin/proctor check --policy=vendor/waynestate/creed/policy/policy.json`
+   `docker run --rm -v "${PWD}:/app" -w /app composer:2 vendor/bin/proctor check`
 
-Options: `--path=.` · `--format=text|json|codequality|sarif` · `--policy=<file>` (optional; without it PROCTOR tries the `PROCTOR_POLICY` variable, then vendor/waynestate/creed, then its bundled copy) · `--today=YYYY-MM-DD` to fix the date so runs repeat · `--php-runtime=X.Y.Z` for the `unpatched` check.
+Options: `--path=.` · `--format=text|json|codequality|sarif` · `--policy=<file>` (optional; without it PROCTOR tries the `PROCTOR_POLICY` variable, then vendor/waynestate/creed, then its bundled copy) · `--today=YYYY-MM-DD` to fix the date so runs repeat (both on your own machine only: CI refuses them) · `--php-runtime=X.Y.Z` for the `unpatched` check.
 
 Open book
 
@@ -1007,7 +1062,7 @@ Read first:
 Task:
 1. Say which kind of app this is: raw PHP, Laravel with Blade, or Laravel with Inertia and Vue. PROCTOR checks all three with the same command.
 2. If PROCTOR is not installed, give me the install command and wait: `composer require waynestate/proctor waynestate/creed --dev`
-3. Run the check, or ask ADVISOR to: `vendor/bin/proctor check --policy=vendor/waynestate/creed/policy/policy.json` (on Windows the path is vendor\bin\proctor).
+3. Run the check, or ask ADVISOR to: `vendor/bin/proctor check` (on Windows the path is vendor\bin\proctor). With CREED installed, PROCTOR reads its policy from vendor/waynestate/creed on its own.
 4. For every FAIL and WARN, say what it means and the smallest fix. Change nothing yet.
 
 Constraints:
@@ -1037,7 +1092,7 @@ Read first:
 
 Task:
 1. Check that waynestate/proctor and waynestate/creed are dev dependencies. If not, give me the command and wait: `composer require waynestate/proctor waynestate/creed --dev`
-2. Add Preflight's proctor component to .gitlab-ci.yml, at the version Preflight's page gives today, with proctor_command set to `vendor/bin/proctor check --format=codequality --policy=vendor/waynestate/creed/policy/policy.json`
+2. Add Preflight's proctor component to .gitlab-ci.yml, at the version Preflight's page gives today, and leave proctor_command at its default (`vendor/bin/proctor check --format=codequality`).
 3. Keep every job the file already has. Show me the whole diff before you write it.
 
 Constraints:
@@ -1059,12 +1114,12 @@ A prompt for your coding agent. Copy it as it stands:
 You are a coding agent adding PROCTOR to GitHub code scanning for the PHP app in this folder, at Wayne State University. PROCTOR is the check command of WELD, the Wayne State application stack. Its sarif format is what GitHub code scanning reads.
 
 Read first:
-- https://proctor.apps.wayne.edu/llms.txt, and PROCTOR's README, section GitHub code scanning, which has the workflow to start from.
+- https://proctor.apps.wayne.edu/llms.txt, and the GitHub code scanning page in PROCTOR's docs, which has the workflow to start from.
 - This app's .github/workflows/, composer.json and composer.lock.
 - ADVISOR, the stack's MCP server, if it is connected: run_proctor_check shows today's findings before the workflow does. If it is not connected, say so and work from the pages.
 
 Task:
-1. Add a workflow, or a job in the existing one, that installs PROCTOR with `composer require waynestate/proctor --dev`, runs vendor/bin/proctor check with --format=sarif and CREED's policy, writes proctor.sarif, and uploads it with github/codeql-action/upload-sarif.
+1. Add a workflow, or a job in the existing one, that installs the app from its lock with `composer install --no-interaction --no-progress` (PROCTOR and CREED must already be dev dependencies; if not, stop and tell me), runs `vendor/bin/proctor check --format=sarif > proctor.sarif` with no --policy and no --today (CI refuses both), and uploads proctor.sarif with github/codeql-action/upload-sarif under `if: always()`.
 2. Give the job permissions: security-events: write, and nothing more than it needs.
 3. Show me the whole file before you write it.
 
@@ -1501,6 +1556,17 @@ Source: https://proctor.apps.wayne.edu/docs/guides/check-ci.html
 
 This page covers the PROCTOR checks that verify CI pipelines run `composer ci`, that Preflight includes are pinned and its gates are present and blocking, and that deploy scripts and committed files keep the app portable. Run `vendor/bin/proctor check` against the app path, then fix the finding the report names. PROCTOR watches the exam and does not hand out answers.
 
+### Run PROCTOR in GitLab CI[#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#run-proctor-in-gitlab-ci)
+
+The smallest pipeline change that satisfies `preflight-pinned` and `preflight-gates` below is Preflight's `proctor` component, pinned to a release tag, with its command left at the default (add Preflight's `php-test` and `composer-audit` next to it, and a job that runs `composer ci` for `ci-pipelines`):
+
+```yaml
+include:
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.4.0
+```
+
+The default command is `vendor/bin/proctor check --format=codequality`, so the findings show on the merge request as Code Quality. Do not add `--policy` or `--today` to `proctor_command`: in CI PROCTOR refuses both (exit 2) unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`, and without them it reads CREED's policy from the app's `vendor/waynestate/creed`. Preflight 0.4.0 clones the full history for this job (`git_depth: "0"`), so `override-approver` can read git blame. Strongly recommended: a git.wayne.edu instance runner. Preflight's own page lists every input: [preflight.apps.wayne.edu](https://preflight.apps.wayne.edu/).
+
 ### ci-pipelines[#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#ci-pipelines)
 
 `ci-pipelines` enforces the CI contract. For a stack package (a composer.json `name` starting with `waynestate/`), both `.gitlab-ci.yml` and `.github/workflows/ci.yml` must exist and run `composer ci`; a missing or incomplete file is a failure. For any other project, a missing or incomplete `.gitlab-ci.yml` is a warning and `.github/workflows/ci.yml` is optional.
@@ -1936,6 +2002,8 @@ Source: https://proctor.apps.wayne.edu/docs/guides/checks-overview.html
 
 This page lists every check PROCTOR runs in a single `vendor/bin/proctor check` run, and how each one reports. The proctor asks the same questions in the same order on every run; only the hall changes.
 
+Thirty-six checks in all. Eight of them also run at the door, in `proctor gate`: `php-floor`, `unpatched`, `laravel-eol`, `laravel-php`, `lock-committed`, `composer-audit`, `overrides` and `policy-age` (see [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html)). Five are new on main since 0.9.0 and ship in the next release: `mysql-minimum`, `entrypoint-migrate`, `preflight-gates`, `app-debug` and `vite-secrets`.
+
 ![Nine real lines from PROCTOR's text report, one per check shown: FAIL php-floor, WARN unpatched, FAIL unbounded-constraints, PASS lock-committed, WARN portability, WARN mysql56, WARN ci-pipelines, PASS composer-audit, FAIL overrides. Each line is written in words; color only repeats what the word says.](https://proctor.apps.wayne.edu/docs/readme/report.svg)
 
 *Nine of the thirty-seven checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
@@ -1954,8 +2022,8 @@ The seven checks that read composer.json and composer.lock. Details and fixes: [
 - `dev-only-packages`: fails when Laravel Boost or Debugbar is in `require`, because they install in production and expose app internals; warns when Telescope is in `require` (keep it there only if the app registers it for local use) and when a test tool (phpunit, Pest, Mockery, Sail, Pail, Collision) is in `require`. It reads only `require`, never `require-dev`.
 - `composer-config`: warns when composer.json opens a door Composer closes by default: `allow-plugins` set to `true`, `secure-http` set to `false`, `lock` set to `false`, `audit.block-insecure` set to `false`, `config.policy` set to `false`, `policy.malware` set to `false` or `policy.advisories` set to `false`; notes when `require.php` is set without `config.platform.php`. Warning and info only, never a fail.
 - `lock-committed`: fails when composer.lock is missing from the app path. When the lock is present and its `content-hash` is a real 32-hex hash, it warns (`proctor/lock-committed/out-of-sync`) when the hash no longer matches composer.json, so a stale lock that still installs is visible instead of silent; the warning never changes the exit code.
-- `composer-audit`: fails for advisories at or above the policy's `audit_severity_threshold`, warns for lower ones, and reports info when composer or the lock file is absent. Fails (`proctor/composer-audit/could-not-run`) when the audit runs but its stdout is not parseable JSON, because a green run that audited nothing is worse than a red one. Abandoned packages follow the policy's `abandoned_packages` rule: a fail under `fail` (the default), a warning under `report`, nothing under `ignore` (`proctor/composer-audit/abandoned`).
-- `composer-version`: fails when the Composer on PATH is Composer 1 (end of life) or carries the command-injection holes CVE-2024-35241 and CVE-2024-35242 (2.2.x below 2.2.24, or any other 2.x below 2.7.7); warns when composer cannot be run.
+- `composer-audit`: fails for advisories at or above the policy's `audit_severity_threshold` and warns for lower ones (an advisory on a dev-only package always warns). When composer or the lock file is absent it fails with a message that starts `not audited:` (`proctor/composer-audit/skipped`), which an active `composer-audit` override downgrades to a warning. It also fails (`proctor/composer-audit/could-not-run`) when the audit runs but its stdout is not parseable JSON, because a green run that audited nothing is worse than a red one. Abandoned packages follow the policy's `abandoned_packages` rule: a fail under `fail` (the default), a warning under `report`, nothing under `ignore` (`proctor/composer-audit/abandoned`).
+- `composer-version`: fails when the Composer on PATH is Composer 1 (end of life) or carries the command-injection holes CVE-2024-35241 and CVE-2024-35242 (2.2.x below 2.2.24, or any other 2.x below 2.7.7), and below the policy's `tools.composer.minimum` when that is higher (the bundled policy sets 2.8.0); warns when composer cannot be run.
 - `repo-url-credentials`: warns when a credential is written into a package source URL: a deploy token in the userinfo of a composer.json repository URL or a composer.lock source/dist URL, a bare token user of 20+ characters, a `private_token`, `access_token`, `token` or `password` query parameter, or a `.npmrc` line that sets `_authToken`, `_auth` or `_password` to a literal value. The secret is masked as `***` in the message, so the report itself is safe to hand back.
 
 ### PHP and database[#](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html#php-and-database)
@@ -1980,7 +2048,7 @@ Details and fixes: [CI checks](https://proctor.apps.wayne.edu/docs/guides/check-
 - `preflight-gates`: warns, never fails, when `.gitlab-ci.yml` includes no Preflight component, lets a Preflight gate fail with `allow_failure`, or has no job that runs PROCTOR.
 - `portability`: warns when code hard-codes a platform fact: an absolute host path, a hard-coded proxy address, a local-disk session store, or a php_value/php_flag line in .htaccess.
 - `destructive-deploy`: fails when a deploy script runs an artisan command that drops or rebuilds the database (`migrate:fresh`, `migrate:refresh`, `migrate:reset`, `db:wipe`), which erases production data on every deploy.
-- `crlf-deploy-script`: fails when a deploy script has Windows line endings (CRLF), which break it on Linux.
+- `crlf-deploy-script`: fails when a deploy script has Windows line endings (CRLF), which break it on Linux, and warns (`proctor/crlf-deploy-script/no-gitattributes`) when the app has a deploy script and `.gitattributes` does not pin `*.sh` to `eol=lf`.
 - `case-clash`: fails when two paths differ only by letter case, which collide on macOS and Windows.
 - `instant-client-committed`: warns when Oracle Instant Client is committed to the repo: an archive, an unzipped install under an `instantclient` directory, or a loose client library.
 
@@ -1990,6 +2058,8 @@ The checks that read the app's own files: the Node line it builds on, the MySQL 
 
 - `node-eol`: grades every Node version the repository pins (`.nvmrc`, `.node-version`, package.json `volta.node`, an official `node` image in `.gitlab-ci.yml` or a Dockerfile) with php-floor's table: active passes, security-only warns, eol fails, and past the grace window it fails as `eol_grace_expired`. `engines.node` warns at worst and an odd major always warns. Silent when the policy has no node component.
 - `mysql-eol`: grades every MySQL or MariaDB version the repository names (an official `mysql` or `mariadb` image in a root compose file, and `SQUIRE_MYSQL_IMAGE=mysql:<version>` in an env example) with php-floor's table, except an active version stays silent: security-only warns, and eol and `eol_grace_expired` warn until Citadel offers a supported MySQL (D-008). Silent when the policy has no mysql or mariadb component.
+- `mysql-minimum`: warns, never fails, when the app's MySQL or MariaDB image is below the minimum the policy records for its locked Laravel line (`proctor/mysql-minimum/below`).
+- `entrypoint-migrate`: warns, never fails, when a container entrypoint runs `artisan migrate` at start: with two replicas both migrate at once, and a failed migration crash-loops the container. Run migrations once per release as a job (WELD W24).
 - `env-outside-config`: warns for every `env()` call in a Laravel app outside its config files, which returns null after `php artisan config:cache`; a call with Larastan's ignore marker for the same rule is an info note.
 - `raw-identity-header`: warns, never fails, when app code reads an identity header directly: a string key on `$_SERVER` or `$_ENV`, the quoted argument of `getenv()` or `apache_getenv()`, a quoted first argument of the request's `header()`, `server()`, `hasHeader()`, `getHeader()` or `getHeaderLine()` methods, or a key on the `getallheaders()` result. Only SESAME's gateway driver may read those headers: it verifies the signed assertion first (CREED auth-3).
 - `app-key`: warns on a committed real env file, a real APP_KEY committed in an env file or `config/app.php` (never printed), and the cookie session driver. A real env file is graded only when git lists it or the run is in CI.
@@ -2222,30 +2292,38 @@ The `sarif` format feeds GitHub code scanning on the GitHub mirror. This page ad
 
 ### The workflow[#](https://proctor.apps.wayne.edu/docs/guides/github-code-scanning.html#the-workflow)
 
-Add this workflow to the mirror. It sets up PHP, installs PROCTOR, runs the check against the app's CREED policy file, and uploads the resulting log:
+Add this workflow to the mirror. It sets up PHP, installs the app's dependencies from the lock (PROCTOR and CREED among them, as dev dependencies), runs the check and uploads the resulting log:
 
 ```yaml
 name: proctor
 on: [push, pull_request]
 permissions:
+  contents: read
   security-events: write
 jobs:
   proctor:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: '8.4'
-      - run: composer require waynestate/proctor --dev
-      # policy.json is the CREED policy file
-      - run: vendor/bin/proctor check --format=sarif --policy=policy.json > proctor.sarif
+      - run: composer install --no-interaction --no-progress
+      # No --policy here: CI refuses it, and PROCTOR reads vendor/waynestate/creed's policy itself.
+      - run: vendor/bin/proctor check --format=sarif > proctor.sarif
       - uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        if: always()
         with:
           sarif_file: proctor.sarif
 ```
 
-The `--policy=policy.json` argument names the app's CREED policy file; see [Policy](https://proctor.apps.wayne.edu/docs/guides/policy.html) for how PROCTOR finds one when you do not name it.
+Three choices in it are on purpose, and each matches a PROCTOR check:
+
+- Every `uses:` is pinned to a full commit SHA with the version in a comment; `ci-pipelines` warns on a tag or a branch (`proctor/ci-pipelines/unpinned-uses`).
+- The job runs `composer install`, never `composer require` or `composer update`: CI installs from the lock (`proctor/ci-pipelines/composer-update`).
+- There is no `--policy` and no `--today`. In CI (`GITHUB_ACTIONS` is set) PROCTOR refuses both with exit 2 unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`, so an app cannot grade itself against a policy or a date it picks. Without `--policy` it reads `vendor/waynestate/creed/policy/policy.json`, or its bundled copy; see [Policy](https://proctor.apps.wayne.edu/docs/guides/policy.html).
+
+`if: always()` uploads the log even when the check exits 1, which is exactly when you want to read it.
 
 ### What the log contains[#](https://proctor.apps.wayne.edu/docs/guides/github-code-scanning.html#what-the-log-contains)
 
@@ -2526,6 +2604,7 @@ Pencils up. Five minutes, one command, a mark sheet: install PROCTOR, run the fi
    vendor/bin/proctor check --policy=policy.json
    ```
    Without `--policy`, PROCTOR resolves the policy in this order: the `PROCTOR_POLICY` environment variable, the app's `vendor/waynestate/creed/policy/policy.json`, then the copy bundled with PROCTOR.
+   Steps 4 and 6 are for your own machine. In CI, `--policy` and `--today` are refused (exit 2) unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`, so an app cannot grade itself against a policy or a date it picks: leave them out of the pipeline, and PROCTOR reads CREED's policy from `vendor/` on its own.
 
 ### What you built[#](https://proctor.apps.wayne.edu/docs/guides/quick-start.html#what-you-built)
 
@@ -2535,7 +2614,7 @@ You ran PROCTOR's first marking pass: a verdict per check against the CREED poli
 
 - [Install](https://proctor.apps.wayne.edu/docs/install.html): requirements and the single-file PHAR route for apps without Composer access.
 - [Reference: commands](https://proctor.apps.wayne.edu/docs/reference/commands.html): the long-form docs for the commands, [rule ids](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html) and [exit codes](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html).
-- When you are ready for CI, the README's GitHub code scanning section shows a workflow that runs the check with `--format=sarif` and uploads the log to code scanning.
+- When you are ready for CI: on GitLab, include Preflight's `proctor` component, pinned to a release tag (see [CI checks](https://proctor.apps.wayne.edu/docs/guides/check-ci.html)); on the GitHub mirror, [GitHub code scanning](https://proctor.apps.wayne.edu/docs/guides/github-code-scanning.html) has a workflow that runs the check with `--format=sarif` and uploads the log.
 
 ---
 
@@ -2576,7 +2655,9 @@ A clean hall exits 0 (warnings allowed), a resit exits 1, and a tripped proctor 
 
 ### Status[#](https://proctor.apps.wayne.edu/docs/#status)
 
-Version: Unreleased. License: MIT.
+The header names the release these pages document; [Upgrading](https://proctor.apps.wayne.edu/docs/upgrading.html) lists what changed at each break. Thirty-six checks, eight of them in the deploy gate, four report formats and three exit codes. License: MIT.
+
+Part of WELD, the Wayne State application stack: [CREED](https://creed.apps.wayne.edu/) sets the policy PROCTOR marks against, [Preflight](https://preflight.apps.wayne.edu/) runs it in GitLab CI, and [Sourdough](https://sourdough.apps.wayne.edu/) and [WELD](https://weld.apps.wayne.edu/) apps come with it installed. The look is [WayneUI](https://wayneui.apps.wayne.edu/).
 
 Agents: the machine-readable entry point for this documentation is [llms.txt](https://proctor.apps.wayne.edu/llms.txt).
 
@@ -2597,7 +2678,7 @@ Where the code lives: the canonical repository is on git.wayne.edu, [enterprise-
 
 ### Single-file PHAR[#](https://proctor.apps.wayne.edu/docs/install.html#single-file-phar)
 
-The single-file PHAR is how Preflight and apps without Composer access run PROCTOR as one file, and from the next release it is attached to each GitLab Release with its `proctor.phar.sha256` checksum file. Both files come from the `release-phar` job in `.gitlab-ci.yml`; the lead tags, and no tag means no release. The `composer require` install below stays the current method; the phar is the one-file alternative.
+The single-file PHAR is how Preflight and apps without Composer access run PROCTOR as one file. Since 0.6.0, every tag runs the `release-phar` job in `.gitlab-ci.yml`, which attaches `proctor.phar` and its `proctor.phar.sha256` checksum file to that tag's GitLab Release; the maintainer tags, and no tag means no release. The `composer require` install below stays the main method; the phar is the one-file alternative.
 
 Download both files for the tag you want, verify the checksum, then run it. Replace `<release>` with the base URL of the release's asset links (the release page lists both files).
 
@@ -2613,7 +2694,7 @@ Windows (PowerShell), one line, no bash needed:
 Invoke-WebRequest "<release>/proctor.phar" -OutFile proctor.phar; Invoke-WebRequest "<release>/proctor.phar.sha256" -OutFile proctor.phar.sha256; if ((Get-FileHash proctor.phar -Algorithm SHA256).Hash -ne (Get-Content proctor.phar.sha256 -TotalCount 1).Trim().Split(' ')[0]) { throw "sha256 mismatch" }; php proctor.phar --version
 ```
 
-Until the first tagged release that runs the job, build it from a checkout with the script for your OS (both need Docker, and no PHP or Composer on the host): `.\scripts\build-phar.ps1` on Windows, `scripts/build-phar.sh` on Linux / macOS. Each script writes `build/proctor.phar` and verifies it by printing PROCTOR's version.
+For a commit between tags, or a release whose job did not attach the files, build it from a checkout with the script for your OS (both need Docker, and no PHP or Composer on the host): `.\scripts\build-phar.ps1` on Windows, `scripts/build-phar.sh` on Linux / macOS. Each script writes `build/proctor.phar` and verifies it by printing PROCTOR's version.
 
 ### Install[#](https://proctor.apps.wayne.edu/docs/install.html#install-1)
 
@@ -2621,7 +2702,13 @@ Until the first tagged release that runs the job, build it from a checkout with 
 composer require waynestate/proctor --dev
 ```
 
-The command is then `vendor/bin/proctor`.
+The command is then `vendor/bin/proctor`. Add CREED next to it, so PROCTOR marks against the newest published policy instead of the copy it bundles:
+
+```
+composer require waynestate/creed --dev
+```
+
+Already in a [Sourdough](https://sourdough.apps.wayne.edu/) app or [WELD](https://weld.apps.wayne.edu/)? Both are there, and `composer proctor` runs the check.
 
 ### Verify[#](https://proctor.apps.wayne.edu/docs/install.html#verify)
 
@@ -2964,6 +3051,9 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `lock-committed` | `proctor/lock-committed/out-of-sync` |
 | `destructive-deploy` | `proctor/destructive-deploy` |
 | `crlf-deploy-script` | `proctor/crlf-deploy-script` |
+| `crlf-deploy-script` | `proctor/crlf-deploy-script/no-gitattributes` |
+| `entrypoint-migrate` | `proctor/entrypoint-migrate` |
+| `entrypoint-migrate` | `proctor/entrypoint-migrate/runs` |
 | `case-clash` | `proctor/case-clash` |
 | `overrides` | `proctor/overrides` |
 | `overrides` | `proctor/overrides/expiring` |
@@ -3010,6 +3100,8 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `mysql56` | `proctor/mysql56/string-default` |
 | `mysql56` | `proctor/mysql56/parse-error` |
 | `mysql-eol` | `proctor/mysql-eol` |
+| `mysql-minimum` | `proctor/mysql-minimum` |
+| `mysql-minimum` | `proctor/mysql-minimum/below` |
 | `ci-pipelines` | `proctor/ci-pipelines` |
 | `ci-pipelines` | `proctor/ci-pipelines/gitlab-missing` |
 | `ci-pipelines` | `proctor/ci-pipelines/gitlab-parse` |
@@ -3025,6 +3117,10 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `preflight-pinned` | `proctor/preflight-pinned` |
 | `preflight-pinned` | `proctor/preflight-pinned/unpinned` |
 | `preflight-pinned` | `proctor/preflight-pinned/script-override` |
+| `preflight-gates` | `proctor/preflight-gates` |
+| `preflight-gates` | `proctor/preflight-gates/no-include` |
+| `preflight-gates` | `proctor/preflight-gates/allow-failure` |
+| `preflight-gates` | `proctor/preflight-gates/no-proctor-job` |
 | `composer-audit` | `proctor/composer-audit` |
 | `composer-audit` | `proctor/composer-audit/advisory` |
 | `composer-audit` | `proctor/composer-audit/abandoned` |
@@ -3050,6 +3146,9 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `display-errors` | `proctor/display-errors` |
 | `display-errors` | `proctor/display-errors/on` |
 | `display-errors` | `proctor/display-errors/log-off` |
+| `vite-secrets` | `proctor/vite-secrets` |
+| `vite-secrets` | `proctor/vite-secrets/env-file` |
+| `vite-secrets` | `proctor/vite-secrets/source` |
 | `served-folder` | `proctor/served-folder` |
 | `served-folder` | `proctor/served-folder/debug-file` |
 | `served-folder` | `proctor/served-folder/phpinfo` |
@@ -3065,7 +3164,7 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 
 ### Kept in step[#](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html#kept-in-step)
 
-`tests/RuleIdContractTest.php` keeps this table in step with the checks: a rule id that is emitted but not listed in the known set fails the suite, and the test parses the README's copy of this table, so a known rule id missing from it, or a row that names an unknown rule id, fails the suite too. The proctor stamps each id in pencil so small only the head office can read it, and it never smudges.
+`tests/RuleIdContractTest.php` keeps this table in step with the checks: a rule id that is emitted but not listed in the known set fails the suite, and the test parses the README's copy of this table, so a known rule id missing from it, or a row that names an unknown rule id, fails the suite too. This page's table is held to the README's, row for row, by the same test file. The proctor stamps each id in pencil so small only the head office can read it, and it never smudges.
 
 ### Related[#](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html#related)
 

@@ -96,6 +96,18 @@
 <td><code>proctor/crlf-deploy-script</code></td>
 </tr>
 <tr>
+<td><code>crlf-deploy-script</code></td>
+<td><code>proctor/crlf-deploy-script/no-gitattributes</code></td>
+</tr>
+<tr>
+<td><code>entrypoint-migrate</code></td>
+<td><code>proctor/entrypoint-migrate</code></td>
+</tr>
+<tr>
+<td><code>entrypoint-migrate</code></td>
+<td><code>proctor/entrypoint-migrate/runs</code></td>
+</tr>
+<tr>
 <td><code>case-clash</code></td>
 <td><code>proctor/case-clash</code></td>
 </tr>
@@ -280,6 +292,14 @@
 <td><code>proctor/mysql-eol</code></td>
 </tr>
 <tr>
+<td><code>mysql-minimum</code></td>
+<td><code>proctor/mysql-minimum</code></td>
+</tr>
+<tr>
+<td><code>mysql-minimum</code></td>
+<td><code>proctor/mysql-minimum/below</code></td>
+</tr>
+<tr>
 <td><code>ci-pipelines</code></td>
 <td><code>proctor/ci-pipelines</code></td>
 </tr>
@@ -338,6 +358,22 @@
 <tr>
 <td><code>preflight-pinned</code></td>
 <td><code>proctor/preflight-pinned/script-override</code></td>
+</tr>
+<tr>
+<td><code>preflight-gates</code></td>
+<td><code>proctor/preflight-gates</code></td>
+</tr>
+<tr>
+<td><code>preflight-gates</code></td>
+<td><code>proctor/preflight-gates/no-include</code></td>
+</tr>
+<tr>
+<td><code>preflight-gates</code></td>
+<td><code>proctor/preflight-gates/allow-failure</code></td>
+</tr>
+<tr>
+<td><code>preflight-gates</code></td>
+<td><code>proctor/preflight-gates/no-proctor-job</code></td>
 </tr>
 <tr>
 <td><code>composer-audit</code></td>
@@ -440,6 +476,18 @@
 <td><code>proctor/display-errors/log-off</code></td>
 </tr>
 <tr>
+<td><code>vite-secrets</code></td>
+<td><code>proctor/vite-secrets</code></td>
+</tr>
+<tr>
+<td><code>vite-secrets</code></td>
+<td><code>proctor/vite-secrets/env-file</code></td>
+</tr>
+<tr>
+<td><code>vite-secrets</code></td>
+<td><code>proctor/vite-secrets/source</code></td>
+</tr>
+<tr>
 <td><code>served-folder</code></td>
 <td><code>proctor/served-folder</code></td>
 </tr>
@@ -476,7 +524,7 @@
 <p><code>proctor/composer-audit/skipped</code> is a failure, not an info finding: it fires when the composer executable is not on PATH or the app has no composer.lock, its message starts with <code>not audited:</code>, and an active <code>composer-audit</code> override downgrades it to a warning.</p>
 <p><code>proctor/ci-pipelines/allow-overrides</code> warns only when the pipeline environment sets <code>PROCTOR_ALLOW_OVERRIDES</code> to <code>1</code>: the variable lets the app pass <code>--policy</code> and <code>--today</code> in CI (BEST_PRACTICES 1.2), so it could grade itself against a policy or a date it picks. Any other value leaves the guard on and gives no finding. Fix: remove the variable; only PROCTOR's own pipeline needs it.</p>
 <h2 id="kept-in-step">Kept in step<a class="docs-heading-link" aria-label="Link to this section" href="#kept-in-step">#</a></h2>
-<p><code>tests/RuleIdContractTest.php</code> keeps this table in step with the checks: a rule id that is emitted but not listed in the known set fails the suite, and the test parses the README's copy of this table, so a known rule id missing from it, or a row that names an unknown rule id, fails the suite too. The proctor stamps each id in pencil so small only the head office can read it, and it never smudges.</p>
+<p><code>tests/RuleIdContractTest.php</code> keeps this table in step with the checks: a rule id that is emitted but not listed in the known set fails the suite, and the test parses the README's copy of this table, so a known rule id missing from it, or a row that names an unknown rule id, fails the suite too. This page's table is held to the README's, row for row, by the same test file. The proctor stamps each id in pencil so small only the head office can read it, and it never smudges.</p>
 <h2 id="related">Related<a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></h2>
 <ul>
 <li><a href="commands.html">Commands</a></li>
