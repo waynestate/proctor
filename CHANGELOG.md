@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Docs: the ADVISOR guide lists `vite-secrets` among the checks `proctor_check` skips because they read env files, next to `app-key` (ADVISOR already skipped it).
+- Changed: the deploy kit is Squire 0.10.0 (was 0.7.1): release.sh keeps Composer and npm download caches in the app folder and the gate takes SQUIRE_PHP_RUNTIME; the compose file, health.php and .env.squire.example follow the template, and the portable image files are added.
 
 ## 0.10.0 (2026-11-09)
 
