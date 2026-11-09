@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>App checks | PROCTOR docs</title>
-<meta name="description" content="The checks that read an app&#039;s own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, secret-looking VITE_ variables, debug files in public/ and chmod 777.">
+<meta name="description" content="The checks that read an app&#039;s own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a missing or open robots.txt, secret-looking VITE_ variables, debug files in public/ and chmod 777.">
 <meta name="docs-version" content="0.9.0">
 <link rel="stylesheet" href="../../assets/wayne-ui/wayne-ui.css">
 <link rel="stylesheet" href="../../assets/docs.css">
@@ -41,8 +41,8 @@
   <div class="docs-content">
     <main id="main">
       <article class="docs-article"><h1 id="app-checks">App checks<a class="docs-heading-link" aria-label="Link to this section" href="#app-checks">#</a></h1>
-<p>This page covers the sixteen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, <code>env()</code> calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, secret-looking <code>VITE_</code> variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from <code>public/</code>, deploy scripts with Windows line endings, paths that differ only by letter case, and <code>chmod 777</code>. Each one holds a CREED practice. Run <code>vendor/bin/proctor check</code> against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.</p>
-<p><code>node-eol</code>, <code>crlf-deploy-script</code> and <code>case-clash</code> can fail a run. The other thirteen warn, never fail: <code>mysql-eol</code> warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.</p>
+<p>This page covers the seventeen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, <code>env()</code> calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a robots.txt that is missing or lets every crawler in, secret-looking <code>VITE_</code> variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from <code>public/</code>, deploy scripts with Windows line endings, paths that differ only by letter case, and <code>chmod 777</code>. Each one holds a CREED practice. Run <code>vendor/bin/proctor check</code> against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.</p>
+<p><code>node-eol</code>, <code>crlf-deploy-script</code> and <code>case-clash</code> can fail a run. The other fourteen warn, never fail: <code>mysql-eol</code> warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.</p>
 <h2 id="node-eol">node-eol<a class="docs-heading-link" aria-label="Link to this section" href="#node-eol">#</a></h2>
 <p><code>node-eol</code> grades every Node version the repository pins against the policy's <code>node</code> lines as of <code>--today</code>. The sources:</p>
 <ul>
@@ -368,6 +368,45 @@
 </tr>
 </tbody>
 </table></div>
+<h2 id="robots-txt">robots-txt<a class="docs-heading-link" aria-label="Link to this section" href="#robots-txt">#</a></h2>
+<p><code>robots-txt</code> warns, never fails, when a served app commits no <code>public/robots.txt</code>, or one that lets every crawler in by default. CREED production says every app must set robots.txt to keep spiders out unless crawling is wanted (WSU developer standards, 2024). It reports, and is not in the deploy gate.</p>
+<p>It applies only to an app with a committed <code>public/index.php</code>, the served folder <code>served-folder</code> reads; without one it emits no finding at all. Only committed files count: the git-tracked files, or the files on disk when git cannot be asked.</p>
+<ul>
+<li><code>proctor/robots-txt/missing</code>: no committed <code>public/robots.txt</code>.</li>
+<li><code>proctor/robots-txt/allows-all</code>: no group for <code>User-agent: *</code> holds <code>Disallow: /</code> or <code>Allow: /</code>. Laravel's skeleton ships <code>User-agent: *</code> with an empty <code>Disallow:</code>, which lets everyone in without anyone deciding so. <code>Disallow: /admin</code> and <code>Allow: /public</code> cover one corner, not the hall, and a rule under <code>User-agent: Googlebot</code> speaks only for Googlebot.</li>
+<li><code>proctor/robots-txt</code> (pass): a group for <code>User-agent: *</code> holds <code>Disallow: /</code>, which keeps every crawler out, or <code>Allow: /</code>, which is a written choice to be crawled. A group with both passes too: it is already a decision.</li>
+</ul>
+<p>Field names are case-insensitive, everything from a <code>#</code> to the end of its line is a comment, and blank lines are ignored. A group is the run of rules after one or more <code>User-agent</code> lines, so <code>User-agent: Googlebot</code> and <code>User-agent: *</code> on consecutive lines share the rules that follow. <code>Disallow: /</code> and <code>Allow: /</code> with trailing spaces count; Windows line endings and a byte order mark are fine.</p>
+<p>Fix by committing a <code>public/robots.txt</code> that keeps every crawler out:</p>
+<pre tabindex="0"><code class="language-text">User-agent: *
+Disallow: /
+</code></pre>
+<p>An app that wants crawling, such as a public front page, says so in the same file instead, and passes:</p>
+<pre tabindex="0"><code class="language-text">User-agent: *
+Allow: /
+</code></pre>
+<div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Rule id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>robots-txt</code></td>
+<td><code>proctor/robots-txt</code></td>
+</tr>
+<tr>
+<td><code>robots-txt</code></td>
+<td><code>proctor/robots-txt/missing</code></td>
+</tr>
+<tr>
+<td><code>robots-txt</code></td>
+<td><code>proctor/robots-txt/allows-all</code></td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="vite-secrets">vite-secrets<a class="docs-heading-link" aria-label="Link to this section" href="#vite-secrets">#</a></h2>
 <p><code>vite-secrets</code> warns, never fails, when a secret-looking variable carries Vite's <code>VITE_</code> prefix. Vite exposes every <code>VITE_</code> variable to the client code it bundles, so the value ships to every visitor's browser, and a name that says it holds a secret is a leak waiting for a value. It reports, and is not in the deploy gate.</p>
 <p>Two places are read:</p>
@@ -525,7 +564,7 @@
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../../docs/guides/check-ci.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">CI checks</span></a><a class="docs-pager__link docs-pager__link--next" href="../../docs/guides/check-wayneui.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">WayneUI checks</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#node-eol">node-eol</a></li><li class="docs-toc__item"><a href="#mysql-eol">mysql-eol</a></li><li class="docs-toc__item"><a href="#mysql-minimum">mysql-minimum</a></li><li class="docs-toc__item"><a href="#env-outside-config">env-outside-config</a></li><li class="docs-toc__item"><a href="#raw-identity-header">raw-identity-header</a></li><li class="docs-toc__item"><a href="#app-key">app-key</a></li><li class="docs-toc__item"><a href="#app-debug">app-debug</a></li><li class="docs-toc__item"><a href="#display-errors">display-errors</a></li><li class="docs-toc__item"><a href="#directory-listing">directory-listing</a></li><li class="docs-toc__item"><a href="#csp-unsafe-inline">csp-unsafe-inline</a></li><li class="docs-toc__item"><a href="#vite-secrets">vite-secrets</a></li><li class="docs-toc__item"><a href="#entrypoint-migrate">entrypoint-migrate</a></li><li class="docs-toc__item"><a href="#served-folder">served-folder</a></li><li class="docs-toc__item"><a href="#crlf-deploy-script">crlf-deploy-script</a></li><li class="docs-toc__item"><a href="#case-clash">case-clash</a></li><li class="docs-toc__item"><a href="#world-writable">world-writable</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#node-eol">node-eol</a></li><li class="docs-toc__item"><a href="#mysql-eol">mysql-eol</a></li><li class="docs-toc__item"><a href="#mysql-minimum">mysql-minimum</a></li><li class="docs-toc__item"><a href="#env-outside-config">env-outside-config</a></li><li class="docs-toc__item"><a href="#raw-identity-header">raw-identity-header</a></li><li class="docs-toc__item"><a href="#app-key">app-key</a></li><li class="docs-toc__item"><a href="#app-debug">app-debug</a></li><li class="docs-toc__item"><a href="#display-errors">display-errors</a></li><li class="docs-toc__item"><a href="#directory-listing">directory-listing</a></li><li class="docs-toc__item"><a href="#csp-unsafe-inline">csp-unsafe-inline</a></li><li class="docs-toc__item"><a href="#robots-txt">robots-txt</a></li><li class="docs-toc__item"><a href="#vite-secrets">vite-secrets</a></li><li class="docs-toc__item"><a href="#entrypoint-migrate">entrypoint-migrate</a></li><li class="docs-toc__item"><a href="#served-folder">served-folder</a></li><li class="docs-toc__item"><a href="#crlf-deploy-script">crlf-deploy-script</a></li><li class="docs-toc__item"><a href="#case-clash">case-clash</a></li><li class="docs-toc__item"><a href="#world-writable">world-writable</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.9.0</span></span>

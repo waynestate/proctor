@@ -7,11 +7,11 @@ description: An overview of every check PROCTOR runs and how each reports pass, 
 
 This page lists every check PROCTOR runs in a single `vendor/bin/proctor check` run, and how each one reports. The proctor asks the same questions in the same order on every run; only the hall changes.
 
-Thirty-nine checks in all. Eight of them also run at the door, in `proctor gate`: `php-floor`, `unpatched`, `laravel-eol`, `laravel-php`, `lock-committed`, `composer-audit`, `overrides` and `policy-age` (see [Deploy gate](deploy-gate.md)). Five are new on main since 0.9.0 and ship in the next release: `mysql-minimum`, `entrypoint-migrate`, `preflight-gates`, `app-debug` and `vite-secrets`.
+Forty checks in all. Eight of them also run at the door, in `proctor gate`: `php-floor`, `unpatched`, `laravel-eol`, `laravel-php`, `lock-committed`, `composer-audit`, `overrides` and `policy-age` (see [Deploy gate](deploy-gate.md)). Five are new on main since 0.9.0 and ship in the next release: `mysql-minimum`, `entrypoint-migrate`, `preflight-gates`, `app-debug` and `vite-secrets`.
 
 ![Nine real lines from PROCTOR's text report, one per check shown: FAIL php-floor, WARN unpatched, FAIL unbounded-constraints, PASS lock-committed, WARN portability, WARN mysql56, WARN ci-pipelines, PASS composer-audit, FAIL overrides. Each line is written in words; color only repeats what the word says.](../readme/report.svg)
 
-*Nine of the thirty-nine checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
+*Nine of the forty checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
 
 ## How a check reports
 
@@ -59,7 +59,7 @@ Details and fixes: [CI checks](check-ci.md).
 
 ## App code and files
 
-The checks that read the app's own files: the Node line it builds on, the MySQL or MariaDB image it runs, `env()` outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, secret-looking `VITE_` variables, files in `public/`, a container entrypoint that runs migrations and `chmod 777`. Details and fixes: [App checks](check-app.md).
+The checks that read the app's own files: the Node line it builds on, the MySQL or MariaDB image it runs, `env()` outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a robots.txt that is missing or lets every crawler in, secret-looking `VITE_` variables, files in `public/`, a container entrypoint that runs migrations and `chmod 777`. Details and fixes: [App checks](check-app.md).
 
 - `node-eol`: grades every Node version the repository pins (`.nvmrc`, `.node-version`, package.json `volta.node`, an official `node` image in `.gitlab-ci.yml` or a Dockerfile) with php-floor's table: active passes, security-only warns, eol fails, and past the grace window it fails as `eol_grace_expired`. `engines.node` warns at worst and an odd major always warns. Silent when the policy has no node component.
 - `mysql-eol`: grades every MySQL or MariaDB version the repository names (an official `mysql` or `mariadb` image in a root compose file, and `SQUIRE_MYSQL_IMAGE=mysql:<version>` in an env example) with php-floor's table, except an active version stays silent: security-only warns, and eol and `eol_grace_expired` warn until Citadel offers a supported MySQL (D-008). Silent when the policy has no mysql or mariadb component.
@@ -72,6 +72,7 @@ The checks that read the app's own files: the Node line it builds on, the MySQL 
 - `display-errors`: warns, never fails, when a committed php.ini, .user.ini or .htaccess turns `display_errors` on or `log_errors` off (CREED runtime-and-headers); one warning per file per rule, on the line of its first match.
 - `directory-listing`: warns, never fails, when a committed .htaccess or server config turns on directory listing (Apache Options Indexes or All, nginx autoindex on) (CREED production); one warning per file, on the line of its first match.
 - `csp-unsafe-inline`: warns, never fails, when committed app config, server config or an example env file lets scripts run inline (`'unsafe-inline'` in `script-src`, `script-src-elem` or `script-src-attr`; `style-src` is left alone) (CREED runtime-and-headers); one warning per file, on the line of its first offending `'unsafe-inline'`.
+- `robots-txt`: warns, never fails, when an app with a committed `public/index.php` commits no `public/robots.txt`, or one that lets every crawler in by default (neither `Disallow: /` nor `Allow: /` for `User-agent: *`; `Allow: /` is a written choice to be crawled and passes) (CREED production); silent when the app has no committed `public/index.php`.
 - `vite-secrets`: warns, never fails, when a committed env file declares a secret-looking `VITE_` variable (`VITE_API_KEY`, `VITE_*_SECRET`, `VITE_*_TOKEN`, `VITE_*_PASSWORD`, `VITE_*_PRIVATE*`) or front-end code under `resources/js/` or `src/` reads one through `import.meta.env`: Vite ships every `VITE_` variable to the browser. Only names are read, never values.
 - `served-folder`: warns when a committed file under `public/` is a dump, backup, editor copy, log, env file or `adminer*.php`, or calls `phpinfo()`.
 - `world-writable`: warns on `chmod 777` (and `0777`, `a+rwx`, `ugo+rwx`) in scripts, Dockerfiles, Makefiles, CI and composer or npm scripts, and on a PHP `chmod()` with `0777`.

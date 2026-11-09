@@ -120,6 +120,7 @@ vendor/bin/proctor gate [--path=.] [--format=text|json] [--baseline=<report or d
 - `display-errors`: warns, never fails, when a committed php.ini, .user.ini or .htaccess turns `display_errors` on (`proctor/display-errors/on`) or `log_errors` off (`proctor/display-errors/log-off`): any `*.ini` at the app root or at any depth under `public/`, `deploy/`, `deployments/` or `docker/`, and every `.htaccess` at the root or at any depth under those folders. A line whose first non-space character is `;` or `#` is ignored, and a file whose name contains `dev`, `local` or `development` (such as `php.dev.ini`) is the local-development template and is skipped, along with `vendor/`, `node_modules/`, `.git/` and anything under `tests/`. One warning per file per rule, on the line of its first match. Fix by keeping `display_errors` Off and `log_errors` On (CREED runtime-and-headers). It reports, and is not in the deploy gate. The proctor keeps the stack traces out of the hall.
 - `directory-listing`: warns, never fails, when a committed .htaccess or server config turns on directory listing: an Apache `Options` directive (case-insensitive, leading spaces allowed) whose arguments carry `+Indexes`, a bare `Indexes` or `All`, unless the same line also has `-Indexes` after it, or an nginx `autoindex on;` (case-insensitive, spaces allowed before the `;`) (CREED production). Scanned: every `.htaccess` at the app root or at any depth under `public/`, `deploy/`, `deployments/` or `docker/`, and every `*.conf` at any depth under `deploy/`, `deployments/` or `docker/`. A line whose first non-space character is `#` is ignored, and `vendor/`, `node_modules/`, `.git/` and anything under `tests/` are skipped at any depth. One warning per file, on the line of its first match. Fix by keeping `Indexes` off (`Options -Indexes`) and `autoindex off;`. It reports, and is not in the deploy gate. The proctor keeps the shelves out of the crowd's sight.
 - `csp-unsafe-inline`: warns, never fails, when committed app config, server config or an example env file lets scripts run inline: a `script-src`, `script-src-elem` or `script-src-attr` directive (case-insensitive) whose value list carries `'unsafe-inline'` (with the single quotes, case-insensitive) (CREED runtime-and-headers). Scanned: every `*.php` directly in `config/` and `bootstrap/`, `public/index.php` and every `*.php` at any depth under `app/`; every `.htaccess` at the app root or at any depth under `public/`, `deploy/`, `deployments/` or `docker/`, and every `*.conf` at any depth under `deploy/`, `deployments/` or `docker/`; and the `HELMET_CSP=` lines of `.env.example`, `.env.production` and `.env.squire.example`. In a header string (server config, an env line, or a PHP string such as `"script-src 'self' 'unsafe-inline'; img-src *"`) the value list runs from the directive name to the next `;`, the end of the quoted string or the end of the line; in a PHP array (`'script-src' => ["'self'", "'unsafe-inline'"]`) it runs from the `=>` to the first `]` after it, which may be on a later line. `style-src`, `style-src-elem` and `style-src-attr` never warn: HELMET's own default keeps `style-src-attr 'unsafe-inline'`. A nonce or `'strict-dynamic'` beside it still warns, and so does a report-only policy. A line whose first non-space characters are `//`, `#` or `*` is ignored, and `vendor/`, `node_modules/`, `.git/` and anything under `tests/` are skipped at any depth. One warning per file, on the line of its first offending `'unsafe-inline'`. Fix by removing `'unsafe-inline'` from the script source and letting HELMET's CSP nonce carry the inline scripts. It reports, and is not in the deploy gate. The proctor reads only the notes the hall hands out, never ones slipped in through the window.
+- `robots-txt`: warns, never fails, when an app served from a committed `public/index.php` commits no `public/robots.txt` (`proctor/robots-txt/missing`), or one that lets every crawler in by default (`proctor/robots-txt/allows-all`): no group for `User-agent: *` holds `Disallow: /` or `Allow: /` (CREED production). `Disallow: /` keeps every crawler out, and `Allow: /` is a written choice to be crawled; either one passes (`proctor/robots-txt`), and a group with both passes too. Laravel's skeleton ships `User-agent: *` with an empty `Disallow:`, which lets everyone in without anyone deciding so, and `Disallow: /admin` or `Allow: /public` covers one corner, not the hall. Field names are case-insensitive, `#` comments and blank lines are ignored, and a group is the run of rules after one or more `User-agent` lines. Only committed files count. No finding at all when the app has no committed `public/index.php`. Fix by committing `public/robots.txt` with `User-agent: *` and `Disallow: /`, or `Allow: /` when crawling is wanted (a public front page). It reports, and is not in the deploy gate. The proctor hangs a sign on the exam-room door: spectators welcome, or not, but say which.
 - `vite-secrets`: warns, never fails, when a secret-looking variable carries Vite's `VITE_` prefix: Vite exposes every `VITE_` variable to the browser bundle, so its value reaches every visitor. `proctor/vite-secrets/env-file`: a committed env file declares one (`VITE_API_KEY=...`); example files (`.env.example`, `.env.squire.example`, `.dist`, `.sample`, `.template`) are always read, any other `.env*` file only when PROCTOR knows it is committed (git lists it, or `CI`, `GITLAB_CI` or `GITHUB_ACTIONS` is set). `proctor/vite-secrets/source`: front-end code under the top-level `resources/js/` or `src/` (`.js`, `.ts`, `.jsx`, `.tsx`, `.vue`, `.svelte` and the `m`/`c` variants) reads one as `import.meta.env.VITE_...` or `import.meta.env['VITE_...']`; comment lines are skipped. Secret-looking: a word of the name is `SECRET`, `TOKEN`, `PASSWORD`, `PASSWD`, `PASSPHRASE`, `CREDENTIAL` (or a plural) or `APIKEY`, or starts with `PRIVATE`; `KEY` right after `API`, `ACCESS`, `SIGNING` or `ENCRYPTION`; or the name is `VITE_APP_KEY`. Pusher and Reverb app keys (`VITE_PUSHER_APP_KEY`, `VITE_REVERB_APP_KEY`) are public by design and pass. Only the name is matched: the value is never parsed or printed, and the process environment is never read. One warning per line; with nothing to flag it passes when the app uses Vite (a root `vite.config.*`, or `vite` in package.json), and is silent otherwise. Fix by keeping the secret on the PHP side under a name without the prefix and calling a route that uses it. It reports, and is not in the deploy gate. The proctor reads the names on the envelopes, never the letters inside.
 - `served-folder`: warns, never fails, when a committed file under the top-level `public/` can be downloaded by a stranger: a PHP file that calls `phpinfo()` (`proctor/served-folder/phpinfo`), or a database dump (`*.sql`, `*.sql.gz`, `*.dump`), a backup or editor copy (`*.bak`, `*.old`, `*.orig`, `*.swp`, a name ending in `~`), a log, an env file or a database admin tool (`adminer*.php`) (`proctor/served-folder/debug-file`). No finding when the app has no `public/` folder. Fix by deleting the file or moving it out of `public/`. The proctor clears the scratch paper off the desk before the hall opens.
 - `world-writable`: warns, never fails, when the repository sets mode 777: `chmod` with `777`, `0777`, `a+rwx` or `ugo+rwx` in a shell script, a Dockerfile, a Makefile, `.gitlab-ci.yml` or the `scripts` of composer.json and package.json, or a PHP `chmod()` with the literal `0777`. Comment lines, the sticky `1777` and `mkdir()` (the umask still applies to it) are not flagged; `tests/` is skipped. Fix by giving the web server user write access to the folders it needs (`storage/` and `bootstrap/cache/` in Laravel) and nothing more. The proctor does not prop the exam-room door open for anyone who wanders by.
@@ -331,6 +332,9 @@ The full set, grouped by check:
 | `directory-listing` | `proctor/directory-listing/indexes` |
 | `csp-unsafe-inline` | `proctor/csp-unsafe-inline` |
 | `csp-unsafe-inline` | `proctor/csp-unsafe-inline/script-src` |
+| `robots-txt` | `proctor/robots-txt` |
+| `robots-txt` | `proctor/robots-txt/missing` |
+| `robots-txt` | `proctor/robots-txt/allows-all` |
 | `vite-secrets` | `proctor/vite-secrets` |
 | `vite-secrets` | `proctor/vite-secrets/env-file` |
 | `vite-secrets` | `proctor/vite-secrets/source` |
@@ -624,7 +628,7 @@ Part A
 
 ### The questions
 
-Nine of PROCTOR's thirty-nine checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures. [The whole paper](https://proctor.apps.wayne.edu/#paper-title) is further down.
+Nine of PROCTOR's forty checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures. [The whole paper](https://proctor.apps.wayne.edu/#paper-title) is further down.
 
 1. Q1 `php-floor`
    ### Is the lowest PHP your `composer.json` allows still supported?
@@ -684,7 +688,7 @@ Last term these were on the coming-soon list. They are built and released now, s
 
 The whole paper
 
-#### All thirty-nine questions
+#### All forty questions
 
 Every check `proctor check` asks, in the order it asks them. Each id opens its page in the docs.
 
@@ -722,16 +726,17 @@ Every check `proctor check` asks, in the order it asks them. Each id opens its p
 29. [`display-errors`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#display-errors): Does a php.ini show errors to visitors? New
 30. [`directory-listing`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#directory-listing): Does the server list a folder's files? New
 31. [`csp-unsafe-inline`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#csp-unsafe-inline): Does the CSP let inline scripts run? New
-32. [`vite-secrets`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#vite-secrets): Does a `VITE_` name carry a secret? New
-33. [`served-folder`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#served-folder): Can a stranger download a dump from `public/`?
-34. [`world-writable`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#world-writable): Does anything `chmod 777`?
-35. [`wayneui-forked-views`](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html#wayneui-forked-views): Are forked WayneUI views committed?
-36. [`wayneui-outdated`](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html#wayneui-outdated): Is your WayneUI the latest of its line?
-37. [`overrides`](https://proctor.apps.wayne.edu/docs/guides/overrides.html#how-overrides-work): Has any note from home expired? Gate
-38. [`override-approver`](https://proctor.apps.wayne.edu/docs/guides/overrides.html#someone-else-signs-the-note): Did someone sign their own note?
-39. [`policy-age`](https://proctor.apps.wayne.edu/docs/guides/check-php.html#policy-age): Is the policy itself fresh? Gate
+32. [`robots-txt`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#robots-txt): Does `robots.txt` say who may crawl? New
+33. [`vite-secrets`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#vite-secrets): Does a `VITE_` name carry a secret? New
+34. [`served-folder`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#served-folder): Can a stranger download a dump from `public/`?
+35. [`world-writable`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#world-writable): Does anything `chmod 777`?
+36. [`wayneui-forked-views`](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html#wayneui-forked-views): Are forked WayneUI views committed?
+37. [`wayneui-outdated`](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html#wayneui-outdated): Is your WayneUI the latest of its line?
+38. [`overrides`](https://proctor.apps.wayne.edu/docs/guides/overrides.html#how-overrides-work): Has any note from home expired? Gate
+39. [`override-approver`](https://proctor.apps.wayne.edu/docs/guides/overrides.html#someone-else-signs-the-note): Did someone sign their own note?
+40. [`policy-age`](https://proctor.apps.wayne.edu/docs/guides/check-php.html#policy-age): Is the policy itself fresh? Gate
 
-39 questions, no multiple choice. The [Checks](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html) page has every rule, and [Rule ids](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html) has every id a finding can carry.
+40 questions, no multiple choice. The [Checks](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html) page has every rule, and [Rule ids](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html) has every id a finding can carry.
 
 #### Part C: next term Coming soon
 
@@ -1274,7 +1279,7 @@ Some checks cannot run inside ADVISOR's sandbox, so `proctor_check` leaves them 
 | `instant-client-committed` | `starts a subprocess` | git, to see what is committed |
 | `wayneui-forked-views` | `starts a subprocess` | `git ls-files` |
 | `wayneui-outdated` | `starts a subprocess` | `composer show` (which asks Packagist) and git |
-| `node-eol`, `env-outside-config`, `raw-identity-header`, `served-folder`, `world-writable` | `starts a subprocess` | `git ls-files`, to grade only committed files |
+| `node-eol`, `env-outside-config`, `raw-identity-header`, `robots-txt`, `served-folder`, `world-writable` | `starts a subprocess` | `git ls-files`, to grade only committed files |
 | `override-approver` | `starts a subprocess` | `git blame`, to see who wrote each override |
 | `app-key` | `reads .env` | reads committed env files for an `APP_KEY` |
 
@@ -1299,9 +1304,9 @@ Source: https://proctor.apps.wayne.edu/docs/guides/check-app.html
 
 ## App checks[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-checks)
 
-This page covers the sixteen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, secret-looking `VITE_` variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
+This page covers the seventeen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a robots.txt that is missing or lets every crawler in, secret-looking `VITE_` variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
 
-`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other thirteen warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.
+`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other fourteen warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.
 
 ### node-eol[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#node-eol)
 
@@ -1488,6 +1493,38 @@ Fix by removing `'unsafe-inline'` from the script source in the file the report 
 | --- | --- |
 | `csp-unsafe-inline` | `proctor/csp-unsafe-inline` |
 | `csp-unsafe-inline` | `proctor/csp-unsafe-inline/script-src` |
+
+### robots-txt[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#robots-txt)
+
+`robots-txt` warns, never fails, when a served app commits no `public/robots.txt`, or one that lets every crawler in by default. CREED production says every app must set robots.txt to keep spiders out unless crawling is wanted (WSU developer standards, 2024). It reports, and is not in the deploy gate.
+
+It applies only to an app with a committed `public/index.php`, the served folder `served-folder` reads; without one it emits no finding at all. Only committed files count: the git-tracked files, or the files on disk when git cannot be asked.
+
+- `proctor/robots-txt/missing`: no committed `public/robots.txt`.
+- `proctor/robots-txt/allows-all`: no group for `User-agent: *` holds `Disallow: /` or `Allow: /`. Laravel's skeleton ships `User-agent: *` with an empty `Disallow:`, which lets everyone in without anyone deciding so. `Disallow: /admin` and `Allow: /public` cover one corner, not the hall, and a rule under `User-agent: Googlebot` speaks only for Googlebot.
+- `proctor/robots-txt` (pass): a group for `User-agent: *` holds `Disallow: /`, which keeps every crawler out, or `Allow: /`, which is a written choice to be crawled. A group with both passes too: it is already a decision.
+
+Field names are case-insensitive, everything from a `#` to the end of its line is a comment, and blank lines are ignored. A group is the run of rules after one or more `User-agent` lines, so `User-agent: Googlebot` and `User-agent: *` on consecutive lines share the rules that follow. `Disallow: /` and `Allow: /` with trailing spaces count; Windows line endings and a byte order mark are fine.
+
+Fix by committing a `public/robots.txt` that keeps every crawler out:
+
+```text
+User-agent: *
+Disallow: /
+```
+
+An app that wants crawling, such as a public front page, says so in the same file instead, and passes:
+
+```text
+User-agent: *
+Allow: /
+```
+
+| Check | Rule id |
+| --- | --- |
+| `robots-txt` | `proctor/robots-txt` |
+| `robots-txt` | `proctor/robots-txt/missing` |
+| `robots-txt` | `proctor/robots-txt/allows-all` |
 
 ### vite-secrets[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#vite-secrets)
 
@@ -2041,11 +2078,11 @@ Source: https://proctor.apps.wayne.edu/docs/guides/checks-overview.html
 
 This page lists every check PROCTOR runs in a single `vendor/bin/proctor check` run, and how each one reports. The proctor asks the same questions in the same order on every run; only the hall changes.
 
-Thirty-nine checks in all. Eight of them also run at the door, in `proctor gate`: `php-floor`, `unpatched`, `laravel-eol`, `laravel-php`, `lock-committed`, `composer-audit`, `overrides` and `policy-age` (see [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html)). Five are new on main since 0.9.0 and ship in the next release: `mysql-minimum`, `entrypoint-migrate`, `preflight-gates`, `app-debug` and `vite-secrets`.
+Forty checks in all. Eight of them also run at the door, in `proctor gate`: `php-floor`, `unpatched`, `laravel-eol`, `laravel-php`, `lock-committed`, `composer-audit`, `overrides` and `policy-age` (see [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html)). Five are new on main since 0.9.0 and ship in the next release: `mysql-minimum`, `entrypoint-migrate`, `preflight-gates`, `app-debug` and `vite-secrets`.
 
 ![Nine real lines from PROCTOR's text report, one per check shown: FAIL php-floor, WARN unpatched, FAIL unbounded-constraints, PASS lock-committed, WARN portability, WARN mysql56, WARN ci-pipelines, PASS composer-audit, FAIL overrides. Each line is written in words; color only repeats what the word says.](https://proctor.apps.wayne.edu/docs/readme/report.svg)
 
-*Nine of the thirty-nine checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
+*Nine of the forty checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
 
 ### How a check reports[#](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html#how-a-check-reports)
 
@@ -2093,7 +2130,7 @@ Details and fixes: [CI checks](https://proctor.apps.wayne.edu/docs/guides/check-
 
 ### App code and files[#](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html#app-code-and-files)
 
-The checks that read the app's own files: the Node line it builds on, the MySQL or MariaDB image it runs, `env()` outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, secret-looking `VITE_` variables, files in `public/`, a container entrypoint that runs migrations and `chmod 777`. Details and fixes: [App checks](https://proctor.apps.wayne.edu/docs/guides/check-app.html).
+The checks that read the app's own files: the Node line it builds on, the MySQL or MariaDB image it runs, `env()` outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a robots.txt that is missing or lets every crawler in, secret-looking `VITE_` variables, files in `public/`, a container entrypoint that runs migrations and `chmod 777`. Details and fixes: [App checks](https://proctor.apps.wayne.edu/docs/guides/check-app.html).
 
 - `node-eol`: grades every Node version the repository pins (`.nvmrc`, `.node-version`, package.json `volta.node`, an official `node` image in `.gitlab-ci.yml` or a Dockerfile) with php-floor's table: active passes, security-only warns, eol fails, and past the grace window it fails as `eol_grace_expired`. `engines.node` warns at worst and an odd major always warns. Silent when the policy has no node component.
 - `mysql-eol`: grades every MySQL or MariaDB version the repository names (an official `mysql` or `mariadb` image in a root compose file, and `SQUIRE_MYSQL_IMAGE=mysql:<version>` in an env example) with php-floor's table, except an active version stays silent: security-only warns, and eol and `eol_grace_expired` warn until Citadel offers a supported MySQL (D-008). Silent when the policy has no mysql or mariadb component.
@@ -2106,6 +2143,7 @@ The checks that read the app's own files: the Node line it builds on, the MySQL 
 - `display-errors`: warns, never fails, when a committed php.ini, .user.ini or .htaccess turns `display_errors` on or `log_errors` off (CREED runtime-and-headers); one warning per file per rule, on the line of its first match.
 - `directory-listing`: warns, never fails, when a committed .htaccess or server config turns on directory listing (Apache Options Indexes or All, nginx autoindex on) (CREED production); one warning per file, on the line of its first match.
 - `csp-unsafe-inline`: warns, never fails, when committed app config, server config or an example env file lets scripts run inline (`'unsafe-inline'` in `script-src`, `script-src-elem` or `script-src-attr`; `style-src` is left alone) (CREED runtime-and-headers); one warning per file, on the line of its first offending `'unsafe-inline'`.
+- `robots-txt`: warns, never fails, when an app with a committed `public/index.php` commits no `public/robots.txt`, or one that lets every crawler in by default (neither `Disallow: /` nor `Allow: /` for `User-agent: *`; `Allow: /` is a written choice to be crawled and passes) (CREED production); silent when the app has no committed `public/index.php`.
 - `vite-secrets`: warns, never fails, when a committed env file declares a secret-looking `VITE_` variable (`VITE_API_KEY`, `VITE_*_SECRET`, `VITE_*_TOKEN`, `VITE_*_PASSWORD`, `VITE_*_PRIVATE*`) or front-end code under `resources/js/` or `src/` reads one through `import.meta.env`: Vite ships every `VITE_` variable to the browser. Only names are read, never values.
 - `served-folder`: warns when a committed file under `public/` is a dump, backup, editor copy, log, env file or `adminer*.php`, or calls `phpinfo()`.
 - `world-writable`: warns on `chmod 777` (and `0777`, `a+rwx`, `ugo+rwx`) in scripts, Dockerfiles, Makefiles, CI and composer or npm scripts, and on a PHP `chmod()` with `0777`.
@@ -2696,7 +2734,7 @@ A clean hall exits 0 (warnings allowed), a resit exits 1, and a tripped proctor 
 
 ### Status[#](https://proctor.apps.wayne.edu/docs/#status)
 
-The header names the release these pages document; [Upgrading](https://proctor.apps.wayne.edu/docs/upgrading.html) lists what changed at each break. Thirty-nine checks, eight of them in the deploy gate, four report formats and three exit codes. License: MIT.
+The header names the release these pages document; [Upgrading](https://proctor.apps.wayne.edu/docs/upgrading.html) lists what changed at each break. Forty checks, eight of them in the deploy gate, four report formats and three exit codes. License: MIT.
 
 Part of WELD, the Wayne State application stack: [CREED](https://creed.apps.wayne.edu/) sets the policy PROCTOR marks against, [Preflight](https://preflight.apps.wayne.edu/) runs it in GitLab CI, and [Sourdough](https://sourdough.apps.wayne.edu/) and [WELD](https://weld.apps.wayne.edu/) apps come with it installed. The look is [WayneUI](https://wayneui.apps.wayne.edu/).
 
@@ -3191,6 +3229,9 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `directory-listing` | `proctor/directory-listing/indexes` |
 | `csp-unsafe-inline` | `proctor/csp-unsafe-inline` |
 | `csp-unsafe-inline` | `proctor/csp-unsafe-inline/script-src` |
+| `robots-txt` | `proctor/robots-txt` |
+| `robots-txt` | `proctor/robots-txt/missing` |
+| `robots-txt` | `proctor/robots-txt/allows-all` |
 | `vite-secrets` | `proctor/vite-secrets` |
 | `vite-secrets` | `proctor/vite-secrets/env-file` |
 | `vite-secrets` | `proctor/vite-secrets/source` |

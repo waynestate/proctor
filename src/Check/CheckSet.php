@@ -82,6 +82,7 @@ final class CheckSet
             new DisplayErrorsCheck(),
             new DirectoryListingCheck(),
             new CspUnsafeInlineCheck(),
+            new RobotsTxtCheck(),
             new ViteSecretsCheck(),
             new ServedFolderCheck(),
             new WorldWritableCheck(),

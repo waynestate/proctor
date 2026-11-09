@@ -61,7 +61,7 @@ final class ProctorModule implements Module
      * composer-audit, composer-version and wayneui-outdated run composer;
      * instant-client-committed, the WayneUI checks and every check built on
      * RepoFiles (node-eol, env-outside-config, raw-identity-header,
-     * served-folder, world-writable) run git, and override-approver runs git
+     * robots-txt, served-folder, world-writable) run git, and override-approver runs git
      * blame. app-key and vite-secrets read committed .env files (and run git
      * too).
      *
@@ -75,6 +75,7 @@ final class ProctorModule implements Module
         'env-outside-config' => self::REASON_SUBPROCESS,
         'raw-identity-header' => self::REASON_SUBPROCESS,
         'app-key' => self::REASON_ENV,
+        'robots-txt' => self::REASON_SUBPROCESS,
         'vite-secrets' => self::REASON_ENV,
         'served-folder' => self::REASON_SUBPROCESS,
         'world-writable' => self::REASON_SUBPROCESS,
@@ -117,6 +118,7 @@ final class ProctorModule implements Module
         'display-errors' => 'check-app',
         'directory-listing' => 'check-app',
         'csp-unsafe-inline' => 'check-app',
+        'robots-txt' => 'check-app',
         'vite-secrets' => 'check-app',
         'mysql-minimum' => 'check-app',
         'entrypoint-migrate' => 'check-app',

@@ -41,6 +41,10 @@ New-Item -ItemType Directory -Force -Path (Join-Path $PWD "build/a11y") | Out-Nu
 # line, and the .ps1 twin passes this very text through.
 $inner = 'if [ ! -f tools/a11y/node_modules/.a11y-pw-stamp ] || [ $(cat tools/a11y/node_modules/.a11y-pw-stamp) != $A11Y_PW ]; then (cd tools/a11y && npm ci --ignore-scripts --no-audit --no-fund && printf %s $A11Y_PW > node_modules/.a11y-pw-stamp); fi
 A11Y_REPORT_DIR=/report node tools/a11y/check.mjs /report/config.json'
+# dash fails on CRLF line endings (after fi), so strip the carriage returns
+# the string picked up from this CRLF-checked-out file before the inner shell
+# sees them.
+$inner = $inner -replace "`r", ''
 
 docker run --rm `
     -v "${PWD}:/work:ro" `

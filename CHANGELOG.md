@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fixed: scripts/a11y.ps1 works on a Windows checkout with CRLF line endings; it strips the carriage returns from the shell command it hands to Docker, which sh rejected with a syntax error.
+- Added: `robots-txt` warns when an app with a public/index.php commits no public/robots.txt, or one that lets every crawler in by default (neither `Disallow: /` nor `Allow: /` for `User-agent: *`, as in Laravel's skeleton); an app that wants crawling writes `Allow: /` and passes (CREED production).
 - Added: `csp-unsafe-inline` warns when committed app config, server config or an example env file lets scripts run inline ('unsafe-inline' in script-src, script-src-elem or script-src-attr); style-src is left alone (CREED runtime-and-headers).
 - Added: `directory-listing` warns when a committed .htaccess or server config turns on directory listing (Apache Options Indexes or All, nginx autoindex on) (CREED production).
 - Fixed: `display-errors` reads an ini value without its inline comment, so `display_errors = On ; note` warns.

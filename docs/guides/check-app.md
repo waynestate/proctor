@@ -1,13 +1,13 @@
 ---
 title: App checks
-description: The checks that read an app's own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, secret-looking VITE_ variables, debug files in public/ and chmod 777.
+description: The checks that read an app's own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a missing or open robots.txt, secret-looking VITE_ variables, debug files in public/ and chmod 777.
 ---
 
 # App checks
 
-This page covers the sixteen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, secret-looking `VITE_` variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
+This page covers the seventeen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a robots.txt that is missing or lets every crawler in, secret-looking `VITE_` variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
 
-`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other thirteen warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.
+`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other fourteen warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.
 
 ## node-eol
 
@@ -194,6 +194,38 @@ Fix by removing `'unsafe-inline'` from the script source in the file the report 
 | --- | --- |
 | `csp-unsafe-inline` | `proctor/csp-unsafe-inline` |
 | `csp-unsafe-inline` | `proctor/csp-unsafe-inline/script-src` |
+
+## robots-txt
+
+`robots-txt` warns, never fails, when a served app commits no `public/robots.txt`, or one that lets every crawler in by default. CREED production says every app must set robots.txt to keep spiders out unless crawling is wanted (WSU developer standards, 2024). It reports, and is not in the deploy gate.
+
+It applies only to an app with a committed `public/index.php`, the served folder `served-folder` reads; without one it emits no finding at all. Only committed files count: the git-tracked files, or the files on disk when git cannot be asked.
+
+- `proctor/robots-txt/missing`: no committed `public/robots.txt`.
+- `proctor/robots-txt/allows-all`: no group for `User-agent: *` holds `Disallow: /` or `Allow: /`. Laravel's skeleton ships `User-agent: *` with an empty `Disallow:`, which lets everyone in without anyone deciding so. `Disallow: /admin` and `Allow: /public` cover one corner, not the hall, and a rule under `User-agent: Googlebot` speaks only for Googlebot.
+- `proctor/robots-txt` (pass): a group for `User-agent: *` holds `Disallow: /`, which keeps every crawler out, or `Allow: /`, which is a written choice to be crawled. A group with both passes too: it is already a decision.
+
+Field names are case-insensitive, everything from a `#` to the end of its line is a comment, and blank lines are ignored. A group is the run of rules after one or more `User-agent` lines, so `User-agent: Googlebot` and `User-agent: *` on consecutive lines share the rules that follow. `Disallow: /` and `Allow: /` with trailing spaces count; Windows line endings and a byte order mark are fine.
+
+Fix by committing a `public/robots.txt` that keeps every crawler out:
+
+```text
+User-agent: *
+Disallow: /
+```
+
+An app that wants crawling, such as a public front page, says so in the same file instead, and passes:
+
+```text
+User-agent: *
+Allow: /
+```
+
+| Check | Rule id |
+| --- | --- |
+| `robots-txt` | `proctor/robots-txt` |
+| `robots-txt` | `proctor/robots-txt/missing` |
+| `robots-txt` | `proctor/robots-txt/allows-all` |
 
 ## vite-secrets
 

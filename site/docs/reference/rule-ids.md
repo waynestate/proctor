@@ -124,6 +124,9 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `directory-listing` | `proctor/directory-listing/indexes` |
 | `csp-unsafe-inline` | `proctor/csp-unsafe-inline` |
 | `csp-unsafe-inline` | `proctor/csp-unsafe-inline/script-src` |
+| `robots-txt` | `proctor/robots-txt` |
+| `robots-txt` | `proctor/robots-txt/missing` |
+| `robots-txt` | `proctor/robots-txt/allows-all` |
 | `vite-secrets` | `proctor/vite-secrets` |
 | `vite-secrets` | `proctor/vite-secrets/env-file` |
 | `vite-secrets` | `proctor/vite-secrets/source` |
