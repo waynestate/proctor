@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CI checks | PROCTOR docs</title>
-<meta name="description" content="The checks that verify CI pipelines run composer ci and that Preflight includes are pinned to a release tag or a commit SHA.">
+<meta name="description" content="The checks that verify CI pipelines run composer ci, that Preflight includes are pinned to a release tag or a commit SHA, and that its gates run and block.">
 <meta name="docs-version" content="0.9.0">
 <link rel="stylesheet" href="../../assets/wayne-ui/wayne-ui.css">
 <link rel="stylesheet" href="../../assets/docs.css">
@@ -41,7 +41,7 @@
   <div class="docs-content">
     <main id="main">
       <article class="docs-article"><h1 id="ci-checks">CI checks<a class="docs-heading-link" aria-label="Link to this section" href="#ci-checks">#</a></h1>
-<p>This page covers the PROCTOR checks that verify CI pipelines run <code>composer ci</code>, that Preflight includes are pinned, and that deploy scripts and committed files keep the app portable. Run <code>vendor/bin/proctor check</code> against the app path, then fix the finding the report names. PROCTOR watches the exam and does not hand out answers.</p>
+<p>This page covers the PROCTOR checks that verify CI pipelines run <code>composer ci</code>, that Preflight includes are pinned and its gates are present and blocking, and that deploy scripts and committed files keep the app portable. Run <code>vendor/bin/proctor check</code> against the app path, then fix the finding the report names. PROCTOR watches the exam and does not hand out answers.</p>
 <h2 id="ci-pipelines">ci-pipelines<a class="docs-heading-link" aria-label="Link to this section" href="#ci-pipelines">#</a></h2>
 <p><code>ci-pipelines</code> enforces the CI contract. For a stack package (a composer.json <code>name</code> starting with <code>waynestate/</code>), both <code>.gitlab-ci.yml</code> and <code>.github/workflows/ci.yml</code> must exist and run <code>composer ci</code>; a missing or incomplete file is a failure. For any other project, a missing or incomplete <code>.gitlab-ci.yml</code> is a warning and <code>.github/workflows/ci.yml</code> is optional.</p>
 <p>The files are parsed as YAML, not grepped: a <code>composer ci</code> that only appears in a comment is not a script line, and a GitLab job is a top-level map with a <code>script</code> key. A GitHub job counts when a step runs <code>composer ci</code> or calls a reusable workflow with <code>ci-command: composer ci</code>.</p>
@@ -137,6 +137,40 @@
 </tr>
 </tbody>
 </table></div>
+<h2 id="preflight-gates">preflight-gates<a class="docs-heading-link" aria-label="Link to this section" href="#preflight-gates">#</a></h2>
+<p><code>preflight-gates</code> warns, and never fails, when <code>.gitlab-ci.yml</code> skips or weakens Preflight, the flags Preflight's practice 3.3 asks for. An include at a moving ref is <code>preflight-pinned</code>'s finding; this check covers the rest.</p>
+<ul>
+<li>No <code>include:</code> entry whose <code>component:</code> path contains <code>/preflight/</code> warns (<code>proctor/preflight-gates/no-include</code>): none of the stack's gates run. Include <code>php-test</code>, <code>composer-audit</code> and <code>proctor</code> from Preflight, pinned to a release tag.</li>
+<li>A gate that can fail while the pipeline passes warns (<code>proctor/preflight-gates/allow-failure</code>), once per place it is set: a gate component included with the <code>allow_failure</code> input set to <code>true</code>, or a job the app re-declares under the gate's job name (its <code>job_name</code> input, or the component name) with <code>allow_failure</code> set to anything but <code>false</code>, the exit-codes form included. Every Preflight component is a gate except <code>renovate</code> (a bot) and <code>package-publish</code> (a release step); php-test's advisory job may fail by design and is not one.</li>
+<li>No job that runs PROCTOR warns (<code>proctor/preflight-gates/no-proctor-job</code>): the Preflight <code>proctor</code> component is not included and no job's <code>script</code> runs <code>proctor check</code> or <code>proctor gate</code> (<code>vendor/bin/proctor</code>, <code>proctor.phar</code> or a path to either).</li>
+</ul>
+<p>No finding when there is no <code>.gitlab-ci.yml</code> or it does not parse; <code>ci-pipelines</code> reports both. With nothing to flag it passes: <code>Preflight gates are included, none may fail softly, and PROCTOR runs</code>. It reports, and is not in the deploy gate. A warning on purpose: a repository fixing its first findings may keep <code>allow_failure</code> for a while, with a comment saying why, the way PROCTOR's own pipeline does on its deploy layer.</p>
+<div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Rule id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>preflight-gates</code></td>
+<td><code>proctor/preflight-gates</code></td>
+</tr>
+<tr>
+<td><code>preflight-gates</code></td>
+<td><code>proctor/preflight-gates/no-include</code></td>
+</tr>
+<tr>
+<td><code>preflight-gates</code></td>
+<td><code>proctor/preflight-gates/allow-failure</code></td>
+</tr>
+<tr>
+<td><code>preflight-gates</code></td>
+<td><code>proctor/preflight-gates/no-proctor-job</code></td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="portability">portability<a class="docs-heading-link" aria-label="Link to this section" href="#portability">#</a></h2>
 <p><code>portability</code> warns when code hard-codes a platform fact: an absolute host path, a hard-coded proxy address, a local-disk session store, or a <code>php_value</code>/<code>php_flag</code> line in <code>.htaccess</code>.</p>
 <p>PHP files are matched on the syntax tree (nikic/php-parser with names resolved), not with regular expressions, so a comment or string that merely mentions a banned call is not flagged, and a call split over several lines, or hidden behind a <code>use function ... as ...</code> alias, is. A call through a variable (<code>$f()</code>) is reported as an info note, never as a pass.</p>
@@ -226,7 +260,7 @@
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../../docs/guides/check-php.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">PHP checks</span></a><a class="docs-pager__link docs-pager__link--next" href="../../docs/guides/check-app.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">App checks</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#ci-pipelines">ci-pipelines</a></li><li class="docs-toc__item"><a href="#preflight-pinned">preflight-pinned</a></li><li class="docs-toc__item"><a href="#portability">portability</a></li><li class="docs-toc__item"><a href="#destructive-deploy">destructive-deploy</a></li><li class="docs-toc__item"><a href="#instant-client-committed">instant-client-committed</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#ci-pipelines">ci-pipelines</a></li><li class="docs-toc__item"><a href="#preflight-pinned">preflight-pinned</a></li><li class="docs-toc__item"><a href="#preflight-gates">preflight-gates</a></li><li class="docs-toc__item"><a href="#portability">portability</a></li><li class="docs-toc__item"><a href="#destructive-deploy">destructive-deploy</a></li><li class="docs-toc__item"><a href="#instant-client-committed">instant-client-committed</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.9.0</span></span>
