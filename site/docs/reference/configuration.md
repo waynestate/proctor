@@ -12,7 +12,7 @@ This page lists every setting PROCTOR reads: the policy file and how it is found
 
 | Variable | Meaning | Default | Read in |
 | --- | --- | --- | --- |
-| PROCTOR_ALLOW_OVERRIDES | Set to exactly 1 by a trusted job (a protected or group-level CI variable, never the app's .gitlab-ci.yml) to allow --policy and --today in CI | none | src/Check/CiPipelinesCheck.php |
+| PROCTOR_ALLOW_OVERRIDES | Set to exactly 1 by a trusted job (a protected or group-level CI variable, never the app's .gitlab-ci.yml) to allow --policy and --today in CI | none | src/Policy/CiGuard.php |
 | PROCTOR_POLICY | Path to a CREED-format policy file; tried before the app's vendor copy and the bundled copy when --policy is absent | none | src/Policy/PolicyResolver.php |
 
 Warning
