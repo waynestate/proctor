@@ -43,7 +43,7 @@ final class CreedCopyJobTest extends TestCase
         $block = self::jobBlock('creed-copy-refresh');
 
         self::assertStringContainsString('extends: .composer-cache', $block);
-        self::assertStringContainsString('image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/composer:2.10.3', $block);
+        self::assertStringContainsString('image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/composer:2.11.1@sha256:8de2184c6de224f4689e8f80ed5f5edaf0030b6b8b7839a22a2bcb6722ac87d0', $block);
         self::assertStringContainsString('GIT_DEPTH: "0"', $block);
         self::assertStringContainsString('- sh ' . self::SCRIPT, $block);
     }

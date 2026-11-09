@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Changed: PROCTOR's own CI jobs (`wayneui-copies`, `composer-ci`, `creed-copy-refresh`, `release-phar`), the phar build scripts and the documented Docker commands use `composer:2.11.1` pinned by its multi-arch list digest (was `composer:2.10.3`); 2.11.1 fixes GHSA-c968-33g3-wh7p and GHSA-fm2w-xgf2-f9fh.
+
 ## 0.11.1 (2026-11-09)
 
 - Changed: in ADVISOR's in-process `proctor_check`, the four checks that read env files (`app-debug` and `csp-unsafe-inline` read `.env.production`; they, `mysql-eol` and `mysql-minimum` read `.env.example` or `.env.squire.example`) grade an env file only when git lists it, the rule `app-key` and `vite-secrets` follow, so a developer's local `.env.production` is never opened there. Git's index is read in PHP (new `Code\GitIndex`, index versions 2 to 4), so the tool still starts no subprocess. Each file it did not open comes back under a new `skipped_files` list (`id`, `file`, `reason`: `not tracked by git` or `no git index to read`). `proctor check` and `proctor gate` are unchanged: they pass no filter (the new optional `EnvFileFilter` on `CheckContext` and `CheckRunner`). The module docblock and the `proctor_check` description now list all four checks and name `vite-secrets` next to `app-key`.

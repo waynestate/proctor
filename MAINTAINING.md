@@ -36,7 +36,7 @@ Both phar scripts write `build/proctor.phar` (gitignored). Since 0.6.0, the phar
 With only Docker (the same line works in PowerShell and sh):
 
 ```
-docker run --rm -v "${PWD}:/app" -w /app composer:2.10.3 sh -c "composer install --no-interaction && composer ci"
+docker run --rm -v "${PWD}:/app" -w /app composer:2.11.1@sha256:8de2184c6de224f4689e8f80ed5f5edaf0030b6b8b7839a22a2bcb6722ac87d0 sh -c "composer install --no-interaction && composer ci"
 docker run --rm -v "${PWD}:/app" -w /app php:8.5-cli vendor/bin/phpunit
 ```
 
@@ -59,7 +59,7 @@ The GitLab pipeline defines a `release-phar` job that runs on tags only
 (`rules: if: $CI_COMMIT_TAG`); the lead cuts the tag, and the job does the
 rest. On a tag it:
 
-1. installs the dependencies in the pinned `composer:2.10.3` image (adding
+1. installs the dependencies in the pinned `composer:2.11.1` image (by digest; adding
    curl first, which the image may lack),
 2. builds `build/proctor.phar` inside that container, the way
    `scripts/build-phar.sh` does but without Docker-in-Docker: the runtime
