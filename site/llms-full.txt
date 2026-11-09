@@ -71,11 +71,12 @@ printing PROCTOR's version.
 ### Usage
 
 ```
-vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--policy=<file>] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z] [--timeout=300]
+vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--record=<file>] [--policy=<file>] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z] [--timeout=300]
 ```
 
 - `--path`: path to the application to check (default `.`).
 - `--format`: output format: `text` (default), `json`, `codequality`, or `sarif`.
+- `--record`: also write the JSON report (exactly what `--format=json` prints) to this file, whatever `--format` says; its folder is created. A CI job keeps it as an artifact, so one run serves the merge request and Rollcall. A file it cannot write is a tool error (exit 2).
 - `--policy`: path to the CREED-format policy file. Optional: without it, PROCTOR resolves the policy from the `PROCTOR_POLICY` environment variable, then the app's `vendor/waynestate/creed/policy/policy.json`, then the copy bundled with PROCTOR (see [Policy](#policy)). In CI this option is refused unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`.
 - `--today`: override today's date (YYYY-MM-DD) so runs are deterministic. In CI this option is refused unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`.
 - `--php-runtime`: the PHP version that will serve the app (X.Y.Z), used by the `unpatched` check. CI should pass the deploy image's PHP, not the runner's.
@@ -1056,7 +1057,7 @@ Install PROCTOR and CREED's policy as dev dependencies, then run the check from 
 2. Sit the exam. The `composer:2` image brings PHP and Composer, so `composer-audit` runs too:
    `docker run --rm -v "${PWD}:/app" -w /app composer:2 vendor/bin/proctor check`
 
-Options: `--path=.` · `--format=text|json|codequality|sarif` · `--policy=<file>` (optional; without it PROCTOR tries the `PROCTOR_POLICY` variable, then vendor/waynestate/creed, then its bundled copy) · `--today=YYYY-MM-DD` to fix the date so runs repeat (both on your own machine only: CI refuses them) · `--php-runtime=X.Y.Z` for the `unpatched` check.
+Options: `--path=.` · `--format=text|json|codequality|sarif` · `--record=<file>` to keep the JSON report too, whatever the format · `--policy=<file>` (optional; without it PROCTOR tries the `PROCTOR_POLICY` variable, then vendor/waynestate/creed, then its bundled copy) · `--today=YYYY-MM-DD` to fix the date so runs repeat (both on your own machine only: CI refuses them) · `--php-runtime=X.Y.Z` for the `unpatched` check.
 
 Open book
 
@@ -1685,6 +1686,8 @@ include:
 ```
 
 The default command is `vendor/bin/proctor check --format=codequality`, so the findings show on the merge request as Code Quality. Do not add `--policy` or `--today` to `proctor_command`: in CI PROCTOR refuses both (exit 2) unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`, and without them it reads CREED's policy from the app's `vendor/waynestate/creed`. Preflight 0.4.0 clones the full history for this job (`git_depth: "0"`), so `override-approver` can read git blame. Strongly recommended: a git.wayne.edu instance runner. Preflight's own page lists every input: [preflight.apps.wayne.edu](https://preflight.apps.wayne.edu/).
+
+To keep PROCTOR's full JSON report from the same run, add `--record`: `vendor/bin/proctor check --format=codequality --record="$CI_PROJECT_DIR/proctor.json"` prints Code Quality for the merge request and writes the JSON report (byte for byte what `--format=json` prints) to `proctor.json`, without running the checks twice. Rollcall, the fleet census, reads each app's latest `proctor.json` from its `proctor` job's artifacts, so the job must keep the file as an artifact under `when: always` (a failing check still has a report worth reading). The exit code is the check's own; a record PROCTOR cannot write is exit 2.
 
 ### ci-pipelines[#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#ci-pipelines)
 
@@ -2865,12 +2868,13 @@ Every command PROCTOR ships, with the options each one accepts. The table is gen
 
 Measure a PHP app against the version policy.
 
-Usage: `proctor check [--path PATH] [--format FORMAT] [--policy POLICY] [--today TODAY] [--php-runtime PHP-RUNTIME] [--timeout TIMEOUT]`
+Usage: `proctor check [--path PATH] [--format FORMAT] [--record RECORD] [--policy POLICY] [--today TODAY] [--php-runtime PHP-RUNTIME] [--timeout TIMEOUT]`
 
 | Option | Meaning | Default |
 | --- | --- | --- |
 | `--path=VALUE` | Path to the application to check. | `.` |
 | `--format=VALUE` | Output format (text, json, codequality, sarif). | `text` |
+| `--record=VALUE` | Also write the JSON report (what --format=json prints) to this file (its folder is created), whatever --format says. A CI job keeps it as an artifact. |  |
 | `--policy=VALUE` | Path to the CREED-format policy file. Without it, PROCTOR checks the PROCTOR_POLICY environment variable, then the app's vendor/waynestate/creed/policy/policy.json, then its own bundled copy. In CI this option is refused unless PROCTOR_ALLOW_OVERRIDES=1. |  |
 | `--today=VALUE` | Override today's date (YYYY-MM-DD). In CI this option is refused unless PROCTOR_ALLOW_OVERRIDES=1. |  |
 | `--php-runtime=VALUE` | The PHP version that will serve the app (X.Y.Z), for the unpatched check. |  |
@@ -2912,11 +2916,12 @@ Usage: `proctor gate [--path PATH] [--format FORMAT] [--baseline BASELINE] [--re
 Run the check against an application:
 
 ```
-vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--policy=<file>] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z] [--timeout=300]
+vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--record=<file>] [--policy=<file>] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z] [--timeout=300]
 ```
 
 - `--path`: path to the application to check (default `.`).
 - `--format`: output format: `text` (default), `json`, `codequality`, or `sarif`.
+- `--record`: also write the JSON report to this file, byte for byte what `--format=json` prints, whatever `--format` says; its folder is created, and a relative path is relative to the current directory, not `--path`. The exit code is the check's own. A file it cannot write is a tool error (exit 2, never a pass), and a run that stops on a tool error records the JSON error report. CI keeps the file as a job artifact for Rollcall (see [CI checks](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#run-proctor-in-gitlab-ci)).
 - `--policy`: path to the CREED-format policy file. Optional: without it, PROCTOR resolves the policy from the `PROCTOR_POLICY` environment variable, then the app's `vendor/waynestate/creed/policy/policy.json`, then the copy bundled with PROCTOR (see [Policy](https://proctor.apps.wayne.edu/docs/guides/policy.html)). In CI this option is refused unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`.
 - `--today`: override today's date (YYYY-MM-DD) so runs are deterministic. In CI this option is refused unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`.
 - `--php-runtime`: the PHP version that will serve the app (X.Y.Z), used by the `unpatched` check. CI should pass the deploy image's PHP, not the runner's.
@@ -3044,7 +3049,7 @@ This page lists the three exit codes `proctor check` and `proctor gate` end with
 | --- | --- |
 | `0` | pass (warnings allowed) |
 | `1` | one or more failures |
-| `2` | tool error (bad options, unreadable policy, a present but malformed or unreadable composer.json, or an overrides file that is malformed, unreadable, or names a check that is not registered or the overrides check itself) |
+| `2` | tool error (bad options, unreadable policy, a present but malformed or unreadable composer.json, an overrides file that is malformed, unreadable, or names a check that is not registered or the overrides check itself, or a `--record` file it could not write) |
 
 A missing composer.json is not a tool error: the app gets a verdict, with php-floor failing.
 

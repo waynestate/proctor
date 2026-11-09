@@ -63,7 +63,7 @@
 </table></div>
 <h3 id="proctor-check"><code>proctor check</code><a class="docs-heading-link" aria-label="Link to this section" href="#proctor-check">#</a></h3>
 <p>Measure a PHP app against the version policy.</p>
-<p>Usage: <code>proctor check [--path PATH] [--format FORMAT] [--policy POLICY] [--today TODAY] [--php-runtime PHP-RUNTIME] [--timeout TIMEOUT]</code></p>
+<p>Usage: <code>proctor check [--path PATH] [--format FORMAT] [--record RECORD] [--policy POLICY] [--today TODAY] [--php-runtime PHP-RUNTIME] [--timeout TIMEOUT]</code></p>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
 <thead>
 <tr>
@@ -82,6 +82,11 @@
 <td><code>--format=VALUE</code></td>
 <td>Output format (text, json, codequality, sarif).</td>
 <td><code>text</code></td>
+</tr>
+<tr>
+<td><code>--record=VALUE</code></td>
+<td>Also write the JSON report (what --format=json prints) to this file (its folder is created), whatever --format says. A CI job keeps it as an artifact.</td>
+<td></td>
 </tr>
 <tr>
 <td><code>--policy=VALUE</code></td>
@@ -219,11 +224,12 @@
 <!-- /generated -->
 <h2 id="examples">Examples<a class="docs-heading-link" aria-label="Link to this section" href="#examples">#</a></h2>
 <p>Run the check against an application:</p>
-<pre tabindex="0"><code>vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--policy=&lt;file&gt;] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z] [--timeout=300]
+<pre tabindex="0"><code>vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--record=&lt;file&gt;] [--policy=&lt;file&gt;] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z] [--timeout=300]
 </code></pre>
 <ul>
 <li><code>--path</code>: path to the application to check (default <code>.</code>).</li>
 <li><code>--format</code>: output format: <code>text</code> (default), <code>json</code>, <code>codequality</code>, or <code>sarif</code>.</li>
+<li><code>--record</code>: also write the JSON report to this file, byte for byte what <code>--format=json</code> prints, whatever <code>--format</code> says; its folder is created, and a relative path is relative to the current directory, not <code>--path</code>. The exit code is the check's own. A file it cannot write is a tool error (exit 2, never a pass), and a run that stops on a tool error records the JSON error report. CI keeps the file as a job artifact for Rollcall (see <a href="../guides/check-ci.html#run-proctor-in-gitlab-ci">CI checks</a>).</li>
 <li><code>--policy</code>: path to the CREED-format policy file. Optional: without it, PROCTOR resolves the policy from the <code>PROCTOR_POLICY</code> environment variable, then the app's <code>vendor/waynestate/creed/policy/policy.json</code>, then the copy bundled with PROCTOR (see <a href="../guides/policy.html">Policy</a>). In CI this option is refused unless a trusted job sets <code>PROCTOR_ALLOW_OVERRIDES=1</code>.</li>
 <li><code>--today</code>: override today's date (YYYY-MM-DD) so runs are deterministic. In CI this option is refused unless a trusted job sets <code>PROCTOR_ALLOW_OVERRIDES=1</code>.</li>
 <li><code>--php-runtime</code>: the PHP version that will serve the app (X.Y.Z), used by the <code>unpatched</code> check. CI should pass the deploy image's PHP, not the runner's.</li>

@@ -471,7 +471,7 @@ Install PROCTOR and CREED's policy as dev dependencies, then run the check from 
 2. Sit the exam. The `composer:2` image brings PHP and Composer, so `composer-audit` runs too:
    `docker run --rm -v "${PWD}:/app" -w /app composer:2 vendor/bin/proctor check`
 
-Options: `--path=.` · `--format=text|json|codequality|sarif` · `--policy=<file>` (optional; without it PROCTOR tries the `PROCTOR_POLICY` variable, then vendor/waynestate/creed, then its bundled copy) · `--today=YYYY-MM-DD` to fix the date so runs repeat (both on your own machine only: CI refuses them) · `--php-runtime=X.Y.Z` for the `unpatched` check.
+Options: `--path=.` · `--format=text|json|codequality|sarif` · `--record=<file>` to keep the JSON report too, whatever the format · `--policy=<file>` (optional; without it PROCTOR tries the `PROCTOR_POLICY` variable, then vendor/waynestate/creed, then its bundled copy) · `--today=YYYY-MM-DD` to fix the date so runs repeat (both on your own machine only: CI refuses them) · `--php-runtime=X.Y.Z` for the `unpatched` check.
 
 Open book
 
