@@ -120,8 +120,9 @@
         </p>
 
         <ul class="cover__facts">
-          <li><strong>32</strong> checks</li>
-          <li><strong>4</strong> report formats</li>
+          <li><a class="cover__fact-link" href="#paper-title"><strong>36</strong> checks</a></li>
+          <li><strong>8</strong> at the gate</li>
+          <li><strong>4</strong> formats</li>
           <li><strong>3</strong> exit codes</li>
           <li><strong>0</strong> policy of its own</li>
         </ul>
@@ -180,7 +181,7 @@
       <header class="sec-head">
         <p class="sec-head__part">Part A</p>
         <h2 id="questions-title">The questions</h2>
-        <p>Nine of PROCTOR's thirty-two checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures.</p>
+        <p>Nine of PROCTOR's thirty-six checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures. <a href="#paper-title">The whole paper</a> is further down.</p>
       </header>
 
       <ol class="questions">
@@ -278,6 +279,62 @@
             <svg class="q__tick" viewBox="0 0 40 30" aria-hidden="true"><path pathLength="1" d="M3 16 L14 26 L37 3"/></svg>
           </li>
         </ol>
+      </div>
+
+      <!-- The whole paper: every registered check, in the order a run asks them
+           (src/Check/CheckSet.php). With motion on, the proctor ticks them off
+           down the columns as the paper comes into view; without it, every tick
+           is already there. Keep the count and the tags in step with CheckSet:
+           GATE lists CheckSet::GATE, New lists what is on main since the last tag. -->
+      <div class="paper" data-reveal>
+        <header class="paper__head">
+          <p class="sec-head__part">The whole paper</p>
+          <h3 class="paper__title" id="paper-title">All thirty-six questions</h3>
+          <p class="paper__lede">Every check <code>proctor check</code> asks, in the order it asks them. Each id opens its page in the docs.</p>
+          <ul class="paper__legend">
+            <li><span class="tag tag--gate">Gate</span> also asked by <code>proctor gate</code> before a deploy</li>
+            <li><span class="tag tag--new">New</span> on main since 0.9.0, in the next release</li>
+          </ul>
+        </header>
+        <ol class="paper__list">
+          <li class="pq" style="--i:0"><a class="pq__id" href="docs/guides/check-php.html#php-floor"><code>php-floor</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is the lowest PHP you allow still supported?</span> <span class="tag tag--gate">Gate</span></li>
+          <li class="pq" style="--i:1"><a class="pq__id" href="docs/guides/check-php.html#unpatched"><code>unpatched</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is each locked line on its latest patch?</span> <span class="tag tag--gate">Gate</span></li>
+          <li class="pq" style="--i:2"><a class="pq__id" href="docs/guides/check-php.html#laravel-eol"><code>laravel-eol</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is the locked Laravel line still supported?</span> <span class="tag tag--gate">Gate</span></li>
+          <li class="pq" style="--i:3"><a class="pq__id" href="docs/guides/check-php.html#laravel-php"><code>laravel-php</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does your PHP range fit that Laravel?</span> <span class="tag tag--gate">Gate</span></li>
+          <li class="pq" style="--i:4"><a class="pq__id" href="docs/guides/check-app.html#node-eol"><code>node-eol</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is every Node version you pin supported?</span></li>
+          <li class="pq" style="--i:5"><a class="pq__id" href="docs/guides/check-app.html#mysql-eol"><code>mysql-eol</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is your MySQL or MariaDB image supported?</span></li>
+          <li class="pq" style="--i:6"><a class="pq__id" href="docs/guides/check-app.html#mysql-minimum"><code>mysql-minimum</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is it new enough for your Laravel?</span> <span class="tag tag--new">New</span></li>
+          <li class="pq" style="--i:7"><a class="pq__id" href="docs/guides/check-composer.html#unbounded-constraints"><code>unbounded-constraints</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is every requirement a released range?</span></li>
+          <li class="pq" style="--i:8"><a class="pq__id" href="docs/guides/check-composer.html#dev-only-packages"><code>dev-only-packages</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Are dev tools kept out of <code>require</code>?</span></li>
+          <li class="pq" style="--i:9"><a class="pq__id" href="docs/guides/check-composer.html#composer-config"><code>composer-config</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Are Composer's safety settings left on?</span></li>
+          <li class="pq" style="--i:10"><a class="pq__id" href="docs/guides/check-composer.html#lock-committed"><code>lock-committed</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is <code>composer.lock</code> committed, and in sync?</span> <span class="tag tag--gate">Gate</span></li>
+          <li class="pq" style="--i:11"><a class="pq__id" href="docs/guides/check-ci.html#portability"><code>portability</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Would the app run on another host?</span></li>
+          <li class="pq" style="--i:12"><a class="pq__id" href="docs/guides/check-php.html#mysql56"><code>mysql56</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Will the migrations survive MySQL&nbsp;5.6?</span></li>
+          <li class="pq" style="--i:13"><a class="pq__id" href="docs/guides/check-ci.html#destructive-deploy"><code>destructive-deploy</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a deploy ever wipe the database?</span></li>
+          <li class="pq" style="--i:14"><a class="pq__id" href="docs/guides/check-app.html#crlf-deploy-script"><code>crlf-deploy-script</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Do the deploy scripts end lines in LF?</span></li>
+          <li class="pq" style="--i:15"><a class="pq__id" href="docs/guides/check-app.html#entrypoint-migrate"><code>entrypoint-migrate</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a container migrate as it starts?</span> <span class="tag tag--new">New</span></li>
+          <li class="pq" style="--i:16"><a class="pq__id" href="docs/guides/check-app.html#case-clash"><code>case-clash</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Do two paths differ only by case?</span></li>
+          <li class="pq" style="--i:17"><a class="pq__id" href="docs/guides/check-ci.html#ci-pipelines"><code>ci-pipelines</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Do the pipelines run <code>composer ci</code>?</span></li>
+          <li class="pq" style="--i:18"><a class="pq__id" href="docs/guides/check-ci.html#preflight-pinned"><code>preflight-pinned</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is Preflight pinned to a release?</span></li>
+          <li class="pq" style="--i:19"><a class="pq__id" href="docs/guides/check-ci.html#preflight-gates"><code>preflight-gates</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Do Preflight's gates run, and block?</span> <span class="tag tag--new">New</span></li>
+          <li class="pq" style="--i:20"><a class="pq__id" href="docs/guides/check-composer.html#composer-audit"><code>composer-audit</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does the lock carry a known advisory?</span> <span class="tag tag--gate">Gate</span></li>
+          <li class="pq" style="--i:21"><a class="pq__id" href="docs/guides/check-composer.html#composer-version"><code>composer-version</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is the Composer on PATH safe?</span></li>
+          <li class="pq" style="--i:22"><a class="pq__id" href="docs/guides/check-composer.html#repo-url-credentials"><code>repo-url-credentials</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is a token written into a package URL?</span></li>
+          <li class="pq" style="--i:23"><a class="pq__id" href="docs/guides/check-ci.html#instant-client-committed"><code>instant-client-committed</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is Oracle Instant Client committed?</span></li>
+          <li class="pq" style="--i:24"><a class="pq__id" href="docs/guides/check-app.html#env-outside-config"><code>env-outside-config</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is <code>env()</code> called outside config?</span></li>
+          <li class="pq" style="--i:25"><a class="pq__id" href="docs/guides/check-app.html#raw-identity-header"><code>raw-identity-header</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does code read identity headers itself?</span></li>
+          <li class="pq" style="--i:26"><a class="pq__id" href="docs/guides/check-app.html#app-key"><code>app-key</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is the APP_KEY given away?</span></li>
+          <li class="pq" style="--i:27"><a class="pq__id" href="docs/guides/check-app.html#app-debug"><code>app-debug</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a production file turn APP_DEBUG on?</span> <span class="tag tag--new">New</span></li>
+          <li class="pq" style="--i:28"><a class="pq__id" href="docs/guides/check-app.html#vite-secrets"><code>vite-secrets</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a <code>VITE_</code> name carry a secret?</span> <span class="tag tag--new">New</span></li>
+          <li class="pq" style="--i:29"><a class="pq__id" href="docs/guides/check-app.html#served-folder"><code>served-folder</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Can a stranger download a dump from <code>public/</code>?</span></li>
+          <li class="pq" style="--i:30"><a class="pq__id" href="docs/guides/check-app.html#world-writable"><code>world-writable</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does anything <code>chmod 777</code>?</span></li>
+          <li class="pq" style="--i:31"><a class="pq__id" href="docs/guides/check-wayneui.html#wayneui-forked-views"><code>wayneui-forked-views</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Are forked WayneUI views committed?</span></li>
+          <li class="pq" style="--i:32"><a class="pq__id" href="docs/guides/check-wayneui.html#wayneui-outdated"><code>wayneui-outdated</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is your WayneUI the latest of its line?</span></li>
+          <li class="pq" style="--i:33"><a class="pq__id" href="docs/guides/overrides.html#how-overrides-work"><code>overrides</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Has any note from home expired?</span> <span class="tag tag--gate">Gate</span></li>
+          <li class="pq" style="--i:34"><a class="pq__id" href="docs/guides/overrides.html#someone-else-signs-the-note"><code>override-approver</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Did someone sign their own note?</span></li>
+          <li class="pq" style="--i:35"><a class="pq__id" href="docs/guides/check-php.html#policy-age"><code>policy-age</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is the policy itself fresh?</span> <span class="tag tag--gate">Gate</span></li>
+        </ol>
+        <p class="paper__foot"><span class="hand redpen-inline">36 questions, no multiple choice.</span> The <a href="docs/guides/checks-overview.html">Checks</a> page has every rule, and <a href="docs/reference/rule-ids.html">Rule ids</a> has every id a finding can carry.</p>
       </div>
 
       <div class="nextterm" data-reveal>
@@ -445,30 +502,30 @@ RESULT: pass</code></pre>
 
         <div class="carbon carbon--white" role="tabpanel" id="pane-text" aria-labelledby="tab-text" tabindex="0">
           <p class="carbon__copy">White copy · for people · <code>--format=text</code> (the default)</p>
-<pre class="carbon__pre"><code>proctor 0.8.0 | composer: 2.10.3
-Policy: bundled (/app/src/Creed/policy.json), refreshed 2026-10-29, 0 days ago
+<pre class="carbon__pre"><code>proctor 0.9.0 | composer: 2.10.3
+Policy: bundled (/app/src/Creed/policy.json), refreshed 2026-11-08, 1 days ago
 PASS php-floor: php floor 8.4 is active
 FAIL unbounded-constraints: vendor/dev constraint "dev-master" is unbounded
 FAIL unbounded-constraints: vendor/any constraint "*" is unbounded
+PASS dev-only-packages: no development tool is in require
 INFO composer-config: require.php is set but config.platform.php is not, so the lock resolves against the local PHP
 PASS lock-committed: composer.lock is present
-PASS portability: no hard-coded platform facts found
-PASS mysql56: no Laravel migrations found; skipped
-PASS destructive-deploy: no destructive deploy commands found
-PASS ci-pipelines: both pipelines run composer ci
-WARN composer-audit: composer audit could not run: No installed packages found. …
-PASS composer-version: composer 2.10.3 is at or above the 2.7.7 floor
-PASS repo-url-credentials: no credentials found in repository URLs
-RESULT: fail (2 failures, 1 warnings)</code></pre>
+… eight more PASS lines, portability to preflight-pinned
+WARN preflight-gates: preflight-gates-no-include: .gitlab-ci.yml includes no Preflight component, so none of the stack's gates run; …
+WARN preflight-gates: preflight-gates-no-proctor-job: no job in .gitlab-ci.yml runs PROCTOR; …
+FAIL composer-audit: not audited: composer audit could not run: No installed packages found. …
+PASS composer-version: composer 2.10.3 is at or above the 2.8.0 floor
+… six more PASS lines, repo-url-credentials to wayneui-forked-views
+RESULT: fail (3 failures, 2 warnings)</code></pre>
         </div>
 
         <div class="carbon carbon--canary" role="tabpanel" id="pane-json" aria-labelledby="tab-json" tabindex="0" hidden>
           <p class="carbon__copy">Canary copy · for scripts · <code>--format=json</code></p>
 <pre class="carbon__pre"><code>{
     "tool": "proctor",
-    "version": "0.8.0",
+    "version": "0.9.0",
     "path": "tests/fixtures/apps/unbounded-app",
-    "today": "2026-10-29",
+    "today": "2026-11-09",
     "result": "fail",
     "exit": 1,
     "tools": {
@@ -477,8 +534,8 @@ RESULT: fail (2 failures, 1 warnings)</code></pre>
     "policy": {
         "origin": "bundled",
         "path": "/app/src/Creed/policy.json",
-        "refreshed_on": "2026-10-29",
-        "age_days": 0
+        "refreshed_on": "2026-11-08",
+        "age_days": 1
     },
     "findings": [
         {
@@ -497,7 +554,7 @@ RESULT: fail (2 failures, 1 warnings)</code></pre>
             "path": "composer.json",
             "line": 4
         },
-        … ten more findings
+        … twenty-two more findings
     ],
     "overrides": []
 }</code></pre>
@@ -518,7 +575,7 @@ RESULT: fail (2 failures, 1 warnings)</code></pre>
             }
         }
     },
-    … three more findings
+    … five more findings
 ]</code></pre>
           <p class="carbon__note">Fingerprints hash the rule id, path and message, never the line number, so a finding keeps its name when the file moves.</p>
         </div>
@@ -530,7 +587,7 @@ RESULT: fail (2 failures, 1 warnings)</code></pre>
     "version": "2.1.0",
     "runs": [
         {
-            "tool": { "driver": { "name": "proctor", "version": "0.8.0", … } },
+            "tool": { "driver": { "name": "proctor", "version": "0.9.0", … } },
             "results": [
                 {
                     "ruleId": "proctor/unbounded-constraints/unbounded",
@@ -607,23 +664,21 @@ RESULT: fail (1 failures, 1 warnings)</code></pre>
         <article class="hall" data-reveal>
           <p class="hall__door"><span class="hall__room">Hall G</span> GitLab, through Preflight</p>
 <pre class="hall__pre"><code>include:
-  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.3.1
-    inputs:
-      proctor_command: vendor/bin/proctor check --format=codequality --policy=vendor/waynestate/creed/policy/policy.json</code></pre>
-          <p class="hall__note">The job publishes a Code Quality report, so findings show on the merge request. We strongly recommend a git.wayne.edu instance runner.</p>
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.4.0</code></pre>
+          <p class="hall__note">The default command is <code>vendor/bin/proctor check --format=codequality</code>, so findings show on the merge request. It clones the full history, so <code>override-approver</code> can read git blame. We strongly recommend a git.wayne.edu instance runner.</p>
         </article>
         <article class="hall" data-reveal>
           <p class="hall__door"><span class="hall__room">Hall H</span> GitHub code scanning</p>
-<pre class="hall__pre"><code>- run: composer require waynestate/proctor --dev
-# policy.json is the CREED policy file
-- run: vendor/bin/proctor check --format=sarif --policy=policy.json &gt; proctor.sarif
+<pre class="hall__pre"><code>- run: composer install --no-interaction --no-progress
+- run: vendor/bin/proctor check --format=sarif &gt; proctor.sarif
 - uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+  if: always()
   with:
     sarif_file: proctor.sarif</code></pre>
-          <p class="hall__note">Pinned to a full commit SHA, the way <code>ci-pipelines</code> asks. Needs <code>permissions: security-events: write</code>.</p>
+          <p class="hall__note">Installs from the lock and pins every action to a full commit SHA, the way <code>ci-pipelines</code> asks. Needs <code>permissions: security-events: write</code>. <a href="docs/guides/github-code-scanning.html">The whole workflow</a>.</p>
         </article>
       </div>
-      <p class="halls__tip">In CI, give <code>--php-runtime</code> the PHP version of the deploy image, because that image serves the app. The runner's PHP doesn't matter.</p>
+      <p class="halls__tip">No answers brought from home: in CI, PROCTOR refuses <code>--policy</code> and <code>--today</code> (exit 2) and reads CREED's policy from <code>vendor/</code> itself. Give <code>--php-runtime</code> the PHP version of the deploy image, because that image serves the app. The runner's PHP doesn't matter.</p>
     </div>
   </section>
 
@@ -648,7 +703,7 @@ RESULT: fail (1 failures, 1 warnings)</code></pre>
             <li><p>Install, in a terminal:</p>
               <div class="cmd cmd--block"><code class="cmd__code">composer require waynestate/proctor waynestate/creed --dev</code><button class="copy" type="button" data-copy="composer require waynestate/proctor waynestate/creed --dev"><span class="copy__label">Copy</span></button></div></li>
             <li><p>Sit the exam:</p>
-              <div class="cmd cmd--block"><code class="cmd__code">vendor/bin/proctor check --policy=vendor/waynestate/creed/policy/policy.json</code><button class="copy" type="button" data-copy="vendor/bin/proctor check --policy=vendor/waynestate/creed/policy/policy.json"><span class="copy__label">Copy</span></button></div></li>
+              <div class="cmd cmd--block"><code class="cmd__code">vendor/bin/proctor check</code><button class="copy" type="button" data-copy="vendor/bin/proctor check"><span class="copy__label">Copy</span></button></div></li>
           </ol>
         </div>
 
@@ -657,7 +712,7 @@ RESULT: fail (1 failures, 1 warnings)</code></pre>
             <li><p>Install, in PowerShell:</p>
               <div class="cmd cmd--block"><code class="cmd__code">composer require waynestate/proctor waynestate/creed --dev</code><button class="copy" type="button" data-copy="composer require waynestate/proctor waynestate/creed --dev"><span class="copy__label">Copy</span></button></div></li>
             <li><p>Sit the exam:</p>
-              <div class="cmd cmd--block"><code class="cmd__code">vendor\bin\proctor check --policy=vendor\waynestate\creed\policy\policy.json</code><button class="copy" type="button" data-copy="vendor\bin\proctor check --policy=vendor\waynestate\creed\policy\policy.json"><span class="copy__label">Copy</span></button></div></li>
+              <div class="cmd cmd--block"><code class="cmd__code">vendor\bin\proctor check</code><button class="copy" type="button" data-copy="vendor\bin\proctor check"><span class="copy__label">Copy</span></button></div></li>
           </ol>
         </div>
 
@@ -666,12 +721,12 @@ RESULT: fail (1 failures, 1 warnings)</code></pre>
             <li><p>Install, from the app's folder (PowerShell, macOS or Linux):</p>
               <div class="cmd cmd--block"><code class="cmd__code">docker run --rm -v "${PWD}:/app" -w /app composer:2 composer require waynestate/proctor waynestate/creed --dev</code><button class="copy" type="button" data-copy='docker run --rm -v "${PWD}:/app" -w /app composer:2 composer require waynestate/proctor waynestate/creed --dev'><span class="copy__label">Copy</span></button></div></li>
             <li><p>Sit the exam. The <code>composer:2</code> image brings PHP and Composer, so <code>composer-audit</code> runs too:</p>
-              <div class="cmd cmd--block"><code class="cmd__code">docker run --rm -v "${PWD}:/app" -w /app composer:2 vendor/bin/proctor check --policy=vendor/waynestate/creed/policy/policy.json</code><button class="copy" type="button" data-copy='docker run --rm -v "${PWD}:/app" -w /app composer:2 vendor/bin/proctor check --policy=vendor/waynestate/creed/policy/policy.json'><span class="copy__label">Copy</span></button></div></li>
+              <div class="cmd cmd--block"><code class="cmd__code">docker run --rm -v "${PWD}:/app" -w /app composer:2 vendor/bin/proctor check</code><button class="copy" type="button" data-copy='docker run --rm -v "${PWD}:/app" -w /app composer:2 vendor/bin/proctor check'><span class="copy__label">Copy</span></button></div></li>
           </ol>
         </div>
       </div>
 
-      <p class="start__opts">Options: <code>--path=.</code> · <code>--format=text|json|codequality|sarif</code> · <code>--policy=&lt;file&gt;</code> (optional; without it PROCTOR tries the <code>PROCTOR_POLICY</code> variable, then vendor/waynestate/creed, then its bundled copy) · <code>--today=YYYY-MM-DD</code> to fix the date so runs repeat · <code>--php-runtime=X.Y.Z</code> for the <code>unpatched</code> check.</p>
+      <p class="start__opts">Options: <code>--path=.</code> · <code>--format=text|json|codequality|sarif</code> · <code>--policy=&lt;file&gt;</code> (optional; without it PROCTOR tries the <code>PROCTOR_POLICY</code> variable, then vendor/waynestate/creed, then its bundled copy) · <code>--today=YYYY-MM-DD</code> to fix the date so runs repeat (both on your own machine only: CI refuses them) · <code>--php-runtime=X.Y.Z</code> for the <code>unpatched</code> check.</p>
     </div>
   </section>
 
@@ -709,7 +764,7 @@ Read first:
 Task:
 1. Say which kind of app this is: raw PHP, Laravel with Blade, or Laravel with Inertia and Vue. PROCTOR checks all three with the same command.
 2. If PROCTOR is not installed, give me the install command and wait: `composer require waynestate/proctor waynestate/creed --dev`
-3. Run the check, or ask ADVISOR to: `vendor/bin/proctor check --policy=vendor/waynestate/creed/policy/policy.json` (on Windows the path is vendor\bin\proctor).
+3. Run the check, or ask ADVISOR to: `vendor/bin/proctor check` (on Windows the path is vendor\bin\proctor). With CREED installed, PROCTOR reads its policy from vendor/waynestate/creed on its own.
 4. For every FAIL and WARN, say what it means and the smallest fix. Change nothing yet.
 
 Constraints:
@@ -740,7 +795,7 @@ Read first:
 
 Task:
 1. Check that waynestate/proctor and waynestate/creed are dev dependencies. If not, give me the command and wait: `composer require waynestate/proctor waynestate/creed --dev`
-2. Add Preflight's proctor component to .gitlab-ci.yml, at the version Preflight's page gives today, with proctor_command set to `vendor/bin/proctor check --format=codequality --policy=vendor/waynestate/creed/policy/policy.json`
+2. Add Preflight's proctor component to .gitlab-ci.yml, at the version Preflight's page gives today, and leave proctor_command at its default (`vendor/bin/proctor check --format=codequality`).
 3. Keep every job the file already has. Show me the whole diff before you write it.
 
 Constraints:
@@ -764,12 +819,12 @@ Output: the diff, then what the merge request will show, then your questions.</c
           <pre class="ar-prompt__text"><code>You are a coding agent adding PROCTOR to GitHub code scanning for the PHP app in this folder, at Wayne State University. PROCTOR is the check command of WELD, the Wayne State application stack. Its sarif format is what GitHub code scanning reads.
 
 Read first:
-- https://proctor.apps.wayne.edu/llms.txt, and PROCTOR's README, section GitHub code scanning, which has the workflow to start from.
+- https://proctor.apps.wayne.edu/llms.txt, and the GitHub code scanning page in PROCTOR's docs, which has the workflow to start from.
 - This app's .github/workflows/, composer.json and composer.lock.
 - ADVISOR, the stack's MCP server, if it is connected: run_proctor_check shows today's findings before the workflow does. If it is not connected, say so and work from the pages.
 
 Task:
-1. Add a workflow, or a job in the existing one, that installs PROCTOR with `composer require waynestate/proctor --dev`, runs vendor/bin/proctor check with --format=sarif and CREED's policy, writes proctor.sarif, and uploads it with github/codeql-action/upload-sarif.
+1. Add a workflow, or a job in the existing one, that installs the app from its lock with `composer install --no-interaction --no-progress` (PROCTOR and CREED must already be dev dependencies; if not, stop and tell me), runs `vendor/bin/proctor check --format=sarif > proctor.sarif` with no --policy and no --today (CI refuses both), and uploads proctor.sarif with github/codeql-action/upload-sarif under `if: always()`.
 2. Give the job permissions: security-events: write, and nothing more than it needs.
 3. Show me the whole file before you write it.
 
@@ -830,7 +885,7 @@ Output: the workflow file, then what code scanning will show, then your question
 <footer class="foot">
   <div class="wrap foot__row">
     <p class="foot__big">Pencils down.</p>
-    <p class="foot__links"><a href="https://github.com/waynestate/proctor">Source on GitHub</a> · MIT · Wayne State University · Enterprise Applications</p>
+    <p class="foot__links"><a href="docs/">Docs</a> · <a href="https://git.wayne.edu/enterprise-apps/proctor">Source on git.wayne.edu</a> · <a href="https://github.com/waynestate/proctor">GitHub mirror</a> · MIT · Wayne State University · Enterprise Applications</p>
     <p class="foot__joke hand">The proctor saw that.</p>
   </div>
 </footer>

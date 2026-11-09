@@ -43,27 +43,35 @@
       <article class="docs-article"><h1 id="github-code-scanning">GitHub code scanning<a class="docs-heading-link" aria-label="Link to this section" href="#github-code-scanning">#</a></h1>
 <p>The <code>sarif</code> format feeds GitHub code scanning on the GitHub mirror. This page adds the workflow that uploads the log with the official action, pinned to a full commit SHA. Run the check with <code>--format=sarif</code>, and let the scanner show the findings on the files. PROCTOR now files the mark sheet in the format the head office already reads; no more translating the exam results by hand.</p>
 <h2 id="the-workflow">The workflow<a class="docs-heading-link" aria-label="Link to this section" href="#the-workflow">#</a></h2>
-<p>Add this workflow to the mirror. It sets up PHP, installs PROCTOR, runs the check against the app's CREED policy file, and uploads the resulting log:</p>
+<p>Add this workflow to the mirror. It sets up PHP, installs the app's dependencies from the lock (PROCTOR and CREED among them, as dev dependencies), runs the check and uploads the resulting log:</p>
 <pre tabindex="0"><code class="language-yaml">name: proctor
 on: [push, pull_request]
 permissions:
+  contents: read
   security-events: write
 jobs:
   proctor:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: '8.4'
-      - run: composer require waynestate/proctor --dev
-      # policy.json is the CREED policy file
-      - run: vendor/bin/proctor check --format=sarif --policy=policy.json &gt; proctor.sarif
+      - run: composer install --no-interaction --no-progress
+      # No --policy here: CI refuses it, and PROCTOR reads vendor/waynestate/creed's policy itself.
+      - run: vendor/bin/proctor check --format=sarif &gt; proctor.sarif
       - uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        if: always()
         with:
           sarif_file: proctor.sarif
 </code></pre>
-<p>The <code>--policy=policy.json</code> argument names the app's CREED policy file; see <a href="policy.html">Policy</a> for how PROCTOR finds one when you do not name it.</p>
+<p>Three choices in it are on purpose, and each matches a PROCTOR check:</p>
+<ul>
+<li>Every <code>uses:</code> is pinned to a full commit SHA with the version in a comment; <code>ci-pipelines</code> warns on a tag or a branch (<code>proctor/ci-pipelines/unpinned-uses</code>).</li>
+<li>The job runs <code>composer install</code>, never <code>composer require</code> or <code>composer update</code>: CI installs from the lock (<code>proctor/ci-pipelines/composer-update</code>).</li>
+<li>There is no <code>--policy</code> and no <code>--today</code>. In CI (<code>GITHUB_ACTIONS</code> is set) PROCTOR refuses both with exit 2 unless a trusted job sets <code>PROCTOR_ALLOW_OVERRIDES=1</code>, so an app cannot grade itself against a policy or a date it picks. Without <code>--policy</code> it reads <code>vendor/waynestate/creed/policy/policy.json</code>, or its bundled copy; see <a href="policy.html">Policy</a>.</li>
+</ul>
+<p><code>if: always()</code> uploads the log even when the check exits 1, which is exactly when you want to read it.</p>
 <h2 id="what-the-log-contains">What the log contains<a class="docs-heading-link" aria-label="Link to this section" href="#what-the-log-contains">#</a></h2>
 <p>The uploaded <code>proctor.sarif</code> is a SARIF 2.1.0 log: one run, one rule per check, one result per non-pass finding.</p>
 <ul>

@@ -244,6 +244,43 @@ final class RuleIdContractTest extends ProctorTestCase
     }
 
     /**
+     * The docs site's Rule ids page carries a copy of the README table. It
+     * drifted once (twelve rows behind), so the copy is held to the README's
+     * rows, in the same order: the README is checked against the code above,
+     * and this keeps the page a true photocopy of it.
+     */
+    public function testDocsRuleIdsPageMatchesTheReadmeTable(): void
+    {
+        $root = dirname(__DIR__);
+        $readme = self::tableRows((string) file_get_contents($root . '/README.md'));
+        $docs = self::tableRows((string) file_get_contents($root . '/docs/reference/rule-ids.md'));
+
+        self::assertNotEmpty($docs, 'no rule-id rows found in docs/reference/rule-ids.md');
+        self::assertSame(
+            $readme,
+            $docs,
+            'docs/reference/rule-ids.md must list the same rule-id rows as the README table, in the same order; copy the README table over it',
+        );
+    }
+
+    /**
+     * The "| `check` | `proctor/...` |" rows of a Markdown page, in order.
+     *
+     * @return list<string>
+     */
+    private static function tableRows(string $markdown): array
+    {
+        $rows = [];
+        foreach (preg_split('/\R/', $markdown) ?: [] as $line) {
+            if (preg_match('/^\|\s*`[a-z0-9-]+`\s*\|\s*`proctor\/[a-z0-9-]+(?:\/[a-z0-9-]+)?`\s*\|$/', $line) === 1) {
+                $rows[] = $line;
+            }
+        }
+
+        return $rows;
+    }
+
+    /**
      * The absolute paths of every fixture app, sorted for determinism.
      *
      * @return list<string>

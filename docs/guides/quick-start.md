@@ -53,6 +53,8 @@ Pencils up. Five minutes, one command, a mark sheet: install PROCTOR, run the fi
 
    Without `--policy`, PROCTOR resolves the policy in this order: the `PROCTOR_POLICY` environment variable, the app's `vendor/waynestate/creed/policy/policy.json`, then the copy bundled with PROCTOR.
 
+   Steps 4 and 6 are for your own machine. In CI, `--policy` and `--today` are refused (exit 2) unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`, so an app cannot grade itself against a policy or a date it picks: leave them out of the pipeline, and PROCTOR reads CREED's policy from `vendor/` on its own.
+
 ## What you built
 
 You ran PROCTOR's first marking pass: a verdict per check against the CREED policy, with an exit code CI can gate on. Nothing in the app changed; the proctor only watches.
@@ -61,4 +63,4 @@ You ran PROCTOR's first marking pass: a verdict per check against the CREED poli
 
 - [Install](../install.md): requirements and the single-file PHAR route for apps without Composer access.
 - [Reference: commands](../reference/commands.md): the long-form docs for the commands, [rule ids](../reference/rule-ids.md) and [exit codes](../reference/exit-codes.md).
-- When you are ready for CI, the README's GitHub code scanning section shows a workflow that runs the check with `--format=sarif` and uploads the log to code scanning.
+- When you are ready for CI: on GitLab, include Preflight's `proctor` component, pinned to a release tag (see [CI checks](check-ci.md)); on the GitHub mirror, [GitHub code scanning](github-code-scanning.md) has a workflow that runs the check with `--format=sarif` and uploads the log.

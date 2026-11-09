@@ -43,11 +43,11 @@ The command is then `vendor/bin/proctor`.
 ## Single-file download
 
 The single-file PHAR is how Preflight and apps without Composer access run
-PROCTOR as one file, and from the next release it is attached to each GitLab
-Release with its `proctor.phar.sha256` checksum file. Both files come from the
-`release-phar` job in `.gitlab-ci.yml`; the lead tags, and no tag means no
-release. The `composer require` install above stays the current method; the
-phar is the one-file alternative.
+PROCTOR as one file. Since 0.6.0, every tag runs the `release-phar` job in
+`.gitlab-ci.yml`, which attaches `proctor.phar` and its `proctor.phar.sha256`
+checksum file to that tag's GitLab Release; the maintainer tags, and no tag
+means no release. The `composer require` install above stays the main method;
+the phar is the one-file alternative.
 
 Download both files for the tag you want, verify the checksum, then run it.
 Replace `<release>` with the base URL of the release's asset links (the
@@ -61,8 +61,8 @@ Windows (PowerShell), one line, no bash needed:
 
     Invoke-WebRequest "<release>/proctor.phar" -OutFile proctor.phar; Invoke-WebRequest "<release>/proctor.phar.sha256" -OutFile proctor.phar.sha256; if ((Get-FileHash proctor.phar -Algorithm SHA256).Hash -ne (Get-Content proctor.phar.sha256 -TotalCount 1).Trim().Split(' ')[0]) { throw "sha256 mismatch" }; php proctor.phar --version
 
-Until the first tagged release that runs the job, build it from a checkout
-with the script for your OS (both need Docker, and no PHP or Composer on the
+For a commit between tags, or a release whose job did not attach the files,
+build it from a checkout with the script for your OS (both need Docker, and no PHP or Composer on the
 host): `.\scripts\build-phar.ps1` on Windows, `scripts/build-phar.sh` on
 Linux / macOS. Each script writes `build/proctor.phar` and verifies it by
 printing PROCTOR's version.
@@ -357,28 +357,36 @@ id, fails the suite too.
 ## GitHub code scanning
 
 The `sarif` format feeds GitHub code scanning on the GitHub mirror. Upload the
-log with the official action, pinned to a full commit SHA:
+log with the official action. Every `uses:` is pinned to a full commit SHA, the
+way the `ci-pipelines` check asks, and the job installs from the lock, the way
+`proctor/ci-pipelines/composer-update` asks (PROCTOR and CREED are already dev
+dependencies of the app):
 
 ```yaml
 name: proctor
 on: [push, pull_request]
 permissions:
+  contents: read
   security-events: write
 jobs:
   proctor:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: '8.4'
-      - run: composer require waynestate/proctor --dev
-      # policy.json is the CREED policy file
-      - run: vendor/bin/proctor check --format=sarif --policy=policy.json > proctor.sarif
+      - run: composer install --no-interaction --no-progress
+      # No --policy here: CI refuses it, and PROCTOR reads vendor/waynestate/creed's policy itself.
+      - run: vendor/bin/proctor check --format=sarif > proctor.sarif
       - uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        if: always()
         with:
           sarif_file: proctor.sarif
 ```
+
+`if: always()` uploads the log even when the check exits 1, which is exactly
+when you want to read it.
 
 PROCTOR now files the mark sheet in the format the head office already reads.
 No more translating the exam results by hand.

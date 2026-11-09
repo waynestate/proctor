@@ -51,11 +51,11 @@
 <p>Where the code lives: the canonical repository is on git.wayne.edu, <a rel="noopener" href="https://git.wayne.edu/enterprise-apps/proctor">enterprise-apps/proctor</a>. GitHub (<a rel="noopener" href="https://github.com/waynestate/proctor">waynestate/proctor</a>) is a read-only mirror of it. Open issues and merge requests on git.wayne.edu, not on the mirror. Your proctor keeps one answer sheet, and this is it; the mirrors hold photocopies.</p>
 <h2 id="single-file-phar">Single-file PHAR<a class="docs-heading-link" aria-label="Link to this section" href="#single-file-phar">#</a></h2>
 <p>The single-file PHAR is how Preflight and apps without Composer access run
-PROCTOR as one file, and from the next release it is attached to each GitLab
-Release with its <code>proctor.phar.sha256</code> checksum file. Both files come from the
-<code>release-phar</code> job in <code>.gitlab-ci.yml</code>; the lead tags, and no tag means no
-release. The <code>composer require</code> install below stays the current method; the
-phar is the one-file alternative.</p>
+PROCTOR as one file. Since 0.6.0, every tag runs the <code>release-phar</code> job in
+<code>.gitlab-ci.yml</code>, which attaches <code>proctor.phar</code> and its <code>proctor.phar.sha256</code>
+checksum file to that tag's GitLab Release; the maintainer tags, and no tag
+means no release. The <code>composer require</code> install below stays the main method;
+the phar is the one-file alternative.</p>
 <p>Download both files for the tag you want, verify the checksum, then run it.
 Replace <code>&lt;release&gt;</code> with the base URL of the release's asset links (the
 release page lists both files).</p>
@@ -65,15 +65,18 @@ release page lists both files).</p>
 <p>Windows (PowerShell), one line, no bash needed:</p>
 <pre tabindex="0"><code class="language-powershell">Invoke-WebRequest &quot;&lt;release&gt;/proctor.phar&quot; -OutFile proctor.phar; Invoke-WebRequest &quot;&lt;release&gt;/proctor.phar.sha256&quot; -OutFile proctor.phar.sha256; if ((Get-FileHash proctor.phar -Algorithm SHA256).Hash -ne (Get-Content proctor.phar.sha256 -TotalCount 1).Trim().Split(' ')[0]) { throw &quot;sha256 mismatch&quot; }; php proctor.phar --version
 </code></pre>
-<p>Until the first tagged release that runs the job, build it from a checkout
-with the script for your OS (both need Docker, and no PHP or Composer on the
+<p>For a commit between tags, or a release whose job did not attach the files,
+build it from a checkout with the script for your OS (both need Docker, and no PHP or Composer on the
 host): <code>.\scripts\build-phar.ps1</code> on Windows, <code>scripts/build-phar.sh</code> on
 Linux / macOS. Each script writes <code>build/proctor.phar</code> and verifies it by
 printing PROCTOR's version.</p>
 <h2 id="install-1">Install<a class="docs-heading-link" aria-label="Link to this section" href="#install-1">#</a></h2>
 <pre tabindex="0"><code>composer require waynestate/proctor --dev
 </code></pre>
-<p>The command is then <code>vendor/bin/proctor</code>.</p>
+<p>The command is then <code>vendor/bin/proctor</code>. Add CREED next to it, so PROCTOR marks against the newest published policy instead of the copy it bundles:</p>
+<pre tabindex="0"><code>composer require waynestate/creed --dev
+</code></pre>
+<p>Already in a <a rel="noopener" href="https://sourdough.apps.wayne.edu/">Sourdough</a> app or <a rel="noopener" href="https://weld.apps.wayne.edu/">WELD</a>? Both are there, and <code>composer proctor</code> runs the check.</p>
 <h2 id="verify">Verify<a class="docs-heading-link" aria-label="Link to this section" href="#verify">#</a></h2>
 <p>Run the check against the app:</p>
 <pre tabindex="0"><code>vendor/bin/proctor check

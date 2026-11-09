@@ -17,11 +17,11 @@ Where the code lives: the canonical repository is on git.wayne.edu, [enterprise-
 ## Single-file PHAR
 
 The single-file PHAR is how Preflight and apps without Composer access run
-PROCTOR as one file, and from the next release it is attached to each GitLab
-Release with its `proctor.phar.sha256` checksum file. Both files come from the
-`release-phar` job in `.gitlab-ci.yml`; the lead tags, and no tag means no
-release. The `composer require` install below stays the current method; the
-phar is the one-file alternative.
+PROCTOR as one file. Since 0.6.0, every tag runs the `release-phar` job in
+`.gitlab-ci.yml`, which attaches `proctor.phar` and its `proctor.phar.sha256`
+checksum file to that tag's GitLab Release; the maintainer tags, and no tag
+means no release. The `composer require` install below stays the main method;
+the phar is the one-file alternative.
 
 Download both files for the tag you want, verify the checksum, then run it.
 Replace `<release>` with the base URL of the release's asset links (the
@@ -39,8 +39,8 @@ Windows (PowerShell), one line, no bash needed:
 Invoke-WebRequest "<release>/proctor.phar" -OutFile proctor.phar; Invoke-WebRequest "<release>/proctor.phar.sha256" -OutFile proctor.phar.sha256; if ((Get-FileHash proctor.phar -Algorithm SHA256).Hash -ne (Get-Content proctor.phar.sha256 -TotalCount 1).Trim().Split(' ')[0]) { throw "sha256 mismatch" }; php proctor.phar --version
 ```
 
-Until the first tagged release that runs the job, build it from a checkout
-with the script for your OS (both need Docker, and no PHP or Composer on the
+For a commit between tags, or a release whose job did not attach the files,
+build it from a checkout with the script for your OS (both need Docker, and no PHP or Composer on the
 host): `.\scripts\build-phar.ps1` on Windows, `scripts/build-phar.sh` on
 Linux / macOS. Each script writes `build/proctor.phar` and verifies it by
 printing PROCTOR's version.
@@ -51,7 +51,13 @@ printing PROCTOR's version.
 composer require waynestate/proctor --dev
 ```
 
-The command is then `vendor/bin/proctor`.
+The command is then `vendor/bin/proctor`. Add CREED next to it, so PROCTOR marks against the newest published policy instead of the copy it bundles:
+
+```
+composer require waynestate/creed --dev
+```
+
+Already in a [Sourdough](https://sourdough.apps.wayne.edu/) app or [WELD](https://weld.apps.wayne.edu/)? Both are there, and `composer proctor` runs the check.
 
 ## Verify
 

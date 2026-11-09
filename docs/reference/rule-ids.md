@@ -22,6 +22,9 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `lock-committed` | `proctor/lock-committed/out-of-sync` |
 | `destructive-deploy` | `proctor/destructive-deploy` |
 | `crlf-deploy-script` | `proctor/crlf-deploy-script` |
+| `crlf-deploy-script` | `proctor/crlf-deploy-script/no-gitattributes` |
+| `entrypoint-migrate` | `proctor/entrypoint-migrate` |
+| `entrypoint-migrate` | `proctor/entrypoint-migrate/runs` |
 | `case-clash` | `proctor/case-clash` |
 | `overrides` | `proctor/overrides` |
 | `overrides` | `proctor/overrides/expiring` |
@@ -68,6 +71,8 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `mysql56` | `proctor/mysql56/string-default` |
 | `mysql56` | `proctor/mysql56/parse-error` |
 | `mysql-eol` | `proctor/mysql-eol` |
+| `mysql-minimum` | `proctor/mysql-minimum` |
+| `mysql-minimum` | `proctor/mysql-minimum/below` |
 | `ci-pipelines` | `proctor/ci-pipelines` |
 | `ci-pipelines` | `proctor/ci-pipelines/gitlab-missing` |
 | `ci-pipelines` | `proctor/ci-pipelines/gitlab-parse` |
@@ -83,6 +88,10 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `preflight-pinned` | `proctor/preflight-pinned` |
 | `preflight-pinned` | `proctor/preflight-pinned/unpinned` |
 | `preflight-pinned` | `proctor/preflight-pinned/script-override` |
+| `preflight-gates` | `proctor/preflight-gates` |
+| `preflight-gates` | `proctor/preflight-gates/no-include` |
+| `preflight-gates` | `proctor/preflight-gates/allow-failure` |
+| `preflight-gates` | `proctor/preflight-gates/no-proctor-job` |
 | `composer-audit` | `proctor/composer-audit` |
 | `composer-audit` | `proctor/composer-audit/advisory` |
 | `composer-audit` | `proctor/composer-audit/abandoned` |
@@ -108,6 +117,9 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `display-errors` | `proctor/display-errors` |
 | `display-errors` | `proctor/display-errors/on` |
 | `display-errors` | `proctor/display-errors/log-off` |
+| `vite-secrets` | `proctor/vite-secrets` |
+| `vite-secrets` | `proctor/vite-secrets/env-file` |
+| `vite-secrets` | `proctor/vite-secrets/source` |
 | `served-folder` | `proctor/served-folder` |
 | `served-folder` | `proctor/served-folder/debug-file` |
 | `served-folder` | `proctor/served-folder/phpinfo` |
@@ -123,7 +135,7 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 
 ## Kept in step
 
-`tests/RuleIdContractTest.php` keeps this table in step with the checks: a rule id that is emitted but not listed in the known set fails the suite, and the test parses the README's copy of this table, so a known rule id missing from it, or a row that names an unknown rule id, fails the suite too. The proctor stamps each id in pencil so small only the head office can read it, and it never smudges.
+`tests/RuleIdContractTest.php` keeps this table in step with the checks: a rule id that is emitted but not listed in the known set fails the suite, and the test parses the README's copy of this table, so a known rule id missing from it, or a row that names an unknown rule id, fails the suite too. This page's table is held to the README's, row for row, by the same test file. The proctor stamps each id in pencil so small only the head office can read it, and it never smudges.
 
 ## Related
 

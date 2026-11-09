@@ -77,6 +77,7 @@
 <pre tabindex="0"><code>vendor/bin/proctor check --policy=policy.json
 </code></pre>
 <p>Without <code>--policy</code>, PROCTOR resolves the policy in this order: the <code>PROCTOR_POLICY</code> environment variable, the app's <code>vendor/waynestate/creed/policy/policy.json</code>, then the copy bundled with PROCTOR.</p>
+<p>Steps 4 and 6 are for your own machine. In CI, <code>--policy</code> and <code>--today</code> are refused (exit 2) unless a trusted job sets <code>PROCTOR_ALLOW_OVERRIDES=1</code>, so an app cannot grade itself against a policy or a date it picks: leave them out of the pipeline, and PROCTOR reads CREED's policy from <code>vendor/</code> on its own.</p>
 </li>
 </ol>
 <h2 id="what-you-built">What you built<a class="docs-heading-link" aria-label="Link to this section" href="#what-you-built">#</a></h2>
@@ -85,7 +86,7 @@
 <ul>
 <li><a href="../install.html">Install</a>: requirements and the single-file PHAR route for apps without Composer access.</li>
 <li><a href="../reference/commands.html">Reference: commands</a>: the long-form docs for the commands, <a href="../reference/rule-ids.html">rule ids</a> and <a href="../reference/exit-codes.html">exit codes</a>.</li>
-<li>When you are ready for CI, the README's GitHub code scanning section shows a workflow that runs the check with <code>--format=sarif</code> and uploads the log to code scanning.</li>
+<li>When you are ready for CI: on GitLab, include Preflight's <code>proctor</code> component, pinned to a release tag (see <a href="check-ci.html">CI checks</a>); on the GitHub mirror, <a href="github-code-scanning.html">GitHub code scanning</a> has a workflow that runs the check with <code>--format=sarif</code> and uploads the log.</li>
 </ul>
 </article>
     </main>

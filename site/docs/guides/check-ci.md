@@ -10,6 +10,17 @@ generator: Squire agent-ready
 
 This page covers the PROCTOR checks that verify CI pipelines run `composer ci`, that Preflight includes are pinned and its gates are present and blocking, and that deploy scripts and committed files keep the app portable. Run `vendor/bin/proctor check` against the app path, then fix the finding the report names. PROCTOR watches the exam and does not hand out answers.
 
+## Run PROCTOR in GitLab CI[#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#run-proctor-in-gitlab-ci)
+
+The smallest pipeline change that satisfies `preflight-pinned` and `preflight-gates` below is Preflight's `proctor` component, pinned to a release tag, with its command left at the default (add Preflight's `php-test` and `composer-audit` next to it, and a job that runs `composer ci` for `ci-pipelines`):
+
+```yaml
+include:
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.4.0
+```
+
+The default command is `vendor/bin/proctor check --format=codequality`, so the findings show on the merge request as Code Quality. Do not add `--policy` or `--today` to `proctor_command`: in CI PROCTOR refuses both (exit 2) unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`, and without them it reads CREED's policy from the app's `vendor/waynestate/creed`. Preflight 0.4.0 clones the full history for this job (`git_depth: "0"`), so `override-approver` can read git blame. Strongly recommended: a git.wayne.edu instance runner. Preflight's own page lists every input: [preflight.apps.wayne.edu](https://preflight.apps.wayne.edu/).
+
 ## ci-pipelines[#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#ci-pipelines)
 
 `ci-pipelines` enforces the CI contract. For a stack package (a composer.json `name` starting with `waynestate/`), both `.gitlab-ci.yml` and `.github/workflows/ci.yml` must exist and run `composer ci`; a missing or incomplete file is a failure. For any other project, a missing or incomplete `.gitlab-ci.yml` is a warning and `.github/workflows/ci.yml` is optional.

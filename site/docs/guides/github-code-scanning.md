@@ -12,30 +12,38 @@ The `sarif` format feeds GitHub code scanning on the GitHub mirror. This page ad
 
 ## The workflow[#](https://proctor.apps.wayne.edu/docs/guides/github-code-scanning.html#the-workflow)
 
-Add this workflow to the mirror. It sets up PHP, installs PROCTOR, runs the check against the app's CREED policy file, and uploads the resulting log:
+Add this workflow to the mirror. It sets up PHP, installs the app's dependencies from the lock (PROCTOR and CREED among them, as dev dependencies), runs the check and uploads the resulting log:
 
 ```yaml
 name: proctor
 on: [push, pull_request]
 permissions:
+  contents: read
   security-events: write
 jobs:
   proctor:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: '8.4'
-      - run: composer require waynestate/proctor --dev
-      # policy.json is the CREED policy file
-      - run: vendor/bin/proctor check --format=sarif --policy=policy.json > proctor.sarif
+      - run: composer install --no-interaction --no-progress
+      # No --policy here: CI refuses it, and PROCTOR reads vendor/waynestate/creed's policy itself.
+      - run: vendor/bin/proctor check --format=sarif > proctor.sarif
       - uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        if: always()
         with:
           sarif_file: proctor.sarif
 ```
 
-The `--policy=policy.json` argument names the app's CREED policy file; see [Policy](https://proctor.apps.wayne.edu/docs/guides/policy.html) for how PROCTOR finds one when you do not name it.
+Three choices in it are on purpose, and each matches a PROCTOR check:
+
+- Every `uses:` is pinned to a full commit SHA with the version in a comment; `ci-pipelines` warns on a tag or a branch (`proctor/ci-pipelines/unpinned-uses`).
+- The job runs `composer install`, never `composer require` or `composer update`: CI installs from the lock (`proctor/ci-pipelines/composer-update`).
+- There is no `--policy` and no `--today`. In CI (`GITHUB_ACTIONS` is set) PROCTOR refuses both with exit 2 unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`, so an app cannot grade itself against a policy or a date it picks. Without `--policy` it reads `vendor/waynestate/creed/policy/policy.json`, or its bundled copy; see [Policy](https://proctor.apps.wayne.edu/docs/guides/policy.html).
+
+`if: always()` uploads the log even when the check exits 1, which is exactly when you want to read it.
 
 ## What the log contains[#](https://proctor.apps.wayne.edu/docs/guides/github-code-scanning.html#what-the-log-contains)
 

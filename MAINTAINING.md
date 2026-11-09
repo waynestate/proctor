@@ -31,7 +31,7 @@ You need PHP 8.3 or newer and Composer, or only Docker.
 | Build the phar (needs Docker), Windows | `.\scripts\build-phar.ps1` |
 | Build the phar (needs Docker), Linux and macOS | `scripts/build-phar.sh` |
 
-Both phar scripts write `build/proctor.phar` (gitignored). From the next release, the phar is published on every tag by the `release-phar` job (see below).
+Both phar scripts write `build/proctor.phar` (gitignored). Since 0.6.0, the phar is published on every tag by the `release-phar` job (see below).
 
 With only Docker (the same line works in PowerShell and sh):
 
