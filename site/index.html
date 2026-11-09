@@ -43,7 +43,7 @@
     <a class="masthead__brand" href="#main">
       <img class="masthead__mark" src="brand/proctor-avatar-256.png" width="34" height="34" alt="">
       <span class="masthead__name">PROCTOR</span>
-      <span class="masthead__form">Form <span data-docs-version>0.9.0</span></span>
+      <span class="masthead__form">Form <span data-docs-version>0.10.0</span></span>
     </a>
     <nav class="masthead__nav" aria-label="Sections">
       <a href="#questions">Questions</a>
@@ -285,7 +285,10 @@
            (src/Check/CheckSet.php). With motion on, the proctor ticks them off
            down the columns as the paper comes into view; without it, every tick
            is already there. Keep the count and the tags in step with CheckSet:
-           GATE lists CheckSet::GATE, New lists what is on main since the last tag. -->
+           GATE lists CheckSet::GATE. New marks what the legend names: from a tag,
+           the checks that release added ("new in 0.10.0"); once a check lands on
+           main after the tag, only the checks on main since it ("on main since
+           0.10.0, in the next release"). Re-mark both at every tag. -->
       <div class="paper" data-reveal>
         <header class="paper__head">
           <p class="sec-head__part">The whole paper</p>
@@ -293,7 +296,7 @@
           <p class="paper__lede">Every check <code>proctor check</code> asks, in the order it asks them. Each id opens its page in the docs.</p>
           <ul class="paper__legend">
             <li><span class="tag tag--gate">Gate</span> also asked by <code>proctor gate</code> before a deploy</li>
-            <li><span class="tag tag--new">New</span> on main since 0.9.0, in the next release</li>
+            <li><span class="tag tag--new">New</span> new in 0.10.0</li>
           </ul>
         </header>
         <ol class="paper__list">
@@ -506,7 +509,7 @@ RESULT: pass</code></pre>
 
         <div class="carbon carbon--white" role="tabpanel" id="pane-text" aria-labelledby="tab-text" tabindex="0">
           <p class="carbon__copy">White copy · for people · <code>--format=text</code> (the default)</p>
-<pre class="carbon__pre"><code>proctor 0.9.0 | composer: 2.10.3
+<pre class="carbon__pre"><code>proctor 0.10.0 | composer: 2.10.3
 Policy: bundled (/app/src/Creed/policy.json), refreshed 2026-11-08, 1 days ago
 PASS php-floor: php floor 8.4 is active
 FAIL unbounded-constraints: vendor/dev constraint "dev-master" is unbounded
@@ -519,7 +522,7 @@ WARN preflight-gates: preflight-gates-no-include: .gitlab-ci.yml includes no Pre
 WARN preflight-gates: preflight-gates-no-proctor-job: no job in .gitlab-ci.yml runs PROCTOR; …
 FAIL composer-audit: not audited: composer audit could not run: No installed packages found. …
 PASS composer-version: composer 2.10.3 is at or above the 2.8.0 floor
-… six more PASS lines, repo-url-credentials to wayneui-forked-views
+… nine more PASS lines, repo-url-credentials to wayneui-forked-views
 RESULT: fail (3 failures, 2 warnings)</code></pre>
         </div>
 
@@ -527,7 +530,7 @@ RESULT: fail (3 failures, 2 warnings)</code></pre>
           <p class="carbon__copy">Canary copy · for scripts · <code>--format=json</code></p>
 <pre class="carbon__pre"><code>{
     "tool": "proctor",
-    "version": "0.9.0",
+    "version": "0.10.0",
     "path": "tests/fixtures/apps/unbounded-app",
     "today": "2026-11-09",
     "result": "fail",
@@ -558,7 +561,7 @@ RESULT: fail (3 failures, 2 warnings)</code></pre>
             "path": "composer.json",
             "line": 4
         },
-        … twenty-two more findings
+        … twenty-five more findings
     ],
     "overrides": []
 }</code></pre>
@@ -591,7 +594,7 @@ RESULT: fail (3 failures, 2 warnings)</code></pre>
     "version": "2.1.0",
     "runs": [
         {
-            "tool": { "driver": { "name": "proctor", "version": "0.9.0", … } },
+            "tool": { "driver": { "name": "proctor", "version": "0.10.0", … } },
             "results": [
                 {
                     "ruleId": "proctor/unbounded-constraints/unbounded",

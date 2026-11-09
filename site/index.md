@@ -112,7 +112,7 @@ The whole paper
 Every check `proctor check` asks, in the order it asks them. Each id opens its page in the docs.
 
 - Gate also asked by `proctor gate` before a deploy
-- New on main since 0.9.0, in the next release
+- New new in 0.10.0
 
 1. [`php-floor`](https://proctor.apps.wayne.edu/docs/guides/check-php.html#php-floor): Is the lowest PHP you allow still supported? Gate
 2. [`unpatched`](https://proctor.apps.wayne.edu/docs/guides/check-php.html#unpatched): Is each locked line on its latest patch? Gate
@@ -260,7 +260,7 @@ Pick the copy your reader needs with `--format`. The findings are the same in al
 White copy · for people · `--format=text` (the default)
 
 ```
-proctor 0.9.0 | composer: 2.10.3
+proctor 0.10.0 | composer: 2.10.3
 Policy: bundled (/app/src/Creed/policy.json), refreshed 2026-11-08, 1 days ago
 PASS php-floor: php floor 8.4 is active
 FAIL unbounded-constraints: vendor/dev constraint "dev-master" is unbounded
@@ -273,7 +273,7 @@ WARN preflight-gates: preflight-gates-no-include: .gitlab-ci.yml includes no Pre
 WARN preflight-gates: preflight-gates-no-proctor-job: no job in .gitlab-ci.yml runs PROCTOR; …
 FAIL composer-audit: not audited: composer audit could not run: No installed packages found. …
 PASS composer-version: composer 2.10.3 is at or above the 2.8.0 floor
-… six more PASS lines, repo-url-credentials to wayneui-forked-views
+… nine more PASS lines, repo-url-credentials to wayneui-forked-views
 RESULT: fail (3 failures, 2 warnings)
 ```
 
@@ -284,7 +284,7 @@ Canary copy · for scripts · `--format=json`
 ```
 {
     "tool": "proctor",
-    "version": "0.9.0",
+    "version": "0.10.0",
     "path": "tests/fixtures/apps/unbounded-app",
     "today": "2026-11-09",
     "result": "fail",
@@ -315,7 +315,7 @@ Canary copy · for scripts · `--format=json`
             "path": "composer.json",
             "line": 4
         },
-        … twenty-two more findings
+        … twenty-five more findings
     ],
     "overrides": []
 }
@@ -355,7 +355,7 @@ Gold copy · for GitHub code scanning · `--format=sarif`
     "version": "2.1.0",
     "runs": [
         {
-            "tool": { "driver": { "name": "proctor", "version": "0.9.0", … } },
+            "tool": { "driver": { "name": "proctor", "version": "0.10.0", … } },
             "results": [
                 {
                     "ruleId": "proctor/unbounded-constraints/unbounded",

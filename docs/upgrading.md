@@ -7,6 +7,54 @@ description: How to upgrade PROCTOR to a newer release and note the changes that
 
 PROCTOR is the invigilator, so upgrading it is a seat change, not a new exam: same hall, fresher pen. This page tells you how to move an app from one PROCTOR release to the next and which changes affect your runs. Start with the release that has a break, then work down to the additive ones.
 
+## 0.10.0
+
+Released 2026-11-09. This is a pre-1.0 minor: consumers that pin `^0.9` stay on 0.9.x until they move their constraint to `^0.10`. Everything new only warns: nine new checks and two new rules on existing checks, none of them in the deploy gate, so a run that passed on 0.9.0 still passes and a deploy that went ahead still goes ahead. Expect new warnings in the report.
+
+### Breaking
+
+- None. Every new finding is a warning, and a warning never changes the exit code.
+
+### Added
+
+Each of these checks only warns, never fails, and none is in the deploy gate:
+
+| Check | Rule ids | What it warns on |
+| --- | --- | --- |
+| `mysql-minimum` | `proctor/mysql-minimum`, `proctor/mysql-minimum/below` | the app's MySQL or MariaDB image is below the minimum the policy records for its Laravel line |
+| `entrypoint-migrate` | `proctor/entrypoint-migrate`, `proctor/entrypoint-migrate/runs` | a container entrypoint runs `artisan migrate` at start |
+| `preflight-gates` | `proctor/preflight-gates`, `proctor/preflight-gates/no-include`, `proctor/preflight-gates/allow-failure`, `proctor/preflight-gates/no-proctor-job` | `.gitlab-ci.yml` includes no Preflight component, lets a Preflight gate fail, or runs no PROCTOR job |
+| `app-debug` | `proctor/app-debug`, `proctor/app-debug/enabled` | a committed production env, deploy or CI file sets `APP_DEBUG` to true |
+| `display-errors` | `proctor/display-errors`, `proctor/display-errors/on`, `proctor/display-errors/log-off` | a committed php.ini, .user.ini or .htaccess turns `display_errors` on or `log_errors` off |
+| `directory-listing` | `proctor/directory-listing`, `proctor/directory-listing/indexes` | a committed .htaccess or server config turns on directory listing |
+| `csp-unsafe-inline` | `proctor/csp-unsafe-inline`, `proctor/csp-unsafe-inline/script-src` | committed config lets scripts run inline (`'unsafe-inline'` in a script source) |
+| `robots-txt` | `proctor/robots-txt`, `proctor/robots-txt/missing`, `proctor/robots-txt/allows-all` | an app with a committed `public/index.php` commits no `public/robots.txt`, or one with neither `Disallow: /` nor `Allow: /` for `User-agent: *` (write `Allow: /` when crawling is wanted) |
+| `vite-secrets` | `proctor/vite-secrets`, `proctor/vite-secrets/env-file`, `proctor/vite-secrets/source` | a secret-looking `VITE_` variable, which Vite ships to the browser |
+
+Two existing checks gain a rule, and both only warn: `crlf-deploy-script` warns (`proctor/crlf-deploy-script/no-gitattributes`) when the app has a deploy script and .gitattributes does not pin `*.sh` to `eol=lf`, and `ci-pipelines` warns (`proctor/ci-pipelines/allow-overrides`) when a pipeline sets `PROCTOR_ALLOW_OVERRIDES` to 1.
+
+### Changed
+
+- `display-errors` reads an ini value without its inline comment, so `display_errors = On ; note` warns.
+- The portability check's message says "analyze" (US spelling); a script that matched the old text needs the new one.
+
+### Deprecated
+
+- None recorded so far.
+
+### Steps
+
+1. Move the PROCTOR constraint in your composer.json from `^0.9` to `^0.10`, then apply it with `composer require waynestate/proctor --dev`.
+2. Re-run the check and read the new warnings; each one names the file and line to fix, and the [App checks](guides/check-app.md), [CI checks](guides/check-ci.md) and [Rule ids](reference/rule-ids.md) pages say how:
+
+   ```bash
+   vendor/bin/proctor check
+   ```
+
+### How to verify
+
+- Run `vendor/bin/proctor check --format=json` and confirm the `version` field reads `0.10.0`.
+
 ## 0.9.0
 
 Released 2026-11-08. This is a pre-1.0 minor: consumers that pin `^0.8` stay on 0.8.x until they move their constraint to `^0.9`. Most of what is new reports without blocking (the `dev-only-packages`, `case-clash` and `override-approver` checks are not in the deploy gate, and the gate stages from CREED change nothing until CREED ships a stage), but two changes can turn a passing run into a failing one.

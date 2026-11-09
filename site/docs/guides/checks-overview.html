@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Checks | PROCTOR docs</title>
 <meta name="description" content="An overview of every check PROCTOR runs and how each reports pass, warning, info or fail.">
-<meta name="docs-version" content="0.9.0">
+<meta name="docs-version" content="0.10.0">
 <link rel="stylesheet" href="../../assets/wayne-ui/wayne-ui.css">
 <link rel="stylesheet" href="../../assets/docs.css">
 <link rel="stylesheet" href="../../docs/theme/proctor.css">
@@ -20,7 +20,7 @@
     <a class="masthead__brand" href="../../index.html">
       <img class="masthead__mark" src="../../brand/proctor-avatar-256.png" width="34" height="34" alt="">
       <span class="masthead__name">PROCTOR</span>
-      <span class="masthead__form">Form 0.9.0</span>
+      <span class="masthead__form">Form 0.10.0</span>
     </a>
     <nav class="masthead__nav" aria-label="Site">
       <a href="../../index.html#questions">Questions</a>
@@ -42,7 +42,7 @@
     <main id="main">
       <article class="docs-article"><h1 id="checks">Checks<a class="docs-heading-link" aria-label="Link to this section" href="#checks">#</a></h1>
 <p>This page lists every check PROCTOR runs in a single <code>vendor/bin/proctor check</code> run, and how each one reports. The proctor asks the same questions in the same order on every run; only the hall changes.</p>
-<p>Forty checks in all. Eight of them also run at the door, in <code>proctor gate</code>: <code>php-floor</code>, <code>unpatched</code>, <code>laravel-eol</code>, <code>laravel-php</code>, <code>lock-committed</code>, <code>composer-audit</code>, <code>overrides</code> and <code>policy-age</code> (see <a href="deploy-gate.html">Deploy gate</a>). Five are new on main since 0.9.0 and ship in the next release: <code>mysql-minimum</code>, <code>entrypoint-migrate</code>, <code>preflight-gates</code>, <code>app-debug</code> and <code>vite-secrets</code>.</p>
+<p>Forty checks in all. Eight of them also run at the door, in <code>proctor gate</code>: <code>php-floor</code>, <code>unpatched</code>, <code>laravel-eol</code>, <code>laravel-php</code>, <code>lock-committed</code>, <code>composer-audit</code>, <code>overrides</code> and <code>policy-age</code> (see <a href="deploy-gate.html">Deploy gate</a>). Nine are new in 0.10.0: <code>mysql-minimum</code>, <code>entrypoint-migrate</code>, <code>preflight-gates</code>, <code>app-debug</code>, <code>display-errors</code>, <code>directory-listing</code>, <code>csp-unsafe-inline</code>, <code>robots-txt</code> and <code>vite-secrets</code>.</p>
 <p><img src="../readme/report.svg" alt="Nine real lines from PROCTOR's text report, one per check shown: FAIL php-floor, WARN unpatched, FAIL unbounded-constraints, PASS lock-committed, WARN portability, WARN mysql56, WARN ci-pipelines, PASS composer-audit, FAIL overrides. Each line is written in words; color only repeats what the word says." /></p>
 <p><em>Nine of the forty checks shown, asked in this order on every run; <code>policy-age</code> stays silent while the policy is fresh. The lines are real output from the test fixtures.</em></p>
 <h2 id="how-a-check-reports">How a check reports<a class="docs-heading-link" aria-label="Link to this section" href="#how-a-check-reports">#</a></h2>
@@ -129,7 +129,7 @@
   <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#how-a-check-reports">How a check reports</a></li><li class="docs-toc__item"><a href="#composer">Composer</a></li><li class="docs-toc__item"><a href="#php-and-database">PHP and database</a></li><li class="docs-toc__item"><a href="#ci-and-deploy">CI and deploy</a></li><li class="docs-toc__item"><a href="#app-code-and-files">App code and files</a></li><li class="docs-toc__item"><a href="#wayneui">WayneUI</a></li><li class="docs-toc__item"><a href="#overrides">Overrides</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
-  <span>Documents PROCTOR <span data-docs-version>0.9.0</span></span>
+  <span>Documents PROCTOR <span data-docs-version>0.10.0</span></span>
   <span><a rel="noopener" href="https://github.com/waynestate/proctor">Source</a> <a href="checks-overview.md">Markdown</a></span>
 </footer>
 </body>
