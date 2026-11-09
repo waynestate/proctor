@@ -286,9 +286,9 @@
            down the columns as the paper comes into view; without it, every tick
            is already there. Keep the count and the tags in step with CheckSet:
            GATE lists CheckSet::GATE. New marks what the legend names: from a tag,
-           the checks that release added ("new in 0.10.0"); once a check lands on
+           the checks that release added ("new in 0.11.0"); once a check lands on
            main after the tag, only the checks on main since it ("on main since
-           0.10.0, in the next release"). Re-mark both at every tag. -->
+           0.11.0, in the next release"). Re-mark both at every tag. -->
       <div class="paper" data-reveal>
         <header class="paper__head">
           <p class="sec-head__part">The whole paper</p>
@@ -296,7 +296,7 @@
           <p class="paper__lede">Every check <code>proctor check</code> asks, in the order it asks them. Each id opens its page in the docs.</p>
           <ul class="paper__legend">
             <li><span class="tag tag--gate">Gate</span> also asked by <code>proctor gate</code> before a deploy</li>
-            <li><span class="tag tag--new">New</span> new in 0.10.0</li>
+            <li><span class="tag tag--new">New</span> new in 0.11.0</li>
           </ul>
         </header>
         <ol class="paper__list">
@@ -306,7 +306,7 @@
           <li class="pq" style="--i:3"><a class="pq__id" href="docs/guides/check-php.html#laravel-php"><code>laravel-php</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does your PHP range fit that Laravel?</span> <span class="tag tag--gate">Gate</span></li>
           <li class="pq" style="--i:4"><a class="pq__id" href="docs/guides/check-app.html#node-eol"><code>node-eol</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is every Node version you pin supported?</span></li>
           <li class="pq" style="--i:5"><a class="pq__id" href="docs/guides/check-app.html#mysql-eol"><code>mysql-eol</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is your MySQL or MariaDB image supported?</span></li>
-          <li class="pq" style="--i:6"><a class="pq__id" href="docs/guides/check-app.html#mysql-minimum"><code>mysql-minimum</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is it new enough for your Laravel?</span> <span class="tag tag--new">New</span></li>
+          <li class="pq" style="--i:6"><a class="pq__id" href="docs/guides/check-app.html#mysql-minimum"><code>mysql-minimum</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is it new enough for your Laravel?</span></li>
           <li class="pq" style="--i:7"><a class="pq__id" href="docs/guides/check-composer.html#unbounded-constraints"><code>unbounded-constraints</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is every requirement a released range?</span></li>
           <li class="pq" style="--i:8"><a class="pq__id" href="docs/guides/check-composer.html#dev-only-packages"><code>dev-only-packages</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Are dev tools kept out of <code>require</code>?</span></li>
           <li class="pq" style="--i:9"><a class="pq__id" href="docs/guides/check-composer.html#composer-config"><code>composer-config</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Are Composer's safety settings left on?</span></li>
@@ -316,11 +316,11 @@
           <li class="pq" style="--i:13"><a class="pq__id" href="docs/guides/check-ci.html#destructive-deploy"><code>destructive-deploy</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a deploy ever wipe the database?</span></li>
           <li class="pq" style="--i:14"><a class="pq__id" href="docs/guides/check-app.html#crlf-deploy-script"><code>crlf-deploy-script</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Do the deploy scripts end lines in LF?</span></li>
           <li class="pq" style="--i:15"><a class="pq__id" href="docs/guides/check-app.html#gitattributes-eol"><code>gitattributes-eol</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is every server file pinned to LF?</span> <span class="tag tag--new">New</span></li>
-          <li class="pq" style="--i:16"><a class="pq__id" href="docs/guides/check-app.html#entrypoint-migrate"><code>entrypoint-migrate</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a container migrate as it starts?</span> <span class="tag tag--new">New</span></li>
+          <li class="pq" style="--i:16"><a class="pq__id" href="docs/guides/check-app.html#entrypoint-migrate"><code>entrypoint-migrate</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a container migrate as it starts?</span></li>
           <li class="pq" style="--i:17"><a class="pq__id" href="docs/guides/check-app.html#case-clash"><code>case-clash</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Do two paths differ only by case?</span></li>
           <li class="pq" style="--i:18"><a class="pq__id" href="docs/guides/check-ci.html#ci-pipelines"><code>ci-pipelines</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Do the pipelines run <code>composer ci</code>?</span></li>
           <li class="pq" style="--i:19"><a class="pq__id" href="docs/guides/check-ci.html#preflight-pinned"><code>preflight-pinned</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is Preflight pinned to a release?</span></li>
-          <li class="pq" style="--i:20"><a class="pq__id" href="docs/guides/check-ci.html#preflight-gates"><code>preflight-gates</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Do Preflight's gates run, and block?</span> <span class="tag tag--new">New</span></li>
+          <li class="pq" style="--i:20"><a class="pq__id" href="docs/guides/check-ci.html#preflight-gates"><code>preflight-gates</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Do Preflight's gates run, and block?</span></li>
           <li class="pq" style="--i:21"><a class="pq__id" href="docs/guides/check-composer.html#composer-audit"><code>composer-audit</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does the lock carry a known advisory?</span> <span class="tag tag--gate">Gate</span></li>
           <li class="pq" style="--i:22"><a class="pq__id" href="docs/guides/check-composer.html#composer-version"><code>composer-version</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is the Composer on PATH safe?</span></li>
           <li class="pq" style="--i:23"><a class="pq__id" href="docs/guides/check-composer.html#repo-url-credentials"><code>repo-url-credentials</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is a token written into a package URL?</span></li>
@@ -328,12 +328,12 @@
           <li class="pq" style="--i:25"><a class="pq__id" href="docs/guides/check-app.html#env-outside-config"><code>env-outside-config</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is <code>env()</code> called outside config?</span></li>
           <li class="pq" style="--i:26"><a class="pq__id" href="docs/guides/check-app.html#raw-identity-header"><code>raw-identity-header</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does code read identity headers itself?</span></li>
           <li class="pq" style="--i:27"><a class="pq__id" href="docs/guides/check-app.html#app-key"><code>app-key</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is the APP_KEY given away?</span></li>
-          <li class="pq" style="--i:28"><a class="pq__id" href="docs/guides/check-app.html#app-debug"><code>app-debug</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a production file turn APP_DEBUG on?</span> <span class="tag tag--new">New</span></li>
-          <li class="pq" style="--i:29"><a class="pq__id" href="docs/guides/check-app.html#display-errors"><code>display-errors</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a php.ini show errors to visitors?</span> <span class="tag tag--new">New</span></li>
-          <li class="pq" style="--i:30"><a class="pq__id" href="docs/guides/check-app.html#directory-listing"><code>directory-listing</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does the server list a folder's files?</span> <span class="tag tag--new">New</span></li>
-          <li class="pq" style="--i:31"><a class="pq__id" href="docs/guides/check-app.html#csp-unsafe-inline"><code>csp-unsafe-inline</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does the CSP let inline scripts run?</span> <span class="tag tag--new">New</span></li>
-          <li class="pq" style="--i:32"><a class="pq__id" href="docs/guides/check-app.html#robots-txt"><code>robots-txt</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does <code>robots.txt</code> say who may crawl?</span> <span class="tag tag--new">New</span></li>
-          <li class="pq" style="--i:33"><a class="pq__id" href="docs/guides/check-app.html#vite-secrets"><code>vite-secrets</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a <code>VITE_</code> name carry a secret?</span> <span class="tag tag--new">New</span></li>
+          <li class="pq" style="--i:28"><a class="pq__id" href="docs/guides/check-app.html#app-debug"><code>app-debug</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a production file turn APP_DEBUG on?</span></li>
+          <li class="pq" style="--i:29"><a class="pq__id" href="docs/guides/check-app.html#display-errors"><code>display-errors</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a php.ini show errors to visitors?</span></li>
+          <li class="pq" style="--i:30"><a class="pq__id" href="docs/guides/check-app.html#directory-listing"><code>directory-listing</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does the server list a folder's files?</span></li>
+          <li class="pq" style="--i:31"><a class="pq__id" href="docs/guides/check-app.html#csp-unsafe-inline"><code>csp-unsafe-inline</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does the CSP let inline scripts run?</span></li>
+          <li class="pq" style="--i:32"><a class="pq__id" href="docs/guides/check-app.html#robots-txt"><code>robots-txt</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does <code>robots.txt</code> say who may crawl?</span></li>
+          <li class="pq" style="--i:33"><a class="pq__id" href="docs/guides/check-app.html#vite-secrets"><code>vite-secrets</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a <code>VITE_</code> name carry a secret?</span></li>
           <li class="pq" style="--i:34"><a class="pq__id" href="docs/guides/check-app.html#served-folder"><code>served-folder</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Can a stranger download a dump from <code>public/</code>?</span></li>
           <li class="pq" style="--i:35"><a class="pq__id" href="docs/guides/check-app.html#world-writable"><code>world-writable</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does anything <code>chmod 777</code>?</span></li>
           <li class="pq" style="--i:36"><a class="pq__id" href="docs/guides/check-wayneui.html#wayneui-forked-views"><code>wayneui-forked-views</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Are forked WayneUI views committed?</span></li>
@@ -510,7 +510,7 @@ RESULT: pass</code></pre>
 
         <div class="carbon carbon--white" role="tabpanel" id="pane-text" aria-labelledby="tab-text" tabindex="0">
           <p class="carbon__copy">White copy · for people · <code>--format=text</code> (the default)</p>
-<pre class="carbon__pre"><code>proctor 0.10.0 | composer: 2.10.3
+<pre class="carbon__pre"><code>proctor 0.11.0 | composer: 2.10.3
 Policy: bundled (/app/src/Creed/policy.json), refreshed 2026-11-08, 1 days ago
 PASS php-floor: php floor 8.4 is active
 FAIL unbounded-constraints: vendor/dev constraint "dev-master" is unbounded
@@ -518,7 +518,7 @@ FAIL unbounded-constraints: vendor/any constraint "*" is unbounded
 PASS dev-only-packages: no development tool is in require
 INFO composer-config: require.php is set but config.platform.php is not, so the lock resolves against the local PHP
 PASS lock-committed: composer.lock is present
-… eight more PASS lines, portability to preflight-pinned
+… nine more PASS lines, portability to preflight-pinned
 WARN preflight-gates: preflight-gates-no-include: .gitlab-ci.yml includes no Preflight component, so none of the stack's gates run; …
 WARN preflight-gates: preflight-gates-no-proctor-job: no job in .gitlab-ci.yml runs PROCTOR; …
 FAIL composer-audit: not audited: composer audit could not run: No installed packages found. …
@@ -531,7 +531,7 @@ RESULT: fail (3 failures, 2 warnings)</code></pre>
           <p class="carbon__copy">Canary copy · for scripts · <code>--format=json</code></p>
 <pre class="carbon__pre"><code>{
     "tool": "proctor",
-    "version": "0.10.0",
+    "version": "0.11.0",
     "path": "tests/fixtures/apps/unbounded-app",
     "today": "2026-11-09",
     "result": "fail",
@@ -562,7 +562,7 @@ RESULT: fail (3 failures, 2 warnings)</code></pre>
             "path": "composer.json",
             "line": 4
         },
-        … twenty-five more findings
+        … twenty-six more findings
     ],
     "overrides": []
 }</code></pre>
@@ -595,7 +595,7 @@ RESULT: fail (3 failures, 2 warnings)</code></pre>
     "version": "2.1.0",
     "runs": [
         {
-            "tool": { "driver": { "name": "proctor", "version": "0.10.0", … } },
+            "tool": { "driver": { "name": "proctor", "version": "0.11.0", … } },
             "results": [
                 {
                     "ruleId": "proctor/unbounded-constraints/unbounded",

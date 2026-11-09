@@ -7,6 +7,47 @@ description: How to upgrade PROCTOR to a newer release and note the changes that
 
 PROCTOR is the invigilator, so upgrading it is a seat change, not a new exam: same hall, fresher pen. This page tells you how to move an app from one PROCTOR release to the next and which changes affect your runs. Start with the release that has a break, then work down to the additive ones.
 
+## 0.11.0
+
+Released 2026-11-09. This is a pre-1.0 minor: consumers that pin `^0.10` stay on 0.10.x until they move their constraint to `^0.11`. Nothing breaks: the one new check only warns and is not in the deploy gate, and the new `--record` option changes nothing until you pass it, so a run that passed on 0.10.0 still passes and a deploy that went ahead still goes ahead. Expect a new warning when `.gitattributes` does not pin your server files to LF.
+
+### Breaking
+
+- None. The new check's findings are warnings, and a warning never changes the exit code.
+
+### Added
+
+The new check only warns, never fails, and is not in the deploy gate:
+
+| Check | Rule ids | What it warns on |
+| --- | --- | --- |
+| `gitattributes-eol` | `proctor/gitattributes-eol`, `proctor/gitattributes-eol/not-pinned`, `proctor/gitattributes-eol/crlf` | `.gitattributes` does not pin the app's shell scripts, `*.conf` files and Dockerfiles to `eol=lf`, or a Dockerfile or `.conf` under `deploy/` or `.squire/` has Windows line endings |
+
+`proctor check --record=<file>` also writes the JSON report (byte for byte what `--format=json` prints) to a file, whatever `--format` prints, so one CI run can feed both the merge request's Code Quality and Rollcall, which reads `proctor.json` from the `proctor` job's artifacts (see [CI checks](guides/check-ci.md)). The exit code is the check's own; a record PROCTOR cannot write is a tool error (exit 2). `proctor gate --record` shares the same writer.
+
+### Changed
+
+- None that changes a run.
+
+### Deprecated
+
+- None recorded so far.
+
+### Steps
+
+1. Move the PROCTOR constraint in your composer.json from `^0.10` to `^0.11`, then apply it with `composer require waynestate/proctor --dev`.
+2. Re-run the check and read any `gitattributes-eol` warning; it names the lines to add to `.gitattributes`, then run `git add --renormalize .` and commit (see [App checks](guides/check-app.md#gitattributes-eol)):
+
+   ```bash
+   vendor/bin/proctor check
+   ```
+
+3. Optional: when Rollcall should read your app, add `--record="$CI_PROJECT_DIR/proctor.json"` to the `proctor` job and keep the file as an artifact under `when: always`.
+
+### How to verify
+
+- Run `vendor/bin/proctor check --format=json` and confirm the `version` field reads `0.11.0`.
+
 ## 0.10.0
 
 Released 2026-11-09. This is a pre-1.0 minor: consumers that pin `^0.9` stay on 0.9.x until they move their constraint to `^0.10`. Everything new only warns: nine new checks and two new rules on existing checks, none of them in the deploy gate, so a run that passed on 0.9.0 still passes and a deploy that went ahead still goes ahead. Expect new warnings in the report.

@@ -855,7 +855,7 @@ Sources: [SLSA v1.0 build levels](https://slsa.dev/spec/v1.0/levels) (page marke
 [OpenSSF Scorecard: Signed-Releases](https://github.com/ossf/scorecard/blob/main/docs/checks.md);
 [CISA and NSA: Defending CI/CD environments](https://cisa.gov/news-events/alerts/2023/06/28/cisa-and-nsa-release-joint-guidance-defending-continuous-integrationcontinuous-delivery-cicd).
 
-**How the stack holds it: Partially.** Releases are tagged (0.1.0 through 0.10.0), and since 0.2.4 the reports read the
+**How the stack holds it: Partially.** Releases are tagged (0.1.0 through 0.11.0), and since 0.2.4 the reports read the
 installed `waynestate/proctor` version from Composer, with the in-code constant as the fallback. What remains: no
 release carries a signature or provenance that says where it was built.
 
@@ -908,7 +908,7 @@ A practice that is now `Checked` or `Enforced` leaves the list; CHANGELOG.md rec
 3. 2.6: Partly done: PROCTOR's own pipeline runs the Preflight `proctor` component on `deploy/`, with `allow_failure` while findings remain; raise PROCTOR's floor from `^8.3` to `^8.4` before PHP 8.3 reaches end of life on 2027-12-31 (see 2.6).
 4. 5.7: Partly done: the `override-approver` check flags an approver who wrote the entry (git blame; rule ids `proctor/override-approver/self-approved`, `proctor/override-approver/could-not-run`), warn or fail per CREED `rules.override_self_approval`; that the approver really approved still rests on the merge request, since GitLab Community Edition has no Code Owner approval (see 5.7).
 5. 4.7: Documented: Preflight's README carries the weekly "Run it on a schedule" steps, but nothing fails when an app has no schedule (see 4.7).
-6. 8.5: Partly done: releases are tagged (0.1.0 through 0.10.0); sign them and publish provenance that says where each was built (see 8.5).
+6. 8.5: Partly done: releases are tagged (0.1.0 through 0.11.0); sign them and publish provenance that says where each was built (see 8.5).
 7. 7.2: Partly done: `proctor gate` (0.7.0) runs only the deploy-time checks with no app boot and a 60-second audit timeout; `composer-audit` still needs the network, so an offline gate only warns that advisory data is missing (see 7.2).
 8. 2.5: Partly done: `proctor gate --php-runtime` grades the PHP that will serve the app, but Squire's release script does not pass it (`gate_args` in `scripts/release.sh`), so the deploy path never sets it (see 2.5).
 
