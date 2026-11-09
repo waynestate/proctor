@@ -513,8 +513,8 @@ The claim that most compromises are found within days is mine and is not backed 
 (read 2026-11-09): Squire's kit pins `composer:2.11.1` by digest in its base fallback image since 0.10.1, and so do
 the deploy layers already regenerated from it (HELMET, SESAME); Squire's own CI jobs use `composer:2.11.1`;
 Preflight's main branch moves the `php-test` and `proctor` default `composer_version` to 2.11.1, while its 0.4.0
-release still installs 2.10.3; and PROCTOR's own CI jobs and deploy layer (Squire 0.10.0), like most stack repos',
-still use `composer:2.10.3`. Decision (Adam, 2026-11-03): when 2.11 is in the base images, Sourdough apps set a 3-day
+release still installs 2.10.3; and PROCTOR's own CI jobs, phar build scripts and deploy layer (Squire 0.10.2) pin
+`composer:2.11.1` by digest. Decision (Adam, 2026-11-03): when 2.11 is in the base images, Sourdough apps set a 3-day
 cooldown and PROCTOR warns when an app has none. Nothing is built before then: no policy rule, no check, no Sourdough
 default.
 

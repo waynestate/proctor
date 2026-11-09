@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Changed: PROCTOR's own CI jobs (`wayneui-copies`, `composer-ci`, `creed-copy-refresh`, `release-phar`), the phar build scripts and the documented Docker commands use `composer:2.11.1` pinned by its multi-arch list digest (was `composer:2.10.3`); 2.11.1 fixes GHSA-c968-33g3-wh7p and GHSA-fm2w-xgf2-f9fh.
+- Changed: the deploy kit is Squire 0.10.2 (was 0.10.0): the fallback base image names every image in full and copies Composer 2.11.1 (by digest) from a `COMPOSER_IMAGE` build argument, `php.ini` sets `session.cookie_samesite = Lax`, and the portable image drops `node_modules/` after the build unless `SQUIRE_KEEP_NODE_MODULES=1`. BEST_PRACTICES 4.11 records that PROCTOR's CI, phar scripts and deploy layer are on 2.11.1.
 
 ## 0.11.1 (2026-11-09)
 
