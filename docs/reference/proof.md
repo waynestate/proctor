@@ -11,7 +11,7 @@ This page points at PROCTOR's proof runs against real Wayne State applications, 
 
 | Check | Date | Commit | Result | Duration |
 | --- | --- | --- | --- | --- |
-| `composer ci` in Docker (composer:2.10.3) | 2026-11-07 | 4201f99 | pass: 334 tests, 4682 assertions; lint 93 files; static analysis clean; agent-ready 25 files; docs 20 pages; 0 advisories | 8 min 12 s |
+| `php bin/docs-site.php && php bin/agent-ready.php && composer ci` in Docker (composer:2.11.1, by digest) | 2026-11-09 | 3bcea3d | pass: 697 tests, 9658 assertions, 1 skipped (the CREED handbook test, no CREED checkout in reach); lint 150 files; static analysis clean; agent-ready 27 files; docs 22 pages; 0 advisories | 23 s |
 
 To refresh this table, rerun the checks described on this page on the current commit and replace the rows with the new output. Not run here: the proof runs against real Wayne State applications, which live on a private site behind an employee sign-in.
 
