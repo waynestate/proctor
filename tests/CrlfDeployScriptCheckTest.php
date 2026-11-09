@@ -40,6 +40,7 @@ final class CrlfDeployScriptCheckTest extends TestCase
     {
         $appPath = $this->makeApp();
         $this->writeFile($appPath, 'build.sh', "#!/bin/sh\r\nset -e\r\n");
+        $this->writeFile($appPath, '.gitattributes', "*.sh text eol=lf\n");
 
         $findings = (new CrlfDeployScriptCheck())->run($this->contextFor($appPath));
 
@@ -57,6 +58,7 @@ final class CrlfDeployScriptCheckTest extends TestCase
     {
         $appPath = $this->makeApp();
         $this->writeFile($appPath, 'deployments/001-first.sh', "#!/bin/sh\nset -e\nrsync -a ./ /var/www/app/\r\n");
+        $this->writeFile($appPath, '.gitattributes', "*.sh text eol=lf\n");
 
         $findings = (new CrlfDeployScriptCheck())->run($this->contextFor($appPath));
 
@@ -75,6 +77,7 @@ final class CrlfDeployScriptCheckTest extends TestCase
         $appPath = $this->makeApp();
         $this->writeFile($appPath, 'scripts/release.sh', "#!/bin/sh\nset -e\n");
         $this->writeFile($appPath, 'README.md', "# App\r\nA readme with CRLF.\r\n");
+        $this->writeFile($appPath, '.gitattributes', "*.sh text eol=lf\n");
 
         $findings = (new CrlfDeployScriptCheck())->run($this->contextFor($appPath));
 
@@ -101,6 +104,7 @@ final class CrlfDeployScriptCheckTest extends TestCase
         $appPath = $this->makeApp();
         $this->writeFile($appPath, 'build.sh', "#!/bin/sh\r\nset -e\r\n");
         $this->writeFile($appPath, 'release.sh', "#!/bin/sh\r\necho done\r\n");
+        $this->writeFile($appPath, '.gitattributes', "*.sh text eol=lf\n");
 
         $findings = (new CrlfDeployScriptCheck())->run($this->contextFor($appPath));
 
@@ -111,6 +115,98 @@ final class CrlfDeployScriptCheckTest extends TestCase
         self::assertSame(Finding::STATUS_FAIL, $findings[1]->status);
         self::assertSame('release.sh', $findings[1]->path);
         self::assertSame(1, $findings[1]->line);
+    }
+
+    public function testCleanDeployScriptWithoutGitattributesWarns(): void
+    {
+        $appPath = $this->makeApp();
+        $this->writeFile($appPath, 'deploy/build.sh', "#!/bin/sh\nset -e\n");
+
+        $findings = (new CrlfDeployScriptCheck())->run($this->contextFor($appPath));
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertSame('proctor/crlf-deploy-script/no-gitattributes', $findings[0]->ruleId);
+        self::assertSame(
+            '.gitattributes does not pin deploy scripts to LF; add "*.sh text eol=lf" so a Windows checkout cannot bring CRLF back',
+            $findings[0]->message,
+        );
+        self::assertSame('.gitattributes', $findings[0]->path);
+    }
+
+    public function testGitattributesPinningShFilesPasses(): void
+    {
+        $appPath = $this->makeApp();
+        $this->writeFile($appPath, 'deploy/build.sh', "#!/bin/sh\nset -e\n");
+        $this->writeFile($appPath, '.gitattributes', "*.sh text eol=lf\n");
+
+        $findings = (new CrlfDeployScriptCheck())->run($this->contextFor($appPath));
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+        self::assertSame('No deploy script has Windows line endings.', $findings[0]->message);
+    }
+
+    public function testGitattributesPinningEveryFilePasses(): void
+    {
+        $appPath = $this->makeApp();
+        $this->writeFile($appPath, 'deploy/build.sh', "#!/bin/sh\nset -e\n");
+        $this->writeFile($appPath, '.gitattributes', "* text=auto eol=lf\n");
+
+        $findings = (new CrlfDeployScriptCheck())->run($this->contextFor($appPath));
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+        self::assertSame('No deploy script has Windows line endings.', $findings[0]->message);
+    }
+
+    public function testCommentedOutGitattributesLineWarns(): void
+    {
+        $appPath = $this->makeApp();
+        $this->writeFile($appPath, 'deploy/build.sh', "#!/bin/sh\nset -e\n");
+        $this->writeFile($appPath, '.gitattributes', "# *.sh text eol=lf\n");
+
+        $findings = (new CrlfDeployScriptCheck())->run($this->contextFor($appPath));
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertSame('proctor/crlf-deploy-script/no-gitattributes', $findings[0]->ruleId);
+        self::assertSame(
+            '.gitattributes does not pin deploy scripts to LF; add "*.sh text eol=lf" so a Windows checkout cannot bring CRLF back',
+            $findings[0]->message,
+        );
+        self::assertSame('.gitattributes', $findings[0]->path);
+    }
+
+    public function testNoDeployScriptAndNoGitattributesPasses(): void
+    {
+        $appPath = $this->makeApp();
+
+        $findings = (new CrlfDeployScriptCheck())->run($this->contextFor($appPath));
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+        self::assertSame('No deploy script has Windows line endings.', $findings[0]->message);
+    }
+
+    public function testCrlfBuildScriptWithoutGitattributesFailsThenWarns(): void
+    {
+        $appPath = $this->makeApp();
+        $this->writeFile($appPath, 'build.sh', "#!/bin/sh\r\nset -e\r\n");
+
+        $findings = (new CrlfDeployScriptCheck())->run($this->contextFor($appPath));
+
+        self::assertCount(2, $findings);
+        self::assertSame(Finding::STATUS_FAIL, $findings[0]->status);
+        self::assertSame('build.sh', $findings[0]->path);
+        self::assertSame(1, $findings[0]->line);
+        self::assertSame(Finding::STATUS_WARNING, $findings[1]->status);
+        self::assertSame('proctor/crlf-deploy-script/no-gitattributes', $findings[1]->ruleId);
+        self::assertSame(
+            '.gitattributes does not pin deploy scripts to LF; add "*.sh text eol=lf" so a Windows checkout cannot bring CRLF back',
+            $findings[1]->message,
+        );
+        self::assertSame('.gitattributes', $findings[1]->path);
     }
 
     /**

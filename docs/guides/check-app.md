@@ -170,11 +170,14 @@ No finding when the app has no `public/` folder. Fix by deleting the file, or mo
 
 Scanned: the top-level `build.sh` and `release.sh`, and every `.sh` file under a `deployments/`, `deploy_scripts/`, `deploy/` or `scripts/` directory at any depth. Skipped at any depth: `vendor/`, `node_modules/` and `.git/`. One finding per file, on the line of its first carriage return.
 
+Warns (`proctor/crlf-deploy-script/no-gitattributes`) when the app has a deploy script and `.gitattributes` has no `*.sh`, `**/*.sh` or `*` line with `eol=lf`.
+
 Fix by converting the file to LF (`sed -i 's/\r$//' build.sh`, or the editor's line-ending setting) and adding `*.sh text eol=lf` to .gitattributes, so Git keeps it LF on every machine.
 
 | Check | Rule id |
 | --- | --- |
 | `crlf-deploy-script` | `proctor/crlf-deploy-script` |
+| `crlf-deploy-script` | `proctor/crlf-deploy-script/no-gitattributes` |
 
 ## case-clash
 

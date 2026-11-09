@@ -22,6 +22,10 @@ use SplFileInfo;
  * Skipped at any depth: vendor/, node_modules/ and .git/. One finding per
  * file, on the line of its first carriage return.
  *
+ * When the app has a deploy script and .gitattributes has no `*.sh`,
+ * `**\/*.sh` or `*` line with `eol=lf`, it warns
+ * (proctor/crlf-deploy-script/no-gitattributes).
+ *
  * The proctor reads the answer sheet in Unix.
  */
 final class CrlfDeployScriptCheck implements CheckInterface
@@ -42,8 +46,13 @@ final class CrlfDeployScriptCheck implements CheckInterface
 
     public function run(CheckContext $context): array
     {
+        $files = $this->filesToScan($context->appPath);
+        if ($files === []) {
+            return [new Finding($this->id(), Finding::STATUS_PASS, 'No deploy script has Windows line endings.')];
+        }
+
         $findings = [];
-        foreach ($this->filesToScan($context->appPath) as $relativePath) {
+        foreach ($files as $relativePath) {
             $raw = file_get_contents($context->appPath . '/' . $relativePath);
             if ($raw === false) {
                 continue;
@@ -54,8 +63,10 @@ final class CrlfDeployScriptCheck implements CheckInterface
             }
         }
 
-        if ($findings === []) {
-            return [new Finding($this->id(), Finding::STATUS_PASS, 'No deploy script has Windows line endings.')];
+        if (!$this->gitattributesPinsLf($context->appPath)) {
+            $findings[] = $this->noGitattributes();
+        } elseif ($findings === []) {
+            $findings[] = new Finding($this->id(), Finding::STATUS_PASS, 'No deploy script has Windows line endings.');
         }
 
         return $findings;
@@ -100,6 +111,39 @@ final class CrlfDeployScriptCheck implements CheckInterface
     }
 
     /**
+     * Whether the app root's .gitattributes pins shell scripts to LF: some
+     * line, ignoring blank lines and comment lines, whose first field is
+     * *.sh, **\/*.sh or * and which also carries eol=lf. A missing file, a
+     * commented-out line or eol=crlf does not count.
+     */
+    private function gitattributesPinsLf(string $appPath): bool
+    {
+        $file = rtrim($appPath, '/\\') . '/.gitattributes';
+        if (!is_file($file)) {
+            return false;
+        }
+        $contents = file_get_contents($file);
+        if ($contents === false) {
+            return false;
+        }
+        foreach (explode("\n", $contents) as $line) {
+            $line = trim($line);
+            if ('' === $line || str_starts_with($line, '#')) {
+                continue;
+            }
+            $fields = preg_split('/\s+/', $line) ?: [];
+            if ([] === $fields || !in_array($fields[0], ['*.sh', '**/*.sh', '*'], true)) {
+                continue;
+            }
+            if (in_array('eol=lf', $fields, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * The 1-based line of the first carriage return in the raw bytes, or
      * null when the file has none.
      */
@@ -125,6 +169,23 @@ final class CrlfDeployScriptCheck implements CheckInterface
             sprintf('%s has Windows line endings (CRLF); bash on Linux reads the carriage return as part of each command. Convert it to LF and add "*.sh text eol=lf" to .gitattributes.', $relativePath),
             $relativePath,
             $line,
+        );
+    }
+
+    /**
+     * A warning finding when .gitattributes does not pin the deploy scripts'
+     * line endings to LF, so a Windows checkout can bring CRLF back.
+     */
+    private function noGitattributes(): Finding
+    {
+        return new Finding(
+            $this->id(),
+            Finding::STATUS_WARNING,
+            '.gitattributes does not pin deploy scripts to LF; add "*.sh text eol=lf" so a Windows checkout cannot bring CRLF back',
+            '.gitattributes',
+            1,
+            null,
+            'no-gitattributes',
         );
     }
 }
