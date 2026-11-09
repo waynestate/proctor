@@ -55,7 +55,7 @@ final class CreedCopyJobTest extends TestCase
         $clone = self::firstCommand('/^if ! git clone -q /');
         $export = self::firstCommand('/^php "\$TMP\/creed\/bin\/export\.php" --namespace="Waynestate\\\\Proctor\\\\Creed" --to=src\/Creed$/');
         $check = self::firstCommand('/^CREED_PATH="\$TMP\/creed" composer creed-copy:check$/');
-        $ci = self::firstCommand('/^composer ci$/');
+        $ci = self::firstCommand('/^CREED_PATH="\$TMP\/creed" composer ci$/');
         $commit = self::firstCommand('/^git .*\bcommit\b/');
         $push = self::firstCommand('/git push\b/');
 

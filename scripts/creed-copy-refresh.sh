@@ -70,7 +70,8 @@ php bin/agent-ready.php
 
 # 6. Prove it. set -eu stops the script on the first red, before any commit or push.
 CREED_PATH="$TMP/creed" composer creed-copy:check
-composer ci
+# The handbook id test reads CREED through CREED_PATH, so it needs the clone.
+CREED_PATH="$TMP/creed" composer ci
 
 # 7. Commit exactly what this job wrote, by name, never git add -A.
 git add -- src/Creed site/index.md site/llms.txt site/llms-full.txt site/robots.txt site/sitemap.xml site/docs docs/reference/commands.md docs/reference/configuration.md

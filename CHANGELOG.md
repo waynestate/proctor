@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Changed: the weekly creed-copy-refresh job runs composer ci with the CREED clone it already made, so the handbook check-id test runs every week instead of skipping.
 - Fixed: the portability check's message says "analyze" (US spelling, as the rest of the stack writes).
 - Added: a test reads CREED's handbook (from `CREED_PATH`, the sibling `../creed` checkout or `vendor/waynestate/creed`) and fails when a "PROCTOR check: `<id>`" tag or a "PROCTOR's `<id>` check" line names an id PROCTOR does not register, the way the dependencies chapter once named `package-sources` and `internal-vendor-shadowing`; it skips with a message when no CREED checkout is in reach.
 - Added: the `vite-secrets` check warns when a committed env file declares a secret-looking `VITE_` variable such as `VITE_API_KEY` or `VITE_STRIPE_SECRET` (`proctor/vite-secrets/env-file`), or front-end code under `resources/js/` or `src/` reads one through `import.meta.env` (`proctor/vite-secrets/source`), because Vite ships every `VITE_` variable to the browser; only names are read, never values, and it is not in the deploy gate. The README and the checks overview count thirty-six checks.
