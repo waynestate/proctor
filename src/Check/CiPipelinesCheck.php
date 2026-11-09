@@ -6,6 +6,7 @@ namespace Waynestate\Proctor\Check;
 
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
+use Waynestate\Proctor\Policy\CiGuard;
 
 /**
  * Checks the project's CI contract. For stack packages (a composer.json
@@ -25,7 +26,7 @@ use Symfony\Component\Yaml\Yaml;
  * pipeline that sets COMPOSER_NO_AUDIT or COMPOSER_NO_BLOCKING in its
  * environment, or COMPOSER_AUDIT_ABANDONED to ignore, warns
  * (proctor/ci-pipelines/composer-audit-off), whatever the project kind.
- * A pipeline that sets PROCTOR_ALLOW_OVERRIDES to 1 in its environment
+ * A pipeline that sets CiGuard::ALLOW_OVERRIDES to 1 in its environment
  * warns too (proctor/ci-pipelines/allow-overrides): the variable lets
  * the app pass --policy and --today in CI (BEST_PRACTICES 1.2), so it
  * could grade itself against a policy or a date it picks; any other
@@ -460,7 +461,7 @@ final class CiPipelinesCheck implements CheckInterface
     }
 
     /**
-     * The warning for a pipeline that sets PROCTOR_ALLOW_OVERRIDES to 1,
+     * The warning for a pipeline that sets CiGuard::ALLOW_OVERRIDES to 1,
      * which lets the app pass --policy and --today in CI (BEST_PRACTICES
      * 1.2) and grade itself against a policy or a date it picks. One
      * warning per file, whatever the project kind: a warning, never a
@@ -475,15 +476,18 @@ final class CiPipelinesCheck implements CheckInterface
      */
     private function allowOverridesFinding(array $data, string $absolutePath, string $relativePath, bool $gitlab): ?Finding
     {
-        $values = $this->pipelineEnvSettings($data, $gitlab)['PROCTOR_ALLOW_OVERRIDES'] ?? [];
+        $values = $this->pipelineEnvSettings($data, $gitlab)[CiGuard::ALLOW_OVERRIDES] ?? [];
         foreach ($values as $value) {
             if ($value === '1' || $value === 1) {
                 return new Finding(
                     $this->id(),
                     Finding::STATUS_WARNING,
-                    'ci-pipelines-allow-overrides: PROCTOR_ALLOW_OVERRIDES is 1 in the pipeline, so PROCTOR accepts --policy and --today and the app can grade itself against a policy or date it picks; remove it (only PROCTOR\'s own pipeline needs it)',
+                    sprintf(
+                        'ci-pipelines-allow-overrides: %s is 1 in the pipeline, so PROCTOR accepts --policy and --today and the app can grade itself against a policy or date it picks; remove it (only PROCTOR\'s own pipeline needs it)',
+                        CiGuard::ALLOW_OVERRIDES,
+                    ),
                     $relativePath,
-                    $this->lineOf('PROCTOR_ALLOW_OVERRIDES', $absolutePath),
+                    $this->lineOf(CiGuard::ALLOW_OVERRIDES, $absolutePath),
                     null,
                     'allow-overrides',
                 );

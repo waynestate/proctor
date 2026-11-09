@@ -21,7 +21,7 @@ final class CiGuard
     private const CI_VARS = ['CI', 'GITLAB_CI', 'GITHUB_ACTIONS'];
 
     /** The variable a trusted job sets to exactly 1 to allow the options. */
-    private const ALLOW_OVERRIDES = 'PROCTOR_ALLOW_OVERRIDES';
+    public const ALLOW_OVERRIDES = 'PROCTOR_ALLOW_OVERRIDES';
 
     /**
      * The refusal message when the run must be refused, or null when it is
