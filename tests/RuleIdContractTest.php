@@ -56,6 +56,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/raw-identity-header',
         'proctor/app-key',
         'proctor/app-debug',
+        'proctor/display-errors',
         'proctor/vite-secrets',
         'proctor/served-folder',
         'proctor/world-writable',
@@ -72,6 +73,9 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/app-key/cookie-sessions',
         // app-debug
         'proctor/app-debug/enabled',
+        // display-errors
+        'proctor/display-errors/on',
+        'proctor/display-errors/log-off',
         // vite-secrets
         'proctor/vite-secrets/env-file',
         'proctor/vite-secrets/source',

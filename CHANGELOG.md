@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added: `display-errors` warns when a committed php.ini, .user.ini or .htaccess turns display_errors on or log_errors off (CREED runtime-and-headers).
 - Changed: the weekly creed-copy-refresh job runs composer ci with the CREED clone it already made, so the handbook check-id test runs every week instead of skipping.
 - Fixed: the portability check's message says "analyze" (US spelling, as the rest of the stack writes).
 - Added: a test reads CREED's handbook (from `CREED_PATH`, the sibling `../creed` checkout or `vendor/waynestate/creed`) and fails when a "PROCTOR check: `<id>`" tag or a "PROCTOR's `<id>` check" line names an id PROCTOR does not register, the way the dependencies chapter once named `package-sources` and `internal-vendor-shadowing`; it skips with a message when no CREED checkout is in reach.
