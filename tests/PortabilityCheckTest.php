@@ -285,7 +285,7 @@ final class PortabilityCheckTest extends TestCase
         self::assertCount(2, $findings);
         self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
         self::assertSame(Finding::STATUS_INFO, $findings[1]->status);
-        self::assertStringStartsWith('dynamic-call: cannot analyse 1 call(s)', $findings[1]->message);
+        self::assertStringStartsWith('dynamic-call: cannot analyze 1 call(s)', $findings[1]->message);
         self::assertSame(3, $findings[1]->line);
     }
 

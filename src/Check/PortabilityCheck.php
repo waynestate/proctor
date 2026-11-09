@@ -92,7 +92,7 @@ final class PortabilityCheck implements CheckInterface
             }
         }
 
-        // Info findings ("cannot analyse") are notes, not problems: a file full
+        // Info findings ("cannot analyze") are notes, not problems: a file full
         // of closures still earns its pass.
         $problems = array_filter(
             $findings,
@@ -287,7 +287,7 @@ final class PortabilityCheck implements CheckInterface
                 $this->id(),
                 Finding::STATUS_INFO,
                 sprintf(
-                    'dynamic-call: cannot analyse %d call(s) through a variable, like $f(); a banned pattern behind one is not seen',
+                    'dynamic-call: cannot analyze %d call(s) through a variable, like $f(); a banned pattern behind one is not seen',
                     count($dynamicLines),
                 ),
                 $relativePath,
