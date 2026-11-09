@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "89acb1ff7753d2db690b3d3781099c0a",
+    "content-hash": "cf9be02b3a2b25e06f19af5c75e2fc27",
     "packages": [
         {
             "name": "composer/semver",
@@ -3333,7 +3333,8 @@
                 "issues": "https://github.com/nette/neon/issues",
                 "source": "https://github.com/nette/neon/tree/v3.4.10"
             },
-            "time": "2026-10-25T22:35:03+00:00"
+            "time": "2026-10-25T22:35:03+00:00",
+            "published-time": "2026-10-25T23:02:33+00:00"
         },
         {
             "name": "nette/schema",
@@ -4158,7 +4159,8 @@
                 "issues": "https://github.com/phpstan/extension-installer/issues",
                 "source": "https://github.com/phpstan/extension-installer/tree/1.4.3"
             },
-            "time": "2024-09-04T20:21:43+00:00"
+            "time": "2024-09-04T20:21:43+00:00",
+            "published-time": "2024-09-04T20:22:27+00:00"
         },
         {
             "name": "phpstan/phpdoc-parser",
@@ -4320,20 +4322,21 @@
                 "issues": "https://github.com/phpstan/phpstan-deprecation-rules/issues",
                 "source": "https://github.com/phpstan/phpstan-deprecation-rules/tree/2.0.5"
             },
-            "time": "2026-07-22T06:50:43+00:00"
+            "time": "2026-07-22T06:50:43+00:00",
+            "published-time": "2026-07-27T15:18:00+00:00"
         },
         {
             "name": "phpstan/phpstan-strict-rules",
-            "version": "2.1.0",
+            "version": "2.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan-strict-rules.git",
-                "reference": "24ec51589f896f048d0d36de373d993b5cf71786"
+                "reference": "fe4a0afae773eedf178fab17ed9361c0061d2804"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan-strict-rules/zipball/24ec51589f896f048d0d36de373d993b5cf71786",
-                "reference": "24ec51589f896f048d0d36de373d993b5cf71786",
+                "url": "https://api.github.com/repos/phpstan/phpstan-strict-rules/zipball/fe4a0afae773eedf178fab17ed9361c0061d2804",
+                "reference": "fe4a0afae773eedf178fab17ed9361c0061d2804",
                 "shasum": ""
             },
             "require": {
@@ -4370,9 +4373,10 @@
             ],
             "support": {
                 "issues": "https://github.com/phpstan/phpstan-strict-rules/issues",
-                "source": "https://github.com/phpstan/phpstan-strict-rules/tree/2.1.0"
+                "source": "https://github.com/phpstan/phpstan-strict-rules/tree/2.1.1"
             },
-            "time": "2026-10-01T21:30:37+00:00"
+            "time": "2026-11-02T08:16:15+00:00",
+            "published-time": "2026-11-02T10:55:07+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -7423,16 +7427,16 @@
         },
         {
             "name": "waynestate/pinstripe",
-            "version": "0.1.0",
+            "version": "0.1.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/waynestate/pinstripe.git",
-                "reference": "e6d399c95976be53d6f9aa9c8dca494eadc5685f"
+                "reference": "eb030787b2b9558e31b3e571a341675c34309c7f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/waynestate/pinstripe/zipball/e6d399c95976be53d6f9aa9c8dca494eadc5685f",
-                "reference": "e6d399c95976be53d6f9aa9c8dca494eadc5685f",
+                "url": "https://api.github.com/repos/waynestate/pinstripe/zipball/eb030787b2b9558e31b3e571a341675c34309c7f",
+                "reference": "eb030787b2b9558e31b3e571a341675c34309c7f",
                 "shasum": ""
             },
             "require": {
@@ -7447,6 +7451,7 @@
             "require-dev": {
                 "larastan/larastan": "^3.13",
                 "laravel/framework": "^11 || ^12 || ^13",
+                "league/commonmark": "^2.10",
                 "phpunit/phpunit": "^12",
                 "rector/rector": "^2.8"
             },
@@ -7458,6 +7463,11 @@
                 "bin/pinstripe-baseline"
             ],
             "type": "library",
+            "extra": {
+                "proctor": {
+                    "wayneui.copies": "fail"
+                }
+            },
             "autoload": {
                 "psr-4": {
                     "WayneState\\Pinstripe\\": "src/"
@@ -7470,10 +7480,11 @@
             "description": "The coding standard for the Wayne State app stack: shared Pint and PHPStan presets.",
             "homepage": "https://pinstripe.apps.wayne.edu/",
             "support": {
-                "issues": "https://github.com/waynestate/pinstripe/issues",
-                "source": "https://github.com/waynestate/pinstripe"
+                "issues": "https://nougat.snu.gs/enterprise-apps/pinstripe/-/issues",
+                "source": "https://nougat.snu.gs/enterprise-apps/pinstripe"
             },
-            "time": "2026-10-29T03:28:00+00:00"
+            "time": "2026-11-07T00:59:25+00:00",
+            "published-time": "2026-11-07T01:31:49+00:00"
         },
         {
             "name": "webmozart/assert",
@@ -7546,5 +7557,5 @@
     "platform-overrides": {
         "php": "8.3.0"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.11.0"
 }

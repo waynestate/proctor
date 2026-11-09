@@ -25,7 +25,7 @@
         "phpunit/phpunit": "^11.5",
         "laravel/pint": "^1.32",
         "phpstan/phpstan": "^2.1",
-        "waynestate/pinstripe": "^0.1",
+        "waynestate/pinstripe": "^0.1.4",
         "league/commonmark": "^2.10",
         "waynestate/advisor": "^0.1.6"
     },
