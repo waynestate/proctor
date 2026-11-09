@@ -2,8 +2,8 @@
 
 ## Unreleased
 
-- Added: `gitattributes-eol` warns when `.gitattributes` does not pin the app's shell scripts, `*.conf` files and Dockerfiles (`Dockerfile`, `*.Dockerfile`) to `eol=lf`, read the way Git applies it (one line per kind or a broader `* text=auto eol=lf`; a later `-text`, `binary` or `eol=crlf` undoes it), and when a Dockerfile or `.conf` under `deploy/` or `.squire/` has Windows line endings; the message names the lines to add and `git add --renormalize .` (CREED every-os).
 - Added: `proctor check --record=<file>` also writes the JSON report, byte for byte what `--format=json` prints, to a file (its folder is created) whatever `--format` prints, so one CI run feeds both the merge request's Code Quality and Rollcall's reader, which pulls `proctor.json` from the `proctor` job's artifacts. The exit code is the check's own; a record it cannot write is a tool error (exit 2), and a tool error is recorded as the JSON error report. `proctor gate --record` shares the same writer.
+- Added: `gitattributes-eol` warns when `.gitattributes` does not pin the app's shell scripts, `*.conf` files and Dockerfiles (`Dockerfile`, `*.Dockerfile`) to `eol=lf`, read the way Git applies it (one line per kind or a broader `* text=auto eol=lf`; a later `-text`, `binary` or `eol=crlf` undoes it), and when a Dockerfile or `.conf` under `deploy/` or `.squire/` has Windows line endings; the message names the lines to add and `git add --renormalize .` (CREED every-os).
 - Docs: the ADVISOR guide lists `vite-secrets` among the checks `proctor_check` skips because they read env files, next to `app-key` (ADVISOR already skipped it).
 - Changed: the deploy kit is Squire 0.10.0 (was 0.7.1): release.sh keeps Composer and npm download caches in the app folder and the gate takes SQUIRE_PHP_RUNTIME; the compose file, health.php and .env.squire.example follow the template, and the portable image files are added.
 
