@@ -181,7 +181,7 @@
       <header class="sec-head">
         <p class="sec-head__part">Part A</p>
         <h2 id="questions-title">The questions</h2>
-        <p>Nine of PROCTOR's thirty-eight checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures. <a href="#paper-title">The whole paper</a> is further down.</p>
+        <p>Nine of PROCTOR's thirty-nine checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures. <a href="#paper-title">The whole paper</a> is further down.</p>
       </header>
 
       <ol class="questions">
@@ -289,7 +289,7 @@
       <div class="paper" data-reveal>
         <header class="paper__head">
           <p class="sec-head__part">The whole paper</p>
-          <h3 class="paper__title" id="paper-title">All thirty-eight questions</h3>
+          <h3 class="paper__title" id="paper-title">All thirty-nine questions</h3>
           <p class="paper__lede">Every check <code>proctor check</code> asks, in the order it asks them. Each id opens its page in the docs.</p>
           <ul class="paper__legend">
             <li><span class="tag tag--gate">Gate</span> also asked by <code>proctor gate</code> before a deploy</li>
@@ -327,16 +327,17 @@
           <li class="pq" style="--i:27"><a class="pq__id" href="docs/guides/check-app.html#app-debug"><code>app-debug</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a production file turn APP_DEBUG on?</span> <span class="tag tag--new">New</span></li>
           <li class="pq" style="--i:28"><a class="pq__id" href="docs/guides/check-app.html#display-errors"><code>display-errors</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a php.ini show errors to visitors?</span> <span class="tag tag--new">New</span></li>
           <li class="pq" style="--i:29"><a class="pq__id" href="docs/guides/check-app.html#directory-listing"><code>directory-listing</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does the server list a folder's files?</span> <span class="tag tag--new">New</span></li>
-          <li class="pq" style="--i:30"><a class="pq__id" href="docs/guides/check-app.html#vite-secrets"><code>vite-secrets</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a <code>VITE_</code> name carry a secret?</span> <span class="tag tag--new">New</span></li>
-          <li class="pq" style="--i:31"><a class="pq__id" href="docs/guides/check-app.html#served-folder"><code>served-folder</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Can a stranger download a dump from <code>public/</code>?</span></li>
-          <li class="pq" style="--i:32"><a class="pq__id" href="docs/guides/check-app.html#world-writable"><code>world-writable</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does anything <code>chmod 777</code>?</span></li>
-          <li class="pq" style="--i:33"><a class="pq__id" href="docs/guides/check-wayneui.html#wayneui-forked-views"><code>wayneui-forked-views</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Are forked WayneUI views committed?</span></li>
-          <li class="pq" style="--i:34"><a class="pq__id" href="docs/guides/check-wayneui.html#wayneui-outdated"><code>wayneui-outdated</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is your WayneUI the latest of its line?</span></li>
-          <li class="pq" style="--i:35"><a class="pq__id" href="docs/guides/overrides.html#how-overrides-work"><code>overrides</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Has any note from home expired?</span> <span class="tag tag--gate">Gate</span></li>
-          <li class="pq" style="--i:36"><a class="pq__id" href="docs/guides/overrides.html#someone-else-signs-the-note"><code>override-approver</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Did someone sign their own note?</span></li>
-          <li class="pq" style="--i:37"><a class="pq__id" href="docs/guides/check-php.html#policy-age"><code>policy-age</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is the policy itself fresh?</span> <span class="tag tag--gate">Gate</span></li>
+          <li class="pq" style="--i:30"><a class="pq__id" href="docs/guides/check-app.html#csp-unsafe-inline"><code>csp-unsafe-inline</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does the CSP let inline scripts run?</span> <span class="tag tag--new">New</span></li>
+          <li class="pq" style="--i:31"><a class="pq__id" href="docs/guides/check-app.html#vite-secrets"><code>vite-secrets</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a <code>VITE_</code> name carry a secret?</span> <span class="tag tag--new">New</span></li>
+          <li class="pq" style="--i:32"><a class="pq__id" href="docs/guides/check-app.html#served-folder"><code>served-folder</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Can a stranger download a dump from <code>public/</code>?</span></li>
+          <li class="pq" style="--i:33"><a class="pq__id" href="docs/guides/check-app.html#world-writable"><code>world-writable</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does anything <code>chmod 777</code>?</span></li>
+          <li class="pq" style="--i:34"><a class="pq__id" href="docs/guides/check-wayneui.html#wayneui-forked-views"><code>wayneui-forked-views</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Are forked WayneUI views committed?</span></li>
+          <li class="pq" style="--i:35"><a class="pq__id" href="docs/guides/check-wayneui.html#wayneui-outdated"><code>wayneui-outdated</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is your WayneUI the latest of its line?</span></li>
+          <li class="pq" style="--i:36"><a class="pq__id" href="docs/guides/overrides.html#how-overrides-work"><code>overrides</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Has any note from home expired?</span> <span class="tag tag--gate">Gate</span></li>
+          <li class="pq" style="--i:37"><a class="pq__id" href="docs/guides/overrides.html#someone-else-signs-the-note"><code>override-approver</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Did someone sign their own note?</span></li>
+          <li class="pq" style="--i:38"><a class="pq__id" href="docs/guides/check-php.html#policy-age"><code>policy-age</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is the policy itself fresh?</span> <span class="tag tag--gate">Gate</span></li>
         </ol>
-        <p class="paper__foot"><span class="hand redpen-inline">38 questions, no multiple choice.</span> The <a href="docs/guides/checks-overview.html">Checks</a> page has every rule, and <a href="docs/reference/rule-ids.html">Rule ids</a> has every id a finding can carry.</p>
+        <p class="paper__foot"><span class="hand redpen-inline">39 questions, no multiple choice.</span> The <a href="docs/guides/checks-overview.html">Checks</a> page has every rule, and <a href="docs/reference/rule-ids.html">Rule ids</a> has every id a finding can carry.</p>
       </div>
 
       <div class="nextterm" data-reveal>

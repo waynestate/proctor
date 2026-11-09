@@ -1,6 +1,6 @@
 ---
 title: "App checks | PROCTOR docs"
-description: "The checks that read an app's own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, secret-looking VITE_ variables, debug files in public/ and chmod 777."
+description: "The checks that read an app's own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, secret-looking VITE_ variables, debug files in public/ and chmod 777."
 url: https://proctor.apps.wayne.edu/docs/guides/check-app.html
 llms: https://proctor.apps.wayne.edu/llms.txt
 generator: Squire agent-ready
@@ -8,9 +8,9 @@ generator: Squire agent-ready
 
 # App checks[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-checks)
 
-This page covers the fifteen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, secret-looking `VITE_` variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
+This page covers the sixteen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, secret-looking `VITE_` variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
 
-`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other twelve warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.
+`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other thirteen warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.
 
 ## node-eol[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#node-eol)
 
@@ -182,6 +182,21 @@ Fix by keeping `Indexes` off (`Options -Indexes`) and `autoindex off;` in the fi
 | --- | --- |
 | `directory-listing` | `proctor/directory-listing` |
 | `directory-listing` | `proctor/directory-listing/indexes` |
+
+## csp-unsafe-inline[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#csp-unsafe-inline)
+
+`csp-unsafe-inline` warns, never fails, when committed app config, server config or an example env file lets scripts run inline. CREED runtime-and-headers says an app should not weaken the default Content-Security-Policy with `'unsafe-inline'` for scripts: HELMET gives every page a nonce instead, and `'unsafe-inline'` in a script source lets any injected `<script>` run. It reports, and is not in the deploy gate.
+
+Scanned: every `*.php` directly in a top-level `config/` or `bootstrap/` directory, `public/index.php`, and every `*.php` at any depth under a top-level `app/` directory; every `.htaccess` at the app root and at any depth under a top-level `public/`, `deploy/`, `deployments/` or `docker/` directory, and every `*.conf` at any depth under a top-level `deploy/`, `deployments/` or `docker/` directory; and `.env.example`, `.env.production` and `.env.squire.example` at the root, where only the lines that start with `HELMET_CSP=` are read. Skipped at any depth: `vendor/`, `node_modules/`, `.git/` and anything under `tests/`; a file that cannot be read is skipped. A line whose first non-space characters are `//`, `#` or `*` (a PHP or shell comment, or a docblock line) is ignored.
+
+A directive counts when its name is `script-src`, `script-src-elem` or `script-src-attr` (case-insensitive), and it warns when its value list carries `'unsafe-inline'` (with the single quotes, case-insensitive). In a header string (server config, an env line, or a PHP string such as `"script-src 'self' 'unsafe-inline'; img-src *"`) the value list runs from the directive name to the next `;`, the end of the quoted string or the end of the line. In a PHP array (`'script-src' => ["'self'", "'unsafe-inline'"]`, the key in single or double quotes) it runs from the `=>` to the first `]` after it, which may be on a later line. `style-src`, `style-src-elem` and `style-src-attr` never warn: HELMET's own default keeps `style-src-attr 'unsafe-inline'`. A nonce or `'strict-dynamic'` beside the `'unsafe-inline'` still warns, and a report-only policy does too. One warning per file, on the line where the first offending `'unsafe-inline'` appears.
+
+Fix by removing `'unsafe-inline'` from the script source in the file the report names and letting HELMET's CSP nonce carry the inline scripts.
+
+| Check | Rule id |
+| --- | --- |
+| `csp-unsafe-inline` | `proctor/csp-unsafe-inline` |
+| `csp-unsafe-inline` | `proctor/csp-unsafe-inline/script-src` |
 
 ## vite-secrets[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#vite-secrets)
 

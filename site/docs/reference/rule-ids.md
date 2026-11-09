@@ -122,6 +122,8 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `display-errors` | `proctor/display-errors/log-off` |
 | `directory-listing` | `proctor/directory-listing` |
 | `directory-listing` | `proctor/directory-listing/indexes` |
+| `csp-unsafe-inline` | `proctor/csp-unsafe-inline` |
+| `csp-unsafe-inline` | `proctor/csp-unsafe-inline/script-src` |
 | `vite-secrets` | `proctor/vite-secrets` |
 | `vite-secrets` | `proctor/vite-secrets/env-file` |
 | `vite-secrets` | `proctor/vite-secrets/source` |

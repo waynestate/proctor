@@ -58,6 +58,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/app-debug',
         'proctor/display-errors',
         'proctor/directory-listing',
+        'proctor/csp-unsafe-inline',
         'proctor/vite-secrets',
         'proctor/served-folder',
         'proctor/world-writable',
@@ -79,6 +80,8 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/display-errors/log-off',
         // directory-listing
         'proctor/directory-listing/indexes',
+        // csp-unsafe-inline
+        'proctor/csp-unsafe-inline/script-src',
         // vite-secrets
         'proctor/vite-secrets/env-file',
         'proctor/vite-secrets/source',

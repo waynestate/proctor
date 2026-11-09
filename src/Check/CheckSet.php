@@ -81,6 +81,7 @@ final class CheckSet
             new AppDebugCheck(),
             new DisplayErrorsCheck(),
             new DirectoryListingCheck(),
+            new CspUnsafeInlineCheck(),
             new ViteSecretsCheck(),
             new ServedFolderCheck(),
             new WorldWritableCheck(),

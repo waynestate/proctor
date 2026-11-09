@@ -116,6 +116,7 @@ final class ProctorModule implements Module
         'app-debug' => 'check-app',
         'display-errors' => 'check-app',
         'directory-listing' => 'check-app',
+        'csp-unsafe-inline' => 'check-app',
         'vite-secrets' => 'check-app',
         'mysql-minimum' => 'check-app',
         'entrypoint-migrate' => 'check-app',

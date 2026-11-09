@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added: `csp-unsafe-inline` warns when committed app config, server config or an example env file lets scripts run inline ('unsafe-inline' in script-src, script-src-elem or script-src-attr); style-src is left alone (CREED runtime-and-headers).
 - Added: `directory-listing` warns when a committed .htaccess or server config turns on directory listing (Apache Options Indexes or All, nginx autoindex on) (CREED production).
 - Fixed: `display-errors` reads an ini value without its inline comment, so `display_errors = On ; note` warns.
 - Added: `display-errors` warns when a committed php.ini, .user.ini or .htaccess turns display_errors on or log_errors off (CREED runtime-and-headers).
