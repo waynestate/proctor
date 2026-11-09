@@ -1,6 +1,6 @@
 ---
 title: "App checks | PROCTOR docs"
-description: "The checks that read an app's own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, secret-looking VITE_ variables, debug files in public/ and chmod 777."
+description: "The checks that read an app's own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, secret-looking VITE_ variables, debug files in public/ and chmod 777."
 url: https://proctor.apps.wayne.edu/docs/guides/check-app.html
 llms: https://proctor.apps.wayne.edu/llms.txt
 generator: Squire agent-ready
@@ -8,9 +8,9 @@ generator: Squire agent-ready
 
 # App checks[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-checks)
 
-This page covers the fourteen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, secret-looking `VITE_` variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
+This page covers the fifteen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, secret-looking `VITE_` variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
 
-`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other eleven warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.
+`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other twelve warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.
 
 ## node-eol[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#node-eol)
 
@@ -158,7 +158,7 @@ Fix by setting `APP_DEBUG=false` in the file the report names.
 
 Scanned: any `*.ini` file at the app root and at any depth under a top-level `public/`, `deploy/`, `deployments/` or `docker/` directory, and every `.htaccess` at the root or at any depth under those folders. Skipped at any depth: `vendor/`, `node_modules/`, `.git/` and anything under `tests/`; a file whose base name contains `dev`, `local` or `development` (case-insensitive), such as `php.dev.ini`, is the local-development template and is skipped too. A line whose first non-space character is `;` or `#` is ignored; a file that cannot be read is skipped.
 
-In an ini file, `display_errors = <v>` (spaces optional, key case-insensitive) is on when `<v>`, with optional quotes, is `On`, `1`, `true`, `yes`, `stdout` or `stderr` (`proctor/display-errors/on`); `log_errors = <v>` is off when `<v>` is `Off`, `0`, `false` or `no` (`proctor/display-errors/log-off`). In an .htaccess, `php_flag display_errors on` or `php_value display_errors 1` (case-insensitive) is on, and `php_flag log_errors off` or `php_value log_errors 0` is off. One warning per file per rule, on the line of its first match.
+In an ini file, `display_errors = <v>` (spaces optional, key case-insensitive) is on when `<v>`, with optional quotes, is `On`, `1`, `true`, `yes`, `stdout` or `stderr` (`proctor/display-errors/on`); `log_errors = <v>` is off when `<v>` is `Off`, `0`, `false` or `no` (`proctor/display-errors/log-off`). The value stops at the first `;` outside quotes, as PHP reads the rest as an inline comment: `display_errors = On ; temporary` is on, and `display_errors = "On;x"` is the value `on;x`, which is not. In an .htaccess, `php_flag display_errors on` or `php_value display_errors 1` (case-insensitive) is on, and `php_flag log_errors off` or `php_value log_errors 0` is off. One warning per file per rule, on the line of its first match.
 
 Fix by keeping `display_errors` Off and `log_errors` On in the file the report names.
 
@@ -167,6 +167,21 @@ Fix by keeping `display_errors` Off and `log_errors` On in the file the report n
 | `display-errors` | `proctor/display-errors` |
 | `display-errors` | `proctor/display-errors/on` |
 | `display-errors` | `proctor/display-errors/log-off` |
+
+## directory-listing[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#directory-listing)
+
+`directory-listing` warns, never fails, when a committed .htaccess or server config turns on directory listing. CREED production says the web server must not list directory contents: a config that leaves Apache's `Indexes` option or nginx's `autoindex` on hands every visitor the folder's inventory. It reports, and is not in the deploy gate.
+
+Scanned: every `.htaccess` at the app root and at any depth under a top-level `public/`, `deploy/`, `deployments/` or `docker/` directory, and every `*.conf` at any depth under a top-level `deploy/`, `deployments/` or `docker/` directory. Skipped at any depth: `vendor/`, `node_modules/`, `.git/` and anything under `tests/`; a file that cannot be read is skipped. A line whose first non-space character is `#` is ignored.
+
+A line turns on directory listing when it is an Apache `Options` directive (case-insensitive, leading spaces allowed) whose arguments carry `+Indexes`, a bare `Indexes` or `All`, unless the same line also has `-Indexes` after it, or when it is an nginx `autoindex on;` (case-insensitive, spaces allowed before the `;`). `Options -Indexes`, `Options FollowSymLinks` and `autoindex off;` pass. One warning per file, on the line of its first match.
+
+Fix by keeping `Indexes` off (`Options -Indexes`) and `autoindex off;` in the file the report names.
+
+| Check | Rule id |
+| --- | --- |
+| `directory-listing` | `proctor/directory-listing` |
+| `directory-listing` | `proctor/directory-listing/indexes` |
 
 ## vite-secrets[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#vite-secrets)
 

@@ -120,6 +120,8 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `display-errors` | `proctor/display-errors` |
 | `display-errors` | `proctor/display-errors/on` |
 | `display-errors` | `proctor/display-errors/log-off` |
+| `directory-listing` | `proctor/directory-listing` |
+| `directory-listing` | `proctor/directory-listing/indexes` |
 | `vite-secrets` | `proctor/vite-secrets` |
 | `vite-secrets` | `proctor/vite-secrets/env-file` |
 | `vite-secrets` | `proctor/vite-secrets/source` |
