@@ -127,7 +127,7 @@ Fix by running `git rm --cached` on the file, adding it to .gitignore and commit
 
 `app-debug` warns, never fails, when a committed env, deploy or CI file sets `APP_DEBUG` to a truthy value: `true` or `1`, case-insensitive, with optional spaces around `=` or `:`. A debug build shows stack traces and environment values to whoever requests the page, so it must stay off in production; Laravel reads `APP_DEBUG` in `config/app.php`. It reports, and is not in the deploy gate.
 
-Scanned: `.env.example`, `.env.production` and `.env.squire.example` at the root, every file under a top-level `deploy/` or `deployments/` directory at any depth, and the CI pipelines (`.gitlab-ci.yml` and every `.github/workflows/*.yml`). Skipped at any depth: `vendor/`, `node_modules/` and `.git/`. One warning per file, on the line of its first true value; a file that cannot be read is skipped. It never reads `.env`: a committed `.env` is the app-key check's finding.
+Scanned: `.env.production` and `.env.squire.example` at the root, every file under a top-level `deploy/` or `deployments/` directory at any depth, and the CI pipelines (`.gitlab-ci.yml` and every `.github/workflows/*.yml`). Skipped at any depth: `vendor/`, `node_modules/` and `.git/`. One warning per file, on the line of its first true value; a file that cannot be read is skipped. It never reads `.env` (a committed `.env` is the app-key check's finding) or `.env.example`, the local-development template where debug is expected to be on.
 
 Fix by setting `APP_DEBUG=false` in the file the report names.
 

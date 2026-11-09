@@ -28,26 +28,38 @@ final class AppDebugCheckTest extends TestCase
         }
     }
 
-    public function testEnvExampleTrueWarnsAndNamesTheFileAndLine(): void
+    public function testEnvProductionTrueWarnsAndNamesTheFileAndLine(): void
     {
-        $this->writeFile('.env.example', "APP_NAME=Acme\nAPP_DEBUG=true\n");
+        $this->writeFile('.env.production', "APP_NAME=Acme\nAPP_DEBUG=true\n");
 
         $findings = $this->runCheck();
 
         self::assertCount(1, $findings);
         self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
         self::assertSame('proctor/app-debug/enabled', $findings[0]->ruleId);
-        self::assertSame('.env.example', $findings[0]->path);
+        self::assertSame('.env.production', $findings[0]->path);
         self::assertSame(2, $findings[0]->line);
         self::assertSame(
-            'APP_DEBUG=true in .env.example:2 shows stack traces and env values to users in production; set APP_DEBUG=false (Laravel reads it in config/app.php).',
+            'APP_DEBUG=true in .env.production:2 shows stack traces and env values to users in production; set APP_DEBUG=false (Laravel reads it in config/app.php).',
             $findings[0]->message,
         );
     }
 
+    public function testEnvExampleIsTheLocalTemplateAndIsNotRead(): void
+    {
+        $this->writeFile('.env.example', "APP_DEBUG=true\n");
+
+        $findings = $this->runCheck();
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+        self::assertSame('proctor/app-debug', $findings[0]->ruleId);
+        self::assertSame('no env, deploy or CI file sets APP_DEBUG=true', $findings[0]->message);
+    }
+
     public function testEachEnvTemplateTrueWarns(): void
     {
-        foreach (['.env.example', '.env.production', '.env.squire.example'] as $name) {
+        foreach (['.env.production', '.env.squire.example'] as $name) {
             $this->freshApp();
             $this->writeFile($name, "APP_DEBUG=true\n");
 
@@ -113,7 +125,7 @@ final class AppDebugCheckTest extends TestCase
 
     public function testAllFalsePasses(): void
     {
-        $this->writeFile('.env.example', "APP_DEBUG=false\n");
+        $this->writeFile('.env.production', "APP_DEBUG=false\n");
         $this->writeFile('deploy/config.ini', "APP_DEBUG=0\n");
         $this->writeFile('.gitlab-ci.yml', "variables:\n  APP_DEBUG: \"false\"\n");
 
@@ -152,7 +164,7 @@ final class AppDebugCheckTest extends TestCase
 
         foreach ($variants as $line) {
             $this->freshApp();
-            $this->writeFile('.env.example', $line . "\n");
+            $this->writeFile('.env.production', $line . "\n");
 
             $findings = $this->runCheck();
 
@@ -176,7 +188,7 @@ final class AppDebugCheckTest extends TestCase
 
         foreach ($variants as $line) {
             $this->freshApp();
-            $this->writeFile('.env.example', $line . "\n");
+            $this->writeFile('.env.production', $line . "\n");
 
             $findings = $this->runCheck();
 
@@ -187,7 +199,7 @@ final class AppDebugCheckTest extends TestCase
 
     public function testACommentedOutLineIsIgnored(): void
     {
-        $this->writeFile('.env.example', "# APP_DEBUG=true\nAPP_NAME=Acme\n");
+        $this->writeFile('.env.production', "# APP_DEBUG=true\nAPP_NAME=Acme\n");
 
         $findings = $this->runCheck();
 
@@ -197,7 +209,7 @@ final class AppDebugCheckTest extends TestCase
 
     public function testOneFindingPerFileUsesTheFirstTrueLine(): void
     {
-        $this->writeFile('.env.example', "APP_DEBUG=true\nFOO=bar\nAPP_DEBUG=1\n");
+        $this->writeFile('.env.production', "APP_DEBUG=true\nFOO=bar\nAPP_DEBUG=1\n");
 
         $findings = $this->runCheck();
 

@@ -16,9 +16,11 @@ use SplFileInfo;
  * CREED practice 12 keeps APP_DEBUG false in production: a committed config
  * that sets it to true leaks stack traces and env values to users over HTTP.
  * PROCTOR never reads .env itself (a committed .env is another check's
- * finding); it looks at the example and production templates, every file
- * under deploy/ or deployments/, and the CI pipelines, where a debug switch
- * would ship with the release.
+ * finding); it looks at the production templates (.env.production and
+ * .env.squire.example; .env.example is the local-development template,
+ * where debug is expected to be on), every file under deploy/ or
+ * deployments/, and the CI pipelines, where a debug switch would ship
+ * with the release.
  *
  * Emits proctor/app-debug on pass and proctor/app-debug/enabled on warning.
  *
@@ -27,8 +29,8 @@ use SplFileInfo;
  */
 final class AppDebugCheck implements CheckInterface
 {
-    /** Committed env templates at the app root that may carry the switch. */
-    private const ENV_FILES = ['.env.example', '.env.production', '.env.squire.example'];
+    /** Committed production env templates at the app root that may carry the switch. */
+    private const ENV_FILES = ['.env.production', '.env.squire.example'];
 
     /** Top-level directories whose files may set the switch. */
     private const DEPLOY_DIRS = ['deploy', 'deployments'];
