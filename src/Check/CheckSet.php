@@ -66,6 +66,7 @@ final class CheckSet
             new Mysql56Check(),
             new DestructiveDeployCheck(),
             new CrlfDeployScriptCheck(),
+            new GitattributesEolCheck(),
             new EntrypointMigrateCheck(),
             new CaseClashCheck(),
             new CiPipelinesCheck(),

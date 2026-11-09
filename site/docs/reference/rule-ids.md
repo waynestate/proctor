@@ -26,6 +26,9 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `destructive-deploy` | `proctor/destructive-deploy` |
 | `crlf-deploy-script` | `proctor/crlf-deploy-script` |
 | `crlf-deploy-script` | `proctor/crlf-deploy-script/no-gitattributes` |
+| `gitattributes-eol` | `proctor/gitattributes-eol` |
+| `gitattributes-eol` | `proctor/gitattributes-eol/not-pinned` |
+| `gitattributes-eol` | `proctor/gitattributes-eol/crlf` |
 | `entrypoint-migrate` | `proctor/entrypoint-migrate` |
 | `entrypoint-migrate` | `proctor/entrypoint-migrate/runs` |
 | `case-clash` | `proctor/case-clash` |

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added: `gitattributes-eol` warns when `.gitattributes` does not pin the app's shell scripts, `*.conf` files and Dockerfiles (`Dockerfile`, `*.Dockerfile`) to `eol=lf`, read the way Git applies it (one line per kind or a broader `* text=auto eol=lf`; a later `-text`, `binary` or `eol=crlf` undoes it), and when a Dockerfile or `.conf` under `deploy/` or `.squire/` has Windows line endings; the message names the lines to add and `git add --renormalize .` (CREED every-os).
 - Docs: the ADVISOR guide lists `vite-secrets` among the checks `proctor_check` skips because they read env files, next to `app-key` (ADVISOR already skipped it).
 - Changed: the deploy kit is Squire 0.10.0 (was 0.7.1): release.sh keeps Composer and npm download caches in the app folder and the gate takes SQUIRE_PHP_RUNTIME; the compose file, health.php and .env.squire.example follow the template, and the portable image files are added.
 

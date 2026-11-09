@@ -1,6 +1,6 @@
 ---
 title: "App checks | PROCTOR docs"
-description: "The checks that read an app's own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a missing or open robots.txt, secret-looking VITE_ variables, debug files in public/ and chmod 777."
+description: "The checks that read an app's own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a missing or open robots.txt, secret-looking VITE_ variables, debug files in public/, server files not pinned to LF line endings and chmod 777."
 url: https://proctor.apps.wayne.edu/docs/guides/check-app.html
 llms: https://proctor.apps.wayne.edu/llms.txt
 generator: Squire agent-ready
@@ -8,9 +8,9 @@ generator: Squire agent-ready
 
 # App checks[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-checks)
 
-This page covers the seventeen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a robots.txt that is missing or lets every crawler in, secret-looking `VITE_` variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
+This page covers the eighteen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a robots.txt that is missing or lets every crawler in, secret-looking `VITE_` variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, shell scripts, server config and Dockerfiles that `.gitattributes` does not pin to LF, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
 
-`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other fourteen warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.
+`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other fifteen warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.
 
 ## node-eol[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#node-eol)
 
@@ -293,6 +293,44 @@ Fix by converting the file to LF (`sed -i 's/\r$//' build.sh`, or the editor's l
 | --- | --- |
 | `crlf-deploy-script` | `proctor/crlf-deploy-script` |
 | `crlf-deploy-script` | `proctor/crlf-deploy-script/no-gitattributes` |
+
+## gitattributes-eol[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#gitattributes-eol)
+
+`gitattributes-eol` warns, never fails, when the files a Linux container reads line by line are not pinned to LF line endings. A carriage return in a shell script, an Apache or nginx `.conf` or a Dockerfile breaks the container that reads it, and Git on Windows adds one easily. CREED every-os asks every repo for a `.gitattributes` with `* text=auto eol=lf`, and anything that runs on a Linux host to be LF. It reports, and is not in the deploy gate.
+
+- `proctor/gitattributes-eol/not-pinned`: a kind of file the app has is not pinned. The kinds are `*.sh`, `*.conf`, and `Dockerfile` with `*.Dockerfile`; a kind the app has no file of is not asked about. Every file of the kind must come out of `.gitattributes` with `eol=lf` and `text` not unset. One warning, on `.gitattributes`, naming the first unpinned file of each kind and the exact lines to add.
+- `proctor/gitattributes-eol/crlf`: a `Dockerfile`, `*.Dockerfile` or `*.conf` at any depth under the top-level `deploy/` or `.squire/` has a carriage return on disk. One warning per file, on the line of its first carriage return. Shell scripts there are left to `crlf-deploy-script`, which fails on them.
+- `proctor/gitattributes-eol` (pass): every kind the app has is pinned and no file under `deploy/` or `.squire/` has a carriage return, or the app has nothing to pin.
+
+The attributes are worked out the way Git works them out: every `.gitattributes` from the app root down to the file's folder, lines in order, so a later line, or a file in a deeper folder, wins over an earlier one. These forms pin a file:
+
+- one line per kind: `*.sh text eol=lf`, `*.conf text eol=lf`, `Dockerfile text eol=lf`, `*.Dockerfile text eol=lf`;
+- a broader line: `* text=auto eol=lf` or `* text eol=lf`;
+- `eol=lf` without `text` (Git treats the file as text), and the old `crlf=input`;
+- a pattern with a folder (`/deploy/*.conf`, anchored to the folder its `.gitattributes` sits in), with `**` (`**/Dockerfile`, `deploy/**/*.conf`), `?` or a `[...]` class, following Git's matching: `*` and `?` never cross a `/`;
+- a `.gitattributes` in a subfolder, for the files under it.
+
+These undo a pin when they come later: `-text`, `binary`, `eol=crlf`, `-eol` and `!eol`. `* text=auto` alone does not pin: it normalizes on commit, but a Windows checkout still writes CRLF. Blank lines, `#` comments and `[attr]` macro definitions are skipped, and a macro of your own is not expanded. Only the `.gitattributes` files inside the app path are read: not one above it, `.git/info/attributes` or `core.attributesFile`. `vendor/`, `node_modules/`, `.git/` and `tests/` are skipped at any depth.
+
+Fix by adding the lines the message names at the end of `.gitattributes` (or one broader line), converting any file with CRLF to LF, then renormalizing what is already committed:
+
+```text
+*.sh text eol=lf
+*.conf text eol=lf
+Dockerfile text eol=lf
+*.Dockerfile text eol=lf
+```
+
+```bash
+git add --renormalize .
+git commit -m "Pin shell scripts, server config and Dockerfiles to LF"
+```
+
+| Check | Rule id |
+| --- | --- |
+| `gitattributes-eol` | `proctor/gitattributes-eol` |
+| `gitattributes-eol` | `proctor/gitattributes-eol/not-pinned` |
+| `gitattributes-eol` | `proctor/gitattributes-eol/crlf` |
 
 ## case-clash[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#case-clash)
 

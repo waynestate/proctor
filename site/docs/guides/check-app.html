@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>App checks | PROCTOR docs</title>
-<meta name="description" content="The checks that read an app&#039;s own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a missing or open robots.txt, secret-looking VITE_ variables, debug files in public/ and chmod 777.">
+<meta name="description" content="The checks that read an app&#039;s own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a missing or open robots.txt, secret-looking VITE_ variables, debug files in public/, server files not pinned to LF line endings and chmod 777.">
 <meta name="docs-version" content="0.10.0">
 <link rel="stylesheet" href="../../assets/wayne-ui/wayne-ui.css">
 <link rel="stylesheet" href="../../assets/docs.css">
@@ -41,8 +41,8 @@
   <div class="docs-content">
     <main id="main">
       <article class="docs-article"><h1 id="app-checks">App checks<a class="docs-heading-link" aria-label="Link to this section" href="#app-checks">#</a></h1>
-<p>This page covers the seventeen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, <code>env()</code> calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a robots.txt that is missing or lets every crawler in, secret-looking <code>VITE_</code> variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from <code>public/</code>, deploy scripts with Windows line endings, paths that differ only by letter case, and <code>chmod 777</code>. Each one holds a CREED practice. Run <code>vendor/bin/proctor check</code> against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.</p>
-<p><code>node-eol</code>, <code>crlf-deploy-script</code> and <code>case-clash</code> can fail a run. The other fourteen warn, never fail: <code>mysql-eol</code> warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.</p>
+<p>This page covers the eighteen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, <code>env()</code> calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a robots.txt that is missing or lets every crawler in, secret-looking <code>VITE_</code> variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from <code>public/</code>, deploy scripts with Windows line endings, shell scripts, server config and Dockerfiles that <code>.gitattributes</code> does not pin to LF, paths that differ only by letter case, and <code>chmod 777</code>. Each one holds a CREED practice. Run <code>vendor/bin/proctor check</code> against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.</p>
+<p><code>node-eol</code>, <code>crlf-deploy-script</code> and <code>case-clash</code> can fail a run. The other fifteen warn, never fail: <code>mysql-eol</code> warns until Citadel's shared database server offers a supported MySQL (D-008), and a new check must not turn a passing app into a failing one.</p>
 <h2 id="node-eol">node-eol<a class="docs-heading-link" aria-label="Link to this section" href="#node-eol">#</a></h2>
 <p><code>node-eol</code> grades every Node version the repository pins against the policy's <code>node</code> lines as of <code>--today</code>. The sources:</p>
 <ul>
@@ -513,6 +513,53 @@ Allow: /
 </tr>
 </tbody>
 </table></div>
+<h2 id="gitattributes-eol">gitattributes-eol<a class="docs-heading-link" aria-label="Link to this section" href="#gitattributes-eol">#</a></h2>
+<p><code>gitattributes-eol</code> warns, never fails, when the files a Linux container reads line by line are not pinned to LF line endings. A carriage return in a shell script, an Apache or nginx <code>.conf</code> or a Dockerfile breaks the container that reads it, and Git on Windows adds one easily. CREED every-os asks every repo for a <code>.gitattributes</code> with <code>* text=auto eol=lf</code>, and anything that runs on a Linux host to be LF. It reports, and is not in the deploy gate.</p>
+<ul>
+<li><code>proctor/gitattributes-eol/not-pinned</code>: a kind of file the app has is not pinned. The kinds are <code>*.sh</code>, <code>*.conf</code>, and <code>Dockerfile</code> with <code>*.Dockerfile</code>; a kind the app has no file of is not asked about. Every file of the kind must come out of <code>.gitattributes</code> with <code>eol=lf</code> and <code>text</code> not unset. One warning, on <code>.gitattributes</code>, naming the first unpinned file of each kind and the exact lines to add.</li>
+<li><code>proctor/gitattributes-eol/crlf</code>: a <code>Dockerfile</code>, <code>*.Dockerfile</code> or <code>*.conf</code> at any depth under the top-level <code>deploy/</code> or <code>.squire/</code> has a carriage return on disk. One warning per file, on the line of its first carriage return. Shell scripts there are left to <code>crlf-deploy-script</code>, which fails on them.</li>
+<li><code>proctor/gitattributes-eol</code> (pass): every kind the app has is pinned and no file under <code>deploy/</code> or <code>.squire/</code> has a carriage return, or the app has nothing to pin.</li>
+</ul>
+<p>The attributes are worked out the way Git works them out: every <code>.gitattributes</code> from the app root down to the file's folder, lines in order, so a later line, or a file in a deeper folder, wins over an earlier one. These forms pin a file:</p>
+<ul>
+<li>one line per kind: <code>*.sh text eol=lf</code>, <code>*.conf text eol=lf</code>, <code>Dockerfile text eol=lf</code>, <code>*.Dockerfile text eol=lf</code>;</li>
+<li>a broader line: <code>* text=auto eol=lf</code> or <code>* text eol=lf</code>;</li>
+<li><code>eol=lf</code> without <code>text</code> (Git treats the file as text), and the old <code>crlf=input</code>;</li>
+<li>a pattern with a folder (<code>/deploy/*.conf</code>, anchored to the folder its <code>.gitattributes</code> sits in), with <code>**</code> (<code>**/Dockerfile</code>, <code>deploy/**/*.conf</code>), <code>?</code> or a <code>[...]</code> class, following Git's matching: <code>*</code> and <code>?</code> never cross a <code>/</code>;</li>
+<li>a <code>.gitattributes</code> in a subfolder, for the files under it.</li>
+</ul>
+<p>These undo a pin when they come later: <code>-text</code>, <code>binary</code>, <code>eol=crlf</code>, <code>-eol</code> and <code>!eol</code>. <code>* text=auto</code> alone does not pin: it normalizes on commit, but a Windows checkout still writes CRLF. Blank lines, <code>#</code> comments and <code>[attr]</code> macro definitions are skipped, and a macro of your own is not expanded. Only the <code>.gitattributes</code> files inside the app path are read: not one above it, <code>.git/info/attributes</code> or <code>core.attributesFile</code>. <code>vendor/</code>, <code>node_modules/</code>, <code>.git/</code> and <code>tests/</code> are skipped at any depth.</p>
+<p>Fix by adding the lines the message names at the end of <code>.gitattributes</code> (or one broader line), converting any file with CRLF to LF, then renormalizing what is already committed:</p>
+<pre tabindex="0"><code class="language-text">*.sh text eol=lf
+*.conf text eol=lf
+Dockerfile text eol=lf
+*.Dockerfile text eol=lf
+</code></pre>
+<pre tabindex="0"><code class="language-bash">git add --renormalize .
+git commit -m &quot;Pin shell scripts, server config and Dockerfiles to LF&quot;
+</code></pre>
+<div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Rule id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gitattributes-eol</code></td>
+<td><code>proctor/gitattributes-eol</code></td>
+</tr>
+<tr>
+<td><code>gitattributes-eol</code></td>
+<td><code>proctor/gitattributes-eol/not-pinned</code></td>
+</tr>
+<tr>
+<td><code>gitattributes-eol</code></td>
+<td><code>proctor/gitattributes-eol/crlf</code></td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="case-clash">case-clash<a class="docs-heading-link" aria-label="Link to this section" href="#case-clash">#</a></h2>
 <p><code>case-clash</code> fails when two paths differ only by letter case (<code>Docs/Guide.md</code> and <code>docs/guide.md</code>): macOS and Windows ignore case, so one checkout silently overwrites the other, and a Linux host then autoloads a different file than the developer edited.</p>
 <p>Scanned: every file and directory under the app path. Skipped at any depth: <code>vendor/</code>, <code>node_modules/</code> and <code>.git/</code>. One finding per topmost clash, naming every colliding path; a clash below a clashing directory is part of it, not its own finding.</p>
@@ -564,7 +611,7 @@ Allow: /
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../../docs/guides/check-ci.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">CI checks</span></a><a class="docs-pager__link docs-pager__link--next" href="../../docs/guides/check-wayneui.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">WayneUI checks</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#node-eol">node-eol</a></li><li class="docs-toc__item"><a href="#mysql-eol">mysql-eol</a></li><li class="docs-toc__item"><a href="#mysql-minimum">mysql-minimum</a></li><li class="docs-toc__item"><a href="#env-outside-config">env-outside-config</a></li><li class="docs-toc__item"><a href="#raw-identity-header">raw-identity-header</a></li><li class="docs-toc__item"><a href="#app-key">app-key</a></li><li class="docs-toc__item"><a href="#app-debug">app-debug</a></li><li class="docs-toc__item"><a href="#display-errors">display-errors</a></li><li class="docs-toc__item"><a href="#directory-listing">directory-listing</a></li><li class="docs-toc__item"><a href="#csp-unsafe-inline">csp-unsafe-inline</a></li><li class="docs-toc__item"><a href="#robots-txt">robots-txt</a></li><li class="docs-toc__item"><a href="#vite-secrets">vite-secrets</a></li><li class="docs-toc__item"><a href="#entrypoint-migrate">entrypoint-migrate</a></li><li class="docs-toc__item"><a href="#served-folder">served-folder</a></li><li class="docs-toc__item"><a href="#crlf-deploy-script">crlf-deploy-script</a></li><li class="docs-toc__item"><a href="#case-clash">case-clash</a></li><li class="docs-toc__item"><a href="#world-writable">world-writable</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#node-eol">node-eol</a></li><li class="docs-toc__item"><a href="#mysql-eol">mysql-eol</a></li><li class="docs-toc__item"><a href="#mysql-minimum">mysql-minimum</a></li><li class="docs-toc__item"><a href="#env-outside-config">env-outside-config</a></li><li class="docs-toc__item"><a href="#raw-identity-header">raw-identity-header</a></li><li class="docs-toc__item"><a href="#app-key">app-key</a></li><li class="docs-toc__item"><a href="#app-debug">app-debug</a></li><li class="docs-toc__item"><a href="#display-errors">display-errors</a></li><li class="docs-toc__item"><a href="#directory-listing">directory-listing</a></li><li class="docs-toc__item"><a href="#csp-unsafe-inline">csp-unsafe-inline</a></li><li class="docs-toc__item"><a href="#robots-txt">robots-txt</a></li><li class="docs-toc__item"><a href="#vite-secrets">vite-secrets</a></li><li class="docs-toc__item"><a href="#entrypoint-migrate">entrypoint-migrate</a></li><li class="docs-toc__item"><a href="#served-folder">served-folder</a></li><li class="docs-toc__item"><a href="#crlf-deploy-script">crlf-deploy-script</a></li><li class="docs-toc__item"><a href="#gitattributes-eol">gitattributes-eol</a></li><li class="docs-toc__item"><a href="#case-clash">case-clash</a></li><li class="docs-toc__item"><a href="#world-writable">world-writable</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.10.0</span></span>
