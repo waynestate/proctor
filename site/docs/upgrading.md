@@ -72,7 +72,7 @@ The new check only warns, never fails, and is not in the deploy gate:
    ```bash
    vendor/bin/proctor check
    ```
-3. Optional: when Rollcall should read your app, add `--record="$CI_PROJECT_DIR/proctor.json"` to the `proctor check` command of the `proctor` job and keep the file as an artifact under `when: always`. Preflight 0.4.0's component keeps only the Code Quality report, so set its `proctor_command` input and add `artifacts: paths: [proctor.json]` to a `proctor:` job of your own (see [CI checks](https://proctor.apps.wayne.edu/docs/guides/check-ci.html)); Preflight's next release does both for you.
+3. Optional: when Rollcall should read your app, add `--record="$CI_PROJECT_DIR/proctor.json"` to the `proctor check` command of the `proctor` job and keep the file as an artifact under `when: always`. Preflight 0.5.0's component does both for you. On Preflight 0.4.0 the component keeps only the Code Quality report, so set its `proctor_command` input and add `artifacts: paths: [proctor.json]` to a `proctor:` job of your own (see [CI checks](https://proctor.apps.wayne.edu/docs/guides/check-ci.html)).
 
 ### How to verify[#](https://proctor.apps.wayne.edu/docs/upgrading.html#how-to-verify-1)
 

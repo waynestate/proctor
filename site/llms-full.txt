@@ -848,7 +848,7 @@ Pick the copy your reader needs with `--format`. The findings are the same in al
 White copy · for people · `--format=text` (the default)
 
 ```
-proctor 0.11.1 | composer: 2.10.3
+proctor 0.11.1 | composer: 2.11.1
 Policy: bundled (/app/src/Creed/policy.json), refreshed 2026-11-08, 1 days ago
 PASS php-floor: php floor 8.4 is active
 FAIL unbounded-constraints: vendor/dev constraint "dev-master" is unbounded
@@ -860,7 +860,7 @@ PASS lock-committed: composer.lock is present
 WARN preflight-gates: preflight-gates-no-include: .gitlab-ci.yml includes no Preflight component, so none of the stack's gates run; …
 WARN preflight-gates: preflight-gates-no-proctor-job: no job in .gitlab-ci.yml runs PROCTOR; …
 FAIL composer-audit: not audited: composer audit could not run: No installed packages found. …
-PASS composer-version: composer 2.10.3 is at or above the 2.8.0 floor
+PASS composer-version: composer 2.11.1 is at or above the 2.8.0 floor
 … nine more PASS lines, repo-url-credentials to wayneui-forked-views
 RESULT: fail (3 failures, 2 warnings)
 ```
@@ -878,7 +878,7 @@ Canary copy · for scripts · `--format=json`
     "result": "fail",
     "exit": 1,
     "tools": {
-        "composer": "2.10.3"
+        "composer": "2.11.1"
     },
     "policy": {
         "origin": "bundled",
@@ -1011,10 +1011,10 @@ Hall G GitLab, through Preflight
 
 ```
 include:
-  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.4.0
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.5.0
 ```
 
-The default command is `vendor/bin/proctor check --format=codequality`, so findings show on the merge request. It clones the full history, so `override-approver` can read git blame. We strongly recommend a git.wayne.edu instance runner.
+The default command is `vendor/bin/proctor check --format=codequality`, so findings show on the merge request. It clones the full history, so `override-approver` can read git blame. With PROCTOR 0.11.0 or later it also adds `--record` and keeps `proctor.json`, the report Rollcall reads. We strongly recommend a git.wayne.edu instance runner.
 
 Hall H GitHub code scanning
 
@@ -1694,14 +1694,16 @@ The smallest pipeline change that satisfies `preflight-pinned` and `preflight-ga
 
 ```yaml
 include:
-  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.4.0
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.5.0
 ```
 
-The default command is `vendor/bin/proctor check --format=codequality`, so the findings show on the merge request as Code Quality. Do not add `--policy` or `--today` to `proctor_command`: in CI PROCTOR refuses both (exit 2) unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`, and without them it reads CREED's policy from the app's `vendor/waynestate/creed`. Preflight 0.4.0 clones the full history for this job (`git_depth: "0"`), so `override-approver` can read git blame. Strongly recommended: a git.wayne.edu instance runner. Preflight's own page lists every input: [preflight.apps.wayne.edu](https://preflight.apps.wayne.edu/).
+The default command is `vendor/bin/proctor check --format=codequality`, so the findings show on the merge request as Code Quality. Do not add `--policy` or `--today` to `proctor_command`: in CI PROCTOR refuses both (exit 2) unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`, and without them it reads CREED's policy from the app's `vendor/waynestate/creed`. Since Preflight 0.4.0 the component clones the full history for this job (`git_depth: "0"`), so `override-approver` can read git blame. Strongly recommended: a git.wayne.edu instance runner. Preflight's own page lists every input: [preflight.apps.wayne.edu](https://preflight.apps.wayne.edu/).
 
 To keep PROCTOR's full JSON report from the same run, add `--record`: `vendor/bin/proctor check --format=codequality --record="$CI_PROJECT_DIR/proctor.json"` prints Code Quality for the merge request and writes the JSON report (byte for byte what `--format=json` prints) to `proctor.json`, without running the checks twice. Rollcall, the fleet census, reads each app's latest `proctor.json` from its `proctor` job's artifacts, so the job must keep the file as an artifact under `when: always` (a failing check still has a report worth reading). The exit code is the check's own; a record PROCTOR cannot write is exit 2.
 
-On Preflight 0.4.0 the component keeps only the Code Quality report, so do both halves yourself: put the `--record` command above in the `proctor_command` input, and add `artifacts: paths: [proctor.json]` to a `proctor:` job in your own `.gitlab-ci.yml`, next to the include. GitLab merges that key into the component's job, which already keeps its artifacts `when: always`; it re-declares no `script`, so `preflight-pinned` has nothing to flag. Preflight's next release does this on its own: it adds `--record` to a `proctor check` command when the app's PROCTOR lists the option, keeps `proctor.json`, and never adds it to a `proctor gate` command, whose record is a deploy verdict, not the report Rollcall reads.
+Preflight 0.5.0 does this on its own. When the app's PROCTOR lists `--record` in `proctor check --help` (PROCTOR 0.11.0 or later), the component adds `--record "$CI_PROJECT_DIR/proctor.json"` to a `proctor check` command and keeps `proctor.json` as an artifact under `when: always`, next to the Code Quality report. It never adds the option to a `proctor gate` command, whose record is a deploy verdict, not the report Rollcall reads, to a command that already passes it, or to one that is not a plain `proctor check` line (shell operators, quotes or `$`). With an older PROCTOR the job log says so and the run keeps no `proctor.json`: move the app to PROCTOR ^0.11.
+
+Still pinned to Preflight 0.4.0? That component keeps only the Code Quality report, so do both halves yourself: put the `--record` command above in the `proctor_command` input, and add `artifacts: paths: [proctor.json]` to a `proctor:` job in your own `.gitlab-ci.yml`, next to the include. GitLab merges that key into the component's job, which already keeps its artifacts `when: always`; it re-declares no `script`, so `preflight-pinned` has nothing to flag. Or move the pin to `@0.5.0` and drop both.
 
 ### ci-pipelines[#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#ci-pipelines)
 
@@ -2351,7 +2353,7 @@ vendor/bin/proctor check --format=json
 The default human-readable format: a header line with the tool and the versions of the external tools used, then one line per finding in check order, then one line per override, then a summary line:
 
 ```
-proctor 0.1.0 | composer: 2.10.3
+proctor 0.11.1 | composer: 2.11.1
 Policy: option (/app/policy.json), refreshed 2026-10-20, 7 days ago
 PASS php-floor: php floor 8.4 is active
 FAIL unbounded-constraints: vendor/a constraint "dev-master" is unbounded
@@ -3605,7 +3607,7 @@ The new check only warns, never fails, and is not in the deploy gate:
    ```bash
    vendor/bin/proctor check
    ```
-3. Optional: when Rollcall should read your app, add `--record="$CI_PROJECT_DIR/proctor.json"` to the `proctor check` command of the `proctor` job and keep the file as an artifact under `when: always`. Preflight 0.4.0's component keeps only the Code Quality report, so set its `proctor_command` input and add `artifacts: paths: [proctor.json]` to a `proctor:` job of your own (see [CI checks](https://proctor.apps.wayne.edu/docs/guides/check-ci.html)); Preflight's next release does both for you.
+3. Optional: when Rollcall should read your app, add `--record="$CI_PROJECT_DIR/proctor.json"` to the `proctor check` command of the `proctor` job and keep the file as an artifact under `when: always`. Preflight 0.5.0's component does both for you. On Preflight 0.4.0 the component keeps only the Code Quality report, so set its `proctor_command` input and add `artifacts: paths: [proctor.json]` to a `proctor:` job of your own (see [CI checks](https://proctor.apps.wayne.edu/docs/guides/check-ci.html)).
 
 #### How to verify[#](https://proctor.apps.wayne.edu/docs/upgrading.html#how-to-verify-1)
 

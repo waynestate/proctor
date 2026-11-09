@@ -510,7 +510,7 @@ RESULT: pass</code></pre>
 
         <div class="carbon carbon--white" role="tabpanel" id="pane-text" aria-labelledby="tab-text" tabindex="0">
           <p class="carbon__copy">White copy · for people · <code>--format=text</code> (the default)</p>
-<pre class="carbon__pre"><code>proctor 0.11.1 | composer: 2.10.3
+<pre class="carbon__pre"><code>proctor 0.11.1 | composer: 2.11.1
 Policy: bundled (/app/src/Creed/policy.json), refreshed 2026-11-08, 1 days ago
 PASS php-floor: php floor 8.4 is active
 FAIL unbounded-constraints: vendor/dev constraint "dev-master" is unbounded
@@ -522,7 +522,7 @@ PASS lock-committed: composer.lock is present
 WARN preflight-gates: preflight-gates-no-include: .gitlab-ci.yml includes no Preflight component, so none of the stack's gates run; …
 WARN preflight-gates: preflight-gates-no-proctor-job: no job in .gitlab-ci.yml runs PROCTOR; …
 FAIL composer-audit: not audited: composer audit could not run: No installed packages found. …
-PASS composer-version: composer 2.10.3 is at or above the 2.8.0 floor
+PASS composer-version: composer 2.11.1 is at or above the 2.8.0 floor
 … nine more PASS lines, repo-url-credentials to wayneui-forked-views
 RESULT: fail (3 failures, 2 warnings)</code></pre>
         </div>
@@ -537,7 +537,7 @@ RESULT: fail (3 failures, 2 warnings)</code></pre>
     "result": "fail",
     "exit": 1,
     "tools": {
-        "composer": "2.10.3"
+        "composer": "2.11.1"
     },
     "policy": {
         "origin": "bundled",
@@ -672,8 +672,8 @@ RESULT: fail (1 failures, 1 warnings)</code></pre>
         <article class="hall" data-reveal>
           <p class="hall__door"><span class="hall__room">Hall G</span> GitLab, through Preflight</p>
 <pre class="hall__pre"><code>include:
-  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.4.0</code></pre>
-          <p class="hall__note">The default command is <code>vendor/bin/proctor check --format=codequality</code>, so findings show on the merge request. It clones the full history, so <code>override-approver</code> can read git blame. We strongly recommend a git.wayne.edu instance runner.</p>
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.5.0</code></pre>
+          <p class="hall__note">The default command is <code>vendor/bin/proctor check --format=codequality</code>, so findings show on the merge request. It clones the full history, so <code>override-approver</code> can read git blame. With PROCTOR 0.11.0 or later it also adds <code>--record</code> and keeps <code>proctor.json</code>, the report Rollcall reads. We strongly recommend a git.wayne.edu instance runner.</p>
         </article>
         <article class="hall" data-reveal>
           <p class="hall__door"><span class="hall__room">Hall H</span> GitHub code scanning</p>

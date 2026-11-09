@@ -113,7 +113,7 @@
 </code></pre>
 </li>
 <li>
-<p>Optional: when Rollcall should read your app, add <code>--record=&quot;$CI_PROJECT_DIR/proctor.json&quot;</code> to the <code>proctor check</code> command of the <code>proctor</code> job and keep the file as an artifact under <code>when: always</code>. Preflight 0.4.0's component keeps only the Code Quality report, so set its <code>proctor_command</code> input and add <code>artifacts: paths: [proctor.json]</code> to a <code>proctor:</code> job of your own (see <a href="guides/check-ci.html">CI checks</a>); Preflight's next release does both for you.</p>
+<p>Optional: when Rollcall should read your app, add <code>--record=&quot;$CI_PROJECT_DIR/proctor.json&quot;</code> to the <code>proctor check</code> command of the <code>proctor</code> job and keep the file as an artifact under <code>when: always</code>. Preflight 0.5.0's component does both for you. On Preflight 0.4.0 the component keeps only the Code Quality report, so set its <code>proctor_command</code> input and add <code>artifacts: paths: [proctor.json]</code> to a <code>proctor:</code> job of your own (see <a href="guides/check-ci.html">CI checks</a>).</p>
 </li>
 </ol>
 <h3 id="how-to-verify-1">How to verify<a class="docs-heading-link" aria-label="Link to this section" href="#how-to-verify-1">#</a></h3>

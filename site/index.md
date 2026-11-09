@@ -261,7 +261,7 @@ Pick the copy your reader needs with `--format`. The findings are the same in al
 White copy · for people · `--format=text` (the default)
 
 ```
-proctor 0.11.1 | composer: 2.10.3
+proctor 0.11.1 | composer: 2.11.1
 Policy: bundled (/app/src/Creed/policy.json), refreshed 2026-11-08, 1 days ago
 PASS php-floor: php floor 8.4 is active
 FAIL unbounded-constraints: vendor/dev constraint "dev-master" is unbounded
@@ -273,7 +273,7 @@ PASS lock-committed: composer.lock is present
 WARN preflight-gates: preflight-gates-no-include: .gitlab-ci.yml includes no Preflight component, so none of the stack's gates run; …
 WARN preflight-gates: preflight-gates-no-proctor-job: no job in .gitlab-ci.yml runs PROCTOR; …
 FAIL composer-audit: not audited: composer audit could not run: No installed packages found. …
-PASS composer-version: composer 2.10.3 is at or above the 2.8.0 floor
+PASS composer-version: composer 2.11.1 is at or above the 2.8.0 floor
 … nine more PASS lines, repo-url-credentials to wayneui-forked-views
 RESULT: fail (3 failures, 2 warnings)
 ```
@@ -291,7 +291,7 @@ Canary copy · for scripts · `--format=json`
     "result": "fail",
     "exit": 1,
     "tools": {
-        "composer": "2.10.3"
+        "composer": "2.11.1"
     },
     "policy": {
         "origin": "bundled",
@@ -424,10 +424,10 @@ Hall G GitLab, through Preflight
 
 ```
 include:
-  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.4.0
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.5.0
 ```
 
-The default command is `vendor/bin/proctor check --format=codequality`, so findings show on the merge request. It clones the full history, so `override-approver` can read git blame. We strongly recommend a git.wayne.edu instance runner.
+The default command is `vendor/bin/proctor check --format=codequality`, so findings show on the merge request. It clones the full history, so `override-approver` can read git blame. With PROCTOR 0.11.0 or later it also adds `--record` and keeps `proctor.json`, the report Rollcall reads. We strongly recommend a git.wayne.edu instance runner.
 
 Hall H GitHub code scanning
 

@@ -25,9 +25,9 @@
         "phpunit/phpunit": "^11.5",
         "laravel/pint": "^1.32",
         "phpstan/phpstan": "^2.1",
-        "waynestate/pinstripe": "^0.1.4",
+        "waynestate/pinstripe": "^0.3",
         "league/commonmark": "^2.10",
-        "waynestate/advisor": "^0.1.6"
+        "waynestate/advisor": "^0.2"
     },
     "suggest": {
         "waynestate/advisor": "ADVISOR module: lets your coding agent read proctor_rules and proctor_check, read-only."

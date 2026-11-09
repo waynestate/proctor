@@ -30,7 +30,7 @@ vendor/bin/proctor check --format=json
 The default human-readable format: a header line with the tool and the versions of the external tools used, then one line per finding in check order, then one line per override, then a summary line:
 
 ```
-proctor 0.1.0 | composer: 2.10.3
+proctor 0.11.1 | composer: 2.11.1
 Policy: option (/app/policy.json), refreshed 2026-10-20, 7 days ago
 PASS php-floor: php floor 8.4 is active
 FAIL unbounded-constraints: vendor/a constraint "dev-master" is unbounded
