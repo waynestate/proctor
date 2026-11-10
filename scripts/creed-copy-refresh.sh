@@ -1,4 +1,5 @@
 #!/bin/sh
+# proctor-ignore script-pair: runs only in the weekly creed-copy-refresh CI job, a Linux container
 # creed-copy-refresh.sh: the weekly creed-copy-refresh job in .gitlab-ci.yml runs this.
 #
 # It clones CREED main with the job token, re-exports the generated CREED reader

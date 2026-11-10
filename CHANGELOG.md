@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Changed: `scripts/creed-copy-refresh.sh` and `scripts/wayneui-copies-scan.sh` carry the `# proctor-ignore script-pair:` marker: they run only in CI jobs, so `script-pair` reports them as info notes, not missing twins.
+
 ## 0.14.1 (2026-11-10)
 
 - Fixed: `script-pair` no longer warns on Squire's deploy-host scripts (any `scripts/` file listed in `.squire.json`, such as `scripts/release.sh`) or on a script marked `# proctor-ignore script-pair: <reason>` in its first 10 lines; both are info notes (`proctor/script-pair/squire-owned`, `proctor/script-pair/single-os`), visible but not counted.

@@ -1,4 +1,5 @@
 #!/bin/sh
+# proctor-ignore script-pair: runs only in the wayneui-copies CI job, a Linux container
 # The wayneui-copies job needs the project root so PROCTOR can see
 # site/assets/wayne-ui/ and the root composer.json. The test fixtures
 # hold destructive deploy scripts on purpose, so a scan of the real root
