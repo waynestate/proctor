@@ -607,7 +607,7 @@ Run `vendor/bin/proctor check` in a PHP app and it checks the app against CREED'
 
 [Sit the exam](https://proctor.apps.wayne.edu/#start-title) [Watch it mark a paper](https://proctor.apps.wayne.edu/#sheet-title)
 
-- [**36** checks](https://proctor.apps.wayne.edu/#paper-title)
+- [**41** checks](https://proctor.apps.wayne.edu/#paper-title)
 - **8** at the gate
 - **4** formats
 - **3** exit codes
@@ -749,7 +749,7 @@ Every check `proctor check` asks, in the order it asks them. Each id opens its p
 
 Planned but not built yet, so there is no command for it.
 
-- **Security headers and CSP.** HELMET sets them; PROCTOR will check they are there.
+- **Security headers.** HELMET sets them. PROCTOR already reads the CSP (`csp-unsafe-inline`, since 0.10.0, warns when it lets inline scripts run); checking that every header is there is still to come.
 
 Set texts
 
