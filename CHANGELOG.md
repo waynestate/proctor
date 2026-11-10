@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.14.2 (2026-11-10)
+
 - Changed: `scripts/creed-copy-refresh.sh` and `scripts/wayneui-copies-scan.sh` carry the `# proctor-ignore script-pair:` marker: they run only in CI jobs, so `script-pair` reports them as info notes, not missing twins.
 
 ## 0.14.1 (2026-11-10)

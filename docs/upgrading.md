@@ -7,6 +7,22 @@ description: How to upgrade PROCTOR to a newer release and note the changes that
 
 PROCTOR is the invigilator, so upgrading it is a seat change, not a new exam: same hall, fresher pen. This page tells you how to move an app from one PROCTOR release to the next and which changes affect your runs. Start with the release that has a break, then work down to the additive ones.
 
+## 0.14.2
+
+Released 2026-11-10. A patch: `^0.14` picks it up with `composer update waynestate/proctor`. Nothing changes for apps: a run that passed on 0.14.1 passes the same way.
+
+### Breaking
+
+- None.
+
+### Changed
+
+- Two of PROCTOR's own scripts that run only in CI (`scripts/creed-copy-refresh.sh` and `scripts/wayneui-copies-scan.sh`) carry the `# proctor-ignore script-pair:` marker, so PROCTOR's self-check shows them as info notes instead of missing twins.
+
+### What to do
+
+- Nothing.
+
 ## 0.14.1
 
 Released 2026-11-10. A patch: `^0.14` picks it up with `composer update waynestate/proctor`. Nothing breaks, and a run that passed on 0.14.0 still passes, usually with fewer warnings.
