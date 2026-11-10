@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Changed: deploy kit refreshed to Squire 0.10.5 (was 0.10.2). Squire 0.10.5 deprecates the parity group (removed no sooner than 0.12.0); `squire update` kept the parity files in place and reported the deprecation.
+- Changed: requires waynestate/advisor ^0.3 (was ^0.2); the lock moves ADVISOR to 0.3.0 and, with it, CREED to 0.1.9.
+
 ## 0.11.2 (2026-11-09)
 
 - Docs: Parity joins the party. The README cast and the front page's "Transfer students, new this term" seat Parity next to Squire, with its spirit-level mark: the stack's new tool that runs Citadel on your computer (its PHP image, its proxy and MySQL 5.6). 0.1.0 is coming and it has no site yet, so its desk links nowhere. Same exam, same paper, sat at home first.

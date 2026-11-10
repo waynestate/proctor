@@ -513,7 +513,7 @@ The claim that most compromises are found within days is mine and is not backed 
 (read 2026-11-09): Squire's kit pins `composer:2.11.1` by digest in its base fallback image since 0.10.1, and so do
 the deploy layers already regenerated from it (HELMET, SESAME); Squire's own CI jobs use `composer:2.11.1`;
 Preflight 0.5.0 installs 2.11.1 by default in its `php-test` and `proctor` components (`composer_version`; 0.4.0
-installed 2.10.3); and PROCTOR's own CI jobs, phar build scripts and deploy layer (Squire 0.10.2) pin
+installed 2.10.3); and PROCTOR's own CI jobs, phar build scripts and deploy layer (Squire 0.10.5) pin
 `composer:2.11.1` by digest. Apps on an older Preflight pin still get the older default until they move to `@0.5.0`. Decision (the stack maintainer, 2026-11-03): when 2.11 is in the base images, Sourdough apps set a 3-day
 cooldown and PROCTOR warns when an app has none. Nothing is built before then: no policy rule, no check, no Sourdough
 default.
@@ -699,8 +699,10 @@ Why: an empty file turns a clear tool error into a second parse error in the mer
 
 Sources: [GitLab Code Quality: report requirements](https://docs.gitlab.com/ci/testing/code_quality/).
 
-**How the stack holds it: Checked.** `bin/proctor` catches `ToolError` and, for the codequality format, writes
-`CodeQualityWriter::writeToolError` (one issue naming the error) to stdout, so the artifact is never an empty file.
+**How the stack holds it: Checked.** `bin/proctor` catches `ToolError` and, in whatever format was selected, writes
+that format's tool-error report to stdout (`TextWriter`, `JsonWriter`, `CodeQualityWriter` and `SarifWriter` each
+have a `writeToolError`; the codequality one lists the error as a single issue), so the artifact is never an empty
+file.
 Test: `tests/CodeQualityShapeTest.php` (`testToolErrorInCodeQualityFormatListsTheErrorAsOneIssue`).
 
 Second pass: this matters because GitLab says artifacts under `artifacts:reports` are "always uploaded, regardless of
