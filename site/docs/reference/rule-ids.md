@@ -57,6 +57,9 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `composer-config` | `proctor/composer-config/policy-malware-off` |
 | `composer-config` | `proctor/composer-config/policy-advisories-off` |
 | `composer-config` | `proctor/composer-config/platform-php-unset` |
+| `composer-cooldown` | `proctor/composer-cooldown` |
+| `composer-cooldown` | `proctor/composer-cooldown/missing` |
+| `composer-cooldown` | `proctor/composer-cooldown/not-blocking` |
 | `portability` | `proctor/portability` |
 | `portability` | `proctor/portability/host-path` |
 | `portability` | `proctor/portability/proxy-address` |

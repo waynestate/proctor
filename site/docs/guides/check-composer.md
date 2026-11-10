@@ -8,7 +8,7 @@ generator: Squire agent-ready
 
 # Composer checks [#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-checks)
 
-This page covers the seven PROCTOR checks that read composer.json and composer.lock: unbounded constraints, development-only packages in require, unsafe composer settings, the committed lock, audit results, the Composer version on PATH, and credentials in repository URLs. Run `vendor/bin/proctor check` against the app path, then fix the finding the report names. The proctor checks the pens before it checks the answers.
+This page covers the eight PROCTOR checks that read composer.json and composer.lock: unbounded constraints, development-only packages in require, unsafe composer settings, the release cooldown, the committed lock, audit results, the Composer version on PATH, and credentials in repository URLs. Run `vendor/bin/proctor check` against the app path, then fix the finding the report names. The proctor checks the pens before it checks the answers.
 
 ## unbounded-constraints [#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#unbounded-constraints)
 
@@ -72,6 +72,32 @@ It notes, as an info finding, when `require.php` is set without `config.platform
 | `composer-config` | `proctor/composer-config/policy-malware-off` |
 | `composer-config` | `proctor/composer-config/policy-advisories-off` |
 | `composer-config` | `proctor/composer-config/platform-php-unset` |
+
+## composer-cooldown [#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-cooldown)
+
+`composer-cooldown` warns when composer.json sets no Composer release cooldown, so Composer installs a newly published version the moment it is released, before any bug report or rollback has had time to land (CREED practice 40):
+
+- No `config.policy.cooldown.period`, or one set to an empty string (`proctor/composer-cooldown/missing`).
+- A period set but `block` exactly `false`, which turns the cooldown off again (`proctor/composer-cooldown/not-blocking`).
+
+Warning only, never a fail, so an app that passes today keeps passing. Fix by adding the cooldown Sourdough's shapes use, exempting the stack's own packages:
+
+```json
+"config": {
+    "policy": {
+        "cooldown": {
+            "period": "3 days",
+            "ignore": ["waynestate/*"]
+        }
+    }
+}
+```
+
+| Check | Rule id |
+| --- | --- |
+| `composer-cooldown` | `proctor/composer-cooldown` |
+| `composer-cooldown` | `proctor/composer-cooldown/missing` |
+| `composer-cooldown` | `proctor/composer-cooldown/not-blocking` |
 
 ## lock-committed [#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#lock-committed)
 

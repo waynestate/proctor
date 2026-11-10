@@ -47,7 +47,7 @@ Part A
 
 ## The questions
 
-Nine of PROCTOR's forty-two checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures. [The whole paper](https://proctor.apps.wayne.edu/#paper-title) is further down.
+Nine of PROCTOR's forty-three checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures. [The whole paper](https://proctor.apps.wayne.edu/#paper-title) is further down.
 
 1. Q1 `php-floor`
    ### Is the lowest PHP your `composer.json` allows still supported?
@@ -107,7 +107,7 @@ Last term these were on the coming-soon list. They are built and released now, s
 
 The whole paper
 
-### All forty-two questions
+### All forty-three questions
 
 Every check `proctor check` asks, in the order it asks them. Each id opens its page in the docs.
 
