@@ -97,6 +97,7 @@ It reads the pipeline whole: `.gitlab-ci.yml` and the local files it includes (s
 - No `include:` entry whose `component:` path contains `/preflight/` warns (`proctor/preflight-gates/no-include`): none of the stack's gates run. Include `php-test`, `composer-audit` and `proctor` from Preflight, pinned to a release tag.
 - A gate that can fail while the pipeline passes warns (`proctor/preflight-gates/allow-failure`), once per place it is set: a gate component included with the `allow_failure` input set to `true`, or a job the app re-declares under the gate's job name (its `job_name` input, or the component name) with `allow_failure` set to anything but `false`, the exit-codes form included. Every Preflight component is a gate except `renovate` (a bot) and `package-publish` (a release step); php-test's advisory job may fail by design and is not one.
 - No job that runs PROCTOR warns (`proctor/preflight-gates/no-proctor-job`): the Preflight `proctor` component is not included and no job's `script` runs `proctor check` or `proctor gate` (`vendor/bin/proctor`, `proctor.phar` or a path to either).
+- A `proctor_command` input on the Preflight `proctor` include that disarms the job warns (`proctor/preflight-gates/proctor-command`): the component hands the input to the shell as written, so a command with no segment that runs `proctor check` or `proctor gate` (`true`, `echo skipped`) passes without grading the app, and one that pipes PROCTOR (`| tee`) or follows it with `||` reports another command's exit code. A redirect such as `> report.json` is fine. Leave the input at its default, or run `vendor/bin/proctor check` on its own.
 
 A Preflight include, a gate job or a PROCTOR job in a local file the pipeline includes counts the same as one in `.gitlab-ci.yml`, and an `allow_failure` warning names the file it is in. No finding when there is no `.gitlab-ci.yml` or it does not parse; `ci-pipelines` reports both. With nothing to flag it passes: `Preflight gates are included, none may fail softly, and PROCTOR runs`. It reports, and is not in the deploy gate. A warning on purpose: a repository fixing its first findings may keep `allow_failure` for a while, with a comment saying why, the way Sourdough's pipeline does on its deploy layer.
 
@@ -106,6 +107,7 @@ A Preflight include, a gate job or a PROCTOR job in a local file the pipeline in
 | `preflight-gates` | `proctor/preflight-gates/no-include` |
 | `preflight-gates` | `proctor/preflight-gates/allow-failure` |
 | `preflight-gates` | `proctor/preflight-gates/no-proctor-job` |
+| `preflight-gates` | `proctor/preflight-gates/proctor-command` |
 
 ## mysql56-ci [#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#mysql56-ci)
 

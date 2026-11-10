@@ -94,6 +94,63 @@ YAML;
         );
     }
 
+    /**
+     * A pipeline whose proctor include sets the given proctor_command.
+     */
+    private function withProctorCommand(string $command): string
+    {
+        return <<<YAML
+include:
+  - component: \$CI_SERVER_FQDN/enterprise-apps/preflight/php-test@0.4.0
+  - component: \$CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.5.0
+    inputs:
+      git_depth: "0"
+      proctor_command: {$command}
+
+YAML;
+    }
+
+    public function testAProctorCommandThatRunsNoProctorWarns(): void
+    {
+        $findings = $this->runCheck($this->withProctorCommand('"true"'));
+
+        self::assertSame(
+            [['proctor/preflight-gates/proctor-command', Finding::STATUS_WARNING, '.gitlab-ci.yml', 6]],
+            $this->rows($findings),
+        );
+        self::assertSame(
+            'preflight-gates-proctor-command: the Preflight proctor component\'s proctor_command "true" runs neither proctor check nor proctor gate, so the job passes without grading the app; leave the input at its default or run vendor/bin/proctor check on its own',
+            $findings[0]->message,
+        );
+    }
+
+    public function testAProctorCommandThatMasksTheExitCodeWarns(): void
+    {
+        foreach (['vendor/bin/proctor check --format=codequality || true', 'vendor/bin/proctor check | tee out.txt'] as $command) {
+            $findings = $this->runCheck($this->withProctorCommand('"' . $command . '"'));
+
+            self::assertSame(
+                [['proctor/preflight-gates/proctor-command', Finding::STATUS_WARNING, '.gitlab-ci.yml', 6]],
+                $this->rows($findings),
+                $command,
+            );
+            self::assertStringContainsString('so the shell reports another command\'s exit code', $findings[0]->message);
+        }
+    }
+
+    public function testAPlainProctorCommandPasses(): void
+    {
+        foreach ([
+            'vendor/bin/proctor check --format=codequality',
+            '"cd deploy && vendor/bin/proctor check --path=.. > report.json"',
+            'php proctor.phar gate --path=.',
+        ] as $command) {
+            $findings = $this->runCheck($this->withProctorCommand($command));
+
+            self::assertSame(Finding::STATUS_PASS, $findings[0]->status, $command);
+        }
+    }
+
     public function testAJobThatRunsProctorItselfCountsAsTheProctorJob(): void
     {
         $findings = $this->runCheck(<<<'YAML'

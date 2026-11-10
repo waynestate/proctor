@@ -94,6 +94,10 @@ final class PreflightGatesCheck implements CheckInterface
                 $includes[] = [$componentPath, $name, $inputs];
                 if ($name === 'proctor') {
                     $runsProctor = true;
+                    $command = $this->proctorCommandFinding($componentPath, $inputs, $file['path'], $lines);
+                    if ($command !== null) {
+                        $findings[] = $command;
+                    }
                 }
                 if (!in_array($name, self::GATE_COMPONENTS, true) || ($inputs['allow_failure'] ?? null) !== true) {
                     continue;
@@ -192,6 +196,60 @@ final class PreflightGatesCheck implements CheckInterface
         });
 
         return $findings;
+    }
+
+    /**
+     * The warning for a Preflight proctor include whose proctor_command
+     * input disarms the job, or null when the input is absent (the default
+     * runs `vendor/bin/proctor check`) or runs PROCTOR plainly.
+     *
+     * The component hands the input to the shell as written, so it is the
+     * one free-text door into the job. Two shapes open it: a command with
+     * no segment that runs `proctor check` or `proctor gate` (`true`, `echo
+     * skipped`), and one that runs PROCTOR but pipes it or follows it with
+     * `||`, so the shell reports another command's exit code and a failing
+     * check passes. A redirect (`> report.json`) leaves the exit code alone
+     * and is fine. The proctor watches the exam paper, not just the clock.
+     *
+     * @param array<mixed, mixed> $inputs the include's inputs
+     * @param list<string>        $lines  the raw lines of the file it is in
+     */
+    private function proctorCommandFinding(string $componentPath, array $inputs, string $path, array $lines): ?Finding
+    {
+        $command = $inputs['proctor_command'] ?? null;
+        if (!is_string($command)) {
+            return null;
+        }
+
+        $runs = false;
+        foreach (preg_split('/&&|\|\||;|\||\n/', $command) ?: [] as $segment) {
+            $segment = trim($segment);
+            if ($segment !== '' && !str_starts_with($segment, '#') && preg_match(self::PROCTOR_COMMAND_PATTERN, $segment) === 1) {
+                $runs = true;
+            }
+        }
+
+        if (!$runs) {
+            $problem = 'runs neither proctor check nor proctor gate, so the job passes without grading the app';
+        } elseif (preg_match('/\|/', $command) === 1) {
+            $problem = 'pipes PROCTOR or follows it with ||, so the shell reports another command\'s exit code and a failing check still passes';
+        } else {
+            return null;
+        }
+
+        return new Finding(
+            $this->id(),
+            Finding::STATUS_WARNING,
+            sprintf(
+                'preflight-gates-proctor-command: the Preflight proctor component\'s proctor_command "%s" %s; leave the input at its default or run vendor/bin/proctor check on its own',
+                trim((string) preg_replace('/\s+/', ' ', $command)),
+                $problem,
+            ),
+            $path,
+            $this->lineAfter($this->lineOf($componentPath, $lines), '/^\s*proctor_command\s*:/', $lines),
+            null,
+            'proctor-command',
+        );
     }
 
     /**

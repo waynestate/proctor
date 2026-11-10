@@ -65,8 +65,11 @@ Sources: [OWASP Top 10 CI/CD Security Risks, CICD-SEC-4 Poisoned Pipeline Execut
 the `PROCTOR_POLICY` environment variable, then the app's vendored copy (when at least as fresh as the bundled copy),
 then the bundled copy, and every report names the policy in use. Since 0.6.0, in CI `--policy` and `--today` are
 refused unless `PROCTOR_ALLOW_OVERRIDES` is exactly `1` (`src/Policy/CiGuard.php`), while `PROCTOR_POLICY` stays
-allowed. What remains: Preflight's `proctor_command` input is free text, and an app's own `.gitlab-ci.yml` can
-override included job keys, so an app can still change the command and the vendored policy. An app that sets
+allowed. Preflight's `proctor_command` input is free text, so `preflight-gates` (Unreleased) warns
+(`proctor/preflight-gates/proctor-command`) when it runs neither `proctor check` nor `proctor gate`, or pipes PROCTOR
+or follows it with `||` so a failing check passes; `preflight-pinned` warns when an app re-declares an included
+Preflight job's script, and `preflight-gates` when it sets `allow_failure` on a gate. What remains: an app can still
+change the vendored policy, and override other job keys (the image, the variables). An app that sets
 `PROCTOR_ALLOW_OVERRIDES` to `1` in its own pipeline is flagged: the `ci-pipelines` check warns
 (`proctor/ci-pipelines/allow-overrides`) when the GitLab or GitHub pipeline environment sets it. A warning, not a
 fail: PROCTOR's own pipeline sets it on purpose, and the right home for it (a protected or group-level variable) is
@@ -920,7 +923,7 @@ see the server version.
 Practices tagged `Not yet`, `Documented` or `Partially`, each one line naming what is still open. Highest value first.
 A practice that is now `Checked` or `Enforced` leaves the list; CHANGELOG.md records when it closed.
 
-1. 1.2: Partly done: in CI `--policy` and `--today` are refused unless `PROCTOR_ALLOW_OVERRIDES` is exactly `1` (0.6.0); Preflight's `proctor_command` input is still free text, an app's `.gitlab-ci.yml` can override included job keys; the `ci-pipelines` check warns (`proctor/ci-pipelines/allow-overrides`) when an app's pipeline sets `PROCTOR_ALLOW_OVERRIDES` to `1` (see 1.2).
+1. 1.2: Partly done: in CI `--policy` and `--today` are refused unless `PROCTOR_ALLOW_OVERRIDES` is exactly `1` (0.6.0); `preflight-gates` warns when Preflight's `proctor_command` input runs no PROCTOR or masks its exit code, but an app's `.gitlab-ci.yml` can still override other included job keys and the vendored policy; the `ci-pipelines` check warns (`proctor/ci-pipelines/allow-overrides`) when an app's pipeline sets `PROCTOR_ALLOW_OVERRIDES` to `1` (see 1.2).
 2. 8.1: Partly done: the PHAR build exists and the Preflight job installs the app with `--no-plugins --no-scripts`; the PHAR is built and attached to each GitLab Release by the `release-phar` job, the job still installs the app's dependencies, and the README still says `composer require` (see 8.1).
 3. 2.6: Partly done: PROCTOR's own pipeline runs the Preflight `proctor` component on `deploy/`, and the job blocks the pipeline; raise PROCTOR's floor from `^8.3` to `^8.4` before PHP 8.3 reaches end of life on 2027-12-31 (see 2.6).
 4. 5.7: Partly done: the `override-approver` check flags an approver who wrote the entry (git blame; rule ids `proctor/override-approver/self-approved`, `proctor/override-approver/could-not-run`), warn or fail per CREED `rules.override_self_approval`; that the approver really approved still rests on the merge request, since GitLab Community Edition has no Code Owner approval (see 5.7).
