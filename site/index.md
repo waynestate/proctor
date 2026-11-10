@@ -617,6 +617,9 @@ Transfer students, new this term
 - ![Squire logo](https://proctor.apps.wayne.edu/assets/marks/squire.png)
   [Squire](https://squire.apps.wayne.edu/)
   The deploy kit for Citadel. Its release script asks `proctor gate` for a go or no-go, and can be set to stop on a no-go.
+- ![Parity logo](https://proctor.apps.wayne.edu/assets/marks/parity.png)
+  Parity
+  Runs Citadel on your computer: a practice exam on the real paper. Version 0.1.0 and its site are coming.
 - ![Drawbridge logo](https://proctor.apps.wayne.edu/assets/marks/drawbridge.png)
   [Drawbridge](https://drawbridge.apps.wayne.edu/)
   A gateway that signs people in through Entra ID before they reach a Citadel app.

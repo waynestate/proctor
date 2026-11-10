@@ -300,7 +300,7 @@ for (const b of badges) {
 /* ------------------------------------------------------------------- cast */
 /* The WayneUI tile is composed here, not copied: the reverse mark (white
    frame, gold tab) is set on a Wayne State green rounded square so it sits
-   beside the other thirteen tiles as a sibling, not a foreign object. The
+   beside the other fourteen tiles as a sibling, not a foreign object. The
    traced paths are placed unchanged. No edits to any d= value, fill, or
    the mark's own viewBox. */
 const markSrc = path.join(scriptDir, "src", "wayneui-mark-reverse.svg");
@@ -329,7 +329,7 @@ if (fs.existsSync(wayneuiDark)) {
 }
 
 const CAST = [
-  "wayneui", "creed", "proctor", "sesame", "helmet", "sourdough", "squire",
+  "wayneui", "creed", "proctor", "sesame", "helmet", "sourdough", "squire", "parity",
   "preflight", "pinstripe", "booster", "rollcall", "drawbridge", "advisor", "weld",
 ];
 for (const name of CAST) {
