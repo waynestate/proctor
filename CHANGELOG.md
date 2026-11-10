@@ -4,6 +4,7 @@
 
 ## 0.14.0 (2026-11-10)
 
+- Docs: the upgrading page has a 0.14.0 section (no breaks; `script-pair` and how to clear its warnings).
 - Site: the front page counts forty-four checks and shows `script-pair`.
 - Added: `script-pair` warns when a developer script in `scripts/` has no twin: a `.sh` without its `.ps1` (`proctor/script-pair/missing-ps1`) or a `.ps1` without its `.sh` (`proctor/script-pair/missing-sh`), as CREED's every-os rule asks. It never fails and is not in `proctor gate`.
 

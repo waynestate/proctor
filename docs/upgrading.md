@@ -7,6 +7,33 @@ description: How to upgrade PROCTOR to a newer release and note the changes that
 
 PROCTOR is the invigilator, so upgrading it is a seat change, not a new exam: same hall, fresher pen. This page tells you how to move an app from one PROCTOR release to the next and which changes affect your runs. Start with the release that has a break, then work down to the additive ones.
 
+## 0.14.0
+
+Released 2026-11-10. This is a pre-1.0 minor: consumers that pin `^0.13` stay on 0.13.x until they move their constraint to `^0.14`. Nothing breaks: the one new check, `script-pair`, only warns and is not in the deploy gate, so a run that passed on 0.13.0 still passes. The proctor now checks that every candidate brought both pencils: a developer script in `scripts/` ships as a `.ps1` and `.sh` pair, as CREED's every-os rule asks.
+
+### Breaking
+
+- None. The new findings are warnings, and a warning never changes the exit code.
+
+### Added
+
+| Check | Rule ids | What it warns on |
+| --- | --- | --- |
+| `script-pair` | `proctor/script-pair/missing-ps1`, `proctor/script-pair/missing-sh` | a `.sh` under the app's top-level `scripts/` (any depth, `vendor/`, `node_modules/` and `.git/` skipped) with no `.ps1` of the same name in the same folder, or a `.ps1` with no `.sh`; `deploy/`, `bin/` and other folders are not read |
+
+### Changed
+
+- The check count is forty-four, eight of them in the deploy gate (unchanged).
+
+### Deprecated
+
+- None recorded so far.
+
+### Steps
+
+1. Move the PROCTOR constraint in your composer.json from `^0.13` to `^0.14`, then apply it with `composer require waynestate/proctor --dev`.
+2. If `proctor check` now warns `missing-ps1` or `missing-sh`, add the missing twin next to the script (same name, same folder, doing the same thing), or turn the script into one PHP command that runs on every OS.
+
 ## 0.13.0
 
 Released 2026-11-10. This is a pre-1.0 minor: consumers that pin `^0.12` stay on 0.12.x until they move their constraint to `^0.13`. Nothing breaks: `composer-cooldown` still only warns and is not in the deploy gate, so a run that passed on 0.12.0 still passes. The proctor now reads the cooldown from the rule book instead of reciting it from memory: the period and the exemptions come from the CREED policy, and an app that waits less than the policy asks gets a warning.
