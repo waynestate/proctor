@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Changed: the deploy layer requires PROCTOR ^0.12 (locked 0.12.0, was ^0.11.1): two new warning-only checks, nothing breaks.
+
 ## 0.12.0 (2026-11-10)
 
 - Added: composer-cooldown warns when composer.json sets no Composer release cooldown (proctor/composer-cooldown/missing) or turns its blocking off (proctor/composer-cooldown/not-blocking); CREED practice 40. Never a failure, not in the gate.
