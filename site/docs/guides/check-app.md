@@ -338,17 +338,21 @@ git commit -m "Pin shell scripts, server config and Dockerfiles to LF"
 
 - `proctor/script-pair/missing-ps1`: a `.sh` under the top-level `scripts/` directory has no `.ps1` at the same path minus the extension. One warning per unpaired script, on line 1.
 - `proctor/script-pair/missing-sh`: a `.ps1` under the top-level `scripts/` directory has no `.sh` at the same path minus the extension. One warning per unpaired script, on line 1.
+- `proctor/script-pair/squire-owned`: an unpaired script whose app-relative path is a key of the `files` object of the app's `.squire.json` is a Squire kit file that runs on the deploy host, not a developer machine. One info note per such script, on line 1; visible in the report, not counted.
+- `proctor/script-pair/single-os`: an unpaired script that carries `# proctor-ignore script-pair: <reason>` anywhere in one of its first 10 lines, with a non-empty reason, is single-OS by its own word. One info note per such script, on the marker's line; visible in the report, not counted.
 - `proctor/script-pair` (pass): every developer script in `scripts/` has its twin, or the app has no `scripts/` directory.
 
 Scanned: files at any depth under the top-level `scripts/` directory only (not `deploy/`, `bin/` or anything else), whose name ends in `.sh` or `.ps1` (case-sensitive). Skipped at any depth: `vendor/`, `node_modules/` and `.git/`. Pairing is by the same path minus the extension, in the same folder: `scripts/a11y.sh` pairs with `scripts/a11y.ps1`, `scripts/tools/x.sh` with `scripts/tools/x.ps1`; a twin in another folder does not count.
 
-Fix by adding the missing twin with the same path minus the extension, doing the same thing, or by making the script one PHP command instead.
+Fix by adding the missing twin with the same path minus the extension, doing the same thing, or by making the script one PHP command instead. A script that runs only on the deploy host or only inside a CI container can say so with `# proctor-ignore script-pair: <reason>` in its first 10 lines.
 
 | Check | Rule id |
 | --- | --- |
 | `script-pair` | `proctor/script-pair` |
 | `script-pair` | `proctor/script-pair/missing-ps1` |
 | `script-pair` | `proctor/script-pair/missing-sh` |
+| `script-pair` | `proctor/script-pair/squire-owned` |
+| `script-pair` | `proctor/script-pair/single-os` |
 
 ## case-clash [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#case-clash)
 

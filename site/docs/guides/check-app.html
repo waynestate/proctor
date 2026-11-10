@@ -565,10 +565,12 @@ git commit -m &quot;Pin shell scripts, server config and Dockerfiles to LF&quot;
 <ul>
 <li><code>proctor/script-pair/missing-ps1</code>: a <code>.sh</code> under the top-level <code>scripts/</code> directory has no <code>.ps1</code> at the same path minus the extension. One warning per unpaired script, on line 1.</li>
 <li><code>proctor/script-pair/missing-sh</code>: a <code>.ps1</code> under the top-level <code>scripts/</code> directory has no <code>.sh</code> at the same path minus the extension. One warning per unpaired script, on line 1.</li>
+<li><code>proctor/script-pair/squire-owned</code>: an unpaired script whose app-relative path is a key of the <code>files</code> object of the app's <code>.squire.json</code> is a Squire kit file that runs on the deploy host, not a developer machine. One info note per such script, on line 1; visible in the report, not counted.</li>
+<li><code>proctor/script-pair/single-os</code>: an unpaired script that carries <code># proctor-ignore script-pair: &lt;reason&gt;</code> anywhere in one of its first 10 lines, with a non-empty reason, is single-OS by its own word. One info note per such script, on the marker's line; visible in the report, not counted.</li>
 <li><code>proctor/script-pair</code> (pass): every developer script in <code>scripts/</code> has its twin, or the app has no <code>scripts/</code> directory.</li>
 </ul>
 <p>Scanned: files at any depth under the top-level <code>scripts/</code> directory only (not <code>deploy/</code>, <code>bin/</code> or anything else), whose name ends in <code>.sh</code> or <code>.ps1</code> (case-sensitive). Skipped at any depth: <code>vendor/</code>, <code>node_modules/</code> and <code>.git/</code>. Pairing is by the same path minus the extension, in the same folder: <code>scripts/a11y.sh</code> pairs with <code>scripts/a11y.ps1</code>, <code>scripts/tools/x.sh</code> with <code>scripts/tools/x.ps1</code>; a twin in another folder does not count.</p>
-<p>Fix by adding the missing twin with the same path minus the extension, doing the same thing, or by making the script one PHP command instead.</p>
+<p>Fix by adding the missing twin with the same path minus the extension, doing the same thing, or by making the script one PHP command instead. A script that runs only on the deploy host or only inside a CI container can say so with <code># proctor-ignore script-pair: &lt;reason&gt;</code> in its first 10 lines.</p>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
 <thead>
 <tr>
@@ -588,6 +590,14 @@ git commit -m &quot;Pin shell scripts, server config and Dockerfiles to LF&quot;
 <tr>
 <td><code>script-pair</code></td>
 <td><code>proctor/script-pair/missing-sh</code></td>
+</tr>
+<tr>
+<td><code>script-pair</code></td>
+<td><code>proctor/script-pair/squire-owned</code></td>
+</tr>
+<tr>
+<td><code>script-pair</code></td>
+<td><code>proctor/script-pair/single-os</code></td>
 </tr>
 </tbody>
 </table></div>
