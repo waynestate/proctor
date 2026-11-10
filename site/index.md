@@ -112,7 +112,7 @@ The whole paper
 Every check `proctor check` asks, in the order it asks them. Each id opens its page in the docs.
 
 - Gate also asked by `proctor gate` before a deploy
-- New on main since 0.13.0, in the next release
+- New new in 0.14.0
 
 1. [`php-floor`](https://proctor.apps.wayne.edu/docs/guides/check-php.html#php-floor): Is the lowest PHP you allow still supported? Gate
 2. [`unpatched`](https://proctor.apps.wayne.edu/docs/guides/check-php.html#unpatched): Is each locked line on its latest patch? Gate
@@ -264,7 +264,7 @@ Pick the copy your reader needs with `--format`. The findings are the same in al
 White copy · for people · `--format=text` (the default)
 
 ```
-proctor 0.13.0 | composer: 2.11.1
+proctor 0.14.0 | composer: 2.11.1
 Policy: bundled (/app/src/Creed/policy.json), refreshed 2026-11-08, 1 days ago
 PASS php-floor: php floor 8.4 is active
 FAIL unbounded-constraints: vendor/dev constraint "dev-master" is unbounded
@@ -289,7 +289,7 @@ Canary copy · for scripts · `--format=json`
 ```
 {
     "tool": "proctor",
-    "version": "0.13.0",
+    "version": "0.14.0",
     "path": "tests/fixtures/apps/unbounded-app",
     "today": "2026-11-09",
     "result": "fail",
@@ -360,7 +360,7 @@ Gold copy · for GitHub code scanning · `--format=sarif`
     "version": "2.1.0",
     "runs": [
         {
-            "tool": { "driver": { "name": "proctor", "version": "0.13.0", … } },
+            "tool": { "driver": { "name": "proctor", "version": "0.14.0", … } },
             "results": [
                 {
                     "ruleId": "proctor/unbounded-constraints/unbounded",
