@@ -62,6 +62,7 @@ final class CheckSet
             new DevOnlyPackagesCheck(),
             new ComposerConfigCheck(),
             new LockCommittedCheck(),
+            new LockTrackedCheck(),
             new PortabilityCheck(),
             new Mysql56Check(),
             new DestructiveDeployCheck(),

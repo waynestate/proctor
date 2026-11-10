@@ -23,7 +23,7 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `node-eol` | `proctor/node-eol/odd-major` |
 | `lock-committed` | `proctor/lock-committed` |
 | `lock-committed` | `proctor/lock-committed/out-of-sync` |
-| `lock-committed` | `proctor/lock-committed/untracked` |
+| `lock-tracked` | `proctor/lock-tracked` |
 | `destructive-deploy` | `proctor/destructive-deploy` |
 | `crlf-deploy-script` | `proctor/crlf-deploy-script` |
 | `crlf-deploy-script` | `proctor/crlf-deploy-script/no-gitattributes` |

@@ -28,6 +28,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/laravel-eol',
         'proctor/laravel-php',
         'proctor/lock-committed',
+        'proctor/lock-tracked',
         'proctor/destructive-deploy',
         'proctor/crlf-deploy-script',
         'proctor/crlf-deploy-script/no-gitattributes',
@@ -99,7 +100,6 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/served-folder/phpinfo',
         // lock-committed
         'proctor/lock-committed/out-of-sync',
-        'proctor/lock-committed/untracked',
         // unbounded-constraints
         'proctor/unbounded-constraints/unbounded',
         'proctor/unbounded-constraints/repository',

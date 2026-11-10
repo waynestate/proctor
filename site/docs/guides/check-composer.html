@@ -170,7 +170,7 @@
 </tbody>
 </table></div>
 <h2 id="lock-committed"><span class="docs-heading-tail"><span>lock-committed</span><a class="docs-heading-link" aria-label="Link to this section" href="#lock-committed">#</a></span></h2>
-<p><code>lock-committed</code> fails when composer.lock is missing from the app path. When the lock is present and its <code>content-hash</code> is a real 32-hex hash, it warns (<code>proctor/lock-committed/out-of-sync</code>) when the hash no longer matches composer.json, so a stale lock that still installs is visible instead of silent; the warning never changes the exit code. When the app path is in a git repository and git does not track composer.lock, it warns (<code>proctor/lock-committed/untracked</code>), because CI's install writes a lock that was never committed; outside a repository it falls back to the file on disk.</p>
+<p><code>lock-committed</code> fails when composer.lock is missing from the app path. When the lock is present and its <code>content-hash</code> is a real 32-hex hash, it warns (<code>proctor/lock-committed/out-of-sync</code>) when the hash no longer matches composer.json, so a stale lock that still installs is visible instead of silent; the warning never changes the exit code.</p>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
 <thead>
 <tr>
@@ -187,9 +187,21 @@
 <td><code>lock-committed</code></td>
 <td><code>proctor/lock-committed/out-of-sync</code></td>
 </tr>
+</tbody>
+</table></div>
+<h2 id="lock-tracked"><span class="docs-heading-tail"><span>lock-tracked</span><a class="docs-heading-link" aria-label="Link to this section" href="#lock-tracked">#</a></span></h2>
+<p><code>lock-tracked</code> asks git whether composer.lock is tracked. When the lock is on disk but git does not track it, it warns (<code>proctor/lock-tracked</code>), because CI's own install writes a lock that was never committed, so the release would install a tree nobody tested; when git lists the lock it passes. It says nothing when the lock is missing (lock-committed owns that verdict), when the app path is not inside a git repository, or when git cannot be run.</p>
+<div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
+<thead>
 <tr>
-<td><code>lock-committed</code></td>
-<td><code>proctor/lock-committed/untracked</code></td>
+<th>Check</th>
+<th>Rule id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>lock-tracked</code></td>
+<td><code>proctor/lock-tracked</code></td>
 </tr>
 </tbody>
 </table></div>
@@ -304,7 +316,7 @@
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../../docs/guides/checks-overview.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">Checks</span></a><a class="docs-pager__link docs-pager__link--next" href="../../docs/guides/check-php.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">PHP checks</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#unbounded-constraints">unbounded-constraints</a></li><li class="docs-toc__item"><a href="#dev-only-packages">dev-only-packages</a></li><li class="docs-toc__item"><a href="#composer-config">composer-config</a></li><li class="docs-toc__item"><a href="#lock-committed">lock-committed</a></li><li class="docs-toc__item"><a href="#composer-audit">composer-audit</a></li><li class="docs-toc__item"><a href="#composer-version">composer-version</a></li><li class="docs-toc__item"><a href="#repo-url-credentials">repo-url-credentials</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#unbounded-constraints">unbounded-constraints</a></li><li class="docs-toc__item"><a href="#dev-only-packages">dev-only-packages</a></li><li class="docs-toc__item"><a href="#composer-config">composer-config</a></li><li class="docs-toc__item"><a href="#lock-committed">lock-committed</a></li><li class="docs-toc__item"><a href="#lock-tracked">lock-tracked</a></li><li class="docs-toc__item"><a href="#composer-audit">composer-audit</a></li><li class="docs-toc__item"><a href="#composer-version">composer-version</a></li><li class="docs-toc__item"><a href="#repo-url-credentials">repo-url-credentials</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.11.2</span></span>

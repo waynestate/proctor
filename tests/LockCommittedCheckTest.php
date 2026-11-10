@@ -9,8 +9,6 @@ use PHPUnit\Framework\TestCase;
 use Waynestate\Proctor\Check\CheckContext;
 use Waynestate\Proctor\Check\Finding;
 use Waynestate\Proctor\Check\LockCommittedCheck;
-use Waynestate\Proctor\Check\ProcessResult;
-use Waynestate\Proctor\Check\ProcessRunnerInterface;
 use Waynestate\Proctor\Creed\Policy;
 
 /**
@@ -62,7 +60,7 @@ final class LockCommittedCheckTest extends TestCase
         $composerJson = ['require' => ['php' => '^8.3']];
         $appPath = $this->makeApp($composerJson, $this->contentHash($composerJson));
 
-        $findings = $this->checkWith($this->silentGit())->run($this->contextFor($appPath));
+        $findings = (new LockCommittedCheck())->run($this->contextFor($appPath));
 
         self::assertCount(1, $findings);
         self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
@@ -76,7 +74,7 @@ final class LockCommittedCheckTest extends TestCase
         $composerJson = ['require' => ['php' => '^8.3']];
         $appPath = $this->makeApp($composerJson, str_repeat('0', 32));
 
-        $findings = $this->checkWith($this->silentGit())->run($this->contextFor($appPath));
+        $findings = (new LockCommittedCheck())->run($this->contextFor($appPath));
 
         self::assertCount(2, $findings);
         self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
@@ -97,7 +95,7 @@ final class LockCommittedCheckTest extends TestCase
         $composerJson = ['require' => ['php' => '^8.3']];
         $appPath = $this->makeApp($composerJson, 'fixture');
 
-        $findings = $this->checkWith($this->silentGit())->run($this->contextFor($appPath));
+        $findings = (new LockCommittedCheck())->run($this->contextFor($appPath));
 
         self::assertCount(1, $findings);
         self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
@@ -112,7 +110,7 @@ final class LockCommittedCheckTest extends TestCase
         ];
         $appPath = $this->makeApp($composerJson, $this->contentHash($composerJson));
 
-        $findings = $this->checkWith($this->silentGit())->run($this->contextFor($appPath));
+        $findings = (new LockCommittedCheck())->run($this->contextFor($appPath));
 
         self::assertCount(1, $findings);
         self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
@@ -131,7 +129,7 @@ final class LockCommittedCheckTest extends TestCase
         ];
         foreach ($badHashes as $hash) {
             $appPath = $this->makeApp($composerJson, $hash);
-            $findings = $this->checkWith($this->silentGit())->run($this->contextFor($appPath));
+            $findings = (new LockCommittedCheck())->run($this->contextFor($appPath));
             self::assertCount(1, $findings, sprintf('hash "%s" must give no extra finding', $hash));
             self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
             self::assertNull($findings[0]->rule);
@@ -145,7 +143,7 @@ final class LockCommittedCheckTest extends TestCase
             json_encode(['packages' => [], 'packages-dev' => []]),
         );
 
-        $findings = $this->checkWith($this->silentGit())->run($this->contextFor($appPath));
+        $findings = (new LockCommittedCheck())->run($this->contextFor($appPath));
 
         self::assertCount(1, $findings);
         self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
@@ -159,7 +157,7 @@ final class LockCommittedCheckTest extends TestCase
             'not json at all',
         );
 
-        $findings = $this->checkWith($this->silentGit())->run($this->contextFor($appPath));
+        $findings = (new LockCommittedCheck())->run($this->contextFor($appPath));
 
         self::assertCount(1, $findings);
         self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
@@ -174,7 +172,7 @@ final class LockCommittedCheckTest extends TestCase
             'content-hash' => str_repeat('0', 32),
         ]));
 
-        $findings = $this->checkWith($this->silentGit())->run($this->contextFor($appPath));
+        $findings = (new LockCommittedCheck())->run($this->contextFor($appPath));
 
         self::assertCount(1, $findings);
         self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
@@ -189,7 +187,7 @@ final class LockCommittedCheckTest extends TestCase
             'content-hash' => str_repeat('0', 32),
         ]));
 
-        $findings = $this->checkWith($this->silentGit())->run($this->contextFor($appPath));
+        $findings = (new LockCommittedCheck())->run($this->contextFor($appPath));
 
         self::assertCount(1, $findings);
         self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
@@ -207,105 +205,12 @@ final class LockCommittedCheckTest extends TestCase
         // proves config.platform is part of the hash input.
         $appPath = $this->makeApp($composerJson, $this->contentHash(['require' => ['php' => '^8.3']]));
 
-        $findings = $this->checkWith($this->silentGit())->run($this->contextFor($appPath));
+        $findings = (new LockCommittedCheck())->run($this->contextFor($appPath));
 
         self::assertCount(2, $findings);
         self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
         self::assertSame(Finding::STATUS_WARNING, $findings[1]->status);
         self::assertSame('proctor/lock-committed/out-of-sync', $findings[1]->ruleId);
-    }
-
-    public function testAnUntrackedLockAddsTheUntrackedWarning(): void
-    {
-        $composerJson = ['require' => ['php' => '^8.3']];
-        $appPath = $this->makeApp($composerJson, $this->contentHash($composerJson));
-        $fake = new class implements ProcessRunnerInterface {
-            /** @var list<list<string>> */
-            public array $commands = [];
-
-            public function run(array $command, string $cwd, int $timeout = 300, ?array $env = null): ProcessResult
-            {
-                $this->commands[] = $command;
-
-                return new ProcessResult(0, '', '');
-            }
-        };
-
-        $findings = $this->checkWith($fake)->run($this->contextFor($appPath));
-
-        self::assertCount(2, $findings);
-        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
-        self::assertNull($findings[0]->rule);
-
-        self::assertSame(Finding::STATUS_WARNING, $findings[1]->status);
-        self::assertSame('untracked', $findings[1]->rule);
-        self::assertSame('proctor/lock-committed/untracked', $findings[1]->ruleId);
-        self::assertSame(
-            'composer.lock is on disk but git does not track it; commit it (git add composer.lock) so the release installs the tree you tested',
-            $findings[1]->message,
-        );
-        self::assertSame('composer.lock', $findings[1]->path);
-        self::assertSame([['git', '-C', $appPath, 'ls-files', '-z', '--', 'composer.lock']], $fake->commands);
-    }
-
-    public function testATrackedLockAddsNoWarning(): void
-    {
-        $composerJson = ['require' => ['php' => '^8.3']];
-        $appPath = $this->makeApp($composerJson, $this->contentHash($composerJson));
-        $fake = new class implements ProcessRunnerInterface {
-            public function run(array $command, string $cwd, int $timeout = 300, ?array $env = null): ProcessResult
-            {
-                return new ProcessResult(0, "composer.lock\0", '');
-            }
-        };
-
-        $findings = $this->checkWith($fake)->run($this->contextFor($appPath));
-
-        self::assertCount(1, $findings);
-        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
-        self::assertNull($findings[0]->rule);
-        self::assertSame('composer.lock is present', $findings[0]->message);
-    }
-
-    public function testOutsideARepositoryTheCheckFallsBackToTheFileOnDisk(): void
-    {
-        $composerJson = ['require' => ['php' => '^8.3']];
-        $appPath = $this->makeApp($composerJson, $this->contentHash($composerJson));
-        $fake = new class implements ProcessRunnerInterface {
-            public function run(array $command, string $cwd, int $timeout = 300, ?array $env = null): ProcessResult
-            {
-                return new ProcessResult(128, '', 'not a git repository');
-            }
-        };
-
-        $findings = $this->checkWith($fake)->run($this->contextFor($appPath));
-
-        self::assertCount(1, $findings);
-        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
-        self::assertNull($findings[0]->rule);
-    }
-
-    public function testAMissingLockNeverAsksGit(): void
-    {
-        $appPath = $this->makeRawApp(json_encode(['require' => ['php' => '^8.3']]), null);
-        $fake = new class implements ProcessRunnerInterface {
-            public int $calls = 0;
-
-            public function run(array $command, string $cwd, int $timeout = 300, ?array $env = null): ProcessResult
-            {
-                $this->calls++;
-
-                return new ProcessResult(0, '', '');
-            }
-        };
-
-        $findings = $this->checkWith($fake)->run($this->contextFor($appPath));
-
-        self::assertCount(1, $findings);
-        self::assertSame(Finding::STATUS_FAIL, $findings[0]->status);
-        self::assertSame('composer.lock is missing', $findings[0]->message);
-        self::assertSame('composer.lock', $findings[0]->path);
-        self::assertSame(0, $fake->calls);
     }
 
     /**
@@ -371,30 +276,6 @@ final class LockCommittedCheckTest extends TestCase
         ksort($content);
 
         return md5(json_encode($content));
-    }
-
-    /**
-     * The check under test with a fake runner and git pinned to "git", so
-     * the tests never depend on git being on PATH.
-     */
-    private function checkWith(ProcessRunnerInterface $runner): LockCommittedCheck
-    {
-        return new LockCommittedCheck($runner, 'git');
-    }
-
-    /**
-     * A fake runner that answers every git call with a non-zero exit, so
-     * the check falls back to the file on disk no matter where the temp
-     * dir sits.
-     */
-    private function silentGit(): ProcessRunnerInterface
-    {
-        return new class implements ProcessRunnerInterface {
-            public function run(array $command, string $cwd, int $timeout = 300, ?array $env = null): ProcessResult
-            {
-                return new ProcessResult(128, '', 'not a git repository');
-            }
-        };
     }
 
     private function contextFor(string $appPath): CheckContext

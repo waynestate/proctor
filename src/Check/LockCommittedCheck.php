@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Waynestate\Proctor\Check;
 
-use Waynestate\Proctor\ToolError;
-
 /**
  * Checks that composer.lock is committed, i.e. present in the app path, and
  * that it still matches composer.json.
@@ -18,12 +16,6 @@ use Waynestate\Proctor\ToolError;
  * Composer's own Locker::getContentHash: the relevant keys of the decoded
  * composer.json, plus config.platform when set, ksorted and md5-hashed as
  * JSON.
- *
- * When the lock is on disk, the check also asks git whether it tracks the
- * file and warns (`proctor/lock-committed/untracked`) when it does not,
- * because CI's own install would otherwise write a lock that was never
- * committed; outside a git repository, or when git cannot be run, it falls
- * back silently to the file on disk.
  */
 final class LockCommittedCheck implements CheckInterface
 {
@@ -46,11 +38,6 @@ final class LockCommittedCheck implements CheckInterface
         'repositories',
         'extra',
     ];
-
-    public function __construct(
-        private readonly ProcessRunnerInterface $process = new ProcessRunner(),
-        private readonly ?string $gitPath = null,
-    ) {}
 
     public function id(): string
     {
@@ -90,83 +77,7 @@ final class LockCommittedCheck implements CheckInterface
             );
         }
 
-        if ($this->gitTracksLock($context) === false) {
-            $findings[] = new Finding(
-                $this->id(),
-                Finding::STATUS_WARNING,
-                'composer.lock is on disk but git does not track it; commit it (git add composer.lock) so the release installs the tree you tested',
-                'composer.lock',
-                1,
-                null,
-                'untracked',
-            );
-        }
-
         return $findings;
-    }
-
-    /**
-     * Whether git tracks composer.lock in the app path: true when git lists
-     * it, false when git ran cleanly and listed nothing, null when the app
-     * path is not inside a git repository or git cannot be run (git not
-     * found, a ToolError, or a non-zero exit code such as dubious
-     * ownership), in which case the check falls back to the file on disk.
-     */
-    private function gitTracksLock(CheckContext $context): ?bool
-    {
-        $git = $this->gitPath ?? $this->findGit();
-        if ($git === null) {
-            return null;
-        }
-
-        try {
-            $result = $this->process->run(
-                [$git, '-C', $context->appPath, 'ls-files', '-z', '--', 'composer.lock'],
-                $context->appPath,
-                $context->timeout,
-            );
-        } catch (ToolError $e) {
-            return null;
-        }
-        if ($result->exitCode !== 0) {
-            return null;
-        }
-
-        return trim(str_replace("\0", '', $result->stdout)) !== '';
-    }
-
-    /**
-     * Finds the git executable on PATH, or returns null. The same walk as
-     * ComposerAuditCheck::findComposer: resolving the path ourselves keeps
-     * proc_open from printing a spawn warning into the report when git is
-     * absent (the CLI tests run with a PATH that finds no tools).
-     */
-    private function findGit(): ?string
-    {
-        $pathEnv = getenv('PATH');
-        if ($pathEnv === false || $pathEnv === '') {
-            $pathEnv = getenv('Path');
-        }
-        if ($pathEnv === false || $pathEnv === '') {
-            return null;
-        }
-
-        $isWindows = DIRECTORY_SEPARATOR === '\\';
-        $candidates = $isWindows ? ['git.exe', 'git.cmd', 'git'] : ['git'];
-
-        foreach (explode(PATH_SEPARATOR, $pathEnv) as $dir) {
-            if ($dir === '') {
-                continue;
-            }
-            foreach ($candidates as $name) {
-                $full = $dir . DIRECTORY_SEPARATOR . $name;
-                if (is_file($full) && ($isWindows || is_executable($full))) {
-                    return $full;
-                }
-            }
-        }
-
-        return null;
     }
 
     /**

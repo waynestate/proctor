@@ -100,7 +100,8 @@ vendor/bin/proctor gate [--path=.] [--format=text|json] [--baseline=<report or d
 - `unbounded-constraints`: fails for every runtime constraint that is `*`, names a dev- branch, carries `@dev`, has a lower bound with no upper bound, or matches the policy's `banned_constraints`; warns on `path` and `vcs` repositories, on a `minimum-stability` below stable, and on a repository URL that is plain http. `require-dev`, `php`, `ext-*` and `lib-*` are not checked. No open-ended answers in this hall.
 - `dev-only-packages`: fails when Laravel Boost or Debugbar is in `require`, because they install in production and expose app internals; warns when Telescope is in `require` (keep it there only if the app registers it for local use) and when a test tool (phpunit, Pest, Mockery, Sail, Pail, Collision) is in `require`. It reads only `require`, never `require-dev`. It reports, and is not in the deploy gate.
 - `composer-config`: warns when composer.json opens a door Composer closes by default: `allow-plugins` set to `true`, `secure-http` set to `false`, `lock` set to `false`, `audit.block-insecure` set to `false`, `config.policy` set to `false`, `policy.malware` set to `false` or `policy.advisories` set to `false`; notes when `require.php` is set without `config.platform.php`. Warning and info only, never a fail, so an app that passes today keeps passing.
-- `lock-committed`: fails when composer.lock is missing from the app path. When the lock is present and its `content-hash` is a real 32-hex hash, it warns (`proctor/lock-committed/out-of-sync`) when the hash no longer matches composer.json, so a stale lock that still installs is visible instead of silent; the warning never changes the exit code. When the app path is in a git repository and git does not track composer.lock, it warns (`proctor/lock-committed/untracked`), because CI's install writes a lock that was never committed; outside a repository it falls back to the file on disk.
+- `lock-committed`: fails when composer.lock is missing from the app path. When the lock is present and its `content-hash` is a real 32-hex hash, it warns (`proctor/lock-committed/out-of-sync`) when the hash no longer matches composer.json, so a stale lock that still installs is visible instead of silent; the warning never changes the exit code.
+- `lock-tracked`: asks git whether it tracks composer.lock and warns (`proctor/lock-tracked`) when the lock is on disk but untracked, because CI's own install writes a lock that was never committed, so the release would install a tree nobody tested; passes when git lists the lock. It says nothing when the lock is missing (lock-committed owns that verdict), when the app path is not inside a git repository, or when git cannot be run. It starts git, so ADVISOR's in-process `proctor_check` skips it.
 - `portability`: warns when code hard-codes a platform fact: an absolute host path, a hard-coded proxy address, a local-disk session store, or a php_value/php_flag line in .htaccess. PHP files are matched on the syntax tree (nikic/php-parser with names resolved), not with regular expressions, so a comment or string that merely mentions a banned call is not flagged and a call split over several lines, or hidden behind a `use function ... as ...` alias, is. A call through a variable (`$f()`) is reported as an info note, never as a pass. Scanned: every *.php file, every file under the top-level `config/` directory, and every `.htaccess`. Skipped at any depth: `vendor/`, `node_modules/`, `storage/`, `tests/` and `.git/`; in a Laravel app (an `artisan` file at the project root) also the top-level `bootstrap/cache/`, which holds the generated output of `php artisan optimize` (config.php, routes-v7.php, services.php, packages.php, events.php) instead of app code. A raw-PHP app that keeps its own `bootstrap/cache/` folder is scanned as before.
 - `mysql56`: warns when migrations or app code use MySQL features the shared 5.6 server rejects: JSON columns (in `database/`) and JSON queries, generated columns, `renameColumn`/`renameIndex`, vector, invisible and spatial columns, `Schema::hasColumn`-style introspection, raw SQL with 5.7+ syntax, the upsert row alias, indexed strings over 191 characters, date columns defaulting to the current time, and the `db:show`/`db:monitor` commands. Citadel's shared MySQL server is 5.6, so migrations must avoid newer features. Warnings, not failures: an app on its own newer database is not affected. Fix by avoiding the feature (a raw `ALTER TABLE ... CHANGE` instead of `renameColumn`, `timestamp` instead of a date column defaulting to now, `Schema::defaultStringLength(191)` in `boot()`) or by moving the app to its own database. HTTP `->json()` calls are not flagged, and a long string only warns when the same migration indexes it.
 - `destructive-deploy`: fails when a deploy script runs an artisan command that drops or rebuilds the database (`migrate:fresh`, `migrate:refresh`, `migrate:reset`, `db:wipe`), which erases production data on every deploy. Scans `.sh` and `.php` files under a top-level `deployments/`, `deploy_scripts/`, `deploy/` or `scripts/` directory, the top-level `build.sh`, `release.sh` and `.gitlab-ci.yml`, and the `scripts` section of composer.json; shell comments are ignored. Fix by running plain `php artisan migrate --force` in the deploy.
@@ -233,7 +234,7 @@ The full set, grouped by check:
 | `node-eol` | `proctor/node-eol/odd-major` |
 | `lock-committed` | `proctor/lock-committed` |
 | `lock-committed` | `proctor/lock-committed/out-of-sync` |
-| `lock-committed` | `proctor/lock-committed/untracked` |
+| `lock-tracked` | `proctor/lock-tracked` |
 | `destructive-deploy` | `proctor/destructive-deploy` |
 | `crlf-deploy-script` | `proctor/crlf-deploy-script` |
 | `crlf-deploy-script` | `proctor/crlf-deploy-script/no-gitattributes` |
@@ -635,7 +636,7 @@ Part A
 
 ### The questions
 
-Nine of PROCTOR's forty-one checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures. [The whole paper](https://proctor.apps.wayne.edu/#paper-title) is further down.
+Nine of PROCTOR's forty-two checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures. [The whole paper](https://proctor.apps.wayne.edu/#paper-title) is further down.
 
 1. Q1 `php-floor`
    ### Is the lowest PHP your `composer.json` allows still supported?
@@ -695,7 +696,7 @@ Last term these were on the coming-soon list. They are built and released now, s
 
 The whole paper
 
-#### All forty-one questions
+#### All forty-two questions
 
 Every check `proctor check` asks, in the order it asks them. Each id opens its page in the docs.
 
@@ -713,38 +714,39 @@ Every check `proctor check` asks, in the order it asks them. Each id opens its p
 9. [`dev-only-packages`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#dev-only-packages): Are dev tools kept out of `require`?
 10. [`composer-config`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-config): Are Composer's safety settings left on?
 11. [`lock-committed`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#lock-committed): Is `composer.lock` committed, and in sync? Gate
-12. [`portability`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#portability): Would the app run on another host?
-13. [`mysql56`](https://proctor.apps.wayne.edu/docs/guides/check-php.html#mysql56): Will the migrations survive MySQL 5.6?
-14. [`destructive-deploy`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#destructive-deploy): Does a deploy ever wipe the database?
-15. [`crlf-deploy-script`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#crlf-deploy-script): Do the deploy scripts end lines in LF?
-16. [`gitattributes-eol`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#gitattributes-eol): Is every server file pinned to LF? New
-17. [`entrypoint-migrate`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#entrypoint-migrate): Does a container migrate as it starts?
-18. [`case-clash`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#case-clash): Do two paths differ only by case?
-19. [`ci-pipelines`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#ci-pipelines): Do the pipelines run `composer ci`?
-20. [`preflight-pinned`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#preflight-pinned): Is Preflight pinned to a release?
-21. [`preflight-gates`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#preflight-gates): Do Preflight's gates run, and block?
-22. [`composer-audit`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-audit): Does the lock carry a known advisory? Gate
-23. [`composer-version`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-version): Is the Composer on PATH safe?
-24. [`repo-url-credentials`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#repo-url-credentials): Is a token written into a package URL?
-25. [`instant-client-committed`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#instant-client-committed): Is Oracle Instant Client committed?
-26. [`env-outside-config`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#env-outside-config): Is `env()` called outside config?
-27. [`raw-identity-header`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#raw-identity-header): Does code read identity headers itself?
-28. [`app-key`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-key): Is the APP_KEY given away?
-29. [`app-debug`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-debug): Does a production file turn APP_DEBUG on?
-30. [`display-errors`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#display-errors): Does a php.ini show errors to visitors?
-31. [`directory-listing`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#directory-listing): Does the server list a folder's files?
-32. [`csp-unsafe-inline`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#csp-unsafe-inline): Does the CSP let inline scripts run?
-33. [`robots-txt`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#robots-txt): Does `robots.txt` say who may crawl?
-34. [`vite-secrets`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#vite-secrets): Does a `VITE_` name carry a secret?
-35. [`served-folder`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#served-folder): Can a stranger download a dump from `public/`?
-36. [`world-writable`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#world-writable): Does anything `chmod 777`?
-37. [`wayneui-forked-views`](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html#wayneui-forked-views): Are forked WayneUI views committed?
-38. [`wayneui-outdated`](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html#wayneui-outdated): Is your WayneUI the latest of its line?
-39. [`overrides`](https://proctor.apps.wayne.edu/docs/guides/overrides.html#how-overrides-work): Has any note from home expired? Gate
-40. [`override-approver`](https://proctor.apps.wayne.edu/docs/guides/overrides.html#someone-else-signs-the-note): Did someone sign their own note?
-41. [`policy-age`](https://proctor.apps.wayne.edu/docs/guides/check-php.html#policy-age): Is the policy itself fresh? Gate
+12. [`lock-tracked`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#lock-tracked): Is `composer.lock` tracked by git?
+13. [`portability`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#portability): Would the app run on another host?
+14. [`mysql56`](https://proctor.apps.wayne.edu/docs/guides/check-php.html#mysql56): Will the migrations survive MySQL 5.6?
+15. [`destructive-deploy`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#destructive-deploy): Does a deploy ever wipe the database?
+16. [`crlf-deploy-script`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#crlf-deploy-script): Do the deploy scripts end lines in LF?
+17. [`gitattributes-eol`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#gitattributes-eol): Is every server file pinned to LF? New
+18. [`entrypoint-migrate`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#entrypoint-migrate): Does a container migrate as it starts?
+19. [`case-clash`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#case-clash): Do two paths differ only by case?
+20. [`ci-pipelines`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#ci-pipelines): Do the pipelines run `composer ci`?
+21. [`preflight-pinned`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#preflight-pinned): Is Preflight pinned to a release?
+22. [`preflight-gates`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#preflight-gates): Do Preflight's gates run, and block?
+23. [`composer-audit`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-audit): Does the lock carry a known advisory? Gate
+24. [`composer-version`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-version): Is the Composer on PATH safe?
+25. [`repo-url-credentials`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#repo-url-credentials): Is a token written into a package URL?
+26. [`instant-client-committed`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#instant-client-committed): Is Oracle Instant Client committed?
+27. [`env-outside-config`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#env-outside-config): Is `env()` called outside config?
+28. [`raw-identity-header`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#raw-identity-header): Does code read identity headers itself?
+29. [`app-key`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-key): Is the APP_KEY given away?
+30. [`app-debug`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-debug): Does a production file turn APP_DEBUG on?
+31. [`display-errors`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#display-errors): Does a php.ini show errors to visitors?
+32. [`directory-listing`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#directory-listing): Does the server list a folder's files?
+33. [`csp-unsafe-inline`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#csp-unsafe-inline): Does the CSP let inline scripts run?
+34. [`robots-txt`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#robots-txt): Does `robots.txt` say who may crawl?
+35. [`vite-secrets`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#vite-secrets): Does a `VITE_` name carry a secret?
+36. [`served-folder`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#served-folder): Can a stranger download a dump from `public/`?
+37. [`world-writable`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#world-writable): Does anything `chmod 777`?
+38. [`wayneui-forked-views`](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html#wayneui-forked-views): Are forked WayneUI views committed?
+39. [`wayneui-outdated`](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html#wayneui-outdated): Is your WayneUI the latest of its line?
+40. [`overrides`](https://proctor.apps.wayne.edu/docs/guides/overrides.html#how-overrides-work): Has any note from home expired? Gate
+41. [`override-approver`](https://proctor.apps.wayne.edu/docs/guides/overrides.html#someone-else-signs-the-note): Did someone sign their own note?
+42. [`policy-age`](https://proctor.apps.wayne.edu/docs/guides/check-php.html#policy-age): Is the policy itself fresh? Gate
 
-41 questions, no multiple choice. The [Checks](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html) page has every rule, and [Rule ids](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html) has every id a finding can carry.
+42 questions, no multiple choice. The [Checks](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html) page has every rule, and [Rule ids](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html) has every id a finding can carry.
 
 #### Part C: next term Coming soon
 
@@ -1289,7 +1291,7 @@ Some checks cannot run inside ADVISOR's sandbox, so `proctor_check` leaves them 
 | `composer-audit` | `starts a subprocess` | `composer audit` |
 | `composer-version` | `starts a subprocess` | `composer --version` |
 | `instant-client-committed` | `starts a subprocess` | git, to see what is committed |
-| `lock-committed` | `starts a subprocess` | git, to see whether composer.lock is committed |
+| `lock-tracked` | `starts a subprocess` | git, to see whether composer.lock is committed |
 | `wayneui-forked-views` | `starts a subprocess` | `git ls-files` |
 | `wayneui-outdated` | `starts a subprocess` | `composer show` (which asks Packagist) and git |
 | `node-eol`, `env-outside-config`, `raw-identity-header`, `robots-txt`, `served-folder`, `world-writable` | `starts a subprocess` | `git ls-files`, to grade only committed files |
@@ -1904,13 +1906,20 @@ It notes, as an info finding, when `require.php` is set without `config.platform
 
 ### lock-committed [#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#lock-committed)
 
-`lock-committed` fails when composer.lock is missing from the app path. When the lock is present and its `content-hash` is a real 32-hex hash, it warns (`proctor/lock-committed/out-of-sync`) when the hash no longer matches composer.json, so a stale lock that still installs is visible instead of silent; the warning never changes the exit code. When the app path is in a git repository and git does not track composer.lock, it warns (`proctor/lock-committed/untracked`), because CI's install writes a lock that was never committed; outside a repository it falls back to the file on disk.
+`lock-committed` fails when composer.lock is missing from the app path. When the lock is present and its `content-hash` is a real 32-hex hash, it warns (`proctor/lock-committed/out-of-sync`) when the hash no longer matches composer.json, so a stale lock that still installs is visible instead of silent; the warning never changes the exit code.
 
 | Check | Rule id |
 | --- | --- |
 | `lock-committed` | `proctor/lock-committed` |
 | `lock-committed` | `proctor/lock-committed/out-of-sync` |
-| `lock-committed` | `proctor/lock-committed/untracked` |
+
+### lock-tracked [#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#lock-tracked)
+
+`lock-tracked` asks git whether composer.lock is tracked. When the lock is on disk but git does not track it, it warns (`proctor/lock-tracked`), because CI's own install writes a lock that was never committed, so the release would install a tree nobody tested; when git lists the lock it passes. It says nothing when the lock is missing (lock-committed owns that verdict), when the app path is not inside a git repository, or when git cannot be run.
+
+| Check | Rule id |
+| --- | --- |
+| `lock-tracked` | `proctor/lock-tracked` |
 
 ### composer-audit [#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-audit)
 
@@ -2148,11 +2157,11 @@ Source: https://proctor.apps.wayne.edu/docs/guides/checks-overview.html
 
 This page lists every check PROCTOR runs in a single `vendor/bin/proctor check` run, and how each one reports. The proctor asks the same questions in the same order on every run; only the hall changes.
 
-Forty-one checks in all. Eight of them also run at the door, in `proctor gate`: `php-floor`, `unpatched`, `laravel-eol`, `laravel-php`, `lock-committed`, `composer-audit`, `overrides` and `policy-age` (see [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html)). One is new in 0.11.0: `gitattributes-eol`.
+Forty-two checks in all. Eight of them also run at the door, in `proctor gate`: `php-floor`, `unpatched`, `laravel-eol`, `laravel-php`, `lock-committed`, `composer-audit`, `overrides` and `policy-age` (see [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html)). One is new in 0.11.0: `gitattributes-eol`.
 
 ![Nine real lines from PROCTOR's text report, one per check shown: FAIL php-floor, WARN unpatched, FAIL unbounded-constraints, PASS lock-committed, WARN portability, WARN mysql56, WARN ci-pipelines, PASS composer-audit, FAIL overrides. Each line is written in words; color only repeats what the word says.](https://proctor.apps.wayne.edu/docs/readme/report.svg)
 
-*Nine of the forty-one checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
+*Nine of the forty-two checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
 
 ### How a check reports [#](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html#how-a-check-reports)
 
@@ -2167,7 +2176,8 @@ The seven checks that read composer.json and composer.lock. Details and fixes: [
 - `unbounded-constraints`: fails for every runtime constraint that is `*`, names a `dev-` branch, carries `@dev`, has a lower bound with no upper bound, or matches the policy's `banned_constraints`; warns on `path` and `vcs` repositories, on a `minimum-stability` below stable, and on a repository URL that is plain http. `require-dev`, `php`, `ext-*` and `lib-*` are not checked.
 - `dev-only-packages`: fails when Laravel Boost or Debugbar is in `require`, because they install in production and expose app internals; warns when Telescope is in `require` (keep it there only if the app registers it for local use) and when a test tool (phpunit, Pest, Mockery, Sail, Pail, Collision) is in `require`. It reads only `require`, never `require-dev`.
 - `composer-config`: warns when composer.json opens a door Composer closes by default: `allow-plugins` set to `true`, `secure-http` set to `false`, `lock` set to `false`, `audit.block-insecure` set to `false`, `config.policy` set to `false`, `policy.malware` set to `false` or `policy.advisories` set to `false`; notes when `require.php` is set without `config.platform.php`. Warning and info only, never a fail.
-- `lock-committed`: fails when composer.lock is missing from the app path. When the lock is present and its `content-hash` is a real 32-hex hash, it warns (`proctor/lock-committed/out-of-sync`) when the hash no longer matches composer.json, so a stale lock that still installs is visible instead of silent; the warning never changes the exit code. When the app path is in a git repository and git does not track composer.lock, it warns (`proctor/lock-committed/untracked`), because CI's install writes a lock that was never committed; outside a repository it falls back to the file on disk.
+- `lock-committed`: fails when composer.lock is missing from the app path. When the lock is present and its `content-hash` is a real 32-hex hash, it warns (`proctor/lock-committed/out-of-sync`) when the hash no longer matches composer.json, so a stale lock that still installs is visible instead of silent; the warning never changes the exit code.
+- `lock-tracked`: asks git whether composer.lock is tracked and warns (`proctor/lock-tracked`) when the lock is on disk but untracked, because CI's own install writes a lock that was never committed; passes when git lists the lock, and says nothing when the lock is missing, when the app path is not inside a git repository, or when git cannot be run.
 - `composer-audit`: fails for advisories at or above the policy's `audit_severity_threshold` and warns for lower ones (an advisory on a dev-only package always warns). When composer or the lock file is absent it fails with a message that starts `not audited:` (`proctor/composer-audit/skipped`), which an active `composer-audit` override downgrades to a warning. It also fails (`proctor/composer-audit/could-not-run`) when the audit runs but its stdout is not parseable JSON, because a green run that audited nothing is worse than a red one. Abandoned packages follow the policy's `abandoned_packages` rule: a fail under `fail` (the default), a warning under `report`, nothing under `ignore` (`proctor/composer-audit/abandoned`).
 - `composer-version`: fails when the Composer on PATH is Composer 1 (end of life) or carries the command-injection holes CVE-2024-35241 and CVE-2024-35242 (2.2.x below 2.2.24, or any other 2.x below 2.7.7), and below the policy's `tools.composer.minimum` when that is higher (the bundled policy sets 2.8.0); warns when composer cannot be run.
 - `repo-url-credentials`: warns when a credential is written into a package source URL: a deploy token in the userinfo of a composer.json repository URL or a composer.lock source/dist URL, a bare token user of 20+ characters, a `private_token`, `access_token`, `token` or `password` query parameter, or a `.npmrc` line that sets `_authToken`, `_auth` or `_password` to a literal value. The secret is masked as `***` in the message, so the report itself is safe to hand back.
@@ -2805,7 +2815,7 @@ A clean hall exits 0 (warnings allowed), a resit exits 1, and a tripped proctor 
 
 ### Status [#](https://proctor.apps.wayne.edu/docs/#status)
 
-The header names the release these pages document; [Upgrading](https://proctor.apps.wayne.edu/docs/upgrading.html) lists what changed at each break. Forty-one checks, eight of them in the deploy gate, four report formats and three exit codes. License: MIT.
+The header names the release these pages document; [Upgrading](https://proctor.apps.wayne.edu/docs/upgrading.html) lists what changed at each break. Forty-two checks, eight of them in the deploy gate, four report formats and three exit codes. License: MIT.
 
 Part of WELD, the Wayne State application stack: [CREED](https://creed.apps.wayne.edu/) sets the policy PROCTOR marks against, [Preflight](https://preflight.apps.wayne.edu/) runs it in GitLab CI, and [Sourdough](https://sourdough.apps.wayne.edu/) and [WELD](https://weld.apps.wayne.edu/) apps come with it installed. The look is [WayneUI](https://wayneui.apps.wayne.edu/).
 
@@ -3201,7 +3211,7 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `node-eol` | `proctor/node-eol/odd-major` |
 | `lock-committed` | `proctor/lock-committed` |
 | `lock-committed` | `proctor/lock-committed/out-of-sync` |
-| `lock-committed` | `proctor/lock-committed/untracked` |
+| `lock-tracked` | `proctor/lock-tracked` |
 | `destructive-deploy` | `proctor/destructive-deploy` |
 | `crlf-deploy-script` | `proctor/crlf-deploy-script` |
 | `crlf-deploy-script` | `proctor/crlf-deploy-script/no-gitattributes` |

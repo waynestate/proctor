@@ -4,7 +4,7 @@
 
 ### Added
 
-- lock-committed warns (proctor/lock-committed/untracked) when composer.lock is on disk but git does not track it, so CI's own install no longer hides an uncommitted lock; outside a git repository it still checks the file on disk.
+- Added: lock-tracked warns (proctor/lock-tracked) when composer.lock is on disk but git does not track it, so CI's own install no longer hides an uncommitted lock; outside a git repository it says nothing. ADVISOR skips it (it runs git); lock-committed stays in-process.
 
 - Site: the front page's stale facts are current (the hero counts 41 checks; Part C says `csp-unsafe-inline` already reads the CSP, since 0.10.0, and keeps only the header presence check planned).
 - Changed: the deploy kit is Squire 0.10.7 (was 0.10.6): it ships a `.gitattributes` that pins line endings, so the deploy layer clears PROCTOR's line-ending warnings.

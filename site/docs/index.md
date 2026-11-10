@@ -41,7 +41,7 @@ A clean hall exits 0 (warnings allowed), a resit exits 1, and a tripped proctor 
 
 ## Status [#](https://proctor.apps.wayne.edu/docs/#status)
 
-The header names the release these pages document; [Upgrading](https://proctor.apps.wayne.edu/docs/upgrading.html) lists what changed at each break. Forty-one checks, eight of them in the deploy gate, four report formats and three exit codes. License: MIT.
+The header names the release these pages document; [Upgrading](https://proctor.apps.wayne.edu/docs/upgrading.html) lists what changed at each break. Forty-two checks, eight of them in the deploy gate, four report formats and three exit codes. License: MIT.
 
 Part of WELD, the Wayne State application stack: [CREED](https://creed.apps.wayne.edu/) sets the policy PROCTOR marks against, [Preflight](https://preflight.apps.wayne.edu/) runs it in GitLab CI, and [Sourdough](https://sourdough.apps.wayne.edu/) and [WELD](https://weld.apps.wayne.edu/) apps come with it installed. The look is [WayneUI](https://wayneui.apps.wayne.edu/).
 

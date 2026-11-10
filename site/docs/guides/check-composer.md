@@ -75,13 +75,20 @@ It notes, as an info finding, when `require.php` is set without `config.platform
 
 ## lock-committed [#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#lock-committed)
 
-`lock-committed` fails when composer.lock is missing from the app path. When the lock is present and its `content-hash` is a real 32-hex hash, it warns (`proctor/lock-committed/out-of-sync`) when the hash no longer matches composer.json, so a stale lock that still installs is visible instead of silent; the warning never changes the exit code. When the app path is in a git repository and git does not track composer.lock, it warns (`proctor/lock-committed/untracked`), because CI's install writes a lock that was never committed; outside a repository it falls back to the file on disk.
+`lock-committed` fails when composer.lock is missing from the app path. When the lock is present and its `content-hash` is a real 32-hex hash, it warns (`proctor/lock-committed/out-of-sync`) when the hash no longer matches composer.json, so a stale lock that still installs is visible instead of silent; the warning never changes the exit code.
 
 | Check | Rule id |
 | --- | --- |
 | `lock-committed` | `proctor/lock-committed` |
 | `lock-committed` | `proctor/lock-committed/out-of-sync` |
-| `lock-committed` | `proctor/lock-committed/untracked` |
+
+## lock-tracked [#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#lock-tracked)
+
+`lock-tracked` asks git whether composer.lock is tracked. When the lock is on disk but git does not track it, it warns (`proctor/lock-tracked`), because CI's own install writes a lock that was never committed, so the release would install a tree nobody tested; when git lists the lock it passes. It says nothing when the lock is missing (lock-committed owns that verdict), when the app path is not inside a git repository, or when git cannot be run.
+
+| Check | Rule id |
+| --- | --- |
+| `lock-tracked` | `proctor/lock-tracked` |
 
 ## composer-audit [#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-audit)
 

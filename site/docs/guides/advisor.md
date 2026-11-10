@@ -76,7 +76,7 @@ Some checks cannot run inside ADVISOR's sandbox, so `proctor_check` leaves them 
 | `composer-audit` | `starts a subprocess` | `composer audit` |
 | `composer-version` | `starts a subprocess` | `composer --version` |
 | `instant-client-committed` | `starts a subprocess` | git, to see what is committed |
-| `lock-committed` | `starts a subprocess` | git, to see whether composer.lock is committed |
+| `lock-tracked` | `starts a subprocess` | git, to see whether composer.lock is committed |
 | `wayneui-forked-views` | `starts a subprocess` | `git ls-files` |
 | `wayneui-outdated` | `starts a subprocess` | `composer show` (which asks Packagist) and git |
 | `node-eol`, `env-outside-config`, `raw-identity-header`, `robots-txt`, `served-folder`, `world-writable` | `starts a subprocess` | `git ls-files`, to grade only committed files |

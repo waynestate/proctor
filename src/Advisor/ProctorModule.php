@@ -67,7 +67,7 @@ final class ProctorModule implements Module
      * environment, so a new check is sorted here before it ships.
      *
      * composer-audit, composer-version and wayneui-outdated run composer;
-     * instant-client-committed, lock-committed, the WayneUI checks and every
+     * instant-client-committed, lock-tracked, the WayneUI checks and every
      * check built on RepoFiles (node-eol, env-outside-config,
      * raw-identity-header, robots-txt, served-folder, world-writable) run git,
      * and override-approver runs git blame. app-key and vite-secrets read every
@@ -77,7 +77,7 @@ final class ProctorModule implements Module
      */
     public const SKIPPED = [
         'node-eol' => self::REASON_SUBPROCESS,
-        'lock-committed' => self::REASON_SUBPROCESS,
+        'lock-tracked' => self::REASON_SUBPROCESS,
         'composer-audit' => self::REASON_SUBPROCESS,
         'composer-version' => self::REASON_SUBPROCESS,
         'instant-client-committed' => self::REASON_SUBPROCESS,
@@ -112,6 +112,7 @@ final class ProctorModule implements Module
         'dev-only-packages' => 'check-composer',
         'composer-config' => 'check-composer',
         'lock-committed' => 'check-composer',
+        'lock-tracked' => 'check-composer',
         'composer-audit' => 'check-composer',
         'composer-version' => 'check-composer',
         'repo-url-credentials' => 'check-composer',
