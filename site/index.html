@@ -188,7 +188,7 @@
         <li class="q" data-reveal>
           <p class="q__no"><span>Q1</span><code>php-floor</code></p>
           <h3 class="q__ask">Is the lowest PHP your <code>composer.json</code> allows still supported?</h3>
-          <p class="q__rubric">Active passes. Security-only warns. Past end of life, or no usable <code>php</code> constraint, fails. The floor comes from the constraint, not from the PHP that runs the check.</p>
+          <p class="q__rubric">Active passes. Security-only warns. Past end of life, or no usable <code>php</code> constraint, fails. The floor comes from the constraint, not from the PHP that runs the check; name the PHP that will serve the app with <code>--php-runtime</code> and a runtime below the constraint fails too.</p>
           <p class="q__answer"><span class="mark mark--fail">FAIL</span> php-floor: php floor 7.4 is eol_grace_expired</p>
           <svg class="q__tick" viewBox="0 0 40 30" aria-hidden="true"><path pathLength="1" d="M3 16 L14 26 L37 3"/></svg>
         </li>

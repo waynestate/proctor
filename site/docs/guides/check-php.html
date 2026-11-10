@@ -52,6 +52,17 @@
 <li>A floor past security support plus the grace window fails.</li>
 </ul>
 <p>A <code>require.php</code> value that is not a valid version constraint is a tool error, not a verdict.</p>
+<h3 id="the-runtime-with-php-runtime">The runtime, with <span class="docs-heading-tail"><span>--php-runtime</span><a class="docs-heading-link" aria-label="Link to this section" href="#the-runtime-with-php-runtime">#</a></span></h3>
+<p>A declared <code>^8.4</code> proves nothing about the image the app lands on, so when <code>--php-runtime</code> names the PHP that will serve the app, <code>php-floor</code> adds a second finding for it. <code>proctor gate</code> takes the same option, and Squire's release script passes it by default (<code>SQUIRE_PHP_RUNTIME</code>).</p>
+<ul>
+<li>A runtime below <code>require.php</code> fails, as <code>proctor/php-floor/runtime-mismatch</code>: Composer's platform check would stop the app on boot. This is the case the floor alone misses, a supported constraint on an older image.</li>
+<li>A runtime above the constraint's upper bound (9.0 under <code>^8.4</code>) warns under the same rule: it boots, but the app was never tested there.</li>
+<li>A runtime inside the constraint is graded on the policy's table as <code>proctor/php-floor/runtime</code>: active passes, security-only warns with the end date and the days left, and end of life warns. It only warns because a runtime inside the constraint can only be end of life when the floor is too, and the floor already fails, so a baselined gate does not grow a second blocker for the same cause. A line the policy does not list warns that its support cannot be graded.</li>
+</ul>
+<pre tabindex="0"><code class="language-text">PASS php-floor: php floor 8.4 is active
+FAIL php-floor: php runtime 8.2.29 is below require.php &quot;^8.4&quot;: Composer's platform check stops the app on boot; serve it on a PHP the constraint allows
+</code></pre>
+<p>An active <code>php-floor</code> override covers both findings, the same as any other fail of the check.</p>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
 <thead>
 <tr>
@@ -63,6 +74,14 @@
 <tr>
 <td><code>php-floor</code></td>
 <td><code>proctor/php-floor</code></td>
+</tr>
+<tr>
+<td><code>php-floor</code></td>
+<td><code>proctor/php-floor/runtime</code></td>
+</tr>
+<tr>
+<td><code>php-floor</code></td>
+<td><code>proctor/php-floor/runtime-mismatch</code></td>
 </tr>
 </tbody>
 </table></div>
@@ -234,7 +253,7 @@
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../../docs/guides/check-composer.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">Composer checks</span></a><a class="docs-pager__link docs-pager__link--next" href="../../docs/guides/check-ci.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">CI checks</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#php-floor">php-floor</a></li><li class="docs-toc__item"><a href="#unpatched">unpatched</a></li><li class="docs-toc__item"><a href="#laravel-eol">laravel-eol</a></li><li class="docs-toc__item"><a href="#laravel-php">laravel-php</a></li><li class="docs-toc__item"><a href="#mysql56">mysql56</a></li><li class="docs-toc__item"><a href="#policy-age">policy-age</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#php-floor">php-floor</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#the-runtime-with-php-runtime">The runtime, with --php-runtime</a></li><li class="docs-toc__item"><a href="#unpatched">unpatched</a></li><li class="docs-toc__item"><a href="#laravel-eol">laravel-eol</a></li><li class="docs-toc__item"><a href="#laravel-php">laravel-php</a></li><li class="docs-toc__item"><a href="#mysql56">mysql56</a></li><li class="docs-toc__item"><a href="#policy-age">policy-age</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.15.1</span></span>

@@ -64,7 +64,7 @@
 <p>Make the run deterministic.</p>
 <pre tabindex="0"><code>vendor/bin/proctor check --today=2026-01-01 --php-runtime=8.4.0
 </code></pre>
-<p>Expected: the same marks on every run. <code>--today</code> overrides today's date so runs are deterministic, and <code>--php-runtime</code> tells the <code>unpatched</code> check the PHP version that will serve the app. CI should pass the deploy image's PHP, not the runner's.</p>
+<p>Expected: the same marks on every run. <code>--today</code> overrides today's date so runs are deterministic, and <code>--php-runtime</code> tells <code>php-floor</code> and <code>unpatched</code> the PHP version that will serve the app. CI should pass the deploy image's PHP, not the runner's.</p>
 </li>
 <li>
 <p>Emit a machine-readable mark sheet (optional).</p>

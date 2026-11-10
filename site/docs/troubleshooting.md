@@ -172,7 +172,7 @@ In a Laravel app (an `artisan` file at the project root) the top-level `bootstra
 
 ### unpatched disagrees with the deploy [#](https://proctor.apps.wayne.edu/docs/troubleshooting.html#unpatched-disagrees-with-the-deploy)
 
-`--php-runtime` is the PHP version that will serve the app (X.Y.Z), used by the `unpatched` check. CI should pass the deploy image's PHP, not the runner's.
+`--php-runtime` is the PHP version that will serve the app (X.Y.Z), graded by `php-floor` (against `require.php` and the policy) and by `unpatched` (patch level). CI should pass the deploy image's PHP, not the runner's.
 
 - Fix: pass `--php-runtime` matching the deploy image in CI.
 - Check: rerun with the flag; the runtime finding follows the version you pass.

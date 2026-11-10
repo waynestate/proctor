@@ -157,13 +157,15 @@ Why: declared and actual versions drift.
 
 Sources: [PHP supported versions](https://www.php.net/supported-versions.php); the stack's deploy-gate decision.
 
-**How the stack holds it: Partially.** `proctor gate` ships (registered in `bin/proctor`, implemented in
+**How the stack holds it: Checked.** `proctor gate` ships (registered in `bin/proctor`, implemented in
 `src/Console/GateCommand.php`): it runs the deploy-time checks, ratchets them against `--baseline`, and exits 0
 for go, 1 for no-go and 2 when it could not decide. Its `--php-runtime` names the PHP that will serve the app,
-which the `unpatched` check grades, and since Squire 0.9.0 Squire's release script passes it by default
-(`SQUIRE_PHP_RUNTIME`: `auto`, the PHP that runs the script, or `skip`, or an `X.Y.Z`). What keeps this Partially:
-the runtime is graded only for patch currency (a warning from `unpatched`), not for its support state, which
-`php-floor` judges from the declared constraint alone. The gate is
+and since Squire 0.9.0 Squire's release script passes it by default (`SQUIRE_PHP_RUNTIME`: `auto`, the PHP that
+runs the script, or `skip`, or an `X.Y.Z`). Two checks grade it: `unpatched` for patch currency, and `php-floor`
+(Unreleased) against `require.php` and the policy. A runtime below the constraint fails
+(`proctor/php-floor/runtime-mismatch`), one above it warns, and one inside it passes when active and warns when
+security-only or end of life (`proctor/php-floor/runtime`; end of life only warns because the floor already fails
+then). Test: `tests/PhpFloorRuntimeTest.php`. The gate is
 platform-neutral: on Citadel, Squire's release script (`scripts/release.sh`) calls it on every release (a report,
 not a stop, unless `SQUIRE_PROCTOR=enforce`), and other hosts run the same gate as a CI job.
 
@@ -869,7 +871,7 @@ Sources: [SLSA v1.0 build levels](https://slsa.dev/spec/v1.0/levels) (page marke
 [OpenSSF Scorecard: Signed-Releases](https://github.com/ossf/scorecard/blob/main/docs/checks.md);
 [CISA and NSA: Defending CI/CD environments](https://cisa.gov/news-events/alerts/2023/06/28/cisa-and-nsa-release-joint-guidance-defending-continuous-integrationcontinuous-delivery-cicd).
 
-**How the stack holds it: Partially.** Releases are tagged (0.1.0 through 0.12.0), and since 0.2.4 the reports read the
+**How the stack holds it: Partially.** Releases are tagged (0.1.0 through 0.15.1), and since 0.2.4 the reports read the
 installed `waynestate/proctor` version from Composer, with the in-code constant as the fallback. What remains: no
 release carries a signature or provenance that says where it was built.
 
@@ -922,16 +924,15 @@ A practice that is now `Checked` or `Enforced` leaves the list; CHANGELOG.md rec
 3. 2.6: Partly done: PROCTOR's own pipeline runs the Preflight `proctor` component on `deploy/`, and the job blocks the pipeline; raise PROCTOR's floor from `^8.3` to `^8.4` before PHP 8.3 reaches end of life on 2027-12-31 (see 2.6).
 4. 5.7: Partly done: the `override-approver` check flags an approver who wrote the entry (git blame; rule ids `proctor/override-approver/self-approved`, `proctor/override-approver/could-not-run`), warn or fail per CREED `rules.override_self_approval`; that the approver really approved still rests on the merge request, since GitLab Community Edition has no Code Owner approval (see 5.7).
 5. 4.7: Documented: Preflight's README carries the weekly "Run it on a schedule" steps, but nothing fails when an app has no schedule (see 4.7).
-6. 8.5: Partly done: releases are tagged (0.1.0 through 0.13.0); sign them and publish provenance that says where each was built (see 8.5).
+6. 8.5: Partly done: releases are tagged (0.1.0 through 0.15.1); sign them and publish provenance that says where each was built (see 8.5).
 7. 7.2: Partly done: `proctor gate` (0.7.0) runs only the deploy-time checks with no app boot and a 60-second audit timeout; `composer-audit` still needs the network, so an offline gate only warns that advisory data is missing (see 7.2).
-8. 2.5: Partly done: `proctor gate --php-runtime` grades the PHP that will serve the app, and Squire's release script passes it by default since Squire 0.9.0 (`SQUIRE_PHP_RUNTIME` in `scripts/release.sh`), but only `unpatched` reads it, as a patch-level warning; an end-of-life runtime under a supported constraint is not flagged (see 2.5).
 
 Added in the second pass (2026-10-27):
 
-9. 4.8: Partly done: the `composer-version` check fails below the CVE-2024 floors and the policy's `tools.composer.minimum` (0.7.0), but that minimum is 2.8.0, below the 2026 Perforce fixes in 2.9.6 and 2.10.3 (see 4.8).
-10. 3.7: Partly done: the Preflight `proctor` component installs from the lock, and the `ci-pipelines` check warns (`proctor/ci-pipelines/composer-update`) when CI runs `composer update` or `composer require`; the finding is a warning, not a fail, and only `.gitlab-ci.yml` and `.github/workflows/ci.yml` are read (see 3.7).
-11. 4.12: Partly done: `composer-audit` (0.6.0) warns instead of failing for an advisory on a package that composer.lock lists only in packages-dev, marked ` [dev dependency]`, and a name in both lists still fails; the policy file carries no rule for it (see 4.12).
-12. 8.7: Documented: the floor is GitLab 18.7 (`spec:component`), named in the install page's requirements; patch status on 18.x is the owner's to check (see 8.7).
+8. 4.8: Partly done: the `composer-version` check fails below the CVE-2024 floors and the policy's `tools.composer.minimum` (0.7.0), but that minimum is 2.8.0, below the 2026 Perforce fixes in 2.9.6 and 2.10.3 (see 4.8).
+9. 3.7: Partly done: the Preflight `proctor` component installs from the lock, and the `ci-pipelines` check warns (`proctor/ci-pipelines/composer-update`) when CI runs `composer update` or `composer require`; the finding is a warning, not a fail, and only `.gitlab-ci.yml` and `.github/workflows/ci.yml` are read (see 3.7).
+10. 4.12: Partly done: `composer-audit` (0.6.0) warns instead of failing for an advisory on a package that composer.lock lists only in packages-dev, marked ` [dev dependency]`, and a name in both lists still fails; the policy file carries no rule for it (see 4.12).
+11. 8.7: Documented: the floor is GitLab 18.7 (`spec:component`), named in the install page's requirements; patch status on 18.x is the owner's to check (see 8.7).
 
 ## Second pass (2026-10-27)
 

@@ -21,9 +21,26 @@ When the floor is usable, the check reduces it to major.minor (`^8.4` becomes `8
 
 A `require.php` value that is not a valid version constraint is a tool error, not a verdict.
 
+### The runtime, with --php-runtime
+
+A declared `^8.4` proves nothing about the image the app lands on, so when `--php-runtime` names the PHP that will serve the app, `php-floor` adds a second finding for it. `proctor gate` takes the same option, and Squire's release script passes it by default (`SQUIRE_PHP_RUNTIME`).
+
+- A runtime below `require.php` fails, as `proctor/php-floor/runtime-mismatch`: Composer's platform check would stop the app on boot. This is the case the floor alone misses, a supported constraint on an older image.
+- A runtime above the constraint's upper bound (9.0 under `^8.4`) warns under the same rule: it boots, but the app was never tested there.
+- A runtime inside the constraint is graded on the policy's table as `proctor/php-floor/runtime`: active passes, security-only warns with the end date and the days left, and end of life warns. It only warns because a runtime inside the constraint can only be end of life when the floor is too, and the floor already fails, so a baselined gate does not grow a second blocker for the same cause. A line the policy does not list warns that its support cannot be graded.
+
+```text
+PASS php-floor: php floor 8.4 is active
+FAIL php-floor: php runtime 8.2.29 is below require.php "^8.4": Composer's platform check stops the app on boot; serve it on a PHP the constraint allows
+```
+
+An active `php-floor` override covers both findings, the same as any other fail of the check.
+
 | Check | Rule id |
 | --- | --- |
 | `php-floor` | `proctor/php-floor` |
+| `php-floor` | `proctor/php-floor/runtime` |
+| `php-floor` | `proctor/php-floor/runtime-mismatch` |
 
 ## unpatched
 

@@ -27,7 +27,7 @@ Pencils up. Five minutes, one command, a mark sheet: install PROCTOR, run the fi
    ```
    vendor/bin/proctor check --today=2026-01-01 --php-runtime=8.4.0
    ```
-   Expected: the same marks on every run. `--today` overrides today's date so runs are deterministic, and `--php-runtime` tells the `unpatched` check the PHP version that will serve the app. CI should pass the deploy image's PHP, not the runner's.
+   Expected: the same marks on every run. `--today` overrides today's date so runs are deterministic, and `--php-runtime` tells `php-floor` and `unpatched` the PHP version that will serve the app. CI should pass the deploy image's PHP, not the runner's.
 5. Emit a machine-readable mark sheet (optional).
    ```
    vendor/bin/proctor check --format=json

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added: with `--php-runtime`, `php-floor` grades the PHP that will serve the app, in `proctor check` and `proctor gate`. A runtime below `require.php` fails (`proctor/php-floor/runtime-mismatch`: Composer's platform check would stop the app on boot), one above the constraint's upper bound warns, and one inside it is graded on the policy (`proctor/php-floor/runtime`): active passes, security-only and end of life warn, and so does a line the policy does not list. Until now a supported `^8.4` on an 8.2 image passed the floor; BEST_PRACTICES 2.5 is `Checked` and leaves the gaps list.
+
 ## 0.15.1 (2026-11-10)
 
 - Added: `mysql56-ci` adds an info note `proctor/mysql56-ci/held` when an app with migrations runs the `mysql56-migrate` job, so Rollcall can count held, missing and not-applicable apps (D-079). Info notes are not counted and never fail the gate.

@@ -177,7 +177,7 @@
 </ul>
 <h2 id="results-that-follow-the-environment">Results that follow the <span class="docs-heading-tail"><span>environment</span><a class="docs-heading-link" aria-label="Link to this section" href="#results-that-follow-the-environment">#</a></span></h2>
 <h3 id="unpatched-disagrees-with-the-deploy">unpatched disagrees with the <span class="docs-heading-tail"><span>deploy</span><a class="docs-heading-link" aria-label="Link to this section" href="#unpatched-disagrees-with-the-deploy">#</a></span></h3>
-<p><code>--php-runtime</code> is the PHP version that will serve the app (X.Y.Z), used by the <code>unpatched</code> check. CI should pass the deploy image's PHP, not the runner's.</p>
+<p><code>--php-runtime</code> is the PHP version that will serve the app (X.Y.Z), graded by <code>php-floor</code> (against <code>require.php</code> and the policy) and by <code>unpatched</code> (patch level). CI should pass the deploy image's PHP, not the runner's.</p>
 <ul>
 <li>Fix: pass <code>--php-runtime</code> matching the deploy image in CI.</li>
 <li>Check: rerun with the flag; the runtime finding follows the version you pass.</li>

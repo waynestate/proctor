@@ -51,7 +51,7 @@ Nine of PROCTOR's forty-five checks, in the order they run. Each one shows a rea
 
 1. Q1 `php-floor`
    ### Is the lowest PHP your `composer.json` allows still supported?
-   Active passes. Security-only warns. Past end of life, or no usable `php` constraint, fails. The floor comes from the constraint, not from the PHP that runs the check.
+   Active passes. Security-only warns. Past end of life, or no usable `php` constraint, fails. The floor comes from the constraint, not from the PHP that runs the check; name the PHP that will serve the app with `--php-runtime` and a runtime below the constraint fails too.
    FAIL php-floor: php floor 7.4 is eol_grace_expired
 2. Q2 `unpatched`
    ### Is every locked component on its line's latest patch?

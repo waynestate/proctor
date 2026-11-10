@@ -79,7 +79,7 @@ vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--re
 - `--record`: also write the JSON report (exactly what `--format=json` prints) to this file, whatever `--format` says; its folder is created. A CI job keeps it as an artifact, so one run serves the merge request and Rollcall. A file it cannot write is a tool error (exit 2).
 - `--policy`: path to the CREED-format policy file. Optional: without it, PROCTOR resolves the policy from the `PROCTOR_POLICY` environment variable, then the app's `vendor/waynestate/creed/policy/policy.json`, then the copy bundled with PROCTOR (see [Policy](#policy)). In CI this option is refused unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`.
 - `--today`: override today's date (YYYY-MM-DD) so runs are deterministic. In CI this option is refused unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`.
-- `--php-runtime`: the PHP version that will serve the app (X.Y.Z), used by the `unpatched` check. CI should pass the deploy image's PHP, not the runner's.
+- `--php-runtime`: the PHP version that will serve the app (X.Y.Z), graded by `php-floor` (against `require.php` and the policy) and by `unpatched` (patch level). CI should pass the deploy image's PHP, not the runner's.
 - `--timeout`: seconds `composer audit` may run before it is killed (default 300). `proctor gate` defaults to 60.
 
 Before a deploy, ask for a go or no-go instead (see [Deploy gate](#deploy-gate)):
@@ -90,7 +90,7 @@ vendor/bin/proctor gate [--path=.] [--format=text|json] [--baseline=<report or d
 
 ### Checks
 
-- `php-floor`: fails when the lowest PHP version allowed by `require.php` is past security support plus the grace window, when composer.json has no usable php constraint, or when there is no composer.json at all.
+- `php-floor`: fails when the lowest PHP version allowed by `require.php` is past security support plus the grace window, when composer.json has no usable php constraint, or when there is no composer.json at all. With `--php-runtime` it also grades the PHP that will serve the app: a runtime below `require.php` fails (`proctor/php-floor/runtime-mismatch`: Composer's platform check would stop the app on boot), one above its upper bound warns, and one inside it passes when active and warns when security-only, end of life (the floor already fails then) or on a line the policy does not list (`proctor/php-floor/runtime`).
 - `unpatched`: warns when a locked component is behind the policy's `latest_patch` for its version line, and passes when it is current. Reads laravel from composer.lock (`laravel/framework`), vue and inertia from package-lock.json (`vue`, `@inertiajs/vue3`), and the PHP runtime from `--php-runtime`. No finding when the component, its version line, or `latest_patch` is absent from the policy.
 - `laravel-eol`: classifies the locked `laravel/framework` version against the policy as of `--today`: active passes, naming the line's end date when it has one; security-only warns, naming the end date and the days left (`ends today`, `1 day left`, or `N days left`); eol fails, and past the security end date plus the policy's grace window it fails as `eol_grace_expired`, each naming the security end date when the line has one. It reads the version from composer.lock (`packages`, then `packages-dev`); a leading `v` is stripped, and a version that is not plain numeric (a dev alias) earns no finding. No finding when the lock has no `laravel/framework` or the version resolves to no policy line. An active override downgrades the eol fail to a warning, never the grace-expired one. The proctor keeps the hall on a textbook the publisher still corrects.
 - `laravel-php`: fails when composer.json's `require.php` allows no PHP version inside the range the policy records for the locked Laravel major, or when its lowest allowed version is below the range's floor, and passes otherwise: the upper end is open by design, so `^8.2` passes a Laravel whose range is 8.2 to 8.5; the message names the app's constraint, the policy range and the Laravel major. The range's max counts as supported, so a max of `8.5` admits everything below `8.6`. No finding when the lock has no `laravel/framework`, the line has no recorded range, or composer.json declares no `require.php` (php-floor owns the missing-constraint verdict); a present `require.php` that is not a valid version constraint is a tool error. The proctor checks the desk before the student sits, because a book that will not open on the declared desk is a fail.
@@ -229,6 +229,8 @@ The full set, grouped by check:
 | Check | Rule id |
 | --- | --- |
 | `php-floor` | `proctor/php-floor` |
+| `php-floor` | `proctor/php-floor/runtime` |
+| `php-floor` | `proctor/php-floor/runtime-mismatch` |
 | `unpatched` | `proctor/unpatched` |
 | `laravel-eol` | `proctor/laravel-eol` |
 | `laravel-php` | `proctor/laravel-php` |
@@ -654,7 +656,7 @@ Nine of PROCTOR's forty-five checks, in the order they run. Each one shows a rea
 
 1. Q1 `php-floor`
    ### Is the lowest PHP your `composer.json` allows still supported?
-   Active passes. Security-only warns. Past end of life, or no usable `php` constraint, fails. The floor comes from the constraint, not from the PHP that runs the check.
+   Active passes. Security-only warns. Past end of life, or no usable `php` constraint, fails. The floor comes from the constraint, not from the PHP that runs the check; name the PHP that will serve the app with `--php-runtime` and a runtime below the constraint fails too.
    FAIL php-floor: php floor 7.4 is eol_grace_expired
 2. Q2 `unpatched`
    ### Is every locked component on its line's latest patch?
@@ -2081,9 +2083,26 @@ When the floor is usable, the check reduces it to major.minor (`^8.4` becomes `8
 
 A `require.php` value that is not a valid version constraint is a tool error, not a verdict.
 
+#### The runtime, with --php-runtime [#](https://proctor.apps.wayne.edu/docs/guides/check-php.html#the-runtime-with-php-runtime)
+
+A declared `^8.4` proves nothing about the image the app lands on, so when `--php-runtime` names the PHP that will serve the app, `php-floor` adds a second finding for it. `proctor gate` takes the same option, and Squire's release script passes it by default (`SQUIRE_PHP_RUNTIME`).
+
+- A runtime below `require.php` fails, as `proctor/php-floor/runtime-mismatch`: Composer's platform check would stop the app on boot. This is the case the floor alone misses, a supported constraint on an older image.
+- A runtime above the constraint's upper bound (9.0 under `^8.4`) warns under the same rule: it boots, but the app was never tested there.
+- A runtime inside the constraint is graded on the policy's table as `proctor/php-floor/runtime`: active passes, security-only warns with the end date and the days left, and end of life warns. It only warns because a runtime inside the constraint can only be end of life when the floor is too, and the floor already fails, so a baselined gate does not grow a second blocker for the same cause. A line the policy does not list warns that its support cannot be graded.
+
+```text
+PASS php-floor: php floor 8.4 is active
+FAIL php-floor: php runtime 8.2.29 is below require.php "^8.4": Composer's platform check stops the app on boot; serve it on a PHP the constraint allows
+```
+
+An active `php-floor` override covers both findings, the same as any other fail of the check.
+
 | Check | Rule id |
 | --- | --- |
 | `php-floor` | `proctor/php-floor` |
+| `php-floor` | `proctor/php-floor/runtime` |
+| `php-floor` | `proctor/php-floor/runtime-mismatch` |
 
 ### unpatched [#](https://proctor.apps.wayne.edu/docs/guides/check-php.html#unpatched)
 
@@ -2267,7 +2286,7 @@ The eight checks that read composer.json and composer.lock. Details and fixes: [
 
 The checks that grade the PHP floor, the locked Laravel line, patch currency, MySQL 5.6 compatibility and the age of the policy in use. Details and fixes: [PHP checks](https://proctor.apps.wayne.edu/docs/guides/check-php.html).
 
-- `php-floor`: fails when the lowest PHP version allowed by `require.php` is past security support plus the grace window, when composer.json has no usable php constraint, or when there is no composer.json at all.
+- `php-floor`: fails when the lowest PHP version allowed by `require.php` is past security support plus the grace window, when composer.json has no usable php constraint, or when there is no composer.json at all. With `--php-runtime` it also grades the PHP that will serve the app: a runtime below `require.php` fails (`proctor/php-floor/runtime-mismatch`: Composer's platform check would stop the app on boot), one above its upper bound warns, and one inside it passes when active and warns when security-only, end of life (the floor already fails then) or on a line the policy does not list (`proctor/php-floor/runtime`).
 - `unpatched`: warns when a locked component is behind the policy's `latest_patch` for its version line, and passes when it is current. Reads laravel from composer.lock (`laravel/framework`), vue and inertia from package-lock.json (`vue`, `@inertiajs/vue3`), and the PHP runtime from `--php-runtime`. No finding when the component, its version line, or `latest_patch` is absent from the policy.
 - `laravel-eol`: classifies the locked `laravel/framework` version against the policy as of `--today`: active passes, naming the line's end date when it has one; security-only warns, naming the end date and the days left; eol fails, and past the security end date plus the grace window it fails as `eol_grace_expired`, each naming the security end date when the line has one. No finding when composer.lock has no `laravel/framework` or the version resolves to no policy line.
 - `laravel-php`: fails when composer.json's `require.php` allows no PHP version inside the range the policy records for the locked Laravel major, or when its lowest allowed version is below the range's floor, and passes otherwise (an open upper bound such as `^8.2` passes); the message names the app's constraint, the policy range and the Laravel major. No finding when composer.lock has no `laravel/framework`, the line has no recorded range, or composer.json declares no `require.php`.
@@ -2835,7 +2854,7 @@ Pencils up. Five minutes, one command, a mark sheet: install PROCTOR, run the fi
    ```
    vendor/bin/proctor check --today=2026-01-01 --php-runtime=8.4.0
    ```
-   Expected: the same marks on every run. `--today` overrides today's date so runs are deterministic, and `--php-runtime` tells the `unpatched` check the PHP version that will serve the app. CI should pass the deploy image's PHP, not the runner's.
+   Expected: the same marks on every run. `--today` overrides today's date so runs are deterministic, and `--php-runtime` tells `php-floor` and `unpatched` the PHP version that will serve the app. CI should pass the deploy image's PHP, not the runner's.
 5. Emit a machine-readable mark sheet (optional).
    ```
    vendor/bin/proctor check --format=json
@@ -2993,7 +3012,7 @@ Usage: `proctor check [--path PATH] [--format FORMAT] [--record RECORD] [--polic
 | `--record=VALUE` | Also write the JSON report (what --format=json prints) to this file (its folder is created), whatever --format says. A CI job keeps it as an artifact. |  |
 | `--policy=VALUE` | Path to the CREED-format policy file. Without it, PROCTOR checks the PROCTOR_POLICY environment variable, then the app's vendor/waynestate/creed/policy/policy.json, then its own bundled copy. In CI this option is refused unless PROCTOR_ALLOW_OVERRIDES=1. |  |
 | `--today=VALUE` | Override today's date (YYYY-MM-DD). In CI this option is refused unless PROCTOR_ALLOW_OVERRIDES=1. |  |
-| `--php-runtime=VALUE` | The PHP version that will serve the app (X.Y.Z), for the unpatched check. |  |
+| `--php-runtime=VALUE` | The PHP version that will serve the app (X.Y.Z), for the php-floor and unpatched checks. |  |
 | `--timeout=VALUE` | Maximum seconds for composer audit before it is killed. | `300` |
 | `--silent` | Do not output any message |  |
 
@@ -3011,7 +3030,7 @@ Usage: `proctor gate [--path PATH] [--format FORMAT] [--baseline BASELINE] [--re
 | `--record=VALUE` | Also write the JSON verdict to this file (its folder is created), whatever --format says. A later run can read it with --baseline. |  |
 | `--policy=VALUE` | Path to the CREED-format policy file. Without it, PROCTOR checks the PROCTOR_POLICY environment variable, then the app's vendor/waynestate/creed/policy/policy.json, then its own bundled copy. In CI this option is refused unless PROCTOR_ALLOW_OVERRIDES=1. |  |
 | `--today=VALUE` | Override today's date (YYYY-MM-DD). In CI this option is refused unless PROCTOR_ALLOW_OVERRIDES=1. |  |
-| `--php-runtime=VALUE` | The PHP version that will serve the app (X.Y.Z), for the unpatched check. |  |
+| `--php-runtime=VALUE` | The PHP version that will serve the app (X.Y.Z), for the php-floor and unpatched checks. |  |
 | `--timeout=VALUE` | Maximum seconds for composer audit before it is killed. | `60` |
 | `--silent` | Do not output any message |  |
 
@@ -3040,7 +3059,7 @@ vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--re
 - `--record`: also write the JSON report to this file, byte for byte what `--format=json` prints, whatever `--format` says; its folder is created, and a relative path is relative to the current directory, not `--path`. The exit code is the check's own. A file it cannot write is a tool error (exit 2, never a pass), and a run that stops on a tool error records the JSON error report. CI keeps the file as a job artifact for Rollcall (see [CI checks](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#run-proctor-in-gitlab-ci)).
 - `--policy`: path to the CREED-format policy file. Optional: without it, PROCTOR resolves the policy from the `PROCTOR_POLICY` environment variable, then the app's `vendor/waynestate/creed/policy/policy.json`, then the copy bundled with PROCTOR (see [Policy](https://proctor.apps.wayne.edu/docs/guides/policy.html)). In CI this option is refused unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`.
 - `--today`: override today's date (YYYY-MM-DD) so runs are deterministic. In CI this option is refused unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`.
-- `--php-runtime`: the PHP version that will serve the app (X.Y.Z), used by the `unpatched` check. CI should pass the deploy image's PHP, not the runner's.
+- `--php-runtime`: the PHP version that will serve the app (X.Y.Z), graded by `php-floor` (against `require.php` and the policy) and by `unpatched` (patch level). CI should pass the deploy image's PHP, not the runner's.
 - `--timeout`: seconds `composer audit` may run before it is killed (default 300). `proctor gate` defaults to 60.
 
 Ask for a go or no-go before a deploy, against the verdict recorded last time:
@@ -3285,6 +3304,8 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | Check | Rule id |
 | --- | --- |
 | `php-floor` | `proctor/php-floor` |
+| `php-floor` | `proctor/php-floor/runtime` |
+| `php-floor` | `proctor/php-floor/runtime-mismatch` |
 | `unpatched` | `proctor/unpatched` |
 | `laravel-eol` | `proctor/laravel-eol` |
 | `laravel-php` | `proctor/laravel-php` |
@@ -3608,7 +3629,7 @@ In a Laravel app (an `artisan` file at the project root) the top-level `bootstra
 
 #### unpatched disagrees with the deploy [#](https://proctor.apps.wayne.edu/docs/troubleshooting.html#unpatched-disagrees-with-the-deploy)
 
-`--php-runtime` is the PHP version that will serve the app (X.Y.Z), used by the `unpatched` check. CI should pass the deploy image's PHP, not the runner's.
+`--php-runtime` is the PHP version that will serve the app (X.Y.Z), graded by `php-floor` (against `require.php` and the policy) and by `unpatched` (patch level). CI should pass the deploy image's PHP, not the runner's.
 
 - Fix: pass `--php-runtime` matching the deploy image in CI.
 - Check: rerun with the flag; the runtime finding follows the version you pass.

@@ -47,7 +47,7 @@ final class GateCommand extends Command
             ->addOption('record', null, InputOption::VALUE_REQUIRED, 'Also write the JSON verdict to this file (its folder is created), whatever --format says. A later run can read it with --baseline.')
             ->addOption('policy', null, InputOption::VALUE_REQUIRED, "Path to the CREED-format policy file. Without it, PROCTOR checks the PROCTOR_POLICY environment variable, then the app's vendor/waynestate/creed/policy/policy.json, then its own bundled copy. In CI this option is refused unless PROCTOR_ALLOW_OVERRIDES=1.")
             ->addOption('today', null, InputOption::VALUE_REQUIRED, "Override today's date (YYYY-MM-DD). In CI this option is refused unless PROCTOR_ALLOW_OVERRIDES=1.")
-            ->addOption('php-runtime', null, InputOption::VALUE_REQUIRED, 'The PHP version that will serve the app (X.Y.Z), for the unpatched check.')
+            ->addOption('php-runtime', null, InputOption::VALUE_REQUIRED, 'The PHP version that will serve the app (X.Y.Z), for the php-floor and unpatched checks.')
             ->addOption('timeout', null, InputOption::VALUE_REQUIRED, 'Maximum seconds for composer audit before it is killed.', '60')
             ->setHelp(<<<'HELP'
                 Runs the deploy-time checks (php-floor, unpatched, laravel-eol, laravel-php, lock-committed,

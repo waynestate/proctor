@@ -100,7 +100,7 @@
 </tr>
 <tr>
 <td><code>--php-runtime=VALUE</code></td>
-<td>The PHP version that will serve the app (X.Y.Z), for the unpatched check.</td>
+<td>The PHP version that will serve the app (X.Y.Z), for the php-floor and unpatched checks.</td>
 <td></td>
 </tr>
 <tr>
@@ -159,7 +159,7 @@
 </tr>
 <tr>
 <td><code>--php-runtime=VALUE</code></td>
-<td>The PHP version that will serve the app (X.Y.Z), for the unpatched check.</td>
+<td>The PHP version that will serve the app (X.Y.Z), for the php-floor and unpatched checks.</td>
 <td></td>
 </tr>
 <tr>
@@ -232,7 +232,7 @@
 <li><code>--record</code>: also write the JSON report to this file, byte for byte what <code>--format=json</code> prints, whatever <code>--format</code> says; its folder is created, and a relative path is relative to the current directory, not <code>--path</code>. The exit code is the check's own. A file it cannot write is a tool error (exit 2, never a pass), and a run that stops on a tool error records the JSON error report. CI keeps the file as a job artifact for Rollcall (see <a href="../guides/check-ci.html#run-proctor-in-gitlab-ci">CI checks</a>).</li>
 <li><code>--policy</code>: path to the CREED-format policy file. Optional: without it, PROCTOR resolves the policy from the <code>PROCTOR_POLICY</code> environment variable, then the app's <code>vendor/waynestate/creed/policy/policy.json</code>, then the copy bundled with PROCTOR (see <a href="../guides/policy.html">Policy</a>). In CI this option is refused unless a trusted job sets <code>PROCTOR_ALLOW_OVERRIDES=1</code>.</li>
 <li><code>--today</code>: override today's date (YYYY-MM-DD) so runs are deterministic. In CI this option is refused unless a trusted job sets <code>PROCTOR_ALLOW_OVERRIDES=1</code>.</li>
-<li><code>--php-runtime</code>: the PHP version that will serve the app (X.Y.Z), used by the <code>unpatched</code> check. CI should pass the deploy image's PHP, not the runner's.</li>
+<li><code>--php-runtime</code>: the PHP version that will serve the app (X.Y.Z), graded by <code>php-floor</code> (against <code>require.php</code> and the policy) and by <code>unpatched</code> (patch level). CI should pass the deploy image's PHP, not the runner's.</li>
 <li><code>--timeout</code>: seconds <code>composer audit</code> may run before it is killed (default 300). <code>proctor gate</code> defaults to 60.</li>
 </ul>
 <p>Ask for a go or no-go before a deploy, against the verdict recorded last time:</p>

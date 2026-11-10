@@ -78,6 +78,9 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/node-eol/odd-major',
         // mysql-minimum
         'proctor/mysql-minimum/below',
+        // php-floor with --php-runtime
+        'proctor/php-floor/runtime',
+        'proctor/php-floor/runtime-mismatch',
         // env-outside-config
         'proctor/env-outside-config/suppressed',
         // app-key
