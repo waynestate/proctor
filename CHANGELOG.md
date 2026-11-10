@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Changed: `script-pair` walks only the app's `scripts/` folder instead of the whole tree, so it stays fast on large apps; its findings are unchanged.
+
 ## 0.14.0 (2026-11-10)
 
 - Docs: the upgrading page has a 0.14.0 section (no breaks; `script-pair` and how to clear its warnings).

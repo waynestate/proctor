@@ -69,14 +69,18 @@ final class ScriptPairCheck implements CheckInterface
      * Every .sh or .ps1 file (case-sensitive) at any depth under the
      * top-level scripts/ directory, as app-relative paths with forward
      * slashes, sorted. vendor/, node_modules/ and .git/ are skipped at any
-     * depth; nothing outside scripts/ is read.
+     * depth; the walk starts at scripts/, so nothing outside it is read.
      *
      * @return list<string>
      */
     private function scripts(string $appPath): array
     {
         $appPath = rtrim($appPath, '/\\');
-        $inner = new RecursiveDirectoryIterator($appPath, FilesystemIterator::SKIP_DOTS);
+        $root = $appPath . DIRECTORY_SEPARATOR . 'scripts';
+        if (!is_dir($root)) {
+            return [];
+        }
+        $inner = new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS);
         $outer = new RecursiveCallbackFilterIterator($inner, static function (SplFileInfo $current): bool {
             return !($current->isDir() && in_array($current->getBasename(), self::SKIP_DIRS, true));
         });
@@ -84,11 +88,7 @@ final class ScriptPairCheck implements CheckInterface
 
         $files = [];
         foreach ($iterator as $file) {
-            $relativePath = str_replace('\\', '/', substr($file->getPathname(), strlen($appPath) + 1));
-            $segments = explode('/', $relativePath);
-            if ($segments[0] !== 'scripts' || 1 === count($segments)) {
-                continue;
-            }
+            $relativePath = 'scripts/' . str_replace('\\', '/', substr($file->getPathname(), strlen($root) + 1));
             $basename = $file->getBasename();
             if (str_ends_with($basename, '.sh') || str_ends_with($basename, '.ps1')) {
                 $files[] = $relativePath;
