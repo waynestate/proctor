@@ -120,7 +120,7 @@
         </p>
 
         <ul class="cover__facts">
-          <li><a class="cover__fact-link" href="#paper-title"><strong>43</strong> checks</a></li>
+          <li><a class="cover__fact-link" href="#paper-title"><strong>44</strong> checks</a></li>
           <li><strong>8</strong> at the gate</li>
           <li><strong>4</strong> formats</li>
           <li><strong>3</strong> exit codes</li>
@@ -181,7 +181,7 @@
       <header class="sec-head">
         <p class="sec-head__part">Part A</p>
         <h2 id="questions-title">The questions</h2>
-        <p>Nine of PROCTOR's forty-three checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures. <a href="#paper-title">The whole paper</a> is further down.</p>
+        <p>Nine of PROCTOR's forty-four checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures. <a href="#paper-title">The whole paper</a> is further down.</p>
       </header>
 
       <ol class="questions">
@@ -292,11 +292,11 @@
       <div class="paper" data-reveal>
         <header class="paper__head">
           <p class="sec-head__part">The whole paper</p>
-          <h3 class="paper__title" id="paper-title">All forty-three questions</h3>
+          <h3 class="paper__title" id="paper-title">All forty-four questions</h3>
           <p class="paper__lede">Every check <code>proctor check</code> asks, in the order it asks them. Each id opens its page in the docs.</p>
           <ul class="paper__legend">
             <li><span class="tag tag--gate">Gate</span> also asked by <code>proctor gate</code> before a deploy</li>
-            <li><span class="tag tag--new">New</span> new in 0.12.0</li>
+            <li><span class="tag tag--new">New</span> on main since 0.13.0, in the next release</li>
           </ul>
         </header>
         <ol class="paper__list">
@@ -310,41 +310,42 @@
           <li class="pq" style="--i:7"><a class="pq__id" href="docs/guides/check-composer.html#unbounded-constraints"><code>unbounded-constraints</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is every requirement a released range?</span></li>
           <li class="pq" style="--i:8"><a class="pq__id" href="docs/guides/check-composer.html#dev-only-packages"><code>dev-only-packages</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Are dev tools kept out of <code>require</code>?</span></li>
           <li class="pq" style="--i:9"><a class="pq__id" href="docs/guides/check-composer.html#composer-config"><code>composer-config</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Are Composer's safety settings left on?</span></li>
-          <li class="pq" style="--i:10"><a class="pq__id" href="docs/guides/check-composer.html#composer-cooldown"><code>composer-cooldown</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does Composer wait out a fresh release?</span> <span class="tag tag--new">New</span></li>
+          <li class="pq" style="--i:10"><a class="pq__id" href="docs/guides/check-composer.html#composer-cooldown"><code>composer-cooldown</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does Composer wait out a fresh release?</span></li>
           <li class="pq" style="--i:11"><a class="pq__id" href="docs/guides/check-composer.html#lock-committed"><code>lock-committed</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is <code>composer.lock</code> committed, and in sync?</span> <span class="tag tag--gate">Gate</span></li>
-          <li class="pq" style="--i:12"><a class="pq__id" href="docs/guides/check-composer.html#lock-tracked"><code>lock-tracked</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is <code>composer.lock</code> tracked by git?</span> <span class="tag tag--new">New</span></li>
+          <li class="pq" style="--i:12"><a class="pq__id" href="docs/guides/check-composer.html#lock-tracked"><code>lock-tracked</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is <code>composer.lock</code> tracked by git?</span></li>
           <li class="pq" style="--i:13"><a class="pq__id" href="docs/guides/check-ci.html#portability"><code>portability</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Would the app run on another host?</span></li>
           <li class="pq" style="--i:14"><a class="pq__id" href="docs/guides/check-php.html#mysql56"><code>mysql56</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Will the migrations survive MySQL&nbsp;5.6?</span></li>
           <li class="pq" style="--i:15"><a class="pq__id" href="docs/guides/check-ci.html#destructive-deploy"><code>destructive-deploy</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a deploy ever wipe the database?</span></li>
           <li class="pq" style="--i:16"><a class="pq__id" href="docs/guides/check-app.html#crlf-deploy-script"><code>crlf-deploy-script</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Do the deploy scripts end lines in LF?</span></li>
           <li class="pq" style="--i:17"><a class="pq__id" href="docs/guides/check-app.html#gitattributes-eol"><code>gitattributes-eol</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is every server file pinned to LF?</span></li>
-          <li class="pq" style="--i:18"><a class="pq__id" href="docs/guides/check-app.html#entrypoint-migrate"><code>entrypoint-migrate</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a container migrate as it starts?</span></li>
-          <li class="pq" style="--i:19"><a class="pq__id" href="docs/guides/check-app.html#case-clash"><code>case-clash</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Do two paths differ only by case?</span></li>
-          <li class="pq" style="--i:20"><a class="pq__id" href="docs/guides/check-ci.html#ci-pipelines"><code>ci-pipelines</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Do the pipelines run <code>composer ci</code>?</span></li>
-          <li class="pq" style="--i:21"><a class="pq__id" href="docs/guides/check-ci.html#preflight-pinned"><code>preflight-pinned</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is every CI component pinned to a release?</span></li>
-          <li class="pq" style="--i:22"><a class="pq__id" href="docs/guides/check-ci.html#preflight-gates"><code>preflight-gates</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Do Preflight's gates run, and block?</span></li>
-          <li class="pq" style="--i:23"><a class="pq__id" href="docs/guides/check-composer.html#composer-audit"><code>composer-audit</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does the lock carry a known advisory?</span> <span class="tag tag--gate">Gate</span></li>
-          <li class="pq" style="--i:24"><a class="pq__id" href="docs/guides/check-composer.html#composer-version"><code>composer-version</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is the Composer on PATH safe?</span></li>
-          <li class="pq" style="--i:25"><a class="pq__id" href="docs/guides/check-composer.html#repo-url-credentials"><code>repo-url-credentials</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is a token written into a package URL?</span></li>
-          <li class="pq" style="--i:26"><a class="pq__id" href="docs/guides/check-ci.html#instant-client-committed"><code>instant-client-committed</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is Oracle Instant Client committed?</span></li>
-          <li class="pq" style="--i:27"><a class="pq__id" href="docs/guides/check-app.html#env-outside-config"><code>env-outside-config</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is <code>env()</code> called outside config?</span></li>
-          <li class="pq" style="--i:28"><a class="pq__id" href="docs/guides/check-app.html#raw-identity-header"><code>raw-identity-header</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does code read identity headers itself?</span></li>
-          <li class="pq" style="--i:29"><a class="pq__id" href="docs/guides/check-app.html#app-key"><code>app-key</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is the APP_KEY given away?</span></li>
-          <li class="pq" style="--i:30"><a class="pq__id" href="docs/guides/check-app.html#app-debug"><code>app-debug</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a production file turn APP_DEBUG on?</span></li>
-          <li class="pq" style="--i:31"><a class="pq__id" href="docs/guides/check-app.html#display-errors"><code>display-errors</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a php.ini show errors to visitors?</span></li>
-          <li class="pq" style="--i:32"><a class="pq__id" href="docs/guides/check-app.html#directory-listing"><code>directory-listing</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does the server list a folder's files?</span></li>
-          <li class="pq" style="--i:33"><a class="pq__id" href="docs/guides/check-app.html#csp-unsafe-inline"><code>csp-unsafe-inline</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does the CSP let inline scripts run?</span></li>
-          <li class="pq" style="--i:34"><a class="pq__id" href="docs/guides/check-app.html#robots-txt"><code>robots-txt</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does <code>robots.txt</code> say who may crawl?</span></li>
-          <li class="pq" style="--i:35"><a class="pq__id" href="docs/guides/check-app.html#vite-secrets"><code>vite-secrets</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a <code>VITE_</code> name carry a secret?</span></li>
-          <li class="pq" style="--i:36"><a class="pq__id" href="docs/guides/check-app.html#served-folder"><code>served-folder</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Can a stranger download a dump from <code>public/</code>?</span></li>
-          <li class="pq" style="--i:37"><a class="pq__id" href="docs/guides/check-app.html#world-writable"><code>world-writable</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does anything <code>chmod 777</code>?</span></li>
-          <li class="pq" style="--i:38"><a class="pq__id" href="docs/guides/check-wayneui.html#wayneui-forked-views"><code>wayneui-forked-views</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Are forked WayneUI views committed?</span></li>
-          <li class="pq" style="--i:39"><a class="pq__id" href="docs/guides/check-wayneui.html#wayneui-outdated"><code>wayneui-outdated</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is your WayneUI the latest of its line?</span></li>
-          <li class="pq" style="--i:40"><a class="pq__id" href="docs/guides/overrides.html#how-overrides-work"><code>overrides</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Has any note from home expired?</span> <span class="tag tag--gate">Gate</span></li>
-          <li class="pq" style="--i:41"><a class="pq__id" href="docs/guides/overrides.html#someone-else-signs-the-note"><code>override-approver</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Did someone sign their own note?</span></li>
-          <li class="pq" style="--i:42"><a class="pq__id" href="docs/guides/check-php.html#policy-age"><code>policy-age</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is the policy itself fresh?</span> <span class="tag tag--gate">Gate</span></li>
+          <li class="pq" style="--i:18"><a class="pq__id" href="docs/guides/check-app.html#script-pair"><code>script-pair</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is every script a <code>.ps1</code> and <code>.sh</code> pair?</span> <span class="tag tag--new">New</span></li>
+          <li class="pq" style="--i:19"><a class="pq__id" href="docs/guides/check-app.html#entrypoint-migrate"><code>entrypoint-migrate</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a container migrate as it starts?</span></li>
+          <li class="pq" style="--i:20"><a class="pq__id" href="docs/guides/check-app.html#case-clash"><code>case-clash</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Do two paths differ only by case?</span></li>
+          <li class="pq" style="--i:21"><a class="pq__id" href="docs/guides/check-ci.html#ci-pipelines"><code>ci-pipelines</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Do the pipelines run <code>composer ci</code>?</span></li>
+          <li class="pq" style="--i:22"><a class="pq__id" href="docs/guides/check-ci.html#preflight-pinned"><code>preflight-pinned</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is every CI component pinned to a release?</span></li>
+          <li class="pq" style="--i:23"><a class="pq__id" href="docs/guides/check-ci.html#preflight-gates"><code>preflight-gates</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Do Preflight's gates run, and block?</span></li>
+          <li class="pq" style="--i:24"><a class="pq__id" href="docs/guides/check-composer.html#composer-audit"><code>composer-audit</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does the lock carry a known advisory?</span> <span class="tag tag--gate">Gate</span></li>
+          <li class="pq" style="--i:25"><a class="pq__id" href="docs/guides/check-composer.html#composer-version"><code>composer-version</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is the Composer on PATH safe?</span></li>
+          <li class="pq" style="--i:26"><a class="pq__id" href="docs/guides/check-composer.html#repo-url-credentials"><code>repo-url-credentials</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is a token written into a package URL?</span></li>
+          <li class="pq" style="--i:27"><a class="pq__id" href="docs/guides/check-ci.html#instant-client-committed"><code>instant-client-committed</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is Oracle Instant Client committed?</span></li>
+          <li class="pq" style="--i:28"><a class="pq__id" href="docs/guides/check-app.html#env-outside-config"><code>env-outside-config</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is <code>env()</code> called outside config?</span></li>
+          <li class="pq" style="--i:29"><a class="pq__id" href="docs/guides/check-app.html#raw-identity-header"><code>raw-identity-header</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does code read identity headers itself?</span></li>
+          <li class="pq" style="--i:30"><a class="pq__id" href="docs/guides/check-app.html#app-key"><code>app-key</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is the APP_KEY given away?</span></li>
+          <li class="pq" style="--i:31"><a class="pq__id" href="docs/guides/check-app.html#app-debug"><code>app-debug</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a production file turn APP_DEBUG on?</span></li>
+          <li class="pq" style="--i:32"><a class="pq__id" href="docs/guides/check-app.html#display-errors"><code>display-errors</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a php.ini show errors to visitors?</span></li>
+          <li class="pq" style="--i:33"><a class="pq__id" href="docs/guides/check-app.html#directory-listing"><code>directory-listing</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does the server list a folder's files?</span></li>
+          <li class="pq" style="--i:34"><a class="pq__id" href="docs/guides/check-app.html#csp-unsafe-inline"><code>csp-unsafe-inline</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does the CSP let inline scripts run?</span></li>
+          <li class="pq" style="--i:35"><a class="pq__id" href="docs/guides/check-app.html#robots-txt"><code>robots-txt</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does <code>robots.txt</code> say who may crawl?</span></li>
+          <li class="pq" style="--i:36"><a class="pq__id" href="docs/guides/check-app.html#vite-secrets"><code>vite-secrets</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a <code>VITE_</code> name carry a secret?</span></li>
+          <li class="pq" style="--i:37"><a class="pq__id" href="docs/guides/check-app.html#served-folder"><code>served-folder</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Can a stranger download a dump from <code>public/</code>?</span></li>
+          <li class="pq" style="--i:38"><a class="pq__id" href="docs/guides/check-app.html#world-writable"><code>world-writable</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does anything <code>chmod 777</code>?</span></li>
+          <li class="pq" style="--i:39"><a class="pq__id" href="docs/guides/check-wayneui.html#wayneui-forked-views"><code>wayneui-forked-views</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Are forked WayneUI views committed?</span></li>
+          <li class="pq" style="--i:40"><a class="pq__id" href="docs/guides/check-wayneui.html#wayneui-outdated"><code>wayneui-outdated</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is your WayneUI the latest of its line?</span></li>
+          <li class="pq" style="--i:41"><a class="pq__id" href="docs/guides/overrides.html#how-overrides-work"><code>overrides</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Has any note from home expired?</span> <span class="tag tag--gate">Gate</span></li>
+          <li class="pq" style="--i:42"><a class="pq__id" href="docs/guides/overrides.html#someone-else-signs-the-note"><code>override-approver</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Did someone sign their own note?</span></li>
+          <li class="pq" style="--i:43"><a class="pq__id" href="docs/guides/check-php.html#policy-age"><code>policy-age</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is the policy itself fresh?</span> <span class="tag tag--gate">Gate</span></li>
         </ol>
-        <p class="paper__foot"><span class="hand redpen-inline">43 questions, no multiple choice.</span> The <a href="docs/guides/checks-overview.html">Checks</a> page has every rule, and <a href="docs/reference/rule-ids.html">Rule ids</a> has every id a finding can carry.</p>
+        <p class="paper__foot"><span class="hand redpen-inline">44 questions, no multiple choice.</span> The <a href="docs/guides/checks-overview.html">Checks</a> page has every rule, and <a href="docs/reference/rule-ids.html">Rule ids</a> has every id a finding can carry.</p>
       </div>
 
       <div class="nextterm" data-reveal>
