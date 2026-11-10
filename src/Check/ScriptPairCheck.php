@@ -86,7 +86,7 @@ final class ScriptPairCheck implements CheckInterface
         foreach ($iterator as $file) {
             $relativePath = str_replace('\\', '/', substr($file->getPathname(), strlen($appPath) + 1));
             $segments = explode('/', $relativePath);
-            if (($segments[0] ?? '') !== 'scripts' || 1 === count($segments)) {
+            if ($segments[0] !== 'scripts' || 1 === count($segments)) {
                 continue;
             }
             $basename = $file->getBasename();
