@@ -121,6 +121,7 @@ final class RuleIdContractTest extends ProctorTestCase
         // composer-cooldown
         'proctor/composer-cooldown/missing',
         'proctor/composer-cooldown/not-blocking',
+        'proctor/composer-cooldown/too-short',
         // portability
         'proctor/portability/host-path',
         'proctor/portability/proxy-address',

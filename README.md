@@ -284,6 +284,7 @@ The full set, grouped by check:
 | `composer-cooldown` | `proctor/composer-cooldown` |
 | `composer-cooldown` | `proctor/composer-cooldown/missing` |
 | `composer-cooldown` | `proctor/composer-cooldown/not-blocking` |
+| `composer-cooldown` | `proctor/composer-cooldown/too-short` |
 | `portability` | `proctor/portability` |
 | `portability` | `proctor/portability/host-path` |
 | `portability` | `proctor/portability/proxy-address` |

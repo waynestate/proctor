@@ -79,6 +79,7 @@ It notes, as an info finding, when `require.php` is set without `config.platform
 
 - No `config.policy.cooldown.period`, or one set to an empty string (`proctor/composer-cooldown/missing`).
 - A period set but `block` exactly `false`, which turns the cooldown off again (`proctor/composer-cooldown/not-blocking`).
+- A period shorter than the one the CREED policy names (`tools.composer.cooldown.period`, 3 days in the bundled policy), compared in hours; a period PROCTOR cannot read is not compared (`proctor/composer-cooldown/too-short`).
 
 Warning only, never a fail, so an app that passes today keeps passing. Fix by adding the cooldown Sourdough's shapes use, exempting the stack's own packages:
 
@@ -98,6 +99,7 @@ Warning only, never a fail, so an app that passes today keeps passing. Fix by ad
 | `composer-cooldown` | `proctor/composer-cooldown` |
 | `composer-cooldown` | `proctor/composer-cooldown/missing` |
 | `composer-cooldown` | `proctor/composer-cooldown/not-blocking` |
+| `composer-cooldown` | `proctor/composer-cooldown/too-short` |
 
 ## lock-committed [#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#lock-committed)
 

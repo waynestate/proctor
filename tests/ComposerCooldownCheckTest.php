@@ -156,6 +156,117 @@ final class ComposerCooldownCheckTest extends TestCase
         self::assertSame('composer.json sets a release cooldown of 1 day', $findings[0]->message);
     }
 
+    public function testAPeriodShorterThanThePolicyWarnsTooShort(): void
+    {
+        $appPath = $this->makeApp([
+            'require' => ['php' => '^8.3'],
+            'config' => ['policy' => ['cooldown' => [
+                'period' => '3 days',
+                'ignore' => ['waynestate/*'],
+            ]]],
+        ]);
+        $policy = $this->policyWithCooldown('1 week');
+
+        $findings = (new ComposerCooldownCheck($policy))->run($this->contextWithPolicy($appPath, $policy));
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertSame('too-short', $findings[0]->rule);
+        self::assertSame('proctor/composer-cooldown/too-short', $findings[0]->ruleId);
+        self::assertSame(
+            'composer.json sets a release cooldown of 3 days, shorter than the 1 week the CREED policy names; raise config.policy.cooldown.period to at least 1 week (CREED practice 40)',
+            $findings[0]->message,
+        );
+        self::assertSame('composer.json', $findings[0]->path);
+        self::assertSame(1, $findings[0]->line);
+    }
+
+    public function testAPeriodEqualToThePolicyPasses(): void
+    {
+        $appPath = $this->makeApp([
+            'require' => ['php' => '^8.3'],
+            'config' => ['policy' => ['cooldown' => [
+                'period' => '72 hours',
+                'ignore' => ['waynestate/*'],
+            ]]],
+        ]);
+        $policy = $this->policyWithCooldown('3 days');
+
+        $findings = (new ComposerCooldownCheck($policy))->run($this->contextWithPolicy($appPath, $policy));
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+        self::assertNull($findings[0]->rule);
+        self::assertSame('composer.json sets a release cooldown of 72 hours', $findings[0]->message);
+    }
+
+    public function testAPeriodLongerThanThePolicyPasses(): void
+    {
+        $appPath = $this->makeApp([
+            'require' => ['php' => '^8.3'],
+            'config' => ['policy' => ['cooldown' => [
+                'period' => '5 days',
+                'ignore' => ['waynestate/*'],
+            ]]],
+        ]);
+        $policy = $this->policyWithCooldown('3 days');
+
+        $findings = (new ComposerCooldownCheck($policy))->run($this->contextWithPolicy($appPath, $policy));
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+        self::assertNull($findings[0]->rule);
+        self::assertSame('composer.json sets a release cooldown of 5 days', $findings[0]->message);
+    }
+
+    public function testAnUnreadablePeriodIsNotComparedAgainstThePolicy(): void
+    {
+        $appPath = $this->makeApp([
+            'require' => ['php' => '^8.3'],
+            'config' => ['policy' => ['cooldown' => [
+                'period' => 'soon',
+                'ignore' => ['waynestate/*'],
+            ]]],
+        ]);
+        $policy = $this->policyWithCooldown('3 days');
+
+        $findings = (new ComposerCooldownCheck($policy))->run($this->contextWithPolicy($appPath, $policy));
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+        self::assertNull($findings[0]->rule);
+        self::assertSame('composer.json sets a release cooldown of soon', $findings[0]->message);
+    }
+
+    public function testTheMissingWarningNamesThePolicyPeriodAndIgnoreList(): void
+    {
+        $appPath = $this->makeApp(['require' => ['php' => '^8.3']]);
+        $policy = $this->policyWithCooldown('1 week', ['acme/*']);
+
+        $findings = (new ComposerCooldownCheck($policy))->run($this->contextWithPolicy($appPath, $policy));
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertSame('missing', $findings[0]->rule);
+        self::assertStringContainsString(
+            '"period": "1 week", "ignore": ["acme/*"]',
+            $findings[0]->message,
+        );
+    }
+
+    public function testTheMissingWarningFallsBackWhenThePolicyNamesNoCooldown(): void
+    {
+        $appPath = $this->makeApp(['require' => ['php' => '^8.3']]);
+        $policy = Policy::fromArray([
+            'schema_version' => 1,
+            'tools' => [
+                'composer' => ['minimum' => '2.8.0'],
+            ],
+        ]);
+
+        $this->assertMissingWarning((new ComposerCooldownCheck($policy))->run($this->contextWithPolicy($appPath, $policy)));
+    }
+
     public function testNoFindingIsEverAFail(): void
     {
         $apps = [
@@ -210,6 +321,33 @@ final class ComposerCooldownCheckTest extends TestCase
         );
         self::assertSame('composer.json', $findings[0]->path);
         self::assertSame(1, $findings[0]->line);
+    }
+
+    /**
+     * A policy whose tools block sets composer's cooldown period and ignore
+     * list to the given values.
+     *
+     * @param list<string> $ignore
+     */
+    private function policyWithCooldown(string $period, array $ignore = ['waynestate/*']): Policy
+    {
+        return Policy::fromArray([
+            'schema_version' => 1,
+            'tools' => [
+                'composer' => [
+                    'minimum' => '2.8.0',
+                    'cooldown' => [
+                        'period' => $period,
+                        'ignore' => $ignore,
+                    ],
+                ],
+            ],
+        ]);
+    }
+
+    private function contextWithPolicy(string $appPath, Policy $policy): CheckContext
+    {
+        return new CheckContext($appPath, $policy, new DateTimeImmutable(self::TODAY));
     }
 
     private function contextFor(string $appPath): CheckContext

@@ -61,7 +61,7 @@ final class CheckSet
             new UnboundedConstraintsCheck(),
             new DevOnlyPackagesCheck(),
             new ComposerConfigCheck(),
-            new ComposerCooldownCheck(),
+            new ComposerCooldownCheck(policy: $resolved->policy),
             new LockCommittedCheck(),
             new LockTrackedCheck(),
             new PortabilityCheck(),
