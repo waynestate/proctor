@@ -6,11 +6,11 @@ llms: https://proctor.apps.wayne.edu/llms.txt
 generator: Squire agent-ready
 ---
 
-# WayneUI checks[#](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html#wayneui-checks)
+# WayneUI checks [#](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html#wayneui-checks)
 
 This page covers the two PROCTOR checks that watch the WayneUI an app carries: forked copies that hide upgrades, and locked or copied WayneUI that is behind the latest release. Run `vendor/bin/proctor check` against the app path, then update the lock file or replace the copy the report names. PROCTOR marks the paper against the current syllabus, not the one the student photocopied last semester.
 
-## wayneui-forked-views[#](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html#wayneui-forked-views)
+## wayneui-forked-views [#](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html#wayneui-forked-views)
 
 `wayneui-forked-views` warns when forked copies of WayneUI are committed: any file under `resources/views/vendor/wayne-ui/` (the published 1.x views) or `public/vendor/wayne-ui/` (the published 1.x assets).
 
@@ -26,7 +26,7 @@ Fix by deleting the folder and running `git rm -r --cached` on it; if you change
 | --- | --- |
 | `wayneui-forked-views` | `proctor/wayneui-forked-views` |
 
-## wayneui-outdated[#](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html#wayneui-outdated)
+## wayneui-outdated [#](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html#wayneui-outdated)
 
 `wayneui-outdated` warns when the WayneUI an app carries is behind the latest release.
 
@@ -49,7 +49,7 @@ Fix by updating the lock file (`composer update waynestate/wayne-ui`, or `npm up
 | `wayneui-outdated` | `proctor/wayneui-outdated` |
 | `wayneui-outdated` | `proctor/wayneui-outdated/skipped` |
 
-## Related[#](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html#related)
+## Related [#](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html#related)
 
 - [CI checks](https://proctor.apps.wayne.edu/docs/guides/check-ci.html)
 - [Overrides](https://proctor.apps.wayne.edu/docs/guides/overrides.html)

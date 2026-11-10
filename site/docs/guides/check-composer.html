@@ -40,9 +40,9 @@
   <nav class="docs-nav docs-nav--sidebar" aria-label="Documentation"><ul class="docs-nav__list"><li class="docs-nav__group"><span class="docs-nav__label">Getting Started</span><ul><li><a href="../../docs/index.html">Overview</a></li><li><a href="../../docs/install.html">Install</a></li><li><a href="../../docs/guides/quick-start.html">Quick start</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Guides</span><ul><li><a href="../../docs/guides/checks-overview.html">Checks</a></li><li><a href="../../docs/guides/check-composer.html" aria-current="page">Composer checks</a></li><li><a href="../../docs/guides/check-php.html">PHP checks</a></li><li><a href="../../docs/guides/check-ci.html">CI checks</a></li><li><a href="../../docs/guides/check-app.html">App checks</a></li><li><a href="../../docs/guides/check-wayneui.html">WayneUI checks</a></li><li><a href="../../docs/guides/overrides.html">Overrides</a></li><li><a href="../../docs/guides/deploy-gate.html">Deploy gate</a></li><li><a href="../../docs/guides/policy.html">Policy</a></li><li><a href="../../docs/guides/formats.html">Formats</a></li><li><a href="../../docs/guides/github-code-scanning.html">GitHub code scanning</a></li><li><a href="../../docs/guides/advisor.html">Coding agents (ADVISOR)</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Reference</span><ul><li><a href="../../docs/reference/commands.html">Commands</a></li><li><a href="../../docs/reference/exit-codes.html">Exit codes</a></li><li><a href="../../docs/reference/rule-ids.html">Rule ids</a></li><li><a href="../../docs/reference/configuration.html">Configuration</a></li><li><a href="../../docs/reference/proof.html">Proof</a></li></ul></li><li><a href="../../docs/troubleshooting.html">Troubleshooting</a></li><li><a href="../../docs/upgrading.html">Upgrading</a></li></ul></nav>
   <div class="docs-content">
     <main id="main">
-      <article class="docs-article"><h1 id="composer-checks">Composer checks<a class="docs-heading-link" aria-label="Link to this section" href="#composer-checks">#</a></h1>
+      <article class="docs-article"><h1 id="composer-checks">Composer <span class="docs-heading-tail"><span>checks</span><a class="docs-heading-link" aria-label="Link to this section" href="#composer-checks">#</a></span></h1>
 <p>This page covers the seven PROCTOR checks that read composer.json and composer.lock: unbounded constraints, development-only packages in require, unsafe composer settings, the committed lock, audit results, the Composer version on PATH, and credentials in repository URLs. Run <code>vendor/bin/proctor check</code> against the app path, then fix the finding the report names. The proctor checks the pens before it checks the answers.</p>
-<h2 id="unbounded-constraints">unbounded-constraints<a class="docs-heading-link" aria-label="Link to this section" href="#unbounded-constraints">#</a></h2>
+<h2 id="unbounded-constraints"><span class="docs-heading-tail"><span>unbounded-constraints</span><a class="docs-heading-link" aria-label="Link to this section" href="#unbounded-constraints">#</a></span></h2>
 <p><code>unbounded-constraints</code> fails for every runtime constraint that is <code>*</code>, names a <code>dev-</code> branch, carries <code>@dev</code>, has a lower bound with no upper bound, or matches the policy's <code>banned_constraints</code>. Each unbounded constraint is its own failure (<code>proctor/unbounded-constraints/unbounded</code>), naming the package and the offending constraint.</p>
 <p>Three more rules warn, and never fail:</p>
 <ul>
@@ -81,7 +81,7 @@
 </tr>
 </tbody>
 </table></div>
-<h2 id="dev-only-packages">dev-only-packages<a class="docs-heading-link" aria-label="Link to this section" href="#dev-only-packages">#</a></h2>
+<h2 id="dev-only-packages"><span class="docs-heading-tail"><span>dev-only-packages</span><a class="docs-heading-link" aria-label="Link to this section" href="#dev-only-packages">#</a></span></h2>
 <p><code>dev-only-packages</code> looks at the <code>require</code> block of composer.json, never <code>require-dev</code>, and flags the tools that belong in <code>require-dev</code> because putting them in <code>require</code> ships them to production.</p>
 <p>Two rules report, and neither is in the deploy gate:</p>
 <ul>
@@ -111,7 +111,7 @@
 </tr>
 </tbody>
 </table></div>
-<h2 id="composer-config">composer-config<a class="docs-heading-link" aria-label="Link to this section" href="#composer-config">#</a></h2>
+<h2 id="composer-config"><span class="docs-heading-tail"><span>composer-config</span><a class="docs-heading-link" aria-label="Link to this section" href="#composer-config">#</a></span></h2>
 <p><code>composer-config</code> warns when the <code>config</code> block of composer.json opens a door Composer closes by default:</p>
 <ul>
 <li><code>allow-plugins</code> set to <code>true</code>: any plugin may run code during install (<code>proctor/composer-config/allow-plugins-all</code>).</li>
@@ -169,7 +169,7 @@
 </tr>
 </tbody>
 </table></div>
-<h2 id="lock-committed">lock-committed<a class="docs-heading-link" aria-label="Link to this section" href="#lock-committed">#</a></h2>
+<h2 id="lock-committed"><span class="docs-heading-tail"><span>lock-committed</span><a class="docs-heading-link" aria-label="Link to this section" href="#lock-committed">#</a></span></h2>
 <p><code>lock-committed</code> fails when composer.lock is missing from the app path. When the lock is present and its <code>content-hash</code> is a real 32-hex hash, it warns (<code>proctor/lock-committed/out-of-sync</code>) when the hash no longer matches composer.json, so a stale lock that still installs is visible instead of silent; the warning never changes the exit code.</p>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
 <thead>
@@ -189,7 +189,7 @@
 </tr>
 </tbody>
 </table></div>
-<h2 id="composer-audit">composer-audit<a class="docs-heading-link" aria-label="Link to this section" href="#composer-audit">#</a></h2>
+<h2 id="composer-audit"><span class="docs-heading-tail"><span>composer-audit</span><a class="docs-heading-link" aria-label="Link to this section" href="#composer-audit">#</a></span></h2>
 <p><code>composer-audit</code> runs <code>composer audit --format=json --locked --no-plugins --no-interaction --abandoned=&lt;policy&gt;</code> against the app path and grades the result:</p>
 <ul>
 <li>Advisories at or above the policy's <code>audit_severity_threshold</code> fail; lower ones warn (<code>proctor/composer-audit/advisory</code>). Each finding names the package, the version locked in composer.lock, the advisory's CVE (or its advisory id when there is no CVE), its title and its severity.</li>
@@ -242,7 +242,7 @@
 </tr>
 </tbody>
 </table></div>
-<h2 id="composer-version">composer-version<a class="docs-heading-link" aria-label="Link to this section" href="#composer-version">#</a></h2>
+<h2 id="composer-version"><span class="docs-heading-tail"><span>composer-version</span><a class="docs-heading-link" aria-label="Link to this section" href="#composer-version">#</a></span></h2>
 <p><code>composer-version</code> fails when the Composer on PATH carries the command-injection holes CVE-2024-35241 and CVE-2024-35242 (2.2.x below 2.2.24, or any other 2.x below 2.7.7) or is Composer 1, which is end of life. When the policy sets <code>tools.composer.minimum</code> above the CVE floor for the version's line, it fails below that minimum too, and the message names the policy setting (the bundled policy sets 2.8.0). It warns when composer cannot be run: <code>proctor/composer-version/not-found</code> when there is no composer executable on PATH, and <code>proctor/composer-version/could-not-determine</code> when the version could not be determined.</p>
 <p>The invigilator checks its own pen: <a rel="noopener" href="https://github.com/advisories/GHSA-47f6-5gq3-vx9c">GHSA-47f6-5gq3-vx9c</a> and <a rel="noopener" href="https://github.com/advisories/GHSA-v9qv-c7wm-wgmf">GHSA-v9qv-c7wm-wgmf</a>.</p>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
@@ -267,7 +267,7 @@
 </tr>
 </tbody>
 </table></div>
-<h2 id="repo-url-credentials">repo-url-credentials<a class="docs-heading-link" aria-label="Link to this section" href="#repo-url-credentials">#</a></h2>
+<h2 id="repo-url-credentials"><span class="docs-heading-tail"><span>repo-url-credentials</span><a class="docs-heading-link" aria-label="Link to this section" href="#repo-url-credentials">#</a></span></h2>
 <p><code>repo-url-credentials</code> warns when a credential is written into a package source URL:</p>
 <ul>
 <li>A deploy token in the userinfo of a composer.json repository URL or a composer.lock source/dist URL (<code>https://gitlab+deploy-token-12:***@host/group/lib.git</code>).</li>
@@ -290,7 +290,7 @@
 </tr>
 </tbody>
 </table></div>
-<h2 id="related">Related<a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></h2>
+<h2 id="related"><span class="docs-heading-tail"><span>Related</span><a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></span></h2>
 <ul>
 <li><a href="checks-overview.html">Checks</a></li>
 <li><a href="../reference/rule-ids.html">Rule ids</a></li>

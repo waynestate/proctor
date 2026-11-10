@@ -6,7 +6,7 @@ llms: https://proctor.apps.wayne.edu/llms.txt
 generator: Squire agent-ready
 ---
 
-# Commands[#](https://proctor.apps.wayne.edu/docs/reference/commands.html#commands)
+# Commands [#](https://proctor.apps.wayne.edu/docs/reference/commands.html#commands)
 
 Every command PROCTOR ships, with the options each one accepts. The table is generated from the CLI, so it stays in step with the code; a proctor reads the rules aloud before the exam, it does not take the exam for you. If you have not run a check yet, start with the [Quick start](https://proctor.apps.wayne.edu/docs/guides/quick-start.html).
 
@@ -50,7 +50,7 @@ Usage: `proctor gate [--path PATH] [--format FORMAT] [--baseline BASELINE] [--re
 | `--timeout=VALUE` | Maximum seconds for composer audit before it is killed. | `60` |
 | `--silent` | Do not output any message |  |
 
-### Options every command accepts[#](https://proctor.apps.wayne.edu/docs/reference/commands.html#options-every-command-accepts)
+### Options every command accepts [#](https://proctor.apps.wayne.edu/docs/reference/commands.html#options-every-command-accepts)
 
 | Option | Meaning | Default |
 | --- | --- | --- |
@@ -62,7 +62,7 @@ Usage: `proctor gate [--path PATH] [--format FORMAT] [--baseline BASELINE] [--re
 | `--no-ansi` | Negate the "--ansi" option |  |
 | `-n`, `--no-interaction` | Do not ask any interactive question |  |
 
-## Examples[#](https://proctor.apps.wayne.edu/docs/reference/commands.html#examples)
+## Examples [#](https://proctor.apps.wayne.edu/docs/reference/commands.html#examples)
 
 Run the check against an application:
 
@@ -89,7 +89,7 @@ vendor/bin/proctor gate --baseline=storage/proctor-gate.json --record=storage/pr
 
 The gate runs eight deploy-time checks and exits 0 (go), 1 (no-go) or 2 (could not decide); see [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html).
 
-## Related[#](https://proctor.apps.wayne.edu/docs/reference/commands.html#related)
+## Related [#](https://proctor.apps.wayne.edu/docs/reference/commands.html#related)
 
 - [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html)
 - [Exit codes](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html)

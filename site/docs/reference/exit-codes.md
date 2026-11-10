@@ -6,11 +6,11 @@ llms: https://proctor.apps.wayne.edu/llms.txt
 generator: Squire agent-ready
 ---
 
-# Exit codes[#](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html#exit-codes)
+# Exit codes [#](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html#exit-codes)
 
 This page lists the three exit codes `proctor check` and `proctor gate` end with and exactly when each one happens, so a pipeline can branch on the right one. The proctor hands back the mark sheet and leaves the hall; the code is the only word it says out loud. For what feeds the verdict, see [Rule ids](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html) and the [checks overview](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html).
 
-## Codes[#](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html#codes)
+## Codes [#](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html#codes)
 
 | Exit code | Meaning |
 | --- | --- |
@@ -22,7 +22,7 @@ A missing composer.json is not a tool error: the app gets a verdict, with php-fl
 
 On a tool error every format still writes its report to stdout, next to the message on stderr: `text` prints the message as a FAIL line, `json` writes the report shape with `result` set to `error`, an `error` field carrying the message and empty findings, `codequality` lists the error as one blocker issue, and `sarif` writes a log whose single run reports an unsuccessful invocation. A pipeline can read the reason from the report instead of only from stderr.
 
-## proctor gate[#](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html#proctor-gate)
+## proctor gate [#](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html#proctor-gate)
 
 The deploy gate uses the same three numbers with deploy words (see [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html)):
 
@@ -34,7 +34,7 @@ The deploy gate uses the same three numbers with deploy words (see [Deploy gate]
 
 On exit 2 the gate writes its verdict in the selected format: the JSON verdict with `verdict` set to `error`, or, for `text`, the verdict line, a FAIL line carrying the message, and a RESULT line.
 
-## How a run ends[#](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html#how-a-run-ends)
+## How a run ends [#](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html#how-a-run-ends)
 
 ```mermaid
 %%{init: {'theme':'base','themeVariables':{'fontFamily':'Helvetica, Arial, sans-serif','primaryColor':'#F4F1EA','primaryTextColor':'#1f2a33','primaryBorderColor':'#0C5449','lineColor':'#8A9A94'}}}%%
@@ -52,13 +52,13 @@ flowchart LR
   class two trip
 ```
 
-## Watch it mark a paper[#](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html#watch-it-mark-a-paper)
+## Watch it mark a paper [#](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html#watch-it-mark-a-paper)
 
 The answer sheet from the front page, handed over finished:
 
 ![The front page's answer sheet: five steps from 'pencils up' to 'resit, pencils down', nine bubbles filled, question 3 circled in red pen with the fix in the margin, the fail struck through and a PASS stamp.](https://proctor.apps.wayne.edu/docs/readme/marking.jpg)
 
-## Related[#](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html#related)
+## Related [#](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html#related)
 
 - [Commands](https://proctor.apps.wayne.edu/docs/reference/commands.html)
 - [Rule ids](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html)

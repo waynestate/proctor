@@ -40,7 +40,7 @@
   <nav class="docs-nav docs-nav--sidebar" aria-label="Documentation"><ul class="docs-nav__list"><li class="docs-nav__group"><span class="docs-nav__label">Getting Started</span><ul><li><a href="../../docs/index.html">Overview</a></li><li><a href="../../docs/install.html">Install</a></li><li><a href="../../docs/guides/quick-start.html" aria-current="page">Quick start</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Guides</span><ul><li><a href="../../docs/guides/checks-overview.html">Checks</a></li><li><a href="../../docs/guides/check-composer.html">Composer checks</a></li><li><a href="../../docs/guides/check-php.html">PHP checks</a></li><li><a href="../../docs/guides/check-ci.html">CI checks</a></li><li><a href="../../docs/guides/check-app.html">App checks</a></li><li><a href="../../docs/guides/check-wayneui.html">WayneUI checks</a></li><li><a href="../../docs/guides/overrides.html">Overrides</a></li><li><a href="../../docs/guides/deploy-gate.html">Deploy gate</a></li><li><a href="../../docs/guides/policy.html">Policy</a></li><li><a href="../../docs/guides/formats.html">Formats</a></li><li><a href="../../docs/guides/github-code-scanning.html">GitHub code scanning</a></li><li><a href="../../docs/guides/advisor.html">Coding agents (ADVISOR)</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Reference</span><ul><li><a href="../../docs/reference/commands.html">Commands</a></li><li><a href="../../docs/reference/exit-codes.html">Exit codes</a></li><li><a href="../../docs/reference/rule-ids.html">Rule ids</a></li><li><a href="../../docs/reference/configuration.html">Configuration</a></li><li><a href="../../docs/reference/proof.html">Proof</a></li></ul></li><li><a href="../../docs/troubleshooting.html">Troubleshooting</a></li><li><a href="../../docs/upgrading.html">Upgrading</a></li></ul></nav>
   <div class="docs-content">
     <main id="main">
-      <article class="docs-article"><h1 id="quick-start">Quick start<a class="docs-heading-link" aria-label="Link to this section" href="#quick-start">#</a></h1>
+      <article class="docs-article"><h1 id="quick-start">Quick <span class="docs-heading-tail"><span>start</span><a class="docs-heading-link" aria-label="Link to this section" href="#quick-start">#</a></span></h1>
 <p>Pencils up. Five minutes, one command, a mark sheet: install PROCTOR, run the first check, read what the proctor saw.</p>
 <ol>
 <li>
@@ -80,9 +80,9 @@
 <p>Steps 4 and 6 are for your own machine. In CI, <code>--policy</code> and <code>--today</code> are refused (exit 2) unless a trusted job sets <code>PROCTOR_ALLOW_OVERRIDES=1</code>, so an app cannot grade itself against a policy or a date it picks: leave them out of the pipeline, and PROCTOR reads CREED's policy from <code>vendor/</code> on its own.</p>
 </li>
 </ol>
-<h2 id="what-you-built">What you built<a class="docs-heading-link" aria-label="Link to this section" href="#what-you-built">#</a></h2>
+<h2 id="what-you-built">What you <span class="docs-heading-tail"><span>built</span><a class="docs-heading-link" aria-label="Link to this section" href="#what-you-built">#</a></span></h2>
 <p>You ran PROCTOR's first marking pass: a verdict per check against the CREED policy, with an exit code CI can gate on. Nothing in the app changed; the proctor only watches.</p>
-<h2 id="next-steps">Next steps<a class="docs-heading-link" aria-label="Link to this section" href="#next-steps">#</a></h2>
+<h2 id="next-steps">Next <span class="docs-heading-tail"><span>steps</span><a class="docs-heading-link" aria-label="Link to this section" href="#next-steps">#</a></span></h2>
 <ul>
 <li><a href="../install.html">Install</a>: requirements and the single-file PHAR route for apps without Composer access.</li>
 <li><a href="../reference/commands.html">Reference: commands</a>: the long-form docs for the commands, <a href="../reference/rule-ids.html">rule ids</a> and <a href="../reference/exit-codes.html">exit codes</a>.</li>

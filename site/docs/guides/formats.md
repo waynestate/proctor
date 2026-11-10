@@ -6,11 +6,11 @@ llms: https://proctor.apps.wayne.edu/llms.txt
 generator: Squire agent-ready
 ---
 
-# Formats[#](https://proctor.apps.wayne.edu/docs/guides/formats.html#formats)
+# Formats [#](https://proctor.apps.wayne.edu/docs/guides/formats.html#formats)
 
 This page describes the four formats PROCTOR writes with `--format`: `text`, `json`, `codequality` and `sarif`. Pick the format your consumer reads, run the check once, and point the report where the consumer looks. One exam, four ways to file the mark sheet.
 
-## Choosing a format[#](https://proctor.apps.wayne.edu/docs/guides/formats.html#choosing-a-format)
+## Choosing a format [#](https://proctor.apps.wayne.edu/docs/guides/formats.html#choosing-a-format)
 
 The default is `text`. Choose another with `--format`:
 
@@ -25,7 +25,7 @@ vendor/bin/proctor check --format=json
 | `codequality` | GitLab's Code Quality JSON: a single array of findings, so a merge request shows them. |
 | `sarif` | A SARIF 2.1.0 log: one run, one rule per check, one result per non-pass finding, so GitHub code scanning and other SARIF viewers show them. |
 
-## text[#](https://proctor.apps.wayne.edu/docs/guides/formats.html#text)
+## text [#](https://proctor.apps.wayne.edu/docs/guides/formats.html#text)
 
 The default human-readable format: a header line with the tool and the versions of the external tools used, then one line per finding in check order, then one line per override, then a summary line:
 
@@ -52,7 +52,7 @@ Finding messages, override reasons and approvers come from files the app control
 
 When the run could not decide (exit 2), the report is one FAIL line: `FAIL proctor: <message>`, the message cleaned the same way.
 
-## json[#](https://proctor.apps.wayne.edu/docs/guides/formats.html#json)
+## json [#](https://proctor.apps.wayne.edu/docs/guides/formats.html#json)
 
 One machine-readable object, pretty-printed on stdout. Slashes and Unicode are left unescaped, so the output stays readable.
 
@@ -63,7 +63,7 @@ One machine-readable object, pretty-printed on stdout. Slashes and Unicode are l
 
 When the run itself stops before a report exists, PROCTOR writes the report shape with `result` set to `error`, an `error` field carrying the message, `today` and `policy` set to null, and empty `findings` and `overrides`, so a CI upload still gets a valid document. When the report cannot be encoded, PROCTOR fails the run with a tool error (exit 2): `Could not encode the JSON report: <reason>`, and writes that same error document.
 
-## codequality[#](https://proctor.apps.wayne.edu/docs/guides/formats.html#codequality)
+## codequality [#](https://proctor.apps.wayne.edu/docs/guides/formats.html#codequality)
 
 GitLab's Code Quality JSON: a single array of findings on stdout, so a merge request shows them. One object per non-pass finding, each with:
 
@@ -75,7 +75,7 @@ GitLab's Code Quality JSON: a single array of findings on stdout, so a merge req
 
 When the run itself fails before a report exists, PROCTOR still writes one item: severity `blocker`, check name `proctor`, line 1, so the merge request shows why the run stopped instead of an empty array.
 
-## sarif[#](https://proctor.apps.wayne.edu/docs/guides/formats.html#sarif)
+## sarif [#](https://proctor.apps.wayne.edu/docs/guides/formats.html#sarif)
 
 A SARIF 2.1.0 log: one run, one rule per check, one result per non-pass finding, so GitHub code scanning and other SARIF viewers show them. See [GitHub code scanning](https://proctor.apps.wayne.edu/docs/guides/github-code-scanning.html) for the workflow that uploads the log.
 
@@ -87,15 +87,15 @@ A SARIF 2.1.0 log: one run, one rule per check, one result per non-pass finding,
 
 When the run could not decide (exit 2), the log holds one run with no results, and its invocation reports `executionSuccessful` false with the message in a `toolExecutionNotifications` entry of level `error`, so code scanning shows why instead of an empty log.
 
-## The fingerprint[#](https://proctor.apps.wayne.edu/docs/guides/formats.html#the-fingerprint)
+## The fingerprint [#](https://proctor.apps.wayne.edu/docs/guides/formats.html#the-fingerprint)
 
 Both `codequality` and `sarif` identify a finding with the same fingerprint, its stable identity: the lower-case hex SHA-256 of the rule id, a newline, the path (an empty string when the finding has none), a newline, and the message.
 
-## proctor gate[#](https://proctor.apps.wayne.edu/docs/guides/formats.html#proctor-gate)
+## proctor gate [#](https://proctor.apps.wayne.edu/docs/guides/formats.html#proctor-gate)
 
 `proctor gate` writes `text` or `json` only: a short go or no-go verdict for the deploy log, or the same verdict as JSON, which also works as the next run's baseline. Its shape is on the [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html) page.
 
-## Related[#](https://proctor.apps.wayne.edu/docs/guides/formats.html#related)
+## Related [#](https://proctor.apps.wayne.edu/docs/guides/formats.html#related)
 
 - [Quick start](https://proctor.apps.wayne.edu/docs/guides/quick-start.html)
 - [Policy](https://proctor.apps.wayne.edu/docs/guides/policy.html)

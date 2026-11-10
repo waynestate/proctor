@@ -6,11 +6,11 @@ llms: https://proctor.apps.wayne.edu/llms.txt
 generator: Squire agent-ready
 ---
 
-# CI checks[#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#ci-checks)
+# CI checks [#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#ci-checks)
 
 This page covers the PROCTOR checks that verify CI pipelines run `composer ci`, that Preflight includes are pinned and its gates are present and blocking, and that deploy scripts and committed files keep the app portable. Run `vendor/bin/proctor check` against the app path, then fix the finding the report names. PROCTOR watches the exam and does not hand out answers.
 
-## Run PROCTOR in GitLab CI[#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#run-proctor-in-gitlab-ci)
+## Run PROCTOR in GitLab CI [#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#run-proctor-in-gitlab-ci)
 
 The smallest pipeline change that satisfies `preflight-pinned` and `preflight-gates` below is Preflight's `proctor` component, pinned to a release tag, with its command left at the default (add Preflight's `php-test` and `composer-audit` next to it, and a job that runs `composer ci` for `ci-pipelines`):
 
@@ -27,7 +27,7 @@ Preflight 0.5.0 does this on its own. When the app's PROCTOR lists `--record` in
 
 Still pinned to Preflight 0.4.0? That component keeps only the Code Quality report, so do both halves yourself: put the `--record` command above in the `proctor_command` input, and add `artifacts: paths: [proctor.json]` to a `proctor:` job in your own `.gitlab-ci.yml`, next to the include. GitLab merges that key into the component's job, which already keeps its artifacts `when: always`; it re-declares no `script`, so `preflight-pinned` has nothing to flag. Or move the pin to `@0.5.0` and drop both.
 
-## ci-pipelines[#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#ci-pipelines)
+## ci-pipelines [#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#ci-pipelines)
 
 `ci-pipelines` enforces the CI contract. For a stack package (a composer.json `name` starting with `waynestate/`), both `.gitlab-ci.yml` and `.github/workflows/ci.yml` must exist and run `composer ci`; a missing or incomplete file is a failure. For any other project, a missing or incomplete `.gitlab-ci.yml` is a warning and `.github/workflows/ci.yml` is optional.
 
@@ -61,7 +61,7 @@ When nothing needs fixing the check passes with `both pipelines run composer ci`
 
 Fix a failing pipeline by adding a GitLab job whose `script` runs `composer ci`, adding a GitHub workflow that runs `composer ci` or calls a reusable workflow with `ci-command: composer ci`, pinning every `uses:` ref to a commit SHA, running `composer install` instead of `composer update` or `composer require`, and removing `PROCTOR_ALLOW_OVERRIDES` from the pipeline environment, which only PROCTOR's own pipeline needs.
 
-## preflight-pinned[#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#preflight-pinned)
+## preflight-pinned [#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#preflight-pinned)
 
 `preflight-pinned` warns, and never fails, when an app includes a Preflight component at a moving ref or re-declares what an included Preflight job runs. A Preflight include is an `include:` entry whose `component:` path contains `/preflight/`.
 
@@ -76,7 +76,7 @@ With nothing to flag it passes: `Preflight includes are pinned`, or `no Prefligh
 | `preflight-pinned` | `proctor/preflight-pinned/unpinned` |
 | `preflight-pinned` | `proctor/preflight-pinned/script-override` |
 
-## preflight-gates[#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#preflight-gates)
+## preflight-gates [#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#preflight-gates)
 
 `preflight-gates` warns, and never fails, when `.gitlab-ci.yml` skips or weakens Preflight, the flags Preflight's practice 3.3 asks for. An include at a moving ref is `preflight-pinned`'s finding; this check covers the rest.
 
@@ -93,7 +93,7 @@ No finding when there is no `.gitlab-ci.yml` or it does not parse; `ci-pipelines
 | `preflight-gates` | `proctor/preflight-gates/allow-failure` |
 | `preflight-gates` | `proctor/preflight-gates/no-proctor-job` |
 
-## portability[#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#portability)
+## portability [#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#portability)
 
 `portability` warns when code hard-codes a platform fact: an absolute host path, a hard-coded proxy address, a local-disk session store, or a `php_value`/`php_flag` line in `.htaccess`.
 
@@ -111,7 +111,7 @@ Scanned: every `*.php` file, every file under the top-level `config/` directory,
 | `portability` | `proctor/portability/parse-error` |
 | `portability` | `proctor/portability/dynamic-call` |
 
-## destructive-deploy[#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#destructive-deploy)
+## destructive-deploy [#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#destructive-deploy)
 
 `destructive-deploy` fails when a deploy script runs an artisan command that drops or rebuilds the database (`migrate:fresh`, `migrate:refresh`, `migrate:reset`, `db:wipe`), which erases production data on every deploy.
 
@@ -127,7 +127,7 @@ It scans `.sh` and `.php` files under a top-level `deployments/`, `deploy_script
 
 Fix by running plain `php artisan migrate --force` in the deploy.
 
-## instant-client-committed[#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#instant-client-committed)
+## instant-client-committed [#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#instant-client-committed)
 
 `instant-client-committed` warns when Oracle Instant Client is committed to the repo: an `instantclient*.zip` or `instantclient*.rpm` archive, any file under a directory named `instantclient` or `instantclient_*` (an unzipped install), or a loose client library such as `libclntsh.so`, `libociei.so` or `oci.dll`.
 
@@ -143,7 +143,7 @@ This is a warning, not a failure: Citadel's images already include Instant Clien
 
 Fix by deleting it, running `git rm -r --cached` on the path PROCTOR reports, and adding that path to `.gitignore`.
 
-## Related[#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#related)
+## Related [#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#related)
 
 - [WayneUI checks](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html)
 - [Overrides](https://proctor.apps.wayne.edu/docs/guides/overrides.html)

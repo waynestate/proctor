@@ -6,11 +6,11 @@ llms: https://proctor.apps.wayne.edu/llms.txt
 generator: Squire agent-ready
 ---
 
-# GitHub code scanning[#](https://proctor.apps.wayne.edu/docs/guides/github-code-scanning.html#github-code-scanning)
+# GitHub code scanning [#](https://proctor.apps.wayne.edu/docs/guides/github-code-scanning.html#github-code-scanning)
 
 The `sarif` format feeds GitHub code scanning on the GitHub mirror. This page adds the workflow that uploads the log with the official action, pinned to a full commit SHA. Run the check with `--format=sarif`, and let the scanner show the findings on the files. PROCTOR now files the mark sheet in the format the head office already reads; no more translating the exam results by hand.
 
-## The workflow[#](https://proctor.apps.wayne.edu/docs/guides/github-code-scanning.html#the-workflow)
+## The workflow [#](https://proctor.apps.wayne.edu/docs/guides/github-code-scanning.html#the-workflow)
 
 Add this workflow to the mirror. It sets up PHP, installs the app's dependencies from the lock (PROCTOR and CREED among them, as dev dependencies), runs the check and uploads the resulting log:
 
@@ -45,7 +45,7 @@ Three choices in it are on purpose, and each matches a PROCTOR check:
 
 `if: always()` uploads the log even when the check exits 1, which is exactly when you want to read it.
 
-## What the log contains[#](https://proctor.apps.wayne.edu/docs/guides/github-code-scanning.html#what-the-log-contains)
+## What the log contains [#](https://proctor.apps.wayne.edu/docs/guides/github-code-scanning.html#what-the-log-contains)
 
 The uploaded `proctor.sarif` is a SARIF 2.1.0 log: one run, one rule per check, one result per non-pass finding.
 
@@ -57,7 +57,7 @@ The uploaded `proctor.sarif` is a SARIF 2.1.0 log: one run, one rule per check, 
 
 See [Formats](https://proctor.apps.wayne.edu/docs/guides/formats.html) for the shape of every format.
 
-## Related[#](https://proctor.apps.wayne.edu/docs/guides/github-code-scanning.html#related)
+## Related [#](https://proctor.apps.wayne.edu/docs/guides/github-code-scanning.html#related)
 
 - [Formats](https://proctor.apps.wayne.edu/docs/guides/formats.html)
 - [Policy](https://proctor.apps.wayne.edu/docs/guides/policy.html)

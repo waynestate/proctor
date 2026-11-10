@@ -40,9 +40,9 @@
   <nav class="docs-nav docs-nav--sidebar" aria-label="Documentation"><ul class="docs-nav__list"><li class="docs-nav__group"><span class="docs-nav__label">Getting Started</span><ul><li><a href="../../docs/index.html">Overview</a></li><li><a href="../../docs/install.html">Install</a></li><li><a href="../../docs/guides/quick-start.html">Quick start</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Guides</span><ul><li><a href="../../docs/guides/checks-overview.html">Checks</a></li><li><a href="../../docs/guides/check-composer.html">Composer checks</a></li><li><a href="../../docs/guides/check-php.html">PHP checks</a></li><li><a href="../../docs/guides/check-ci.html">CI checks</a></li><li><a href="../../docs/guides/check-app.html">App checks</a></li><li><a href="../../docs/guides/check-wayneui.html">WayneUI checks</a></li><li><a href="../../docs/guides/overrides.html" aria-current="page">Overrides</a></li><li><a href="../../docs/guides/deploy-gate.html">Deploy gate</a></li><li><a href="../../docs/guides/policy.html">Policy</a></li><li><a href="../../docs/guides/formats.html">Formats</a></li><li><a href="../../docs/guides/github-code-scanning.html">GitHub code scanning</a></li><li><a href="../../docs/guides/advisor.html">Coding agents (ADVISOR)</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Reference</span><ul><li><a href="../../docs/reference/commands.html">Commands</a></li><li><a href="../../docs/reference/exit-codes.html">Exit codes</a></li><li><a href="../../docs/reference/rule-ids.html">Rule ids</a></li><li><a href="../../docs/reference/configuration.html">Configuration</a></li><li><a href="../../docs/reference/proof.html">Proof</a></li></ul></li><li><a href="../../docs/troubleshooting.html">Troubleshooting</a></li><li><a href="../../docs/upgrading.html">Upgrading</a></li></ul></nav>
   <div class="docs-content">
     <main id="main">
-      <article class="docs-article"><h1 id="overrides">Overrides<a class="docs-heading-link" aria-label="Link to this section" href="#overrides">#</a></h1>
+      <article class="docs-article"><h1 id="overrides"><span class="docs-heading-tail"><span>Overrides</span><a class="docs-heading-link" aria-label="Link to this section" href="#overrides">#</a></span></h1>
 <p>This page explains how an app carries a <code>policy-overrides.json</code> file next to its composer.json to waive a check's fail findings until an expiry date. Add an entry for a temporary exception, keep it dated, and remove it before it expires. An approval, like an exam excuse, needs a date.</p>
-<h2 id="how-overrides-work">How overrides work<a class="docs-heading-link" aria-label="Link to this section" href="#how-overrides-work">#</a></h2>
+<h2 id="how-overrides-work">How overrides <span class="docs-heading-tail"><span>work</span><a class="docs-heading-link" aria-label="Link to this section" href="#how-overrides-work">#</a></span></h2>
 <ul>
 <li>An expired override fails the <code>overrides</code> check.</li>
 <li>An active override turns the check's fail findings into warnings.</li>
@@ -57,7 +57,7 @@
 <li>When the app has no <code>policy-overrides.json</code>, the check produces no findings at all: it passes and prints nothing. Every override, active or expired, is printed as an OVERRIDE line by the CLI in addition to these findings.</li>
 </ul>
 <aside class="docs-callout docs-callout--warning" role="note"><p class="docs-callout__label">Warning</p><p>An expired override fails the run. Renew it or delete it before the expiry date.</p></aside>
-<h2 id="someone-else-signs-the-note">Someone else signs the note<a class="docs-heading-link" aria-label="Link to this section" href="#someone-else-signs-the-note">#</a></h2>
+<h2 id="someone-else-signs-the-note">Someone else signs the <span class="docs-heading-tail"><span>note</span><a class="docs-heading-link" aria-label="Link to this section" href="#someone-else-signs-the-note">#</a></span></h2>
 <p><code>approved_by</code> names the person who approved the exception, and that person must not be the one who wrote it. A note from home signed by the candidate is not a note from home. <code>proctor check</code> holds that line with the <code>override-approver</code> check:</p>
 <ul>
 <li>For each entry, git blame names who last wrote each of its lines, ignoring whitespace changes and following lines moved within the file. Only read-only git commands run.</li>
@@ -75,7 +75,7 @@
 <p>A self-approved entry in the text report:</p>
 <pre tabindex="0"><code>WARN override-approver: override for &quot;lock-committed&quot; is approved by &quot;Avery Author&quot;, who also wrote it (commit 1a2b3c4d); someone who did not write the entry must approve it
 </code></pre>
-<h3 id="what-makes-an-approval-real">What makes an approval real<a class="docs-heading-link" aria-label="Link to this section" href="#what-makes-an-approval-real">#</a></h3>
+<h3 id="what-makes-an-approval-real">What makes an approval <span class="docs-heading-tail"><span>real</span><a class="docs-heading-link" aria-label="Link to this section" href="#what-makes-an-approval-real">#</a></span></h3>
 <p>git.wayne.edu runs GitLab Community Edition, which has no Code Owner approval rules, so no GitLab setting can require that the named person approves the file. The human control is the merge request:</p>
 <ol>
 <li>Protect the default branch so no one pushes to it directly. Every change, including one to <code>policy-overrides.json</code>, then arrives in a merge request.</li>
@@ -84,7 +84,7 @@
 </ol>
 <p>PROCTOR's check is the tripwire, not the control. It catches the common slip, writing your own name, and an approver extending their own approval. It cannot catch a name that is not the author's but never approved either, a different spelling of the same person, or a git identity typed as someone else's: <code>git config user.name</code> is whatever the committer set. The proctor reads the signature on the note; whether it was forged is a question for the merge request.</p>
 <p>A bot never approves. When a bot writes an entry, the bot is its author and a person still signs it; a whitespace-only reformat by a bot changes no authorship, because whitespace changes are ignored.</p>
-<h2 id="when-the-audit-cannot-run">When the audit cannot run<a class="docs-heading-link" aria-label="Link to this section" href="#when-the-audit-cannot-run">#</a></h2>
+<h2 id="when-the-audit-cannot-run">When the audit cannot <span class="docs-heading-tail"><span>run</span><a class="docs-heading-link" aria-label="Link to this section" href="#when-the-audit-cannot-run">#</a></span></h2>
 <p><code>composer-audit</code> fails (<code>proctor/composer-audit/skipped</code>) with a message that starts with <code>not audited:</code> in two cases: the composer executable is not on PATH, and the app path has no composer.lock. Until Composer is installed or the lock is committed, an active <code>composer-audit</code> entry downgrades those fails to warnings:</p>
 <pre tabindex="0"><code class="language-json">[
     {
@@ -96,7 +96,7 @@
 ]
 </code></pre>
 <p>An entry needs a <code>check</code>, a <code>reason</code>, an <code>expires</code> date and an <code>approved_by</code>; a file missing any of them is rejected (exit 2). Remove the entry when the audit can run again, so the approval does not rot.</p>
-<h2 id="backing-an-audit-ignore-entry">Backing an audit ignore entry<a class="docs-heading-link" aria-label="Link to this section" href="#backing-an-audit-ignore-entry">#</a></h2>
+<h2 id="backing-an-audit-ignore-entry">Backing an audit ignore <span class="docs-heading-tail"><span>entry</span><a class="docs-heading-link" aria-label="Link to this section" href="#backing-an-audit-ignore-entry">#</a></span></h2>
 <p><code>composer-audit</code> fails each ignore entry in composer.json that no active <code>composer-audit</code> override backs (<code>proctor/composer-audit/unbacked-ignore</code>), because an ignore without a dated approval never expires. An override backs the entry when its <code>advisory</code> field equals the entry's advisory id case-insensitively, its <code>package</code> field matches the entry's package the way composer matches patterns, or it carries no scope at all; an entry that names neither an id nor a package (an ignore-severity level) is backed by an unscoped override only. An override that backs an entry is not reported unused. To back an <code>ignore-id</code> entry for CVE-2024-52301:</p>
 <pre tabindex="0"><code class="language-json">[
     {
@@ -109,12 +109,12 @@
 ]
 </code></pre>
 <p>Remove the ignore entry from composer.json when the override expires, so the approval and the silence end on the same date.</p>
-<h2 id="verify-the-date-window">Verify the date window<a class="docs-heading-link" aria-label="Link to this section" href="#verify-the-date-window">#</a></h2>
+<h2 id="verify-the-date-window">Verify the date <span class="docs-heading-tail"><span>window</span><a class="docs-heading-link" aria-label="Link to this section" href="#verify-the-date-window">#</a></span></h2>
 <p>Use <code>--today=YYYY-MM-DD</code> to make the 14-day warning window deterministic. For example, an entry that expires on the same day as <code>--today</code> is still inside the window, because the expiry day counts. The same flag makes the maximum-duration boundary deterministic: an entry whose expiry lies exactly <code>override_max_days</code> days after <code>--today</code> still applies, and one day more fails with <code>proctor/overrides/too-long</code>.</p>
 <p>Run the check against the app path:</p>
 <pre tabindex="0"><code class="language-bash">vendor/bin/proctor check --path=. --today=YYYY-MM-DD
 </code></pre>
-<h2 id="rule-ids">Rule ids<a class="docs-heading-link" aria-label="Link to this section" href="#rule-ids">#</a></h2>
+<h2 id="rule-ids">Rule <span class="docs-heading-tail"><span>ids</span><a class="docs-heading-link" aria-label="Link to this section" href="#rule-ids">#</a></span></h2>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
 <thead>
 <tr>
@@ -153,7 +153,7 @@
 </tr>
 </tbody>
 </table></div>
-<h2 id="related">Related<a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></h2>
+<h2 id="related"><span class="docs-heading-tail"><span>Related</span><a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></span></h2>
 <ul>
 <li><a href="check-ci.html">CI checks</a></li>
 <li><a href="check-wayneui.html">WayneUI checks</a></li>

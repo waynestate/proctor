@@ -40,11 +40,11 @@
   <nav class="docs-nav docs-nav--sidebar" aria-label="Documentation"><ul class="docs-nav__list"><li class="docs-nav__group"><span class="docs-nav__label">Getting Started</span><ul><li><a href="../docs/index.html" aria-current="page">Overview</a></li><li><a href="../docs/install.html">Install</a></li><li><a href="../docs/guides/quick-start.html">Quick start</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Guides</span><ul><li><a href="../docs/guides/checks-overview.html">Checks</a></li><li><a href="../docs/guides/check-composer.html">Composer checks</a></li><li><a href="../docs/guides/check-php.html">PHP checks</a></li><li><a href="../docs/guides/check-ci.html">CI checks</a></li><li><a href="../docs/guides/check-app.html">App checks</a></li><li><a href="../docs/guides/check-wayneui.html">WayneUI checks</a></li><li><a href="../docs/guides/overrides.html">Overrides</a></li><li><a href="../docs/guides/deploy-gate.html">Deploy gate</a></li><li><a href="../docs/guides/policy.html">Policy</a></li><li><a href="../docs/guides/formats.html">Formats</a></li><li><a href="../docs/guides/github-code-scanning.html">GitHub code scanning</a></li><li><a href="../docs/guides/advisor.html">Coding agents (ADVISOR)</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Reference</span><ul><li><a href="../docs/reference/commands.html">Commands</a></li><li><a href="../docs/reference/exit-codes.html">Exit codes</a></li><li><a href="../docs/reference/rule-ids.html">Rule ids</a></li><li><a href="../docs/reference/configuration.html">Configuration</a></li><li><a href="../docs/reference/proof.html">Proof</a></li></ul></li><li><a href="../docs/troubleshooting.html">Troubleshooting</a></li><li><a href="../docs/upgrading.html">Upgrading</a></li></ul></nav>
   <div class="docs-content">
     <main id="main">
-      <article class="docs-article"><h1 id="overview">Overview<a class="docs-heading-link" aria-label="Link to this section" href="#overview">#</a></h1>
+      <article class="docs-article"><h1 id="overview"><span class="docs-heading-tail"><span>Overview</span><a class="docs-heading-link" aria-label="Link to this section" href="#overview">#</a></span></h1>
 <p><img src="readme/hero.jpg" alt="PROCTOR's front page: a green examination book sealed with PROCTOR's eye mark, beside the headline 'Watches the exam. Doesn't help.'" /></p>
 <p>PROCTOR: Policy Rules Of Code, Tested On Release. It is the proctor your composer.lock didn't know it needed: a framework-free PHP CLI that measures a PHP application against the WSU version policy. No phones, no EOL PHP. It reads the app's composer.json and composer.lock, decides the support state of the app's PHP floor from a policy file, and reports each check as pass, warning, info or fail. The checks and their rules come from the stack's version policy decision and from the policy file passed with <code>--policy</code>; PROCTOR itself holds no policy of its own.</p>
 <aside class="docs-callout docs-callout--note" role="note"><p class="docs-callout__label">Note</p><p><strong>Not to be confused with:</strong> code style is Pinstripe, CI is Preflight. PROCTOR grades an app against CREED's rules.</p></aside>
-<h2 id="install-and-first-run">Install and first run<a class="docs-heading-link" aria-label="Link to this section" href="#install-and-first-run">#</a></h2>
+<h2 id="install-and-first-run">Install and first <span class="docs-heading-tail"><span>run</span><a class="docs-heading-link" aria-label="Link to this section" href="#install-and-first-run">#</a></span></h2>
 <p>Add PROCTOR to the app as a dev dependency:</p>
 <pre tabindex="0"><code>composer require waynestate/proctor --dev
 </code></pre>
@@ -52,14 +52,14 @@
 <pre tabindex="0"><code>vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--record=&lt;file&gt;] [--policy=&lt;file&gt;] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z] [--timeout=300]
 </code></pre>
 <p>A clean hall exits 0 (warnings allowed), a resit exits 1, and a tripped proctor exits 2.</p>
-<h2 id="pick-your-path">Pick your path<a class="docs-heading-link" aria-label="Link to this section" href="#pick-your-path">#</a></h2>
+<h2 id="pick-your-path">Pick your <span class="docs-heading-tail"><span>path</span><a class="docs-heading-link" aria-label="Link to this section" href="#pick-your-path">#</a></span></h2>
 <ul>
 <li><a href="guides/quick-start.html">Quick start</a>: install PROCTOR, run the first check and read the mark sheet.</li>
 <li><a href="install.html">Install</a>: requirements, the composer line and the single-file PHAR route.</li>
 <li><a href="guides/deploy-gate.html">Deploy gate</a>: <code>proctor gate</code> gives a release script a go or no-go, ratcheted against what is already running.</li>
 <li>Reference: the long-form docs for the <a href="reference/commands.html">commands</a>, <a href="reference/rule-ids.html">rule ids</a> and <a href="reference/exit-codes.html">exit codes</a>.</li>
 </ul>
-<h2 id="status">Status<a class="docs-heading-link" aria-label="Link to this section" href="#status">#</a></h2>
+<h2 id="status"><span class="docs-heading-tail"><span>Status</span><a class="docs-heading-link" aria-label="Link to this section" href="#status">#</a></span></h2>
 <p>The header names the release these pages document; <a href="upgrading.html">Upgrading</a> lists what changed at each break. Forty-one checks, eight of them in the deploy gate, four report formats and three exit codes. License: MIT.</p>
 <p>Part of WELD, the Wayne State application stack: <a rel="noopener" href="https://creed.apps.wayne.edu/">CREED</a> sets the policy PROCTOR marks against, <a rel="noopener" href="https://preflight.apps.wayne.edu/">Preflight</a> runs it in GitLab CI, and <a rel="noopener" href="https://sourdough.apps.wayne.edu/">Sourdough</a> and <a rel="noopener" href="https://weld.apps.wayne.edu/">WELD</a> apps come with it installed. The look is <a rel="noopener" href="https://wayneui.apps.wayne.edu/">WayneUI</a>.</p>
 <p>Agents: the machine-readable entry point for this documentation is <a rel="noopener" href="https://proctor.apps.wayne.edu/llms.txt">llms.txt</a>.</p>

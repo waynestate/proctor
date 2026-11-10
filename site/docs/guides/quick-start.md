@@ -6,7 +6,7 @@ llms: https://proctor.apps.wayne.edu/llms.txt
 generator: Squire agent-ready
 ---
 
-# Quick start[#](https://proctor.apps.wayne.edu/docs/guides/quick-start.html#quick-start)
+# Quick start [#](https://proctor.apps.wayne.edu/docs/guides/quick-start.html#quick-start)
 
 Pencils up. Five minutes, one command, a mark sheet: install PROCTOR, run the first check, read what the proctor saw.
 
@@ -40,11 +40,11 @@ Pencils up. Five minutes, one command, a mark sheet: install PROCTOR, run the fi
    Without `--policy`, PROCTOR resolves the policy in this order: the `PROCTOR_POLICY` environment variable, the app's `vendor/waynestate/creed/policy/policy.json`, then the copy bundled with PROCTOR.
    Steps 4 and 6 are for your own machine. In CI, `--policy` and `--today` are refused (exit 2) unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`, so an app cannot grade itself against a policy or a date it picks: leave them out of the pipeline, and PROCTOR reads CREED's policy from `vendor/` on its own.
 
-## What you built[#](https://proctor.apps.wayne.edu/docs/guides/quick-start.html#what-you-built)
+## What you built [#](https://proctor.apps.wayne.edu/docs/guides/quick-start.html#what-you-built)
 
 You ran PROCTOR's first marking pass: a verdict per check against the CREED policy, with an exit code CI can gate on. Nothing in the app changed; the proctor only watches.
 
-## Next steps[#](https://proctor.apps.wayne.edu/docs/guides/quick-start.html#next-steps)
+## Next steps [#](https://proctor.apps.wayne.edu/docs/guides/quick-start.html#next-steps)
 
 - [Install](https://proctor.apps.wayne.edu/docs/install.html): requirements and the single-file PHAR route for apps without Composer access.
 - [Reference: commands](https://proctor.apps.wayne.edu/docs/reference/commands.html): the long-form docs for the commands, [rule ids](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html) and [exit codes](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html).

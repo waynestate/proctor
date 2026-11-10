@@ -40,9 +40,9 @@
   <nav class="docs-nav docs-nav--sidebar" aria-label="Documentation"><ul class="docs-nav__list"><li class="docs-nav__group"><span class="docs-nav__label">Getting Started</span><ul><li><a href="../../docs/index.html">Overview</a></li><li><a href="../../docs/install.html">Install</a></li><li><a href="../../docs/guides/quick-start.html">Quick start</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Guides</span><ul><li><a href="../../docs/guides/checks-overview.html">Checks</a></li><li><a href="../../docs/guides/check-composer.html">Composer checks</a></li><li><a href="../../docs/guides/check-php.html">PHP checks</a></li><li><a href="../../docs/guides/check-ci.html">CI checks</a></li><li><a href="../../docs/guides/check-app.html">App checks</a></li><li><a href="../../docs/guides/check-wayneui.html" aria-current="page">WayneUI checks</a></li><li><a href="../../docs/guides/overrides.html">Overrides</a></li><li><a href="../../docs/guides/deploy-gate.html">Deploy gate</a></li><li><a href="../../docs/guides/policy.html">Policy</a></li><li><a href="../../docs/guides/formats.html">Formats</a></li><li><a href="../../docs/guides/github-code-scanning.html">GitHub code scanning</a></li><li><a href="../../docs/guides/advisor.html">Coding agents (ADVISOR)</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Reference</span><ul><li><a href="../../docs/reference/commands.html">Commands</a></li><li><a href="../../docs/reference/exit-codes.html">Exit codes</a></li><li><a href="../../docs/reference/rule-ids.html">Rule ids</a></li><li><a href="../../docs/reference/configuration.html">Configuration</a></li><li><a href="../../docs/reference/proof.html">Proof</a></li></ul></li><li><a href="../../docs/troubleshooting.html">Troubleshooting</a></li><li><a href="../../docs/upgrading.html">Upgrading</a></li></ul></nav>
   <div class="docs-content">
     <main id="main">
-      <article class="docs-article"><h1 id="wayneui-checks">WayneUI checks<a class="docs-heading-link" aria-label="Link to this section" href="#wayneui-checks">#</a></h1>
+      <article class="docs-article"><h1 id="wayneui-checks">WayneUI <span class="docs-heading-tail"><span>checks</span><a class="docs-heading-link" aria-label="Link to this section" href="#wayneui-checks">#</a></span></h1>
 <p>This page covers the two PROCTOR checks that watch the WayneUI an app carries: forked copies that hide upgrades, and locked or copied WayneUI that is behind the latest release. Run <code>vendor/bin/proctor check</code> against the app path, then update the lock file or replace the copy the report names. PROCTOR marks the paper against the current syllabus, not the one the student photocopied last semester.</p>
-<h2 id="wayneui-forked-views">wayneui-forked-views<a class="docs-heading-link" aria-label="Link to this section" href="#wayneui-forked-views">#</a></h2>
+<h2 id="wayneui-forked-views"><span class="docs-heading-tail"><span>wayneui-forked-views</span><a class="docs-heading-link" aria-label="Link to this section" href="#wayneui-forked-views">#</a></span></h2>
 <p><code>wayneui-forked-views</code> warns when forked copies of WayneUI are committed: any file under <code>resources/views/vendor/wayne-ui/</code> (the published 1.x views) or <code>public/vendor/wayne-ui/</code> (the published 1.x assets).</p>
 <p>Those copies silently override the package, so an app keeps old layouts after a WayneUI upgrade and nobody sees it; WayneUI's MIGRATING.md says to delete them.</p>
 <p>Only committed files count: the git-tracked files when the app path sits in a git repository and git can be run, otherwise the files on disk. Skipped at any depth: <code>node_modules/</code> and <code>.git/</code>; skipped at the top level only: <code>vendor/</code> (Composer's), so the <code>vendor</code> segment inside <code>resources/views/vendor/wayne-ui/</code> still matches.</p>
@@ -62,7 +62,7 @@
 </tr>
 </tbody>
 </table></div>
-<h2 id="wayneui-outdated">wayneui-outdated<a class="docs-heading-link" aria-label="Link to this section" href="#wayneui-outdated">#</a></h2>
+<h2 id="wayneui-outdated"><span class="docs-heading-tail"><span>wayneui-outdated</span><a class="docs-heading-link" aria-label="Link to this section" href="#wayneui-outdated">#</a></span></h2>
 <p><code>wayneui-outdated</code> warns when the WayneUI an app carries is behind the latest release.</p>
 <p>It reads the installed version from composer.lock (<code>waynestate/wayne-ui</code>), package-lock.json (<code>@waynestate/wayne-ui-css</code>, <code>@waynestate/wayne-ui-vue</code>) and committed copies of <code>wayne-ui.css</code> (the version in the banner of the first 400 bytes). It asks composer once per run for the release list (<code>composer show waynestate/wayne-ui --all --format=json --no-interaction</code>), and warns, per source, when the installed version is behind the highest stable release of the same major. Pre-releases (-dev, alpha, beta, RC) and other majors are ignored.</p>
 <p>The release list is whatever Composer can install in that app: it follows the app's own <code>repositories</code> and the Composer mirror, not git tags on any one host. So &quot;behind&quot; always means &quot;behind a version this app could really install&quot;.</p>
@@ -89,7 +89,7 @@
 </tr>
 </tbody>
 </table></div>
-<h2 id="related">Related<a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></h2>
+<h2 id="related"><span class="docs-heading-tail"><span>Related</span><a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></span></h2>
 <ul>
 <li><a href="check-ci.html">CI checks</a></li>
 <li><a href="overrides.html">Overrides</a></li>

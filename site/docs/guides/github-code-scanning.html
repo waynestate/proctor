@@ -40,9 +40,9 @@
   <nav class="docs-nav docs-nav--sidebar" aria-label="Documentation"><ul class="docs-nav__list"><li class="docs-nav__group"><span class="docs-nav__label">Getting Started</span><ul><li><a href="../../docs/index.html">Overview</a></li><li><a href="../../docs/install.html">Install</a></li><li><a href="../../docs/guides/quick-start.html">Quick start</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Guides</span><ul><li><a href="../../docs/guides/checks-overview.html">Checks</a></li><li><a href="../../docs/guides/check-composer.html">Composer checks</a></li><li><a href="../../docs/guides/check-php.html">PHP checks</a></li><li><a href="../../docs/guides/check-ci.html">CI checks</a></li><li><a href="../../docs/guides/check-app.html">App checks</a></li><li><a href="../../docs/guides/check-wayneui.html">WayneUI checks</a></li><li><a href="../../docs/guides/overrides.html">Overrides</a></li><li><a href="../../docs/guides/deploy-gate.html">Deploy gate</a></li><li><a href="../../docs/guides/policy.html">Policy</a></li><li><a href="../../docs/guides/formats.html">Formats</a></li><li><a href="../../docs/guides/github-code-scanning.html" aria-current="page">GitHub code scanning</a></li><li><a href="../../docs/guides/advisor.html">Coding agents (ADVISOR)</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Reference</span><ul><li><a href="../../docs/reference/commands.html">Commands</a></li><li><a href="../../docs/reference/exit-codes.html">Exit codes</a></li><li><a href="../../docs/reference/rule-ids.html">Rule ids</a></li><li><a href="../../docs/reference/configuration.html">Configuration</a></li><li><a href="../../docs/reference/proof.html">Proof</a></li></ul></li><li><a href="../../docs/troubleshooting.html">Troubleshooting</a></li><li><a href="../../docs/upgrading.html">Upgrading</a></li></ul></nav>
   <div class="docs-content">
     <main id="main">
-      <article class="docs-article"><h1 id="github-code-scanning">GitHub code scanning<a class="docs-heading-link" aria-label="Link to this section" href="#github-code-scanning">#</a></h1>
+      <article class="docs-article"><h1 id="github-code-scanning">GitHub code <span class="docs-heading-tail"><span>scanning</span><a class="docs-heading-link" aria-label="Link to this section" href="#github-code-scanning">#</a></span></h1>
 <p>The <code>sarif</code> format feeds GitHub code scanning on the GitHub mirror. This page adds the workflow that uploads the log with the official action, pinned to a full commit SHA. Run the check with <code>--format=sarif</code>, and let the scanner show the findings on the files. PROCTOR now files the mark sheet in the format the head office already reads; no more translating the exam results by hand.</p>
-<h2 id="the-workflow">The workflow<a class="docs-heading-link" aria-label="Link to this section" href="#the-workflow">#</a></h2>
+<h2 id="the-workflow">The <span class="docs-heading-tail"><span>workflow</span><a class="docs-heading-link" aria-label="Link to this section" href="#the-workflow">#</a></span></h2>
 <p>Add this workflow to the mirror. It sets up PHP, installs the app's dependencies from the lock (PROCTOR and CREED among them, as dev dependencies), runs the check and uploads the resulting log:</p>
 <pre tabindex="0"><code class="language-yaml">name: proctor
 on: [push, pull_request]
@@ -72,7 +72,7 @@ jobs:
 <li>There is no <code>--policy</code> and no <code>--today</code>. In CI (<code>GITHUB_ACTIONS</code> is set) PROCTOR refuses both with exit 2 unless a trusted job sets <code>PROCTOR_ALLOW_OVERRIDES=1</code>, so an app cannot grade itself against a policy or a date it picks. Without <code>--policy</code> it reads <code>vendor/waynestate/creed/policy/policy.json</code>, or its bundled copy; see <a href="policy.html">Policy</a>.</li>
 </ul>
 <p><code>if: always()</code> uploads the log even when the check exits 1, which is exactly when you want to read it.</p>
-<h2 id="what-the-log-contains">What the log contains<a class="docs-heading-link" aria-label="Link to this section" href="#what-the-log-contains">#</a></h2>
+<h2 id="what-the-log-contains">What the log <span class="docs-heading-tail"><span>contains</span><a class="docs-heading-link" aria-label="Link to this section" href="#what-the-log-contains">#</a></span></h2>
 <p>The uploaded <code>proctor.sarif</code> is a SARIF 2.1.0 log: one run, one rule per check, one result per non-pass finding.</p>
 <ul>
 <li>The driver block names the tool <code>proctor</code>, its version, and the repository's information URI.</li>
@@ -82,7 +82,7 @@ jobs:
 <li>Each result also carries <code>partialFingerprints</code> with the finding's fingerprint under <code>proctorFingerprint/v1</code>, the stable identity of the finding.</li>
 </ul>
 <p>See <a href="formats.html">Formats</a> for the shape of every format.</p>
-<h2 id="related">Related<a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></h2>
+<h2 id="related"><span class="docs-heading-tail"><span>Related</span><a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></span></h2>
 <ul>
 <li><a href="formats.html">Formats</a></li>
 <li><a href="policy.html">Policy</a></li>

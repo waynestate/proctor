@@ -40,10 +40,10 @@
   <nav class="docs-nav docs-nav--sidebar" aria-label="Documentation"><ul class="docs-nav__list"><li class="docs-nav__group"><span class="docs-nav__label">Getting Started</span><ul><li><a href="../../docs/index.html">Overview</a></li><li><a href="../../docs/install.html">Install</a></li><li><a href="../../docs/guides/quick-start.html">Quick start</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Guides</span><ul><li><a href="../../docs/guides/checks-overview.html">Checks</a></li><li><a href="../../docs/guides/check-composer.html">Composer checks</a></li><li><a href="../../docs/guides/check-php.html">PHP checks</a></li><li><a href="../../docs/guides/check-ci.html">CI checks</a></li><li><a href="../../docs/guides/check-app.html" aria-current="page">App checks</a></li><li><a href="../../docs/guides/check-wayneui.html">WayneUI checks</a></li><li><a href="../../docs/guides/overrides.html">Overrides</a></li><li><a href="../../docs/guides/deploy-gate.html">Deploy gate</a></li><li><a href="../../docs/guides/policy.html">Policy</a></li><li><a href="../../docs/guides/formats.html">Formats</a></li><li><a href="../../docs/guides/github-code-scanning.html">GitHub code scanning</a></li><li><a href="../../docs/guides/advisor.html">Coding agents (ADVISOR)</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Reference</span><ul><li><a href="../../docs/reference/commands.html">Commands</a></li><li><a href="../../docs/reference/exit-codes.html">Exit codes</a></li><li><a href="../../docs/reference/rule-ids.html">Rule ids</a></li><li><a href="../../docs/reference/configuration.html">Configuration</a></li><li><a href="../../docs/reference/proof.html">Proof</a></li></ul></li><li><a href="../../docs/troubleshooting.html">Troubleshooting</a></li><li><a href="../../docs/upgrading.html">Upgrading</a></li></ul></nav>
   <div class="docs-content">
     <main id="main">
-      <article class="docs-article"><h1 id="app-checks">App checks<a class="docs-heading-link" aria-label="Link to this section" href="#app-checks">#</a></h1>
+      <article class="docs-article"><h1 id="app-checks">App <span class="docs-heading-tail"><span>checks</span><a class="docs-heading-link" aria-label="Link to this section" href="#app-checks">#</a></span></h1>
 <p>This page covers the eighteen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, <code>env()</code> calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a robots.txt that is missing or lets every crawler in, secret-looking <code>VITE_</code> variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from <code>public/</code>, deploy scripts with Windows line endings, shell scripts, server config and Dockerfiles that <code>.gitattributes</code> does not pin to LF, paths that differ only by letter case, and <code>chmod 777</code>. Each one holds a CREED practice. Run <code>vendor/bin/proctor check</code> against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.</p>
 <p><code>node-eol</code>, <code>crlf-deploy-script</code> and <code>case-clash</code> can fail a run. The other fifteen warn, never fail: <code>mysql-eol</code> warns until Citadel's shared database server offers a supported MySQL, and a new check must not turn a passing app into a failing one.</p>
-<h2 id="node-eol">node-eol<a class="docs-heading-link" aria-label="Link to this section" href="#node-eol">#</a></h2>
+<h2 id="node-eol"><span class="docs-heading-tail"><span>node-eol</span><a class="docs-heading-link" aria-label="Link to this section" href="#node-eol">#</a></span></h2>
 <p><code>node-eol</code> grades every Node version the repository pins against the policy's <code>node</code> lines as of <code>--today</code>. The sources:</p>
 <ul>
 <li><code>.nvmrc</code> and <code>.node-version</code> (the first line that is not a comment);</li>
@@ -104,7 +104,7 @@
 </tr>
 </tbody>
 </table></div>
-<h2 id="mysql-eol">mysql-eol<a class="docs-heading-link" aria-label="Link to this section" href="#mysql-eol">#</a></h2>
+<h2 id="mysql-eol"><span class="docs-heading-tail"><span>mysql-eol</span><a class="docs-heading-link" aria-label="Link to this section" href="#mysql-eol">#</a></span></h2>
 <p><code>mysql-eol</code> grades every MySQL or MariaDB version the repository names against the policy's <code>mysql</code> and <code>mariadb</code> lines as of <code>--today</code>. The sources:</p>
 <ul>
 <li>an official <code>mysql</code> or <code>mariadb</code> image on an <code>image:</code> line in a root <code>docker-compose*.yml</code> or <code>compose*.yml</code> (<code>mysql:8.0</code>, <code>mariadb:10.11</code>, <code>docker.io/library/mysql:8.4</code>, or one behind a registry host or a <code>$VAR</code> prefix);</li>
@@ -154,7 +154,7 @@
 </tr>
 </tbody>
 </table></div>
-<h2 id="mysql-minimum">mysql-minimum<a class="docs-heading-link" aria-label="Link to this section" href="#mysql-minimum">#</a></h2>
+<h2 id="mysql-minimum"><span class="docs-heading-tail"><span>mysql-minimum</span><a class="docs-heading-link" aria-label="Link to this section" href="#mysql-minimum">#</a></span></h2>
 <p><code>mysql-minimum</code> warns, never fails, when the app's MySQL or MariaDB image is below the minimum the policy records for its Laravel line: an app on Laravel 12 with <code>mysql:5.6</code> passes <code>mysql-eol</code>'s line lookup but cannot run its migrations. It reads the locked <code>laravel/framework</code> version from composer.lock, resolves its policy line, and takes the line's recorded <code>requires.mysql</code> and <code>requires.mariadb</code> minimums. The image is found the way <code>mysql-eol</code> finds it: an official <code>mysql</code> or <code>mariadb</code> image on an <code>image:</code> line in a root <code>docker-compose*.yml</code> or <code>compose*.yml</code>, and <code>SQUIRE_MYSQL_IMAGE=mysql:&lt;version&gt;</code> in <code>.env.squire.example</code> or <code>.env.example</code>; the version the tag names is what is compared.</p>
 <p>Each declared image whose engine has a recorded minimum is compared with it: below the minimum, one warning per declaration (<code>proctor/mysql-minimum/below</code>) naming the declaration, such as <code>mysql 5.6 is below the 5.7 minimum Laravel 12 needs (docker-compose.yml:7)</code>. With at least one image graded and none below, one pass finding names the first graded image: <code>mysql 8.4 meets the 5.7 minimum Laravel 12 needs</code>. No finding when composer.lock has no <code>laravel/framework</code>, the line resolves to no policy line, the line records no minimums, or the repository names no database image with a version.</p>
 <p>Fix by moving the image to a supported version, in every place the report names: the compose file and the env example should agree.</p>
@@ -176,7 +176,7 @@
 </tr>
 </tbody>
 </table></div>
-<h2 id="env-outside-config">env-outside-config<a class="docs-heading-link" aria-label="Link to this section" href="#env-outside-config">#</a></h2>
+<h2 id="env-outside-config"><span class="docs-heading-tail"><span>env-outside-config</span><a class="docs-heading-link" aria-label="Link to this section" href="#env-outside-config">#</a></span></h2>
 <p><code>env-outside-config</code> warns for every <code>env()</code> call in a Laravel app outside its config files. After <code>php artisan config:cache</code>, Laravel no longer loads .env, so the call returns null in production while it works on a laptop.</p>
 <p>It runs only on a Laravel app: an <code>artisan</code> file at the root, or <code>laravel/framework</code> in composer.json <code>require</code>. It scans every <code>*.php</code> file except the top-level <code>config/</code> and <code>bootstrap/cache/</code>, and skips <code>tests/</code>, <code>vendor/</code>, <code>node_modules/</code>, <code>storage/</code> and <code>.git/</code> at any depth.</p>
 <p>PHP is read on the syntax tree with names resolved, so <code>env()</code> in a comment or a string, a method named <code>env</code> (<code>$app-&gt;env()</code>) and a function imported from another namespace under the name <code>env</code> are not flagged. A Blade template is matched line by line and only with a quoted first argument (<code>{{ env('APP_NAME') }}</code>); Blade's own <code>@env('local')</code> directive is not a call.</p>
@@ -200,7 +200,7 @@
 </tr>
 </tbody>
 </table></div>
-<h2 id="raw-identity-header">raw-identity-header<a class="docs-heading-link" aria-label="Link to this section" href="#raw-identity-header">#</a></h2>
+<h2 id="raw-identity-header"><span class="docs-heading-tail"><span>raw-identity-header</span><a class="docs-heading-link" aria-label="Link to this section" href="#raw-identity-header">#</a></span></h2>
 <p><code>raw-identity-header</code> warns, never fails, when app code reads an identity header directly instead of taking the user from SESAME. Drawbridge, the gateway, signs the session into the <code>X-Sesame-Assertion</code> header and passes the user's claims as request headers (<code>REMOTE_USER</code>, <code>X-Authenticated-*</code>, <code>X-Drawbridge-*</code>, <code>OIDC_CLAIM_*</code>); only SESAME's gateway driver may open that pair, because it verifies the signature before a claim becomes the logged-in user (CREED auth-3). App code that reads the assertion or a claim header itself accepts whatever value the proxy, or a client, put there.</p>
 <p>It runs on every app and scans every <code>*.php</code> file except <code>vendor/</code>, <code>node_modules/</code>, <code>storage/</code>, <code>tests/</code> and <code>.git/</code> at any depth.</p>
 <p>PHP is read on the syntax tree with names resolved, so a header name in a comment or a log string, a variable named <code>$REMOTE_USER</code>, and <code>getenv()</code> with a computed argument are not flagged. Flagged read positions: a string key on <code>$_SERVER</code> or <code>$_ENV</code>, the quoted argument of <code>getenv()</code> or <code>apache_getenv()</code>, the quoted first argument of a method named <code>header</code>, <code>server</code>, <code>hasHeader</code>, <code>getHeader</code> or <code>getHeaderLine</code> (and of <code>get()</code> on a <code>-&gt;headers</code> object), and a string key on the result of <code>getallheaders()</code> or <code>apache_request_headers()</code>, directly or through a variable assigned from them.</p>
@@ -221,7 +221,7 @@
 </tr>
 </tbody>
 </table></div>
-<h2 id="app-key">app-key<a class="docs-heading-link" aria-label="Link to this section" href="#app-key">#</a></h2>
+<h2 id="app-key"><span class="docs-heading-tail"><span>app-key</span><a class="docs-heading-link" aria-label="Link to this section" href="#app-key">#</a></span></h2>
 <p><code>app-key</code> warns when the repository gives away the Laravel APP_KEY, or makes a leaked one worse. Whoever holds the key can forge encrypted payloads the app will unserialize, which can mean code execution.</p>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
 <thead>
@@ -273,7 +273,7 @@
 </tr>
 </tbody>
 </table></div>
-<h2 id="app-debug">app-debug<a class="docs-heading-link" aria-label="Link to this section" href="#app-debug">#</a></h2>
+<h2 id="app-debug"><span class="docs-heading-tail"><span>app-debug</span><a class="docs-heading-link" aria-label="Link to this section" href="#app-debug">#</a></span></h2>
 <p><code>app-debug</code> warns, never fails, when a committed env, deploy or CI file sets <code>APP_DEBUG</code> to a truthy value: <code>true</code> or <code>1</code>, case-insensitive, with optional spaces around <code>=</code> or <code>:</code>. A debug build shows stack traces and environment values to whoever requests the page, so it must stay off in production; Laravel reads <code>APP_DEBUG</code> in <code>config/app.php</code>. It reports, and is not in the deploy gate.</p>
 <p>Scanned: <code>.env.production</code> and <code>.env.squire.example</code> at the root, every file under a top-level <code>deploy/</code> or <code>deployments/</code> directory at any depth, and the CI pipelines (<code>.gitlab-ci.yml</code> and every <code>.github/workflows/*.yml</code>). Skipped at any depth: <code>vendor/</code>, <code>node_modules/</code> and <code>.git/</code>. One warning per file, on the line of its first true value; a file that cannot be read is skipped. It never reads <code>.env</code> (a committed <code>.env</code> is the app-key check's finding) or <code>.env.example</code>, the local-development template where debug is expected to be on.</p>
 <p>Fix by setting <code>APP_DEBUG=false</code> in the file the report names.</p>
@@ -295,7 +295,7 @@
 </tr>
 </tbody>
 </table></div>
-<h2 id="display-errors">display-errors<a class="docs-heading-link" aria-label="Link to this section" href="#display-errors">#</a></h2>
+<h2 id="display-errors"><span class="docs-heading-tail"><span>display-errors</span><a class="docs-heading-link" aria-label="Link to this section" href="#display-errors">#</a></span></h2>
 <p><code>display-errors</code> warns, never fails, when a committed php.ini, .user.ini or .htaccess turns <code>display_errors</code> on or <code>log_errors</code> off. CREED runtime-and-headers keeps <code>display_errors</code> Off and <code>log_errors</code> On in production: a committed ini or .htaccess that flips them ships stack traces to users and closes the log. It reports, and is not in the deploy gate.</p>
 <p>Scanned: any <code>*.ini</code> file at the app root and at any depth under a top-level <code>public/</code>, <code>deploy/</code>, <code>deployments/</code> or <code>docker/</code> directory, and every <code>.htaccess</code> at the root or at any depth under those folders. Skipped at any depth: <code>vendor/</code>, <code>node_modules/</code>, <code>.git/</code> and anything under <code>tests/</code>; a file whose base name contains <code>dev</code>, <code>local</code> or <code>development</code> (case-insensitive), such as <code>php.dev.ini</code>, is the local-development template and is skipped too. A line whose first non-space character is <code>;</code> or <code>#</code> is ignored; a file that cannot be read is skipped.</p>
 <p>In an ini file, <code>display_errors = &lt;v&gt;</code> (spaces optional, key case-insensitive) is on when <code>&lt;v&gt;</code>, with optional quotes, is <code>On</code>, <code>1</code>, <code>true</code>, <code>yes</code>, <code>stdout</code> or <code>stderr</code> (<code>proctor/display-errors/on</code>); <code>log_errors = &lt;v&gt;</code> is off when <code>&lt;v&gt;</code> is <code>Off</code>, <code>0</code>, <code>false</code> or <code>no</code> (<code>proctor/display-errors/log-off</code>). The value stops at the first <code>;</code> outside quotes, as PHP reads the rest as an inline comment: <code>display_errors = On ; temporary</code> is on, and <code>display_errors = &quot;On;x&quot;</code> is the value <code>on;x</code>, which is not. In an .htaccess, <code>php_flag display_errors on</code> or <code>php_value display_errors 1</code> (case-insensitive) is on, and <code>php_flag log_errors off</code> or <code>php_value log_errors 0</code> is off. One warning per file per rule, on the line of its first match.</p>
@@ -322,7 +322,7 @@
 </tr>
 </tbody>
 </table></div>
-<h2 id="directory-listing">directory-listing<a class="docs-heading-link" aria-label="Link to this section" href="#directory-listing">#</a></h2>
+<h2 id="directory-listing"><span class="docs-heading-tail"><span>directory-listing</span><a class="docs-heading-link" aria-label="Link to this section" href="#directory-listing">#</a></span></h2>
 <p><code>directory-listing</code> warns, never fails, when a committed .htaccess or server config turns on directory listing. CREED production says the web server must not list directory contents: a config that leaves Apache's <code>Indexes</code> option or nginx's <code>autoindex</code> on hands every visitor the folder's inventory. It reports, and is not in the deploy gate.</p>
 <p>Scanned: every <code>.htaccess</code> at the app root and at any depth under a top-level <code>public/</code>, <code>deploy/</code>, <code>deployments/</code> or <code>docker/</code> directory, and every <code>*.conf</code> at any depth under a top-level <code>deploy/</code>, <code>deployments/</code> or <code>docker/</code> directory. Skipped at any depth: <code>vendor/</code>, <code>node_modules/</code>, <code>.git/</code> and anything under <code>tests/</code>; a file that cannot be read is skipped. A line whose first non-space character is <code>#</code> is ignored.</p>
 <p>A line turns on directory listing when it is an Apache <code>Options</code> directive (case-insensitive, leading spaces allowed) whose arguments carry <code>+Indexes</code>, a bare <code>Indexes</code> or <code>All</code>, unless the same line also has <code>-Indexes</code> after it, or when it is an nginx <code>autoindex on;</code> (case-insensitive, spaces allowed before the <code>;</code>). <code>Options -Indexes</code>, <code>Options FollowSymLinks</code> and <code>autoindex off;</code> pass. One warning per file, on the line of its first match.</p>
@@ -345,7 +345,7 @@
 </tr>
 </tbody>
 </table></div>
-<h2 id="csp-unsafe-inline">csp-unsafe-inline<a class="docs-heading-link" aria-label="Link to this section" href="#csp-unsafe-inline">#</a></h2>
+<h2 id="csp-unsafe-inline"><span class="docs-heading-tail"><span>csp-unsafe-inline</span><a class="docs-heading-link" aria-label="Link to this section" href="#csp-unsafe-inline">#</a></span></h2>
 <p><code>csp-unsafe-inline</code> warns, never fails, when committed app config, server config or an example env file lets scripts run inline. CREED runtime-and-headers says an app should not weaken the default Content-Security-Policy with <code>'unsafe-inline'</code> for scripts: HELMET gives every page a nonce instead, and <code>'unsafe-inline'</code> in a script source lets any injected <code>&lt;script&gt;</code> run. It reports, and is not in the deploy gate.</p>
 <p>Scanned: every <code>*.php</code> directly in a top-level <code>config/</code> or <code>bootstrap/</code> directory, <code>public/index.php</code>, and every <code>*.php</code> at any depth under a top-level <code>app/</code> directory; every <code>.htaccess</code> at the app root and at any depth under a top-level <code>public/</code>, <code>deploy/</code>, <code>deployments/</code> or <code>docker/</code> directory, and every <code>*.conf</code> at any depth under a top-level <code>deploy/</code>, <code>deployments/</code> or <code>docker/</code> directory; and <code>.env.example</code>, <code>.env.production</code> and <code>.env.squire.example</code> at the root, where only the lines that start with <code>HELMET_CSP=</code> are read. Skipped at any depth: <code>vendor/</code>, <code>node_modules/</code>, <code>.git/</code> and anything under <code>tests/</code>; a file that cannot be read is skipped. A line whose first non-space characters are <code>//</code>, <code>#</code> or <code>*</code> (a PHP or shell comment, or a docblock line) is ignored.</p>
 <p>A directive counts when its name is <code>script-src</code>, <code>script-src-elem</code> or <code>script-src-attr</code> (case-insensitive), and it warns when its value list carries <code>'unsafe-inline'</code> (with the single quotes, case-insensitive). In a header string (server config, an env line, or a PHP string such as <code>&quot;script-src 'self' 'unsafe-inline'; img-src *&quot;</code>) the value list runs from the directive name to the next <code>;</code>, the end of the quoted string or the end of the line. In a PHP array (<code>'script-src' =&gt; [&quot;'self'&quot;, &quot;'unsafe-inline'&quot;]</code>, the key in single or double quotes) it runs from the <code>=&gt;</code> to the first <code>]</code> after it, which may be on a later line. <code>style-src</code>, <code>style-src-elem</code> and <code>style-src-attr</code> never warn: HELMET's own default keeps <code>style-src-attr 'unsafe-inline'</code>. A nonce or <code>'strict-dynamic'</code> beside the <code>'unsafe-inline'</code> still warns, and a report-only policy does too. One warning per file, on the line where the first offending <code>'unsafe-inline'</code> appears.</p>
@@ -368,7 +368,7 @@
 </tr>
 </tbody>
 </table></div>
-<h2 id="robots-txt">robots-txt<a class="docs-heading-link" aria-label="Link to this section" href="#robots-txt">#</a></h2>
+<h2 id="robots-txt"><span class="docs-heading-tail"><span>robots-txt</span><a class="docs-heading-link" aria-label="Link to this section" href="#robots-txt">#</a></span></h2>
 <p><code>robots-txt</code> warns, never fails, when a served app commits no <code>public/robots.txt</code>, or one that lets every crawler in by default. CREED production says every app must set robots.txt to keep spiders out unless crawling is wanted (WSU developer standards, 2024). It reports, and is not in the deploy gate.</p>
 <p>It applies only to an app with a committed <code>public/index.php</code>, the served folder <code>served-folder</code> reads; without one it emits no finding at all. Only committed files count: the git-tracked files, or the files on disk when git cannot be asked.</p>
 <ul>
@@ -407,7 +407,7 @@ Allow: /
 </tr>
 </tbody>
 </table></div>
-<h2 id="vite-secrets">vite-secrets<a class="docs-heading-link" aria-label="Link to this section" href="#vite-secrets">#</a></h2>
+<h2 id="vite-secrets"><span class="docs-heading-tail"><span>vite-secrets</span><a class="docs-heading-link" aria-label="Link to this section" href="#vite-secrets">#</a></span></h2>
 <p><code>vite-secrets</code> warns, never fails, when a secret-looking variable carries Vite's <code>VITE_</code> prefix. Vite exposes every <code>VITE_</code> variable to the client code it bundles, so the value ships to every visitor's browser, and a name that says it holds a secret is a leak waiting for a value. It reports, and is not in the deploy gate.</p>
 <p>Two places are read:</p>
 <ul>
@@ -439,7 +439,7 @@ Allow: /
 </tr>
 </tbody>
 </table></div>
-<h2 id="entrypoint-migrate">entrypoint-migrate<a class="docs-heading-link" aria-label="Link to this section" href="#entrypoint-migrate">#</a></h2>
+<h2 id="entrypoint-migrate"><span class="docs-heading-tail"><span>entrypoint-migrate</span><a class="docs-heading-link" aria-label="Link to this section" href="#entrypoint-migrate">#</a></span></h2>
 <p><code>entrypoint-migrate</code> warns, never fails, when a container entrypoint runs migrations at start: with two replicas both would run <code>migrate</code> at the same moment, and a failed migration crash-loops the container, so WELD practice W24 runs migrations once per release as a job, never in an entrypoint. It reports, and is not in the deploy gate.</p>
 <p>Scanned: every file whose name contains <code>entrypoint</code> (case-insensitive) at any depth; Dockerfiles themselves are not read. Skipped at any depth: <code>vendor/</code>, <code>node_modules/</code> and <code>.git/</code>. A line is flagged when, after removing a trailing shell comment, it contains <code>artisan migrate</code> followed by whitespace, <code>;</code>, <code>&amp;</code>, <code>|</code>, a quote or the end of the line, so <code>migrate --force</code> and a bare <code>migrate</code> flag while <code>migrate:status</code>, <code>migrate:fresh</code> and the other subcommands do not; a line whose first non-space character is <code>#</code> is ignored. A line inside a shell <code>case</code> branch whose label is <code>migrate)</code> or <code>migrate|...)</code>, with optional spaces before it, is not flagged: the branch runs from its label line to the next line ending in <code>;;</code>, or to <code>esac</code>. That is the shape Squire's own entrypoint takes, where the <code>migrate</code> role runs once as a job. One warning per file, on the line of its first flagged line; a file that cannot be read is skipped.</p>
 <p>Fix by moving the migration out of the entrypoint and running it once per release as a job.</p>
@@ -461,7 +461,7 @@ Allow: /
 </tr>
 </tbody>
 </table></div>
-<h2 id="served-folder">served-folder<a class="docs-heading-link" aria-label="Link to this section" href="#served-folder">#</a></h2>
+<h2 id="served-folder"><span class="docs-heading-tail"><span>served-folder</span><a class="docs-heading-link" aria-label="Link to this section" href="#served-folder">#</a></span></h2>
 <p><code>served-folder</code> warns when a committed file under the top-level <code>public/</code> is something a stranger should not be able to download:</p>
 <ul>
 <li>a PHP file that calls <code>phpinfo()</code>, which shows the server configuration and environment (<code>proctor/served-folder/phpinfo</code>);</li>
@@ -490,7 +490,7 @@ Allow: /
 </tr>
 </tbody>
 </table></div>
-<h2 id="crlf-deploy-script">crlf-deploy-script<a class="docs-heading-link" aria-label="Link to this section" href="#crlf-deploy-script">#</a></h2>
+<h2 id="crlf-deploy-script"><span class="docs-heading-tail"><span>crlf-deploy-script</span><a class="docs-heading-link" aria-label="Link to this section" href="#crlf-deploy-script">#</a></span></h2>
 <p><code>crlf-deploy-script</code> fails when a deploy script has Windows line endings (CRLF): bash on Linux reads the carriage return as part of each command, so <code>set -e</code> becomes <code>set -e\r</code> and the script breaks on the host that runs it.</p>
 <p>Scanned: the top-level <code>build.sh</code> and <code>release.sh</code>, and every <code>.sh</code> file under a <code>deployments/</code>, <code>deploy_scripts/</code>, <code>deploy/</code> or <code>scripts/</code> directory at any depth. Skipped at any depth: <code>vendor/</code>, <code>node_modules/</code> and <code>.git/</code>. One finding per file, on the line of its first carriage return.</p>
 <p>Warns (<code>proctor/crlf-deploy-script/no-gitattributes</code>) when the app has a deploy script and <code>.gitattributes</code> has no <code>*.sh</code>, <code>**/*.sh</code> or <code>*</code> line with <code>eol=lf</code>.</p>
@@ -513,7 +513,7 @@ Allow: /
 </tr>
 </tbody>
 </table></div>
-<h2 id="gitattributes-eol">gitattributes-eol<a class="docs-heading-link" aria-label="Link to this section" href="#gitattributes-eol">#</a></h2>
+<h2 id="gitattributes-eol"><span class="docs-heading-tail"><span>gitattributes-eol</span><a class="docs-heading-link" aria-label="Link to this section" href="#gitattributes-eol">#</a></span></h2>
 <p><code>gitattributes-eol</code> warns, never fails, when the files a Linux container reads line by line are not pinned to LF line endings. A carriage return in a shell script, an Apache or nginx <code>.conf</code> or a Dockerfile breaks the container that reads it, and Git on Windows adds one easily. CREED every-os asks every repo for a <code>.gitattributes</code> with <code>* text=auto eol=lf</code>, and anything that runs on a Linux host to be LF. It reports, and is not in the deploy gate.</p>
 <ul>
 <li><code>proctor/gitattributes-eol/not-pinned</code>: a kind of file the app has is not pinned. The kinds are <code>*.sh</code>, <code>*.conf</code>, and <code>Dockerfile</code> with <code>*.Dockerfile</code>; a kind the app has no file of is not asked about. Every file of the kind must come out of <code>.gitattributes</code> with <code>eol=lf</code> and <code>text</code> not unset. One warning, on <code>.gitattributes</code>, naming the first unpinned file of each kind and the exact lines to add.</li>
@@ -560,7 +560,7 @@ git commit -m &quot;Pin shell scripts, server config and Dockerfiles to LF&quot;
 </tr>
 </tbody>
 </table></div>
-<h2 id="case-clash">case-clash<a class="docs-heading-link" aria-label="Link to this section" href="#case-clash">#</a></h2>
+<h2 id="case-clash"><span class="docs-heading-tail"><span>case-clash</span><a class="docs-heading-link" aria-label="Link to this section" href="#case-clash">#</a></span></h2>
 <p><code>case-clash</code> fails when two paths differ only by letter case (<code>Docs/Guide.md</code> and <code>docs/guide.md</code>): macOS and Windows ignore case, so one checkout silently overwrites the other, and a Linux host then autoloads a different file than the developer edited.</p>
 <p>Scanned: every file and directory under the app path. Skipped at any depth: <code>vendor/</code>, <code>node_modules/</code> and <code>.git/</code>. One finding per topmost clash, naming every colliding path; a clash below a clashing directory is part of it, not its own finding.</p>
 <p>Fix by keeping one name and removing the duplicate: <code>git rm docs/guide.md</code>, or <code>git mv</code> it to a different name.</p>
@@ -578,7 +578,7 @@ git commit -m &quot;Pin shell scripts, server config and Dockerfiles to LF&quot;
 </tr>
 </tbody>
 </table></div>
-<h2 id="world-writable">world-writable<a class="docs-heading-link" aria-label="Link to this section" href="#world-writable">#</a></h2>
+<h2 id="world-writable"><span class="docs-heading-tail"><span>world-writable</span><a class="docs-heading-link" aria-label="Link to this section" href="#world-writable">#</a></span></h2>
 <p><code>world-writable</code> warns when the repository sets mode 777, which lets any process on the host change the file or folder:</p>
 <ul>
 <li><code>chmod</code> with <code>777</code>, <code>0777</code>, <code>a+rwx</code> or <code>ugo+rwx</code> (flags such as <code>-R</code> allowed) in a shell script, a <code>Dockerfile</code> or <code>Containerfile</code>, a <code>Makefile</code>, <code>.gitlab-ci.yml</code>, or the <code>scripts</code> of composer.json and package.json;</li>
@@ -600,7 +600,7 @@ git commit -m &quot;Pin shell scripts, server config and Dockerfiles to LF&quot;
 </tr>
 </tbody>
 </table></div>
-<h2 id="related">Related<a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></h2>
+<h2 id="related"><span class="docs-heading-tail"><span>Related</span><a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></span></h2>
 <ul>
 <li><a href="checks-overview.html">Checks</a></li>
 <li><a href="check-php.html">PHP checks</a></li>

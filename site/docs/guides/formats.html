@@ -40,9 +40,9 @@
   <nav class="docs-nav docs-nav--sidebar" aria-label="Documentation"><ul class="docs-nav__list"><li class="docs-nav__group"><span class="docs-nav__label">Getting Started</span><ul><li><a href="../../docs/index.html">Overview</a></li><li><a href="../../docs/install.html">Install</a></li><li><a href="../../docs/guides/quick-start.html">Quick start</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Guides</span><ul><li><a href="../../docs/guides/checks-overview.html">Checks</a></li><li><a href="../../docs/guides/check-composer.html">Composer checks</a></li><li><a href="../../docs/guides/check-php.html">PHP checks</a></li><li><a href="../../docs/guides/check-ci.html">CI checks</a></li><li><a href="../../docs/guides/check-app.html">App checks</a></li><li><a href="../../docs/guides/check-wayneui.html">WayneUI checks</a></li><li><a href="../../docs/guides/overrides.html">Overrides</a></li><li><a href="../../docs/guides/deploy-gate.html">Deploy gate</a></li><li><a href="../../docs/guides/policy.html">Policy</a></li><li><a href="../../docs/guides/formats.html" aria-current="page">Formats</a></li><li><a href="../../docs/guides/github-code-scanning.html">GitHub code scanning</a></li><li><a href="../../docs/guides/advisor.html">Coding agents (ADVISOR)</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Reference</span><ul><li><a href="../../docs/reference/commands.html">Commands</a></li><li><a href="../../docs/reference/exit-codes.html">Exit codes</a></li><li><a href="../../docs/reference/rule-ids.html">Rule ids</a></li><li><a href="../../docs/reference/configuration.html">Configuration</a></li><li><a href="../../docs/reference/proof.html">Proof</a></li></ul></li><li><a href="../../docs/troubleshooting.html">Troubleshooting</a></li><li><a href="../../docs/upgrading.html">Upgrading</a></li></ul></nav>
   <div class="docs-content">
     <main id="main">
-      <article class="docs-article"><h1 id="formats">Formats<a class="docs-heading-link" aria-label="Link to this section" href="#formats">#</a></h1>
+      <article class="docs-article"><h1 id="formats"><span class="docs-heading-tail"><span>Formats</span><a class="docs-heading-link" aria-label="Link to this section" href="#formats">#</a></span></h1>
 <p>This page describes the four formats PROCTOR writes with <code>--format</code>: <code>text</code>, <code>json</code>, <code>codequality</code> and <code>sarif</code>. Pick the format your consumer reads, run the check once, and point the report where the consumer looks. One exam, four ways to file the mark sheet.</p>
-<h2 id="choosing-a-format">Choosing a format<a class="docs-heading-link" aria-label="Link to this section" href="#choosing-a-format">#</a></h2>
+<h2 id="choosing-a-format">Choosing a <span class="docs-heading-tail"><span>format</span><a class="docs-heading-link" aria-label="Link to this section" href="#choosing-a-format">#</a></span></h2>
 <p>The default is <code>text</code>. Choose another with <code>--format</code>:</p>
 <pre tabindex="0"><code class="language-bash">vendor/bin/proctor check --format=json
 </code></pre>
@@ -72,7 +72,7 @@
 </tr>
 </tbody>
 </table></div>
-<h2 id="text">text<a class="docs-heading-link" aria-label="Link to this section" href="#text">#</a></h2>
+<h2 id="text"><span class="docs-heading-tail"><span>text</span><a class="docs-heading-link" aria-label="Link to this section" href="#text">#</a></span></h2>
 <p>The default human-readable format: a header line with the tool and the versions of the external tools used, then one line per finding in check order, then one line per override, then a summary line:</p>
 <pre tabindex="0"><code>proctor 0.11.2 | composer: 2.11.1
 Policy: option (/app/policy.json), refreshed 2026-10-20, 7 days ago
@@ -92,7 +92,7 @@ RESULT: fail (1 failures, 0 warnings)
 </ul>
 <p>Finding messages, override reasons and approvers come from files the app controls, so they are printed with terminal control characters replaced by a visible <code>?</code>: an escape sequence or carriage return in one of them must not reach the log.</p>
 <p>When the run could not decide (exit 2), the report is one FAIL line: <code>FAIL proctor: &lt;message&gt;</code>, the message cleaned the same way.</p>
-<h2 id="json">json<a class="docs-heading-link" aria-label="Link to this section" href="#json">#</a></h2>
+<h2 id="json"><span class="docs-heading-tail"><span>json</span><a class="docs-heading-link" aria-label="Link to this section" href="#json">#</a></span></h2>
 <p>One machine-readable object, pretty-printed on stdout. Slashes and Unicode are left unescaped, so the output stays readable.</p>
 <ul>
 <li>Top level: <code>tool</code>, <code>version</code>, <code>path</code>, <code>today</code> (a <code>YYYY-MM-DD</code> date), <code>result</code> (<code>pass</code> or <code>fail</code>), <code>exit</code> (0 or 1), <code>tools</code>, <code>policy</code>, <code>findings</code>, <code>overrides</code>.</li>
@@ -101,7 +101,7 @@ RESULT: fail (1 failures, 0 warnings)
 <li>Each entry in <code>overrides</code> holds <code>check</code>, <code>reason</code>, <code>expires</code>, <code>approved_by</code> and <code>expired</code>, computed from <code>today</code>.</li>
 </ul>
 <p>When the run itself stops before a report exists, PROCTOR writes the report shape with <code>result</code> set to <code>error</code>, an <code>error</code> field carrying the message, <code>today</code> and <code>policy</code> set to null, and empty <code>findings</code> and <code>overrides</code>, so a CI upload still gets a valid document. When the report cannot be encoded, PROCTOR fails the run with a tool error (exit 2): <code>Could not encode the JSON report: &lt;reason&gt;</code>, and writes that same error document.</p>
-<h2 id="codequality">codequality<a class="docs-heading-link" aria-label="Link to this section" href="#codequality">#</a></h2>
+<h2 id="codequality"><span class="docs-heading-tail"><span>codequality</span><a class="docs-heading-link" aria-label="Link to this section" href="#codequality">#</a></span></h2>
 <p>GitLab's Code Quality JSON: a single array of findings on stdout, so a merge request shows them. One object per non-pass finding, each with:</p>
 <ul>
 <li><code>description</code>: the finding message.</li>
@@ -111,7 +111,7 @@ RESULT: fail (1 failures, 0 warnings)
 <li><code>location</code>: <code>path</code> and <code>lines.begin</code>; the path falls back to <code>composer.json</code> when the finding has none.</li>
 </ul>
 <p>When the run itself fails before a report exists, PROCTOR still writes one item: severity <code>blocker</code>, check name <code>proctor</code>, line 1, so the merge request shows why the run stopped instead of an empty array.</p>
-<h2 id="sarif">sarif<a class="docs-heading-link" aria-label="Link to this section" href="#sarif">#</a></h2>
+<h2 id="sarif"><span class="docs-heading-tail"><span>sarif</span><a class="docs-heading-link" aria-label="Link to this section" href="#sarif">#</a></span></h2>
 <p>A SARIF 2.1.0 log: one run, one rule per check, one result per non-pass finding, so GitHub code scanning and other SARIF viewers show them. See <a href="github-code-scanning.html">GitHub code scanning</a> for the workflow that uploads the log.</p>
 <ul>
 <li>The driver block names the tool <code>proctor</code>, its version, and the repository's information URI.</li>
@@ -121,11 +121,11 @@ RESULT: fail (1 failures, 0 warnings)
 <li>Each result also carries <code>partialFingerprints</code> with the finding's fingerprint under <code>proctorFingerprint/v1</code>.</li>
 </ul>
 <p>When the run could not decide (exit 2), the log holds one run with no results, and its invocation reports <code>executionSuccessful</code> false with the message in a <code>toolExecutionNotifications</code> entry of level <code>error</code>, so code scanning shows why instead of an empty log.</p>
-<h2 id="the-fingerprint">The fingerprint<a class="docs-heading-link" aria-label="Link to this section" href="#the-fingerprint">#</a></h2>
+<h2 id="the-fingerprint">The <span class="docs-heading-tail"><span>fingerprint</span><a class="docs-heading-link" aria-label="Link to this section" href="#the-fingerprint">#</a></span></h2>
 <p>Both <code>codequality</code> and <code>sarif</code> identify a finding with the same fingerprint, its stable identity: the lower-case hex SHA-256 of the rule id, a newline, the path (an empty string when the finding has none), a newline, and the message.</p>
-<h2 id="proctor-gate">proctor gate<a class="docs-heading-link" aria-label="Link to this section" href="#proctor-gate">#</a></h2>
+<h2 id="proctor-gate">proctor <span class="docs-heading-tail"><span>gate</span><a class="docs-heading-link" aria-label="Link to this section" href="#proctor-gate">#</a></span></h2>
 <p><code>proctor gate</code> writes <code>text</code> or <code>json</code> only: a short go or no-go verdict for the deploy log, or the same verdict as JSON, which also works as the next run's baseline. Its shape is on the <a href="deploy-gate.html">Deploy gate</a> page.</p>
-<h2 id="related">Related<a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></h2>
+<h2 id="related"><span class="docs-heading-tail"><span>Related</span><a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></span></h2>
 <ul>
 <li><a href="quick-start.html">Quick start</a></li>
 <li><a href="policy.html">Policy</a></li>

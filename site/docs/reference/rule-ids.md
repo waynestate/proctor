@@ -6,11 +6,11 @@ llms: https://proctor.apps.wayne.edu/llms.txt
 generator: Squire agent-ready
 ---
 
-# Rule ids[#](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html#rule-ids)
+# Rule ids [#](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html#rule-ids)
 
 Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a check's default finding, `proctor/<check-id>/<rule>` for a named rule. The id is the finding's identity in the machine formats: `rule_id` in `json`, `ruleId` in `sarif`, and `check_name` in `codequality`. A rule keeps the same id across runs and across formats even when its message changes. The table below is the full set, grouped by check.
 
-## Rule ids by check[#](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html#rule-ids-by-check)
+## Rule ids by check [#](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html#rule-ids-by-check)
 
 | Check | Rule id |
 | --- | --- |
@@ -146,11 +146,11 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 
 `proctor/ci-pipelines/allow-overrides` warns only when the pipeline environment sets `PROCTOR_ALLOW_OVERRIDES` to `1`: the variable lets the app pass `--policy` and `--today` in CI (BEST_PRACTICES 1.2), so it could grade itself against a policy or a date it picks. Any other value leaves the guard on and gives no finding. Fix: remove the variable; only PROCTOR's own pipeline needs it.
 
-## Kept in step[#](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html#kept-in-step)
+## Kept in step [#](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html#kept-in-step)
 
 `tests/RuleIdContractTest.php` keeps this table in step with the checks: a rule id that is emitted but not listed in the known set fails the suite, and the test parses the README's copy of this table, so a known rule id missing from it, or a row that names an unknown rule id, fails the suite too. This page's table is held to the README's, row for row, by the same test file. The proctor stamps each id in pencil so small only the head office can read it, and it never smudges.
 
-## Related[#](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html#related)
+## Related [#](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html#related)
 
 - [Commands](https://proctor.apps.wayne.edu/docs/reference/commands.html)
 - [Exit codes](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html)

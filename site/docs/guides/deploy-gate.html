@@ -40,10 +40,10 @@
   <nav class="docs-nav docs-nav--sidebar" aria-label="Documentation"><ul class="docs-nav__list"><li class="docs-nav__group"><span class="docs-nav__label">Getting Started</span><ul><li><a href="../../docs/index.html">Overview</a></li><li><a href="../../docs/install.html">Install</a></li><li><a href="../../docs/guides/quick-start.html">Quick start</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Guides</span><ul><li><a href="../../docs/guides/checks-overview.html">Checks</a></li><li><a href="../../docs/guides/check-composer.html">Composer checks</a></li><li><a href="../../docs/guides/check-php.html">PHP checks</a></li><li><a href="../../docs/guides/check-ci.html">CI checks</a></li><li><a href="../../docs/guides/check-app.html">App checks</a></li><li><a href="../../docs/guides/check-wayneui.html">WayneUI checks</a></li><li><a href="../../docs/guides/overrides.html">Overrides</a></li><li><a href="../../docs/guides/deploy-gate.html" aria-current="page">Deploy gate</a></li><li><a href="../../docs/guides/policy.html">Policy</a></li><li><a href="../../docs/guides/formats.html">Formats</a></li><li><a href="../../docs/guides/github-code-scanning.html">GitHub code scanning</a></li><li><a href="../../docs/guides/advisor.html">Coding agents (ADVISOR)</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Reference</span><ul><li><a href="../../docs/reference/commands.html">Commands</a></li><li><a href="../../docs/reference/exit-codes.html">Exit codes</a></li><li><a href="../../docs/reference/rule-ids.html">Rule ids</a></li><li><a href="../../docs/reference/configuration.html">Configuration</a></li><li><a href="../../docs/reference/proof.html">Proof</a></li></ul></li><li><a href="../../docs/troubleshooting.html">Troubleshooting</a></li><li><a href="../../docs/upgrading.html">Upgrading</a></li></ul></nav>
   <div class="docs-content">
     <main id="main">
-      <article class="docs-article"><h1 id="deploy-gate">Deploy gate<a class="docs-heading-link" aria-label="Link to this section" href="#deploy-gate">#</a></h1>
+      <article class="docs-article"><h1 id="deploy-gate">Deploy <span class="docs-heading-tail"><span>gate</span><a class="docs-heading-link" aria-label="Link to this section" href="#deploy-gate">#</a></span></h1>
 <p><code>proctor gate</code> answers one question for a release script or a platform hook: may this commit be deployed? It runs the small, deploy-time part of PROCTOR's checks, compares the failures with what the running deployment already fails, and exits 0 for go or 1 for no-go. <code>proctor check</code> marks the whole paper; the gate is the proctor at the exam-hall door, deciding only whether you may sit.</p>
 <p>It follows CREED's deploy-gate chapter (the stack's deploy-gate decision): the rule set is small, offline-tolerant and fast, and it ratchets, so a deploy that does not make things worse always passes.</p>
-<h2 id="run-it">Run it<a class="docs-heading-link" aria-label="Link to this section" href="#run-it">#</a></h2>
+<h2 id="run-it">Run <span class="docs-heading-tail"><span>it</span><a class="docs-heading-link" aria-label="Link to this section" href="#run-it">#</a></span></h2>
 <pre tabindex="0"><code>vendor/bin/proctor gate [--path=.] [--format=text|json] [--baseline=&lt;report or directory&gt;] [--record=&lt;file&gt;] [--policy=&lt;file&gt;] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z] [--timeout=60]
 </code></pre>
 <ul>
@@ -53,7 +53,7 @@
 <li><code>--policy</code>, <code>--today</code>, <code>--php-runtime</code>: as for <code>proctor check</code>, including the CI guard on <code>--policy</code> and <code>--today</code>.</li>
 <li><code>--timeout</code>: seconds for <code>composer audit</code> before it is killed; 60 by default here, because a deploy should not wait five minutes.</li>
 </ul>
-<h2 id="what-it-runs">What it runs<a class="docs-heading-link" aria-label="Link to this section" href="#what-it-runs">#</a></h2>
+<h2 id="what-it-runs">What it <span class="docs-heading-tail"><span>runs</span><a class="docs-heading-link" aria-label="Link to this section" href="#what-it-runs">#</a></span></h2>
 <p>Eight of the checks, the deploy-time rule set: <code>php-floor</code>, <code>unpatched</code>, <code>laravel-eol</code>, <code>laravel-php</code>, <code>lock-committed</code>, <code>composer-audit</code>, <code>overrides</code> and <code>policy-age</code>. That covers the PHP floor and the runtime, the framework line and the PHP range it supports, the lock file, known advisories, and the overrides themselves. Style, portability, MySQL 5.6 safety, CI pipelines and the rest stay in <code>proctor check</code>, in CI.</p>
 <p><code>override-approver</code>, the check that flags an override approved by its own author, stays out of the gate on purpose:</p>
 <ul>
@@ -62,7 +62,7 @@
 <li>Who approved an override is settled when the override reaches the default branch: in CI, on the merge request that added it. Nothing at deploy time changes that answer, while the expiry, which the gate does check, changes every day.</li>
 <li>On Citadel, the platform's own overrides are held by its admins, with their own approver.</li>
 </ul>
-<h2 id="how-it-decides">How it decides<a class="docs-heading-link" aria-label="Link to this section" href="#how-it-decides">#</a></h2>
+<h2 id="how-it-decides">How it <span class="docs-heading-tail"><span>decides</span><a class="docs-heading-link" aria-label="Link to this section" href="#how-it-decides">#</a></span></h2>
 <p>The app's overrides are applied first, exactly as in <code>proctor check</code>. Then each failure is one of these:</p>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
 <thead>
@@ -108,7 +108,7 @@
 <p>CREED's <code>gate</code> block ships empty, so today every check blocks; a stage date is agreed with the Citadel team first. A staged failure is still recorded as a fail, so once its check reaches <code>block</code>, the ratchet holds it like any other existing violation, and only a new failure blocks; <code>proctor check</code> in CI fails it all along.</p>
 <p>Warnings and info notes never change the verdict. The comparison is by rule id, so a rule that already failed on the baseline is held even if it got worse within the rule; <code>proctor check</code> in CI still fails it. The unused-override warning is left to <code>proctor check</code>, because the gate runs only some checks and would call an override for a skipped check unused.</p>
 <aside class="docs-callout docs-callout--note" role="note"><p class="docs-callout__label">Note</p><p>An override names any registered check, not only the eight above. An expired one blocks the deploy even when its check is not part of the gate.</p></aside>
-<h2 id="exit-codes">Exit codes<a class="docs-heading-link" aria-label="Link to this section" href="#exit-codes">#</a></h2>
+<h2 id="exit-codes">Exit <span class="docs-heading-tail"><span>codes</span><a class="docs-heading-link" aria-label="Link to this section" href="#exit-codes">#</a></span></h2>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
 <thead>
 <tr>
@@ -132,7 +132,7 @@
 </tbody>
 </table></div>
 <p>A platform hook should fail open on 2, with an alert: a bug in the gate must never take down deploys (the stack's deploy-gate decision). A release script may choose to stop on it instead.</p>
-<h2 id="the-verdict">The verdict<a class="docs-heading-link" aria-label="Link to this section" href="#the-verdict">#</a></h2>
+<h2 id="the-verdict">The <span class="docs-heading-tail"><span>verdict</span><a class="docs-heading-link" aria-label="Link to this section" href="#the-verdict">#</a></span></h2>
 <p>The text verdict leads with the answer and lists only what is not a pass:</p>
 <pre tabindex="0"><code>proctor 0.11.2 gate: NO-GO
 Policy: vendor (vendor/waynestate/creed/policy/policy.json), refreshed 2026-10-20, 7 days ago
@@ -142,9 +142,9 @@ BLOCK php-floor: php floor 7.4 is eol_grace_expired [new app: no baseline, so ev
 RESULT: no-go (1 blocked, 0 held, 0 waived, 0 warnings, 3 passed)
 </code></pre>
 <p>The JSON verdict carries <code>command</code> (<code>gate</code>), <code>verdict</code> (<code>go</code>, <code>no-go</code>, or <code>error</code> when it could not decide), <code>exit</code>, <code>policy</code>, <code>baseline</code> (its source, path and failing rule ids, or null), <code>checks</code>, a <code>summary</code> with the count of each outcome, <code>findings</code> and <code>overrides</code>. Each finding keeps the check's own <code>status</code> and adds <code>gate</code> (its outcome), <code>reason</code> when blocked or staged, and <code>stage</code> when staged. Because the status is kept, a recorded verdict works as the next run's baseline.</p>
-<h2 id="in-a-release">In a release<a class="docs-heading-link" aria-label="Link to this section" href="#in-a-release">#</a></h2>
+<h2 id="in-a-release">In a <span class="docs-heading-tail"><span>release</span><a class="docs-heading-link" aria-label="Link to this section" href="#in-a-release">#</a></span></h2>
 <p>Squire's release script runs the gate when PROCTOR is installed, records the verdict, and keeps the last accepted verdict as the next baseline. On Citadel, the gate is meant to run in <code>runGitPull()</code>, inside the app's image, before the fetched commit is checked out; that hook waits on the Citadel team.</p>
-<h2 id="related">Related<a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></h2>
+<h2 id="related"><span class="docs-heading-tail"><span>Related</span><a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></span></h2>
 <ul>
 <li><a href="overrides.html">Overrides</a></li>
 <li><a href="../reference/exit-codes.html">Exit codes</a></li>

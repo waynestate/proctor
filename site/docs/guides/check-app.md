@@ -6,13 +6,13 @@ llms: https://proctor.apps.wayne.edu/llms.txt
 generator: Squire agent-ready
 ---
 
-# App checks[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-checks)
+# App checks [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-checks)
 
 This page covers the eighteen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a robots.txt that is missing or lets every crawler in, secret-looking `VITE_` variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, shell scripts, server config and Dockerfiles that `.gitattributes` does not pin to LF, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
 
 `node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other fifteen warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL, and a new check must not turn a passing app into a failing one.
 
-## node-eol[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#node-eol)
+## node-eol [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#node-eol)
 
 `node-eol` grades every Node version the repository pins against the policy's `node` lines as of `--today`. The sources:
 
@@ -44,7 +44,7 @@ Fix by moving the pin to an active even line, in every place the report names: t
 | `node-eol` | `proctor/node-eol/engines` |
 | `node-eol` | `proctor/node-eol/odd-major` |
 
-## mysql-eol[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#mysql-eol)
+## mysql-eol [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#mysql-eol)
 
 `mysql-eol` grades every MySQL or MariaDB version the repository names against the policy's `mysql` and `mariadb` lines as of `--today`. The sources:
 
@@ -70,7 +70,7 @@ Fix by moving the image to an active line, in every place the report names: the 
 | --- | --- |
 | `mysql-eol` | `proctor/mysql-eol` |
 
-## mysql-minimum[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#mysql-minimum)
+## mysql-minimum [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#mysql-minimum)
 
 `mysql-minimum` warns, never fails, when the app's MySQL or MariaDB image is below the minimum the policy records for its Laravel line: an app on Laravel 12 with `mysql:5.6` passes `mysql-eol`'s line lookup but cannot run its migrations. It reads the locked `laravel/framework` version from composer.lock, resolves its policy line, and takes the line's recorded `requires.mysql` and `requires.mariadb` minimums. The image is found the way `mysql-eol` finds it: an official `mysql` or `mariadb` image on an `image:` line in a root `docker-compose*.yml` or `compose*.yml`, and `SQUIRE_MYSQL_IMAGE=mysql:<version>` in `.env.squire.example` or `.env.example`; the version the tag names is what is compared.
 
@@ -83,7 +83,7 @@ Fix by moving the image to a supported version, in every place the report names:
 | `mysql-minimum` | `proctor/mysql-minimum` |
 | `mysql-minimum` | `proctor/mysql-minimum/below` |
 
-## env-outside-config[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#env-outside-config)
+## env-outside-config [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#env-outside-config)
 
 `env-outside-config` warns for every `env()` call in a Laravel app outside its config files. After `php artisan config:cache`, Laravel no longer loads .env, so the call returns null in production while it works on a laptop.
 
@@ -100,7 +100,7 @@ Fix by reading the variable in a config file (`'url' => env('APP_URL')` in `conf
 | `env-outside-config` | `proctor/env-outside-config` |
 | `env-outside-config` | `proctor/env-outside-config/suppressed` |
 
-## raw-identity-header[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#raw-identity-header)
+## raw-identity-header [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#raw-identity-header)
 
 `raw-identity-header` warns, never fails, when app code reads an identity header directly instead of taking the user from SESAME. Drawbridge, the gateway, signs the session into the `X-Sesame-Assertion` header and passes the user's claims as request headers (`REMOTE_USER`, `X-Authenticated-*`, `X-Drawbridge-*`, `OIDC_CLAIM_*`); only SESAME's gateway driver may open that pair, because it verifies the signature before a claim becomes the logged-in user (CREED auth-3). App code that reads the assertion or a claim header itself accepts whatever value the proxy, or a client, put there.
 
@@ -118,7 +118,7 @@ Fix by taking the user from SESAME (the gateway driver) and reading the claims i
 | --- | --- |
 | `raw-identity-header` | `proctor/raw-identity-header` |
 
-## app-key[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-key)
+## app-key [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-key)
 
 `app-key` warns when the repository gives away the Laravel APP_KEY, or makes a leaked one worse. Whoever holds the key can forge encrypted payloads the app will unserialize, which can mean code execution.
 
@@ -139,7 +139,7 @@ Fix by running `git rm --cached` on the file, adding it to .gitignore and commit
 | `app-key` | `proctor/app-key/committed-key` |
 | `app-key` | `proctor/app-key/cookie-sessions` |
 
-## app-debug[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-debug)
+## app-debug [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-debug)
 
 `app-debug` warns, never fails, when a committed env, deploy or CI file sets `APP_DEBUG` to a truthy value: `true` or `1`, case-insensitive, with optional spaces around `=` or `:`. A debug build shows stack traces and environment values to whoever requests the page, so it must stay off in production; Laravel reads `APP_DEBUG` in `config/app.php`. It reports, and is not in the deploy gate.
 
@@ -152,7 +152,7 @@ Fix by setting `APP_DEBUG=false` in the file the report names.
 | `app-debug` | `proctor/app-debug` |
 | `app-debug` | `proctor/app-debug/enabled` |
 
-## display-errors[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#display-errors)
+## display-errors [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#display-errors)
 
 `display-errors` warns, never fails, when a committed php.ini, .user.ini or .htaccess turns `display_errors` on or `log_errors` off. CREED runtime-and-headers keeps `display_errors` Off and `log_errors` On in production: a committed ini or .htaccess that flips them ships stack traces to users and closes the log. It reports, and is not in the deploy gate.
 
@@ -168,7 +168,7 @@ Fix by keeping `display_errors` Off and `log_errors` On in the file the report n
 | `display-errors` | `proctor/display-errors/on` |
 | `display-errors` | `proctor/display-errors/log-off` |
 
-## directory-listing[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#directory-listing)
+## directory-listing [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#directory-listing)
 
 `directory-listing` warns, never fails, when a committed .htaccess or server config turns on directory listing. CREED production says the web server must not list directory contents: a config that leaves Apache's `Indexes` option or nginx's `autoindex` on hands every visitor the folder's inventory. It reports, and is not in the deploy gate.
 
@@ -183,7 +183,7 @@ Fix by keeping `Indexes` off (`Options -Indexes`) and `autoindex off;` in the fi
 | `directory-listing` | `proctor/directory-listing` |
 | `directory-listing` | `proctor/directory-listing/indexes` |
 
-## csp-unsafe-inline[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#csp-unsafe-inline)
+## csp-unsafe-inline [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#csp-unsafe-inline)
 
 `csp-unsafe-inline` warns, never fails, when committed app config, server config or an example env file lets scripts run inline. CREED runtime-and-headers says an app should not weaken the default Content-Security-Policy with `'unsafe-inline'` for scripts: HELMET gives every page a nonce instead, and `'unsafe-inline'` in a script source lets any injected `<script>` run. It reports, and is not in the deploy gate.
 
@@ -198,7 +198,7 @@ Fix by removing `'unsafe-inline'` from the script source in the file the report 
 | `csp-unsafe-inline` | `proctor/csp-unsafe-inline` |
 | `csp-unsafe-inline` | `proctor/csp-unsafe-inline/script-src` |
 
-## robots-txt[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#robots-txt)
+## robots-txt [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#robots-txt)
 
 `robots-txt` warns, never fails, when a served app commits no `public/robots.txt`, or one that lets every crawler in by default. CREED production says every app must set robots.txt to keep spiders out unless crawling is wanted (WSU developer standards, 2024). It reports, and is not in the deploy gate.
 
@@ -230,7 +230,7 @@ Allow: /
 | `robots-txt` | `proctor/robots-txt/missing` |
 | `robots-txt` | `proctor/robots-txt/allows-all` |
 
-## vite-secrets[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#vite-secrets)
+## vite-secrets [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#vite-secrets)
 
 `vite-secrets` warns, never fails, when a secret-looking variable carries Vite's `VITE_` prefix. Vite exposes every `VITE_` variable to the client code it bundles, so the value ships to every visitor's browser, and a name that says it holds a secret is a leak waiting for a value. It reports, and is not in the deploy gate.
 
@@ -251,7 +251,7 @@ Fix by keeping the secret on the PHP side under a name without the `VITE_` prefi
 | `vite-secrets` | `proctor/vite-secrets/env-file` |
 | `vite-secrets` | `proctor/vite-secrets/source` |
 
-## entrypoint-migrate[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#entrypoint-migrate)
+## entrypoint-migrate [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#entrypoint-migrate)
 
 `entrypoint-migrate` warns, never fails, when a container entrypoint runs migrations at start: with two replicas both would run `migrate` at the same moment, and a failed migration crash-loops the container, so WELD practice W24 runs migrations once per release as a job, never in an entrypoint. It reports, and is not in the deploy gate.
 
@@ -264,7 +264,7 @@ Fix by moving the migration out of the entrypoint and running it once per releas
 | `entrypoint-migrate` | `proctor/entrypoint-migrate` |
 | `entrypoint-migrate` | `proctor/entrypoint-migrate/runs` |
 
-## served-folder[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#served-folder)
+## served-folder [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#served-folder)
 
 `served-folder` warns when a committed file under the top-level `public/` is something a stranger should not be able to download:
 
@@ -279,7 +279,7 @@ No finding when the app has no `public/` folder. Fix by deleting the file, or mo
 | `served-folder` | `proctor/served-folder/debug-file` |
 | `served-folder` | `proctor/served-folder/phpinfo` |
 
-## crlf-deploy-script[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#crlf-deploy-script)
+## crlf-deploy-script [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#crlf-deploy-script)
 
 `crlf-deploy-script` fails when a deploy script has Windows line endings (CRLF): bash on Linux reads the carriage return as part of each command, so `set -e` becomes `set -e\r` and the script breaks on the host that runs it.
 
@@ -294,7 +294,7 @@ Fix by converting the file to LF (`sed -i 's/\r$//' build.sh`, or the editor's l
 | `crlf-deploy-script` | `proctor/crlf-deploy-script` |
 | `crlf-deploy-script` | `proctor/crlf-deploy-script/no-gitattributes` |
 
-## gitattributes-eol[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#gitattributes-eol)
+## gitattributes-eol [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#gitattributes-eol)
 
 `gitattributes-eol` warns, never fails, when the files a Linux container reads line by line are not pinned to LF line endings. A carriage return in a shell script, an Apache or nginx `.conf` or a Dockerfile breaks the container that reads it, and Git on Windows adds one easily. CREED every-os asks every repo for a `.gitattributes` with `* text=auto eol=lf`, and anything that runs on a Linux host to be LF. It reports, and is not in the deploy gate.
 
@@ -332,7 +332,7 @@ git commit -m "Pin shell scripts, server config and Dockerfiles to LF"
 | `gitattributes-eol` | `proctor/gitattributes-eol/not-pinned` |
 | `gitattributes-eol` | `proctor/gitattributes-eol/crlf` |
 
-## case-clash[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#case-clash)
+## case-clash [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#case-clash)
 
 `case-clash` fails when two paths differ only by letter case (`Docs/Guide.md` and `docs/guide.md`): macOS and Windows ignore case, so one checkout silently overwrites the other, and a Linux host then autoloads a different file than the developer edited.
 
@@ -344,7 +344,7 @@ Fix by keeping one name and removing the duplicate: `git rm docs/guide.md`, or `
 | --- | --- |
 | `case-clash` | `proctor/case-clash` |
 
-## world-writable[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#world-writable)
+## world-writable [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#world-writable)
 
 `world-writable` warns when the repository sets mode 777, which lets any process on the host change the file or folder:
 
@@ -359,7 +359,7 @@ Fix by giving the web server user write access to the folders it needs (`storage
 | --- | --- |
 | `world-writable` | `proctor/world-writable` |
 
-## Related[#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#related)
+## Related [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#related)
 
 - [Checks](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html)
 - [PHP checks](https://proctor.apps.wayne.edu/docs/guides/check-php.html)

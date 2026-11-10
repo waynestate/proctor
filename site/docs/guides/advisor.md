@@ -6,11 +6,11 @@ llms: https://proctor.apps.wayne.edu/llms.txt
 generator: Squire agent-ready
 ---
 
-# Use PROCTOR from your coding agent (ADVISOR)[#](https://proctor.apps.wayne.edu/docs/guides/advisor.html#use-proctor-from-your-coding-agent-advisor)
+# Use PROCTOR from your coding agent (ADVISOR) [#](https://proctor.apps.wayne.edu/docs/guides/advisor.html#use-proctor-from-your-coding-agent-advisor)
 
 This page is for developers whose coding agent runs [ADVISOR](https://github.com/waynestate/advisor), the stack's read-only MCP server. PROCTOR ships an ADVISOR module, so the agent can ask PROCTOR two questions without leaving its sandbox: "which rules do you check, and which ones block a deploy?" and "what do you say about this app right now?" Both answers come from PROCTOR's own classes. Next, see [Checks](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html) for every check in prose and [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html) for the deploy-time rule set.
 
-## Install ADVISOR[#](https://proctor.apps.wayne.edu/docs/guides/advisor.html#install-advisor)
+## Install ADVISOR [#](https://proctor.apps.wayne.edu/docs/guides/advisor.html#install-advisor)
 
 In the app, install ADVISOR as a dev dependency:
 
@@ -30,11 +30,11 @@ Then add one line to the app's `modules.json` (or point `ADVISOR_MODULES_FILE` a
 
 PROCTOR does not require ADVISOR, and ADVISOR does not require PROCTOR: the module only loads when both are installed and `modules.json` names it.
 
-## The two read-only tools[#](https://proctor.apps.wayne.edu/docs/guides/advisor.html#the-two-read-only-tools)
+## The two read-only tools [#](https://proctor.apps.wayne.edu/docs/guides/advisor.html#the-two-read-only-tools)
 
 Both tools run in-process: no subprocess, no network, nothing written, and neither reads `.env` itself (four checks that do run read other env files, and only the ones git lists; see [What is skipped, and why](https://proctor.apps.wayne.edu/docs/guides/advisor.html#what-is-skipped-and-why)). `proctor_rules` takes no arguments. `proctor_check` takes exactly one, `path`: the app folder, inside the project root (default: the root itself). A path outside the root, or one that is not a folder, is refused.
 
-### proctor_rules[#](https://proctor.apps.wayne.edu/docs/guides/advisor.html#proctor-rules)
+### proctor_rules [#](https://proctor.apps.wayne.edu/docs/guides/advisor.html#proctor-rules)
 
 `proctor_rules` lists every check PROCTOR registers, in the order a report prints them, straight from `CheckSet`. It returns `proctor_version` and `rules`, one entry per check:
 
@@ -54,7 +54,7 @@ One rule, as it comes back:
 }
 ```
 
-### proctor_check[#](https://proctor.apps.wayne.edu/docs/guides/advisor.html#proctor-check)
+### proctor_check [#](https://proctor.apps.wayne.edu/docs/guides/advisor.html#proctor-check)
 
 `proctor_check` runs PROCTOR's checks on the app folder with PROCTOR's own `CheckRunner`, the way `proctor check` runs them by default: the CREED policy PROCTOR bundles, today's date and the app's `policy-overrides.json` when it has one. It returns:
 
@@ -67,7 +67,7 @@ One rule, as it comes back:
 
 A missing or malformed `composer.json` or `policy-overrides.json` comes back as a tool error with PROCTOR's own message, the same one `proctor check` prints before it exits 2.
 
-## What is skipped, and why[#](https://proctor.apps.wayne.edu/docs/guides/advisor.html#what-is-skipped-and-why)
+## What is skipped, and why [#](https://proctor.apps.wayne.edu/docs/guides/advisor.html#what-is-skipped-and-why)
 
 Some checks cannot run inside ADVISOR's sandbox, so `proctor_check` leaves them out and lists them under `skipped`:
 
@@ -100,7 +100,7 @@ Note
 
 The agent reports; PROCTOR decides. Every answer names its source and says plainly what ran and what did not, and the run in CI is the one that passes or fails a build. A practice paper is a fine way to study, but it is not the exam.
 
-## Related[#](https://proctor.apps.wayne.edu/docs/guides/advisor.html#related)
+## Related [#](https://proctor.apps.wayne.edu/docs/guides/advisor.html#related)
 
 - [Checks](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html)
 - [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html)

@@ -6,15 +6,15 @@ llms: https://proctor.apps.wayne.edu/llms.txt
 generator: Squire agent-ready
 ---
 
-# Policy[#](https://proctor.apps.wayne.edu/docs/guides/policy.html#policy)
+# Policy [#](https://proctor.apps.wayne.edu/docs/guides/policy.html#policy)
 
 This page explains which CREED-format policy file PROCTOR checks against, and how to point it at a different one. Pick the source that fits the app (an explicit file, an environment variable, the CREED package, or the bundled copy), then confirm in the report which policy the run actually used. The proctor grades against the school's answer key, not its own memory, and it always says which key it used.
 
-## What a policy file contains[#](https://proctor.apps.wayne.edu/docs/guides/policy.html#what-a-policy-file-contains)
+## What a policy file contains [#](https://proctor.apps.wayne.edu/docs/guides/policy.html#what-a-policy-file-contains)
 
 `--policy` takes a CREED-format policy file: schema_version 1, component versions with released, active_until and security_until dates, and rules (abandoned_packages, audit_severity_threshold, banned_constraints, eol_grace_days, override_max_days, override_self_approval). The policy-file wiring to `waynestate/creed` is described in [The CREED reader copy](https://proctor.apps.wayne.edu/docs/guides/policy.html#the-creed-reader-copy) below.
 
-## Resolution order[#](https://proctor.apps.wayne.edu/docs/guides/policy.html#resolution-order)
+## Resolution order [#](https://proctor.apps.wayne.edu/docs/guides/policy.html#resolution-order)
 
 PROCTOR resolves the policy in this order, first match wins:
 
@@ -49,7 +49,7 @@ Note
 
 The resolver reads each candidate's top-level `refreshed_on` date from the raw JSON and treats it as a date only when it is an ISO date (`YYYY-MM-DD`). A value that is absent or not one is treated as absent.
 
-## The vendor copy[#](https://proctor.apps.wayne.edu/docs/guides/policy.html#the-vendor-copy)
+## The vendor copy [#](https://proctor.apps.wayne.edu/docs/guides/policy.html#the-vendor-copy)
 
 An app that installs CREED gets its policy automatically:
 
@@ -70,7 +70,7 @@ Warning
 
 An explicit source (`--policy` or `PROCTOR_POLICY`) that points at a missing or invalid file is still an error (exit 2). Only the vendor copy is skipped quietly.
 
-## Policy and date in CI[#](https://proctor.apps.wayne.edu/docs/guides/policy.html#policy-and-date-in-ci)
+## Policy and date in CI [#](https://proctor.apps.wayne.edu/docs/guides/policy.html#policy-and-date-in-ci)
 
 In CI (any of `CI`, `GITLAB_CI` or `GITHUB_ACTIONS` set to a value other than `0` or `false`), `--policy` and `--today` are refused with a tool error (exit 2): in CI the policy and the date must come from the stack, not from the app being checked, so a pipeline that could pass its own policy or date in its own `.gitlab-ci.yml` could grade itself. The refusal message names the option or options that were given.
 
@@ -84,19 +84,19 @@ PROCTOR_ALLOW_OVERRIDES: "1"
 
 Outside CI nothing changes: both options work as described above.
 
-## What the report says[#](https://proctor.apps.wayne.edu/docs/guides/policy.html#what-the-report-says)
+## What the report says [#](https://proctor.apps.wayne.edu/docs/guides/policy.html#what-the-report-says)
 
 Every report names the policy it used: origin (`option`, `env`, `vendor` or `bundled`), path, `refreshed_on` and the age in days. The age is whole days since the refresh: zero on the refresh day, positive after it, negative when the date is in the future, and absent when the policy carries no `refreshed_on`.
 
 The `policy-age` check warns when the policy is more than 60 days old, or when a non-bundled policy has no `refreshed_on` date, so a stopped CREED refresh is visible instead of silent.
 
-## The CREED reader copy[#](https://proctor.apps.wayne.edu/docs/guides/policy.html#the-creed-reader-copy)
+## The CREED reader copy [#](https://proctor.apps.wayne.edu/docs/guides/policy.html#the-creed-reader-copy)
 
 PROCTOR carries a generated copy of the CREED reader under `src/Creed/` (namespace `Waynestate\Proctor\Creed`), so it never depends on the CREED package at runtime. `composer creed-copy:check` verifies the copy against the CREED checkout named by `CREED_PATH` (default `../creed`); refresh it by running CREED's `bin/export.php` against `src/Creed/`.
 
 Weekly CREED copy refresh: a scheduled GitLab job (`creed-copy-refresh`, Mondays, an hour after CREED's policy robot) re-exports the copy from CREED main, rebuilds the docs, runs `composer creed-copy:check` and `composer ci`, and pushes to main only when both pass. A red run leaves main untouched.
 
-## Related[#](https://proctor.apps.wayne.edu/docs/guides/policy.html#related)
+## Related [#](https://proctor.apps.wayne.edu/docs/guides/policy.html#related)
 
 - [Overrides](https://proctor.apps.wayne.edu/docs/guides/overrides.html)
 - [Formats](https://proctor.apps.wayne.edu/docs/guides/formats.html)

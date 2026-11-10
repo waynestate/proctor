@@ -6,7 +6,7 @@ llms: https://proctor.apps.wayne.edu/llms.txt
 generator: Squire agent-ready
 ---
 
-# Overview[#](https://proctor.apps.wayne.edu/docs/#overview)
+# Overview [#](https://proctor.apps.wayne.edu/docs/#overview)
 
 ![PROCTOR's front page: a green examination book sealed with PROCTOR's eye mark, beside the headline 'Watches the exam. Doesn't help.'](https://proctor.apps.wayne.edu/docs/readme/hero.jpg)
 
@@ -16,7 +16,7 @@ Note
 
 **Not to be confused with:** code style is Pinstripe, CI is Preflight. PROCTOR grades an app against CREED's rules.
 
-## Install and first run[#](https://proctor.apps.wayne.edu/docs/#install-and-first-run)
+## Install and first run [#](https://proctor.apps.wayne.edu/docs/#install-and-first-run)
 
 Add PROCTOR to the app as a dev dependency:
 
@@ -32,14 +32,14 @@ vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--re
 
 A clean hall exits 0 (warnings allowed), a resit exits 1, and a tripped proctor exits 2.
 
-## Pick your path[#](https://proctor.apps.wayne.edu/docs/#pick-your-path)
+## Pick your path [#](https://proctor.apps.wayne.edu/docs/#pick-your-path)
 
 - [Quick start](https://proctor.apps.wayne.edu/docs/guides/quick-start.html): install PROCTOR, run the first check and read the mark sheet.
 - [Install](https://proctor.apps.wayne.edu/docs/install.html): requirements, the composer line and the single-file PHAR route.
 - [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html): `proctor gate` gives a release script a go or no-go, ratcheted against what is already running.
 - Reference: the long-form docs for the [commands](https://proctor.apps.wayne.edu/docs/reference/commands.html), [rule ids](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html) and [exit codes](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html).
 
-## Status[#](https://proctor.apps.wayne.edu/docs/#status)
+## Status [#](https://proctor.apps.wayne.edu/docs/#status)
 
 The header names the release these pages document; [Upgrading](https://proctor.apps.wayne.edu/docs/upgrading.html) lists what changed at each break. Forty-one checks, eight of them in the deploy gate, four report formats and three exit codes. License: MIT.
 

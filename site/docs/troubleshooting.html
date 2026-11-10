@@ -40,160 +40,160 @@
   <nav class="docs-nav docs-nav--sidebar" aria-label="Documentation"><ul class="docs-nav__list"><li class="docs-nav__group"><span class="docs-nav__label">Getting Started</span><ul><li><a href="../docs/index.html">Overview</a></li><li><a href="../docs/install.html">Install</a></li><li><a href="../docs/guides/quick-start.html">Quick start</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Guides</span><ul><li><a href="../docs/guides/checks-overview.html">Checks</a></li><li><a href="../docs/guides/check-composer.html">Composer checks</a></li><li><a href="../docs/guides/check-php.html">PHP checks</a></li><li><a href="../docs/guides/check-ci.html">CI checks</a></li><li><a href="../docs/guides/check-app.html">App checks</a></li><li><a href="../docs/guides/check-wayneui.html">WayneUI checks</a></li><li><a href="../docs/guides/overrides.html">Overrides</a></li><li><a href="../docs/guides/deploy-gate.html">Deploy gate</a></li><li><a href="../docs/guides/policy.html">Policy</a></li><li><a href="../docs/guides/formats.html">Formats</a></li><li><a href="../docs/guides/github-code-scanning.html">GitHub code scanning</a></li><li><a href="../docs/guides/advisor.html">Coding agents (ADVISOR)</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Reference</span><ul><li><a href="../docs/reference/commands.html">Commands</a></li><li><a href="../docs/reference/exit-codes.html">Exit codes</a></li><li><a href="../docs/reference/rule-ids.html">Rule ids</a></li><li><a href="../docs/reference/configuration.html">Configuration</a></li><li><a href="../docs/reference/proof.html">Proof</a></li></ul></li><li><a href="../docs/troubleshooting.html" aria-current="page">Troubleshooting</a></li><li><a href="../docs/upgrading.html">Upgrading</a></li></ul></nav>
   <div class="docs-content">
     <main id="main">
-      <article class="docs-article"><h1 id="troubleshooting">Troubleshooting<a class="docs-heading-link" aria-label="Link to this section" href="#troubleshooting">#</a></h1>
+      <article class="docs-article"><h1 id="troubleshooting"><span class="docs-heading-tail"><span>Troubleshooting</span><a class="docs-heading-link" aria-label="Link to this section" href="#troubleshooting">#</a></span></h1>
 <p>How to work through a PROCTOR run that trips, warns or fails, starting from the exit code and ending at the fix. A proctor that trips over the desk has not marked your paper: exit 2 is the proctor's problem, exit 1 is yours, and warnings are notes in the margin.</p>
-<h2 id="read-the-run-in-order">Read the run in order<a class="docs-heading-link" aria-label="Link to this section" href="#read-the-run-in-order">#</a></h2>
+<h2 id="read-the-run-in-order">Read the run in <span class="docs-heading-tail"><span>order</span><a class="docs-heading-link" aria-label="Link to this section" href="#read-the-run-in-order">#</a></span></h2>
 <ol>
 <li><strong>The exit code.</strong> <code>0</code>: pass (warnings allowed). <code>1</code>: one or more failures. <code>2</code>: tool error. A warning never changes the exit code, so a red run always has a failure behind it.</li>
 <li><strong>The policy line.</strong> Every report names the policy in use: origin (<code>option</code>, <code>env</code>, <code>vendor</code> or <code>bundled</code>), path, <code>refreshed_on</code> and the age in days. If the run looks wrong, check which policy answered before blaming the checks.</li>
 <li><strong>The findings.</strong> One line per finding in the text format, each carrying a stable rule id. The <a href="reference/rule-ids.html">Rule ids</a> page maps every id to its check.</li>
 </ol>
-<h2 id="exit-2-the-proctor-tripped">Exit 2: the proctor tripped<a class="docs-heading-link" aria-label="Link to this section" href="#exit-2-the-proctor-tripped">#</a></h2>
+<h2 id="exit-2-the-proctor-tripped">Exit 2: the proctor <span class="docs-heading-tail"><span>tripped</span><a class="docs-heading-link" aria-label="Link to this section" href="#exit-2-the-proctor-tripped">#</a></span></h2>
 <p>A tool error means PROCTOR could not run the checks. The causes it reports:</p>
-<h3 id="bad-options">Bad options<a class="docs-heading-link" aria-label="Link to this section" href="#bad-options">#</a></h3>
+<h3 id="bad-options">Bad <span class="docs-heading-tail"><span>options</span><a class="docs-heading-link" aria-label="Link to this section" href="#bad-options">#</a></span></h3>
 <p>The run named an option the command does not accept, or a value it cannot read.</p>
 <ul>
 <li>Fix: correct the option against the <a href="reference/commands.html">Commands</a> page.</li>
 <li>Check: <code>vendor/bin/proctor check --help</code> lists what the command accepts.</li>
 </ul>
-<h3 id="the-message-starts-with-refused">The message starts with <code>Refused:</code><a class="docs-heading-link" aria-label="Link to this section" href="#the-message-starts-with-refused">#</a></h3>
+<h3 id="the-message-starts-with-refused">The message starts with <span class="docs-heading-tail"><code>Refused:</code><a class="docs-heading-link" aria-label="Link to this section" href="#the-message-starts-with-refused">#</a></span></h3>
 <p>In CI (any of <code>CI</code>, <code>GITLAB_CI</code> or <code>GITHUB_ACTIONS</code> set to a value other than <code>0</code> or <code>false</code>), <code>--policy</code> and <code>--today</code> are refused (exit 2) unless the job sets <code>PROCTOR_ALLOW_OVERRIDES=1</code>: in CI the policy and the date must come from the stack, not from the app being checked, so a pipeline that could pass its own policy or date could grade itself. The message names the option or options that were given.</p>
 <ul>
 <li>Fix: drop <code>--policy</code> and let the policy resolve from the <code>PROCTOR_POLICY</code> variable (which stays allowed in CI), then the app's <code>vendor/waynestate/creed/policy/policy.json</code>, then the bundled copy; drop <code>--today</code>, or move the option to a trusted job that sets <code>PROCTOR_ALLOW_OVERRIDES: &quot;1&quot;</code> as a protected or group-level CI variable, never in the app's own <code>.gitlab-ci.yml</code>.</li>
 <li>Check: rerun in CI; the run reaches the checks when no refused option is present, or the trusted job allows them. Outside CI the same command runs unchanged.</li>
 </ul>
-<h3 id="the-message-names-a-policy-file">The message names a policy file<a class="docs-heading-link" aria-label="Link to this section" href="#the-message-names-a-policy-file">#</a></h3>
+<h3 id="the-message-names-a-policy-file">The message names a policy <span class="docs-heading-tail"><span>file</span><a class="docs-heading-link" aria-label="Link to this section" href="#the-message-names-a-policy-file">#</a></span></h3>
 <p>An explicit source (<code>--policy</code> or <code>PROCTOR_POLICY</code>) that points at a missing or invalid file is an error (exit 2). A vendor copy that cannot be read or parsed, or that is older than the bundled one, is not an error: it is skipped with a note on stderr and the run continues with the next source.</p>
 <ul>
 <li>Fix: correct the path or the file, or drop the explicit source and let the policy resolve from the <code>PROCTOR_POLICY</code> variable, then the app's <code>vendor/waynestate/creed/policy/policy.json</code>, then the bundled copy.</li>
 <li>Check: rerun and read the policy line; it names the origin, path, <code>refreshed_on</code> and age of the policy that answered.</li>
 </ul>
-<h3 id="the-message-names-policy-overrides-json">The message names policy-overrides.json<a class="docs-heading-link" aria-label="Link to this section" href="#the-message-names-policy-overrides-json">#</a></h3>
+<h3 id="the-message-names-policy-overrides-json">The message names <span class="docs-heading-tail"><span>policy-overrides.json</span><a class="docs-heading-link" aria-label="Link to this section" href="#the-message-names-policy-overrides-json">#</a></span></h3>
 <p>The file is rejected before any check runs when it is malformed or unreadable, when an entry names a check that is not registered in the run, or when an entry names the <code>overrides</code> or <code>override-approver</code> check: an override cannot exempt the checks that police overrides, and an entry for a check that does not exist would silently do nothing.</p>
 <ul>
 <li>Fix: repair the JSON, and use a check id that PROCTOR actually runs; the list of valid ids is built from the checks PROCTOR runs, so a new check needs no change to the guard.</li>
 <li>Check: rerun; the file must parse and name only registered checks before any check runs.</li>
 </ul>
-<h3 id="composer-json-is-present-but-malformed">composer.json is present but malformed<a class="docs-heading-link" aria-label="Link to this section" href="#composer-json-is-present-but-malformed">#</a></h3>
+<h3 id="composer-json-is-present-but-malformed">composer.json is present but <span class="docs-heading-tail"><span>malformed</span><a class="docs-heading-link" aria-label="Link to this section" href="#composer-json-is-present-but-malformed">#</a></span></h3>
 <p>A present but malformed or unreadable composer.json is a tool error. A missing composer.json is not: the app gets a verdict, with <code>php-floor</code> failing.</p>
 <ul>
 <li>Fix: repair the JSON, or point <code>--path</code> at the application root that has one.</li>
 <li>Check: rerun; with a readable composer.json the run reaches the checks.</li>
 </ul>
-<h2 id="failures-that-mean-what-they-say">Failures that mean what they say<a class="docs-heading-link" aria-label="Link to this section" href="#failures-that-mean-what-they-say">#</a></h2>
-<h3 id="composer-audit-fails-with-not-audited">composer-audit fails with <code>not audited:</code><a class="docs-heading-link" aria-label="Link to this section" href="#composer-audit-fails-with-not-audited">#</a></h3>
+<h2 id="failures-that-mean-what-they-say">Failures that mean what they <span class="docs-heading-tail"><span>say</span><a class="docs-heading-link" aria-label="Link to this section" href="#failures-that-mean-what-they-say">#</a></span></h2>
+<h3 id="composer-audit-fails-with-not-audited">composer-audit fails with <span class="docs-heading-tail"><code>not audited:</code><a class="docs-heading-link" aria-label="Link to this section" href="#composer-audit-fails-with-not-audited">#</a></span></h3>
 <p>Rule id <code>proctor/composer-audit/could-not-run</code>. The audit ran but its stdout was not parseable JSON; the message starts with <code>not audited:</code> and carries the first stderr line, because a green run that audited nothing is worse than a red one.</p>
 <ul>
 <li>Fix: read the stderr line in the message and fix what composer reported. Composer audit runs with <code>--no-plugins --no-interaction</code> and a minimal explicit environment (PATH plus the variables composer needs to start), so inherited <code>COMPOSER_*</code> switches no longer reach it.</li>
 <li>Check: rerun the check; only a clean audit with a clean result passes.</li>
 </ul>
-<h3 id="composer-audit-fails-with-not-audited-because-composer-is-missing">composer-audit fails with <code>not audited:</code> because composer is missing<a class="docs-heading-link" aria-label="Link to this section" href="#composer-audit-fails-with-not-audited-because-composer-is-missing">#</a></h3>
+<h3 id="composer-audit-fails-with-not-audited-because-composer-is-missing">composer-audit fails with <code>not audited:</code> because composer is <span class="docs-heading-tail"><span>missing</span><a class="docs-heading-link" aria-label="Link to this section" href="#composer-audit-fails-with-not-audited-because-composer-is-missing">#</a></span></h3>
 <p>Rule id <code>proctor/composer-audit/skipped</code>. The message reads <code>not audited: composer executable not found on PATH; install Composer or record an override</code>: there is no composer executable on PATH, so the audit could not run at all. A skipped audit must never look like a pass.</p>
 <ul>
 <li>Fix: install Composer on the runner, or record an active <code>composer-audit</code> override in policy-overrides.json with a reason and an expiry to downgrade the fail to a warning.</li>
 <li>Check: rerun; once composer is found, the audit runs and is graded as usual.</li>
 </ul>
-<h3 id="composer-audit-fails-with-not-audited-because-the-lock-is-missing">composer-audit fails with <code>not audited:</code> because the lock is missing<a class="docs-heading-link" aria-label="Link to this section" href="#composer-audit-fails-with-not-audited-because-the-lock-is-missing">#</a></h3>
+<h3 id="composer-audit-fails-with-not-audited-because-the-lock-is-missing">composer-audit fails with <code>not audited:</code> because the lock is <span class="docs-heading-tail"><span>missing</span><a class="docs-heading-link" aria-label="Link to this section" href="#composer-audit-fails-with-not-audited-because-the-lock-is-missing">#</a></span></h3>
 <p>Rule id <code>proctor/composer-audit/skipped</code>. The message reads <code>not audited: no composer.lock in the app path; commit the lock or record an override</code>: the app path has no composer.lock, so <code>composer audit --locked</code> has nothing to audit.</p>
 <ul>
 <li>Fix: commit the lock file (<code>composer update --lock</code> regenerates it), or record an active <code>composer-audit</code> override in policy-overrides.json with a reason and an expiry to downgrade the fail to a warning.</li>
 <li>Check: rerun; with the lock present, the audit runs and is graded as usual.</li>
 </ul>
-<h3 id="composer-audit-fails-with-no-advisory-listed">composer-audit fails with no advisory listed<a class="docs-heading-link" aria-label="Link to this section" href="#composer-audit-fails-with-no-advisory-listed">#</a></h3>
+<h3 id="composer-audit-fails-with-no-advisory-listed">composer-audit fails with no advisory <span class="docs-heading-tail"><span>listed</span><a class="docs-heading-link" aria-label="Link to this section" href="#composer-audit-fails-with-no-advisory-listed">#</a></span></h3>
 <p>Rule id <code>proctor/composer-audit/exit-code</code>. Since Composer 2.10 the audit exits 1 when anything failed it, so a non-zero exit whose JSON lists nothing PROCTOR can read (a malware or policy block, or an error) is itself a fail, and only a clean exit with a clean result passes.</p>
 <ul>
 <li>Fix: address what Composer blocked: the block is real, not a PROCTOR misread.</li>
 <li>Check: run with <code>--format=json</code> and read the finding.</li>
 </ul>
-<h3 id="composer-audit-fails-because-an-ignore-entry-has-no-matching-override">composer-audit fails because an ignore entry has no matching override<a class="docs-heading-link" aria-label="Link to this section" href="#composer-audit-fails-because-an-ignore-entry-has-no-matching-override">#</a></h3>
+<h3 id="composer-audit-fails-because-an-ignore-entry-has-no-matching-override">composer-audit fails because an ignore entry has no matching <span class="docs-heading-tail"><span>override</span><a class="docs-heading-link" aria-label="Link to this section" href="#composer-audit-fails-because-an-ignore-entry-has-no-matching-override">#</a></span></h3>
 <p>Rule id <code>proctor/composer-audit/unbacked-ignore</code>. The message reads <code>ignore entry &quot;&lt;entry&gt;&quot; in composer.json has no matching override; record it in policy-overrides.json with a reason and an expiry</code>: the app silences an audit result in its own composer.json, and no active <code>composer-audit</code> override in policy-overrides.json backs that entry. An ignore without a dated approval never expires, so each unbacked entry fails instead of warning.</p>
 <ul>
 <li>Fix: record an active <code>composer-audit</code> override in policy-overrides.json that backs the entry: its <code>advisory</code> field equals the entry's advisory id case-insensitively, its <code>package</code> field matches the entry's package, or the override carries no scope at all (the only shape that backs an ignore-severity level). Remove the ignore entry from composer.json when the override expires.</li>
 <li>Check: rerun; the entry earns no <code>unbacked-ignore</code> fail, the count warning (<code>proctor/composer-audit/ignore-entries</code>) still reports it, and the backing override is not flagged <code>proctor/overrides/unused</code>.</li>
 </ul>
-<h3 id="lock-committed-fails">lock-committed fails<a class="docs-heading-link" aria-label="Link to this section" href="#lock-committed-fails">#</a></h3>
+<h3 id="lock-committed-fails">lock-committed <span class="docs-heading-tail"><span>fails</span><a class="docs-heading-link" aria-label="Link to this section" href="#lock-committed-fails">#</a></span></h3>
 <p><code>composer.lock</code> is missing from the app path.</p>
 <ul>
 <li>Fix: commit the lock file.</li>
 <li>Check: rerun; with the lock present, a <code>content-hash</code> that no longer matches composer.json warns (<code>proctor/lock-committed/out-of-sync</code>) instead of failing, so regenerate the lock when the warning appears and the warning never changes the exit code.</li>
 </ul>
-<h3 id="destructive-deploy-fails">destructive-deploy fails<a class="docs-heading-link" aria-label="Link to this section" href="#destructive-deploy-fails">#</a></h3>
+<h3 id="destructive-deploy-fails">destructive-deploy <span class="docs-heading-tail"><span>fails</span><a class="docs-heading-link" aria-label="Link to this section" href="#destructive-deploy-fails">#</a></span></h3>
 <p>A deploy script runs an artisan command that drops or rebuilds the database (<code>migrate:fresh</code>, <code>migrate:refresh</code>, <code>migrate:reset</code>, <code>db:wipe</code>), which erases production data on every deploy. Scanned: <code>.sh</code> and <code>.php</code> files under a top-level <code>deployments/</code>, <code>deploy_scripts/</code>, <code>deploy/</code> or <code>scripts/</code> directory, the top-level <code>build.sh</code>, <code>release.sh</code> and <code>.gitlab-ci.yml</code>, and the <code>scripts</code> section of composer.json; shell comments are ignored.</p>
 <ul>
 <li>Fix: run plain <code>php artisan migrate --force</code> in the deploy.</li>
 <li>Check: rerun; the check passes when no scanned script drops or rebuilds the database.</li>
 </ul>
-<h3 id="php-floor-fails-and-there-is-no-composer-json">php-floor fails and there is no composer.json<a class="docs-heading-link" aria-label="Link to this section" href="#php-floor-fails-and-there-is-no-composer-json">#</a></h3>
+<h3 id="php-floor-fails-and-there-is-no-composer-json">php-floor fails and there is no <span class="docs-heading-tail"><span>composer.json</span><a class="docs-heading-link" aria-label="Link to this section" href="#php-floor-fails-and-there-is-no-composer-json">#</a></span></h3>
 <p>Intended behavior: a missing composer.json is not a tool error, so the app gets a verdict, with <code>php-floor</code> failing.</p>
 <ul>
 <li>Fix: point <code>--path</code> at the application root that carries the composer.json.</li>
 <li>Check: rerun against the right path.</li>
 </ul>
-<h2 id="warnings-that-deserve-a-look">Warnings that deserve a look<a class="docs-heading-link" aria-label="Link to this section" href="#warnings-that-deserve-a-look">#</a></h2>
-<h3 id="proctor-policy-age">proctor/policy-age<a class="docs-heading-link" aria-label="Link to this section" href="#proctor-policy-age">#</a></h3>
+<h2 id="warnings-that-deserve-a-look">Warnings that deserve a <span class="docs-heading-tail"><span>look</span><a class="docs-heading-link" aria-label="Link to this section" href="#warnings-that-deserve-a-look">#</a></span></h2>
+<h3 id="proctor-policy-age"><span class="docs-heading-tail"><span>proctor/policy-age</span><a class="docs-heading-link" aria-label="Link to this section" href="#proctor-policy-age">#</a></span></h3>
 <p>The policy in use is more than 60 days old (its <code>refreshed_on</code> date is more than 60 days before <code>--today</code>), or a non-bundled policy has no <code>refreshed_on</code> date. It exists so a stopped CREED refresh robot is visible instead of silent.</p>
 <ul>
 <li>Fix: refresh the policy: <code>composer update waynestate/creed</code> for the vendor copy, or point <code>--policy</code> or <code>PROCTOR_POLICY</code> at a current file. Warning only: an old policy never fails a run, and the bundled policy may omit the date.</li>
 </ul>
-<h3 id="proctor-overrides-expiring-and-proctor-overrides-unused">proctor/overrides/expiring and proctor/overrides/unused<a class="docs-heading-link" aria-label="Link to this section" href="#proctor-overrides-expiring-and-proctor-overrides-unused">#</a></h3>
+<h3 id="proctor-overrides-expiring-and-proctor-overrides-unused">proctor/overrides/expiring and <span class="docs-heading-tail"><span>proctor/overrides/unused</span><a class="docs-heading-link" aria-label="Link to this section" href="#proctor-overrides-expiring-and-proctor-overrides-unused">#</a></span></h3>
 <p>An active entry in policy-overrides.json that expires within 14 days of <code>--today</code> (the expiry day counts) warns <code>expiring</code>, so an approval that is about to lapse is visible instead of silent. An active entry that matches no failure warns <code>unused</code>, so a stale approval is removed instead of rotting.</p>
 <ul>
 <li>Fix: renew the entry with a new <code>expires</code> date and approver, or delete it. A warning never changes the exit code; an expired entry, however, fails the <code>overrides</code> check.</li>
 </ul>
-<h3 id="proctor-override-approver-self-approved">proctor/override-approver/self-approved<a class="docs-heading-link" aria-label="Link to this section" href="#proctor-override-approver-self-approved">#</a></h3>
+<h3 id="proctor-override-approver-self-approved"><span class="docs-heading-tail"><span>proctor/override-approver/self-approved</span><a class="docs-heading-link" aria-label="Link to this section" href="#proctor-override-approver-self-approved">#</a></span></h3>
 <p><code>approved_by</code> names someone git blame says wrote a line of the entry: the author name, email, email local part or noreply username. Renewing your own approval counts, because moving <code>expires</code> makes you an author of the entry.</p>
 <ul>
 <li>Fix: ask someone who did not write the entry to review the merge request, approve it, and put their name in <code>approved_by</code> (on its own line). Do not rewrite history to change the author; the merge request is the record.</li>
 <li>Check: rerun <code>proctor check</code>; the pass line says how many entries were checked.</li>
 </ul>
-<h3 id="proctor-override-approver-could-not-run">proctor/override-approver/could-not-run<a class="docs-heading-link" aria-label="Link to this section" href="#proctor-override-approver-could-not-run">#</a></h3>
+<h3 id="proctor-override-approver-could-not-run"><span class="docs-heading-tail"><span>proctor/override-approver/could-not-run</span><a class="docs-heading-link" aria-label="Link to this section" href="#proctor-override-approver-could-not-run">#</a></span></h3>
 <p>The message starts <code>not checked:</code> and names why: git is not on PATH, the app path is not inside a git checkout, git could not read the repository (for example <code>detected dubious ownership</code>), or the clone is shallow and the entry's lines are credited to its oldest commit.</p>
 <ul>
 <li>Fix: run <code>proctor check</code> in a full git checkout with git installed. In GitLab CI, set <code>GIT_DEPTH: 0</code> on the job. For dubious ownership, mark the checkout safe in the job (<code>git config --global --add safe.directory &quot;$CI_PROJECT_DIR&quot;</code>).</li>
 <li>Check: rerun; the finding becomes a pass line or a <code>self-approved</code> finding. Under CREED's <code>override_self_approval: fail</code>, this finding fails the run.</li>
 </ul>
-<h3 id="proctor-repo-url-credentials">proctor/repo-url-credentials<a class="docs-heading-link" aria-label="Link to this section" href="#proctor-repo-url-credentials">#</a></h3>
+<h3 id="proctor-repo-url-credentials"><span class="docs-heading-tail"><span>proctor/repo-url-credentials</span><a class="docs-heading-link" aria-label="Link to this section" href="#proctor-repo-url-credentials">#</a></span></h3>
 <p>A credential is written into a package source URL: a deploy token in the userinfo of a composer.json repository URL or a composer.lock source/dist URL, a bare token user of 20+ characters, a <code>private_token</code>, <code>access_token</code>, <code>token</code> or <code>password</code> query parameter, or a <code>.npmrc</code> line that sets <code>_authToken</code>, <code>_auth</code> or <code>_password</code> to a literal value (<code>${SOME_VAR}</code> is fine). The secret is masked as <code>***</code> in the message, so the report itself is safe to hand back.</p>
 <ul>
 <li>Fix: move the token to <code>auth.json</code>, which is gitignored, or a CI variable, and use one registry URL without credentials.</li>
 <li>Check: rerun; the warning clears when no scanned URL carries a literal credential.</li>
 </ul>
-<h3 id="proctor-ci-pipelines-composer-audit-off">proctor/ci-pipelines/composer-audit-off<a class="docs-heading-link" aria-label="Link to this section" href="#proctor-ci-pipelines-composer-audit-off">#</a></h3>
+<h3 id="proctor-ci-pipelines-composer-audit-off"><span class="docs-heading-tail"><span>proctor/ci-pipelines/composer-audit-off</span><a class="docs-heading-link" aria-label="Link to this section" href="#proctor-ci-pipelines-composer-audit-off">#</a></span></h3>
 <p>The pipeline environment switches Composer's audit or blocking policy off: <code>COMPOSER_NO_AUDIT</code> or <code>COMPOSER_NO_BLOCKING</code> set to anything but an empty string, <code>0</code> or <code>false</code>, or <code>COMPOSER_AUDIT_ABANDONED</code> set to <code>ignore</code>, in the GitLab top-level or job <code>variables:</code> (a scalar or a map with a <code>value</code> key) or the GitHub top-level, job or step <code>env:</code>.</p>
 <ul>
 <li>Fix: remove the switch from the pipeline environment. A warning, never a fail, for stack packages and other projects alike.</li>
 </ul>
-<h3 id="a-dev-dependency-advisory-is-only-a-warning">A dev-dependency advisory is only a warning<a class="docs-heading-link" aria-label="Link to this section" href="#a-dev-dependency-advisory-is-only-a-warning">#</a></h3>
+<h3 id="a-dev-dependency-advisory-is-only-a-warning">A dev-dependency advisory is only a <span class="docs-heading-tail"><span>warning</span><a class="docs-heading-link" aria-label="Link to this section" href="#a-dev-dependency-advisory-is-only-a-warning">#</a></span></h3>
 <p>An advisory whose package composer.lock lists only in <code>packages-dev</code> is a warning at any severity, with the message ending in <code> [dev dependency]</code>. It still needs fixing: dev tools run in CI, and a vulnerable test runner is a real attack surface even though it is not in the deployed image.</p>
 <ul>
 <li>Fix: update the dev dependency the way you would any other (<code>composer update vendor/package --with-dependencies</code>), or record a dated <code>composer-audit</code> override in policy-overrides.json if the upgrade is blocked.</li>
 <li>Check: open <code>composer.lock</code> and look for the package name under <code>packages-dev</code>; if it also appears under <code>packages</code>, it counts as runtime and the advisory fails at or above the threshold as usual.</li>
 </ul>
-<h3 id="portability-warnings-from-bootstrap-cache">portability warnings from bootstrap/cache/<a class="docs-heading-link" aria-label="Link to this section" href="#portability-warnings-from-bootstrap-cache">#</a></h3>
+<h3 id="portability-warnings-from-bootstrap-cache">portability warnings from <span class="docs-heading-tail"><span>bootstrap/cache/</span><a class="docs-heading-link" aria-label="Link to this section" href="#portability-warnings-from-bootstrap-cache">#</a></span></h3>
 <p>In a Laravel app (an <code>artisan</code> file at the project root) the top-level <code>bootstrap/cache/</code> is skipped, so the files <code>php artisan optimize</code> writes there (<code>config.php</code>, <code>routes-v7.php</code>, <code>services.php</code>, <code>packages.php</code>, <code>events.php</code>) do not raise warnings and hide real findings. If you still see them, the app has no <code>artisan</code> at the root: a raw-PHP app that keeps its own <code>bootstrap/cache/</code> folder is scanned as before.</p>
 <ul>
 <li>Fix: put <code>artisan</code> at the project root, or move the generated output out of the scanned directories.</li>
 <li>Check: rerun; the generated cache files stop appearing once the app is recognized as Laravel.</li>
 </ul>
-<h2 id="results-that-follow-the-environment">Results that follow the environment<a class="docs-heading-link" aria-label="Link to this section" href="#results-that-follow-the-environment">#</a></h2>
-<h3 id="unpatched-disagrees-with-the-deploy">unpatched disagrees with the deploy<a class="docs-heading-link" aria-label="Link to this section" href="#unpatched-disagrees-with-the-deploy">#</a></h3>
+<h2 id="results-that-follow-the-environment">Results that follow the <span class="docs-heading-tail"><span>environment</span><a class="docs-heading-link" aria-label="Link to this section" href="#results-that-follow-the-environment">#</a></span></h2>
+<h3 id="unpatched-disagrees-with-the-deploy">unpatched disagrees with the <span class="docs-heading-tail"><span>deploy</span><a class="docs-heading-link" aria-label="Link to this section" href="#unpatched-disagrees-with-the-deploy">#</a></span></h3>
 <p><code>--php-runtime</code> is the PHP version that will serve the app (X.Y.Z), used by the <code>unpatched</code> check. CI should pass the deploy image's PHP, not the runner's.</p>
 <ul>
 <li>Fix: pass <code>--php-runtime</code> matching the deploy image in CI.</li>
 <li>Check: rerun with the flag; the runtime finding follows the version you pass.</li>
 </ul>
-<h3 id="the-same-app-gives-different-results-on-different-days">The same app gives different results on different days<a class="docs-heading-link" aria-label="Link to this section" href="#the-same-app-gives-different-results-on-different-days">#</a></h3>
+<h3 id="the-same-app-gives-different-results-on-different-days">The same app gives different results on different <span class="docs-heading-tail"><span>days</span><a class="docs-heading-link" aria-label="Link to this section" href="#the-same-app-gives-different-results-on-different-days">#</a></span></h3>
 <p><code>--today</code> overrides today's date (YYYY-MM-DD) so runs are deterministic; <code>policy-age</code> and the overrides expiring window both compare against it.</p>
 <ul>
 <li>Fix: pin <code>--today</code> in CI so a policy refresh or an override renewal does not change the verdict mid-week.</li>
 <li>Check: rerun twice with the same <code>--today</code>; the findings match.</li>
 </ul>
-<h3 id="an-offline-run-reports-proctor-wayneui-outdated-skipped">An offline run reports proctor/wayneui-outdated/skipped<a class="docs-heading-link" aria-label="Link to this section" href="#an-offline-run-reports-proctor-wayneui-outdated-skipped">#</a></h3>
+<h3 id="an-offline-run-reports-proctor-wayneui-outdated-skipped">An offline run reports <span class="docs-heading-tail"><span>proctor/wayneui-outdated/skipped</span><a class="docs-heading-link" aria-label="Link to this section" href="#an-offline-run-reports-proctor-wayneui-outdated-skipped">#</a></span></h3>
 <p>When the lookup cannot run (no composer on PATH, offline, or no parsable versions) the check reports one info finding with the skipped marker and nothing else, so an offline run never breaks.</p>
 <ul>
 <li>No fix needed: the version comparison resumes when the release list can be read, and an offline run never fails in either mode, because an unknown latest is always just the info skipped finding.</li>
 </ul>
-<h2 id="you-are-on-an-older-proctor">You are on an older PROCTOR<a class="docs-heading-link" aria-label="Link to this section" href="#you-are-on-an-older-proctor">#</a></h2>
+<h2 id="you-are-on-an-older-proctor">You are on an older <span class="docs-heading-tail"><span>PROCTOR</span><a class="docs-heading-link" aria-label="Link to this section" href="#you-are-on-an-older-proctor">#</a></span></h2>
 <p>Some symptoms were bugs, fixed in a release. Check your version first:</p>
 <pre tabindex="0"><code>composer show waynestate/proctor
 </code></pre>
@@ -203,7 +203,7 @@
 <li>The app's ignore list matched nothing: fixed in 0.2.8. <code>config.policy.advisories.ignore-id</code>, <code>config.policy.advisories.ignore</code> (by package) and the legacy <code>config.audit.ignore</code> are read in both their list and map shapes, matching any of the advisory's ids.</li>
 <li>A <code>?</code> in the text report is not corruption: since 0.3.1, terminal control characters in app-supplied strings (finding messages, override reasons and approvers) print as a visible <code>?</code>. Clean the string at the source.</li>
 </ul>
-<h2 id="related">Related<a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></h2>
+<h2 id="related"><span class="docs-heading-tail"><span>Related</span><a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></span></h2>
 <ul>
 <li><a href="reference/commands.html">Commands</a></li>
 <li><a href="reference/configuration.html">Configuration</a></li>

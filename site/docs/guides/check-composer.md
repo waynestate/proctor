@@ -6,11 +6,11 @@ llms: https://proctor.apps.wayne.edu/llms.txt
 generator: Squire agent-ready
 ---
 
-# Composer checks[#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-checks)
+# Composer checks [#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-checks)
 
 This page covers the seven PROCTOR checks that read composer.json and composer.lock: unbounded constraints, development-only packages in require, unsafe composer settings, the committed lock, audit results, the Composer version on PATH, and credentials in repository URLs. Run `vendor/bin/proctor check` against the app path, then fix the finding the report names. The proctor checks the pens before it checks the answers.
 
-## unbounded-constraints[#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#unbounded-constraints)
+## unbounded-constraints [#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#unbounded-constraints)
 
 `unbounded-constraints` fails for every runtime constraint that is `*`, names a `dev-` branch, carries `@dev`, has a lower bound with no upper bound, or matches the policy's `banned_constraints`. Each unbounded constraint is its own failure (`proctor/unbounded-constraints/unbounded`), naming the package and the offending constraint.
 
@@ -30,7 +30,7 @@ Three more rules warn, and never fail:
 | `unbounded-constraints` | `proctor/unbounded-constraints/minimum-stability` |
 | `unbounded-constraints` | `proctor/unbounded-constraints/insecure-url` |
 
-## dev-only-packages[#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#dev-only-packages)
+## dev-only-packages [#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#dev-only-packages)
 
 `dev-only-packages` looks at the `require` block of composer.json, never `require-dev`, and flags the tools that belong in `require-dev` because putting them in `require` ships them to production.
 
@@ -47,7 +47,7 @@ Each finding names the package and the fix: move it to `require-dev` with `compo
 | `dev-only-packages` | `proctor/dev-only-packages/exposes-internals` |
 | `dev-only-packages` | `proctor/dev-only-packages/test-tool` |
 
-## composer-config[#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-config)
+## composer-config [#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-config)
 
 `composer-config` warns when the `config` block of composer.json opens a door Composer closes by default:
 
@@ -73,7 +73,7 @@ It notes, as an info finding, when `require.php` is set without `config.platform
 | `composer-config` | `proctor/composer-config/policy-advisories-off` |
 | `composer-config` | `proctor/composer-config/platform-php-unset` |
 
-## lock-committed[#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#lock-committed)
+## lock-committed [#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#lock-committed)
 
 `lock-committed` fails when composer.lock is missing from the app path. When the lock is present and its `content-hash` is a real 32-hex hash, it warns (`proctor/lock-committed/out-of-sync`) when the hash no longer matches composer.json, so a stale lock that still installs is visible instead of silent; the warning never changes the exit code.
 
@@ -82,7 +82,7 @@ It notes, as an info finding, when `require.php` is set without `config.platform
 | `lock-committed` | `proctor/lock-committed` |
 | `lock-committed` | `proctor/lock-committed/out-of-sync` |
 
-## composer-audit[#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-audit)
+## composer-audit [#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-audit)
 
 `composer-audit` runs `composer audit --format=json --locked --no-plugins --no-interaction --abandoned=<policy>` against the app path and grades the result:
 
@@ -107,7 +107,7 @@ A package pattern in `config.policy.advisories.ignore` may use `*`, matched the 
 | `composer-audit` | `proctor/composer-audit/ignore-entries` |
 | `composer-audit` | `proctor/composer-audit/unbacked-ignore` |
 
-## composer-version[#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-version)
+## composer-version [#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-version)
 
 `composer-version` fails when the Composer on PATH carries the command-injection holes CVE-2024-35241 and CVE-2024-35242 (2.2.x below 2.2.24, or any other 2.x below 2.7.7) or is Composer 1, which is end of life. When the policy sets `tools.composer.minimum` above the CVE floor for the version's line, it fails below that minimum too, and the message names the policy setting (the bundled policy sets 2.8.0). It warns when composer cannot be run: `proctor/composer-version/not-found` when there is no composer executable on PATH, and `proctor/composer-version/could-not-determine` when the version could not be determined.
 
@@ -119,7 +119,7 @@ The invigilator checks its own pen: [GHSA-47f6-5gq3-vx9c](https://github.com/adv
 | `composer-version` | `proctor/composer-version/not-found` |
 | `composer-version` | `proctor/composer-version/could-not-determine` |
 
-## repo-url-credentials[#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#repo-url-credentials)
+## repo-url-credentials [#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#repo-url-credentials)
 
 `repo-url-credentials` warns when a credential is written into a package source URL:
 
@@ -134,7 +134,7 @@ The secret is masked as `***` in the message, so the report itself is safe to ha
 | --- | --- |
 | `repo-url-credentials` | `proctor/repo-url-credentials` |
 
-## Related[#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#related)
+## Related [#](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#related)
 
 - [Checks](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html)
 - [Rule ids](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html)

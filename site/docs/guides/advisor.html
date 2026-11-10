@@ -40,13 +40,13 @@
   <nav class="docs-nav docs-nav--sidebar" aria-label="Documentation"><ul class="docs-nav__list"><li class="docs-nav__group"><span class="docs-nav__label">Getting Started</span><ul><li><a href="../../docs/index.html">Overview</a></li><li><a href="../../docs/install.html">Install</a></li><li><a href="../../docs/guides/quick-start.html">Quick start</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Guides</span><ul><li><a href="../../docs/guides/checks-overview.html">Checks</a></li><li><a href="../../docs/guides/check-composer.html">Composer checks</a></li><li><a href="../../docs/guides/check-php.html">PHP checks</a></li><li><a href="../../docs/guides/check-ci.html">CI checks</a></li><li><a href="../../docs/guides/check-app.html">App checks</a></li><li><a href="../../docs/guides/check-wayneui.html">WayneUI checks</a></li><li><a href="../../docs/guides/overrides.html">Overrides</a></li><li><a href="../../docs/guides/deploy-gate.html">Deploy gate</a></li><li><a href="../../docs/guides/policy.html">Policy</a></li><li><a href="../../docs/guides/formats.html">Formats</a></li><li><a href="../../docs/guides/github-code-scanning.html">GitHub code scanning</a></li><li><a href="../../docs/guides/advisor.html" aria-current="page">Coding agents (ADVISOR)</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Reference</span><ul><li><a href="../../docs/reference/commands.html">Commands</a></li><li><a href="../../docs/reference/exit-codes.html">Exit codes</a></li><li><a href="../../docs/reference/rule-ids.html">Rule ids</a></li><li><a href="../../docs/reference/configuration.html">Configuration</a></li><li><a href="../../docs/reference/proof.html">Proof</a></li></ul></li><li><a href="../../docs/troubleshooting.html">Troubleshooting</a></li><li><a href="../../docs/upgrading.html">Upgrading</a></li></ul></nav>
   <div class="docs-content">
     <main id="main">
-      <article class="docs-article"><h1 id="use-proctor-from-your-coding-agent-advisor">Use PROCTOR from your coding agent (ADVISOR)<a class="docs-heading-link" aria-label="Link to this section" href="#use-proctor-from-your-coding-agent-advisor">#</a></h1>
+      <article class="docs-article"><h1 id="use-proctor-from-your-coding-agent-advisor">Use PROCTOR from your coding agent <span class="docs-heading-tail"><span>(ADVISOR)</span><a class="docs-heading-link" aria-label="Link to this section" href="#use-proctor-from-your-coding-agent-advisor">#</a></span></h1>
 <p>This page is for developers whose coding agent runs <a rel="noopener" href="https://github.com/waynestate/advisor">ADVISOR</a>, the stack's
 read-only MCP server. PROCTOR ships an ADVISOR module, so the agent can ask PROCTOR two questions without leaving its
 sandbox: &quot;which rules do you check, and which ones block a deploy?&quot; and &quot;what do you say about this app right now?&quot;
 Both answers come from PROCTOR's own classes. Next, see <a href="checks-overview.html">Checks</a> for every check in prose and
 <a href="deploy-gate.html">Deploy gate</a> for the deploy-time rule set.</p>
-<h2 id="install-advisor">Install ADVISOR<a class="docs-heading-link" aria-label="Link to this section" href="#install-advisor">#</a></h2>
+<h2 id="install-advisor">Install <span class="docs-heading-tail"><span>ADVISOR</span><a class="docs-heading-link" aria-label="Link to this section" href="#install-advisor">#</a></span></h2>
 <p>In the app, install ADVISOR as a dev dependency:</p>
 <pre tabindex="0"><code class="language-bash">composer require --dev waynestate/advisor
 </code></pre>
@@ -59,13 +59,13 @@ Both answers come from PROCTOR's own classes. Next, see <a href="checks-overview
 </code></pre>
 <p>PROCTOR does not require ADVISOR, and ADVISOR does not require PROCTOR: the module only loads when both are installed
 and <code>modules.json</code> names it.</p>
-<h2 id="the-two-read-only-tools">The two read-only tools<a class="docs-heading-link" aria-label="Link to this section" href="#the-two-read-only-tools">#</a></h2>
+<h2 id="the-two-read-only-tools">The two read-only <span class="docs-heading-tail"><span>tools</span><a class="docs-heading-link" aria-label="Link to this section" href="#the-two-read-only-tools">#</a></span></h2>
 <p>Both tools run in-process: no subprocess, no network, nothing written, and neither reads <code>.env</code> itself (four checks
 that do run read other env files, and only the ones git lists; see
 <a href="#what-is-skipped-and-why">What is skipped, and why</a>). <code>proctor_rules</code> takes
 no arguments. <code>proctor_check</code> takes exactly one, <code>path</code>: the app folder, inside the project root (default: the root
 itself). A path outside the root, or one that is not a folder, is refused.</p>
-<h3 id="proctor-rules">proctor_rules<a class="docs-heading-link" aria-label="Link to this section" href="#proctor-rules">#</a></h3>
+<h3 id="proctor-rules"><span class="docs-heading-tail"><span>proctor_rules</span><a class="docs-heading-link" aria-label="Link to this section" href="#proctor-rules">#</a></span></h3>
 <p><code>proctor_rules</code> lists every check PROCTOR registers, in the order a report prints them, straight from <code>CheckSet</code>. It
 returns <code>proctor_version</code> and <code>rules</code>, one entry per check:</p>
 <ul>
@@ -83,7 +83,7 @@ returns <code>proctor_version</code> and <code>rules</code>, one entry per check
     &quot;docs&quot;: &quot;https://proctor.apps.wayne.edu/docs/guides/check-composer.html#lock-committed&quot;
 }
 </code></pre>
-<h3 id="proctor-check">proctor_check<a class="docs-heading-link" aria-label="Link to this section" href="#proctor-check">#</a></h3>
+<h3 id="proctor-check"><span class="docs-heading-tail"><span>proctor_check</span><a class="docs-heading-link" aria-label="Link to this section" href="#proctor-check">#</a></span></h3>
 <p><code>proctor_check</code> runs PROCTOR's checks on the app folder with PROCTOR's own <code>CheckRunner</code>, the way <code>proctor check</code> runs
 them by default: the CREED policy PROCTOR bundles, today's date and the app's <code>policy-overrides.json</code> when it has one.
 It returns:</p>
@@ -99,7 +99,7 @@ check), <code>file</code> (relative to the app) and <code>reason</code> (see bel
 </ul>
 <p>A missing or malformed <code>composer.json</code> or <code>policy-overrides.json</code> comes back as a tool error with PROCTOR's own
 message, the same one <code>proctor check</code> prints before it exits 2.</p>
-<h2 id="what-is-skipped-and-why">What is skipped, and why<a class="docs-heading-link" aria-label="Link to this section" href="#what-is-skipped-and-why">#</a></h2>
+<h2 id="what-is-skipped-and-why">What is skipped, and <span class="docs-heading-tail"><span>why</span><a class="docs-heading-link" aria-label="Link to this section" href="#what-is-skipped-and-why">#</a></span></h2>
 <p>Some checks cannot run inside ADVISOR's sandbox, so <code>proctor_check</code> leaves them out and lists them under <code>skipped</code>:</p>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
 <thead>
@@ -195,7 +195,7 @@ An override in <code>policy-overrides.json</code> for a skipped check is not rep
 <aside class="docs-callout docs-callout--note" role="note"><p class="docs-callout__label">Note</p><p>The agent reports; PROCTOR decides. Every answer names its source and says plainly what ran and what did not, and
 the run in CI is the one that passes or fails a build. A practice paper is a fine way to study, but it is not the
 exam.</p></aside>
-<h2 id="related">Related<a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></h2>
+<h2 id="related"><span class="docs-heading-tail"><span>Related</span><a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></span></h2>
 <ul>
 <li><a href="checks-overview.html">Checks</a></li>
 <li><a href="deploy-gate.html">Deploy gate</a></li>

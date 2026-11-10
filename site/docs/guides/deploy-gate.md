@@ -6,13 +6,13 @@ llms: https://proctor.apps.wayne.edu/llms.txt
 generator: Squire agent-ready
 ---
 
-# Deploy gate[#](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html#deploy-gate)
+# Deploy gate [#](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html#deploy-gate)
 
 `proctor gate` answers one question for a release script or a platform hook: may this commit be deployed? It runs the small, deploy-time part of PROCTOR's checks, compares the failures with what the running deployment already fails, and exits 0 for go or 1 for no-go. `proctor check` marks the whole paper; the gate is the proctor at the exam-hall door, deciding only whether you may sit.
 
 It follows CREED's deploy-gate chapter (the stack's deploy-gate decision): the rule set is small, offline-tolerant and fast, and it ratchets, so a deploy that does not make things worse always passes.
 
-## Run it[#](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html#run-it)
+## Run it [#](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html#run-it)
 
 ```
 vendor/bin/proctor gate [--path=.] [--format=text|json] [--baseline=<report or directory>] [--record=<file>] [--policy=<file>] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z] [--timeout=60]
@@ -24,7 +24,7 @@ vendor/bin/proctor gate [--path=.] [--format=text|json] [--baseline=<report or d
 - `--policy`, `--today`, `--php-runtime`: as for `proctor check`, including the CI guard on `--policy` and `--today`.
 - `--timeout`: seconds for `composer audit` before it is killed; 60 by default here, because a deploy should not wait five minutes.
 
-## What it runs[#](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html#what-it-runs)
+## What it runs [#](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html#what-it-runs)
 
 Eight of the checks, the deploy-time rule set: `php-floor`, `unpatched`, `laravel-eol`, `laravel-php`, `lock-committed`, `composer-audit`, `overrides` and `policy-age`. That covers the PHP floor and the runtime, the framework line and the PHP range it supports, the lock file, known advisories, and the overrides themselves. Style, portability, MySQL 5.6 safety, CI pipelines and the rest stay in `proctor check`, in CI.
 
@@ -35,7 +35,7 @@ Eight of the checks, the deploy-time rule set: `php-floor`, `unpatched`, `larave
 - Who approved an override is settled when the override reaches the default branch: in CI, on the merge request that added it. Nothing at deploy time changes that answer, while the expiry, which the gate does check, changes every day.
 - On Citadel, the platform's own overrides are held by its admins, with their own approver.
 
-## How it decides[#](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html#how-it-decides)
+## How it decides [#](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html#how-it-decides)
 
 The app's overrides are applied first, exactly as in `proctor check`. Then each failure is one of these:
 
@@ -56,7 +56,7 @@ Note
 
 An override names any registered check, not only the eight above. An expired one blocks the deploy even when its check is not part of the gate.
 
-## Exit codes[#](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html#exit-codes)
+## Exit codes [#](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html#exit-codes)
 
 | Exit code | Meaning |
 | --- | --- |
@@ -66,7 +66,7 @@ An override names any registered check, not only the eight above. An expired one
 
 A platform hook should fail open on 2, with an alert: a bug in the gate must never take down deploys (the stack's deploy-gate decision). A release script may choose to stop on it instead.
 
-## The verdict[#](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html#the-verdict)
+## The verdict [#](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html#the-verdict)
 
 The text verdict leads with the answer and lists only what is not a pass:
 
@@ -81,11 +81,11 @@ RESULT: no-go (1 blocked, 0 held, 0 waived, 0 warnings, 3 passed)
 
 The JSON verdict carries `command` (`gate`), `verdict` (`go`, `no-go`, or `error` when it could not decide), `exit`, `policy`, `baseline` (its source, path and failing rule ids, or null), `checks`, a `summary` with the count of each outcome, `findings` and `overrides`. Each finding keeps the check's own `status` and adds `gate` (its outcome), `reason` when blocked or staged, and `stage` when staged. Because the status is kept, a recorded verdict works as the next run's baseline.
 
-## In a release[#](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html#in-a-release)
+## In a release [#](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html#in-a-release)
 
 Squire's release script runs the gate when PROCTOR is installed, records the verdict, and keeps the last accepted verdict as the next baseline. On Citadel, the gate is meant to run in `runGitPull()`, inside the app's image, before the fetched commit is checked out; that hook waits on the Citadel team.
 
-## Related[#](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html#related)
+## Related [#](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html#related)
 
 - [Overrides](https://proctor.apps.wayne.edu/docs/guides/overrides.html)
 - [Exit codes](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html)

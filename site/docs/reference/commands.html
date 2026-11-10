@@ -40,7 +40,7 @@
   <nav class="docs-nav docs-nav--sidebar" aria-label="Documentation"><ul class="docs-nav__list"><li class="docs-nav__group"><span class="docs-nav__label">Getting Started</span><ul><li><a href="../../docs/index.html">Overview</a></li><li><a href="../../docs/install.html">Install</a></li><li><a href="../../docs/guides/quick-start.html">Quick start</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Guides</span><ul><li><a href="../../docs/guides/checks-overview.html">Checks</a></li><li><a href="../../docs/guides/check-composer.html">Composer checks</a></li><li><a href="../../docs/guides/check-php.html">PHP checks</a></li><li><a href="../../docs/guides/check-ci.html">CI checks</a></li><li><a href="../../docs/guides/check-app.html">App checks</a></li><li><a href="../../docs/guides/check-wayneui.html">WayneUI checks</a></li><li><a href="../../docs/guides/overrides.html">Overrides</a></li><li><a href="../../docs/guides/deploy-gate.html">Deploy gate</a></li><li><a href="../../docs/guides/policy.html">Policy</a></li><li><a href="../../docs/guides/formats.html">Formats</a></li><li><a href="../../docs/guides/github-code-scanning.html">GitHub code scanning</a></li><li><a href="../../docs/guides/advisor.html">Coding agents (ADVISOR)</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Reference</span><ul><li><a href="../../docs/reference/commands.html" aria-current="page">Commands</a></li><li><a href="../../docs/reference/exit-codes.html">Exit codes</a></li><li><a href="../../docs/reference/rule-ids.html">Rule ids</a></li><li><a href="../../docs/reference/configuration.html">Configuration</a></li><li><a href="../../docs/reference/proof.html">Proof</a></li></ul></li><li><a href="../../docs/troubleshooting.html">Troubleshooting</a></li><li><a href="../../docs/upgrading.html">Upgrading</a></li></ul></nav>
   <div class="docs-content">
     <main id="main">
-      <article class="docs-article"><h1 id="commands">Commands<a class="docs-heading-link" aria-label="Link to this section" href="#commands">#</a></h1>
+      <article class="docs-article"><h1 id="commands"><span class="docs-heading-tail"><span>Commands</span><a class="docs-heading-link" aria-label="Link to this section" href="#commands">#</a></span></h1>
 <p>Every command PROCTOR ships, with the options each one accepts. The table is generated from the CLI, so it stays in step with the code; a proctor reads the rules aloud before the exam, it does not take the exam for you. If you have not run a check yet, start with the <a href="../guides/quick-start.html">Quick start</a>.</p>
 <!-- generated:commands -->
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
@@ -61,7 +61,7 @@
 </tr>
 </tbody>
 </table></div>
-<h3 id="proctor-check"><code>proctor check</code><a class="docs-heading-link" aria-label="Link to this section" href="#proctor-check">#</a></h3>
+<h3 id="proctor-check"><span class="docs-heading-tail"><code>proctor check</code><a class="docs-heading-link" aria-label="Link to this section" href="#proctor-check">#</a></span></h3>
 <p>Measure a PHP app against the version policy.</p>
 <p>Usage: <code>proctor check [--path PATH] [--format FORMAT] [--record RECORD] [--policy POLICY] [--today TODAY] [--php-runtime PHP-RUNTIME] [--timeout TIMEOUT]</code></p>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
@@ -115,7 +115,7 @@
 </tr>
 </tbody>
 </table></div>
-<h3 id="proctor-gate"><code>proctor gate</code><a class="docs-heading-link" aria-label="Link to this section" href="#proctor-gate">#</a></h3>
+<h3 id="proctor-gate"><span class="docs-heading-tail"><code>proctor gate</code><a class="docs-heading-link" aria-label="Link to this section" href="#proctor-gate">#</a></span></h3>
 <p>Decide go or no-go for a deploy: the deploy-time checks, ratcheted against a baseline.</p>
 <p>Usage: <code>proctor gate [--path PATH] [--format FORMAT] [--baseline BASELINE] [--record RECORD] [--policy POLICY] [--today TODAY] [--php-runtime PHP-RUNTIME] [--timeout TIMEOUT]</code></p>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
@@ -174,7 +174,7 @@
 </tr>
 </tbody>
 </table></div>
-<h3 id="options-every-command-accepts">Options every command accepts<a class="docs-heading-link" aria-label="Link to this section" href="#options-every-command-accepts">#</a></h3>
+<h3 id="options-every-command-accepts">Options every command <span class="docs-heading-tail"><span>accepts</span><a class="docs-heading-link" aria-label="Link to this section" href="#options-every-command-accepts">#</a></span></h3>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
 <thead>
 <tr>
@@ -222,7 +222,7 @@
 </tbody>
 </table></div>
 <!-- /generated -->
-<h2 id="examples">Examples<a class="docs-heading-link" aria-label="Link to this section" href="#examples">#</a></h2>
+<h2 id="examples"><span class="docs-heading-tail"><span>Examples</span><a class="docs-heading-link" aria-label="Link to this section" href="#examples">#</a></span></h2>
 <p>Run the check against an application:</p>
 <pre tabindex="0"><code>vendor/bin/proctor check [--path=.] [--format=text|json|codequality|sarif] [--record=&lt;file&gt;] [--policy=&lt;file&gt;] [--today=YYYY-MM-DD] [--php-runtime=X.Y.Z] [--timeout=300]
 </code></pre>
@@ -243,7 +243,7 @@
 <li><code>--record</code>: also write the JSON verdict to this file, for the deploy log and the next run's <code>--baseline</code>.</li>
 </ul>
 <p>The gate runs eight deploy-time checks and exits 0 (go), 1 (no-go) or 2 (could not decide); see <a href="../guides/deploy-gate.html">Deploy gate</a>.</p>
-<h2 id="related">Related<a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></h2>
+<h2 id="related"><span class="docs-heading-tail"><span>Related</span><a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></span></h2>
 <ul>
 <li>
 <p><a href="../guides/deploy-gate.html">Deploy gate</a></p>

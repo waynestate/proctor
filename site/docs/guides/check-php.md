@@ -6,13 +6,13 @@ llms: https://proctor.apps.wayne.edu/llms.txt
 generator: Squire agent-ready
 ---
 
-# PHP checks[#](https://proctor.apps.wayne.edu/docs/guides/check-php.html#php-checks)
+# PHP checks [#](https://proctor.apps.wayne.edu/docs/guides/check-php.html#php-checks)
 
 This page covers the six PROCTOR checks that grade the PHP an app runs on, the Laravel it locks, and the database it talks to: the PHP floor, the Laravel line's state and PHP range, patch currency, MySQL 5.6 compatibility, and the age of the policy in use. Run `vendor/bin/proctor check` against the app path, then fix the finding the report names. The proctor grades the ink before it grades the handwriting.
 
 The other two checks that read PHP and deploy scripts, `portability` and `destructive-deploy`, are covered on the [CI checks](https://proctor.apps.wayne.edu/docs/guides/check-ci.html) page.
 
-## php-floor[#](https://proctor.apps.wayne.edu/docs/guides/check-php.html#php-floor)
+## php-floor [#](https://proctor.apps.wayne.edu/docs/guides/check-php.html#php-floor)
 
 `php-floor` fails when the lowest PHP version allowed by `require.php` is past security support plus the grace window, when composer.json has no usable php constraint, or when there is no composer.json at all. A missing composer.json is not a tool error: the app gets a verdict, with php-floor failing.
 
@@ -28,7 +28,7 @@ A `require.php` value that is not a valid version constraint is a tool error, no
 | --- | --- |
 | `php-floor` | `proctor/php-floor` |
 
-## unpatched[#](https://proctor.apps.wayne.edu/docs/guides/check-php.html#unpatched)
+## unpatched [#](https://proctor.apps.wayne.edu/docs/guides/check-php.html#unpatched)
 
 `unpatched` warns when a locked component is behind the policy's `latest_patch` for its version line, and passes when it is current. It reads laravel from composer.lock (`laravel/framework`), vue and inertia from package-lock.json (`vue`, `@inertiajs/vue3`), and the PHP runtime from `--php-runtime`. There is no finding when the component, its version line, or `latest_patch` is absent from the policy.
 
@@ -38,7 +38,7 @@ CI should pass the deploy image's PHP, not the runner's.
 | --- | --- |
 | `unpatched` | `proctor/unpatched` |
 
-## laravel-eol[#](https://proctor.apps.wayne.edu/docs/guides/check-php.html#laravel-eol)
+## laravel-eol [#](https://proctor.apps.wayne.edu/docs/guides/check-php.html#laravel-eol)
 
 `laravel-eol` classifies the locked `laravel/framework` version against the policy as of `--today`. It reads the version from composer.lock (`packages`, then `packages-dev`); a leading `v` is stripped, and a version that is not plain numeric (a dev alias) earns no finding, because the reader does not guess.
 
@@ -52,7 +52,7 @@ An active `laravel-eol` override downgrades the `eol` fail to a warning; it neve
 | --- | --- |
 | `laravel-eol` | `proctor/laravel-eol` |
 
-## laravel-php[#](https://proctor.apps.wayne.edu/docs/guides/check-php.html#laravel-php)
+## laravel-php [#](https://proctor.apps.wayne.edu/docs/guides/check-php.html#laravel-php)
 
 `laravel-php` checks composer.json's `require.php` against the PHP range the policy records for the locked Laravel major. It reads the version from composer.lock and the range from the policy's `requires` block for that major's line, then asks two questions of the constraint: does it allow any PHP version inside the range, and does it allow any PHP below the range's floor? Composer and the deployed runtime decide the upper end, so an open upper bound such as `^8.2` passes; the range's max counts as supported, so a max of `8.5` admits everything below `8.6`.
 
@@ -66,7 +66,7 @@ An active `laravel-php` override downgrades the fail to a warning. There is no f
 | --- | --- |
 | `laravel-php` | `proctor/laravel-php` |
 
-## mysql56[#](https://proctor.apps.wayne.edu/docs/guides/check-php.html#mysql56)
+## mysql56 [#](https://proctor.apps.wayne.edu/docs/guides/check-php.html#mysql56)
 
 `mysql56` warns when migrations or app code use MySQL features the shared 5.6 server rejects. Citadel's shared MySQL server is 5.6, so migrations must avoid newer features. Warnings, not failures: an app on its own newer database is not affected.
 
@@ -105,7 +105,7 @@ Fix by avoiding the feature (a raw `ALTER TABLE ... CHANGE` instead of `renameCo
 | `mysql56` | `proctor/mysql56/string-default` |
 | `mysql56` | `proctor/mysql56/parse-error` |
 
-## policy-age[#](https://proctor.apps.wayne.edu/docs/guides/check-php.html#policy-age)
+## policy-age [#](https://proctor.apps.wayne.edu/docs/guides/check-php.html#policy-age)
 
 `policy-age` warns when the policy in use is more than 60 days old (its `refreshed_on` date is more than 60 days before `--today`), or when a non-bundled policy has no `refreshed_on` date. Warning only: an old policy never fails a run, and the bundled policy may omit the date. It exists so a stopped CREED refresh robot is visible instead of silent.
 
@@ -113,7 +113,7 @@ Fix by avoiding the feature (a raw `ALTER TABLE ... CHANGE` instead of `renameCo
 | --- | --- |
 | `policy-age` | `proctor/policy-age` |
 
-## Related[#](https://proctor.apps.wayne.edu/docs/guides/check-php.html#related)
+## Related [#](https://proctor.apps.wayne.edu/docs/guides/check-php.html#related)
 
 - [Checks](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html)
 - [CI checks](https://proctor.apps.wayne.edu/docs/guides/check-ci.html)

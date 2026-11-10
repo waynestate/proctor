@@ -40,9 +40,9 @@
   <nav class="docs-nav docs-nav--sidebar" aria-label="Documentation"><ul class="docs-nav__list"><li class="docs-nav__group"><span class="docs-nav__label">Getting Started</span><ul><li><a href="../../docs/index.html">Overview</a></li><li><a href="../../docs/install.html">Install</a></li><li><a href="../../docs/guides/quick-start.html">Quick start</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Guides</span><ul><li><a href="../../docs/guides/checks-overview.html">Checks</a></li><li><a href="../../docs/guides/check-composer.html">Composer checks</a></li><li><a href="../../docs/guides/check-php.html">PHP checks</a></li><li><a href="../../docs/guides/check-ci.html">CI checks</a></li><li><a href="../../docs/guides/check-app.html">App checks</a></li><li><a href="../../docs/guides/check-wayneui.html">WayneUI checks</a></li><li><a href="../../docs/guides/overrides.html">Overrides</a></li><li><a href="../../docs/guides/deploy-gate.html">Deploy gate</a></li><li><a href="../../docs/guides/policy.html">Policy</a></li><li><a href="../../docs/guides/formats.html">Formats</a></li><li><a href="../../docs/guides/github-code-scanning.html">GitHub code scanning</a></li><li><a href="../../docs/guides/advisor.html">Coding agents (ADVISOR)</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Reference</span><ul><li><a href="../../docs/reference/commands.html">Commands</a></li><li><a href="../../docs/reference/exit-codes.html">Exit codes</a></li><li><a href="../../docs/reference/rule-ids.html">Rule ids</a></li><li><a href="../../docs/reference/configuration.html">Configuration</a></li><li><a href="../../docs/reference/proof.html" aria-current="page">Proof</a></li></ul></li><li><a href="../../docs/troubleshooting.html">Troubleshooting</a></li><li><a href="../../docs/upgrading.html">Upgrading</a></li></ul></nav>
   <div class="docs-content">
     <main id="main">
-      <article class="docs-article"><h1 id="proof">Proof<a class="docs-heading-link" aria-label="Link to this section" href="#proof">#</a></h1>
+      <article class="docs-article"><h1 id="proof"><span class="docs-heading-tail"><span>Proof</span><a class="docs-heading-link" aria-label="Link to this section" href="#proof">#</a></span></h1>
 <p>This page points at PROCTOR's proof runs against real Wayne State applications, and how the docs site and the test suite are built and run. To read a report once you have one, start with <a href="../guides/formats.html">Formats</a>.</p>
-<h2 id="last-run">Last run<a class="docs-heading-link" aria-label="Link to this section" href="#last-run">#</a></h2>
+<h2 id="last-run">Last <span class="docs-heading-tail"><span>run</span><a class="docs-heading-link" aria-label="Link to this section" href="#last-run">#</a></span></h2>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
 <thead>
 <tr>
@@ -64,9 +64,9 @@
 </tbody>
 </table></div>
 <p>To refresh this table, rerun the checks described on this page on the current commit and replace the rows with the new output. Not run here: the proof runs against real Wayne State applications, which live on a private site behind an employee sign-in.</p>
-<h2 id="proof-runs">Proof runs<a class="docs-heading-link" aria-label="Link to this section" href="#proof-runs">#</a></h2>
+<h2 id="proof-runs">Proof <span class="docs-heading-tail"><span>runs</span><a class="docs-heading-link" aria-label="Link to this section" href="#proof-runs">#</a></span></h2>
 <p>Proof runs against real Wayne State applications are on a private site, <a rel="noopener" href="https://proof.apps.wayne.edu/proctor/">proof.apps.wayne.edu/proctor</a>, behind a Wayne State employee sign-in.</p>
-<h2 id="docs">Docs<a class="docs-heading-link" aria-label="Link to this section" href="#docs">#</a></h2>
+<h2 id="docs"><span class="docs-heading-tail"><span>Docs</span><a class="docs-heading-link" aria-label="Link to this section" href="#docs">#</a></span></h2>
 <p>The documentation lives at <a rel="noopener" href="https://proctor.apps.wayne.edu/docs/">proctor.apps.wayne.edu/docs</a> and is built from <code>docs/</code> by Squire's docs builder:</p>
 <pre tabindex="0"><code>composer docs
 </code></pre>
@@ -74,7 +74,7 @@
 <pre tabindex="0"><code>composer docs:check
 </code></pre>
 <p>which runs as part of <code>composer ci</code>.</p>
-<h2 id="running-the-tests-in-docker">Running the tests in Docker<a class="docs-heading-link" aria-label="Link to this section" href="#running-the-tests-in-docker">#</a></h2>
+<h2 id="running-the-tests-in-docker">Running the tests in <span class="docs-heading-tail"><span>Docker</span><a class="docs-heading-link" aria-label="Link to this section" href="#running-the-tests-in-docker">#</a></span></h2>
 <p>Maintainers: how to build, test and release this project, and where its data comes from, is in <a rel="noopener" href="https://github.com/waynestate/proctor/blob/main/MAINTAINING.md">MAINTAINING.md</a>.</p>
 <p>No PHP is needed on the host:</p>
 <pre tabindex="0"><code>docker run --rm -v &quot;${PWD}:/app&quot; -v stack-composer-cache:/tmp/cache -w /app -e COMPOSER_PROCESS_TIMEOUT=0 composer:2.11.1@sha256:8de2184c6de224f4689e8f80ed5f5edaf0030b6b8b7839a22a2bcb6722ac87d0 sh -c &quot;composer install -q --no-progress &amp;&amp; composer ci&quot;
@@ -82,7 +82,7 @@
 <p>The <code>stack-composer-cache</code> volume keeps Composer's downloads between runs; Docker creates it the first time.</p>
 <p>The plain php images lack git and composer, so 22 tests fail there; the composer image above carries both tools.</p>
 <p>Strongly recommended: a git.wayne.edu instance runner.</p>
-<h2 id="related">Related<a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></h2>
+<h2 id="related"><span class="docs-heading-tail"><span>Related</span><a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></span></h2>
 <ul>
 <li><a href="../install.html">Install</a></li>
 <li><a href="commands.html">Commands</a></li>

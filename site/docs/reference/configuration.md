@@ -6,7 +6,7 @@ llms: https://proctor.apps.wayne.edu/llms.txt
 generator: Squire agent-ready
 ---
 
-# Configuration[#](https://proctor.apps.wayne.edu/docs/reference/configuration.html#configuration)
+# Configuration [#](https://proctor.apps.wayne.edu/docs/reference/configuration.html#configuration)
 
 This page lists every setting PROCTOR reads: the policy file and how it is found, the `extra.proctor` keys in composer.json, and the `policy-overrides.json` file an app can carry next to it. The environment table is generated from the source, so it stays in step with the code. The proctor keeps the answer sheet sealed; these are the only dials it has. If a run trips or fails, go to [Troubleshooting](https://proctor.apps.wayne.edu/docs/troubleshooting.html).
 
@@ -19,7 +19,7 @@ Warning
 
 None of the settings on this page take a secret. PROCTOR reads paths, dates and flags; it never asks for a token, password or key. The one nearby place credentials leak is a package source URL: a deploy token in the userinfo of a composer.json repository URL or a composer.lock source/dist URL, a `private_token`, `access_token`, `token` or `password` query parameter, or a `.npmrc` line that sets `_authToken`, `_auth` or `_password` to a literal value. The `repo-url-credentials` check warns when it sees one (the secret is masked as `***` in the message), and the fix is moving the token to `auth.json`, which is gitignored, or a CI variable, and using one registry URL without credentials.
 
-## The policy file[#](https://proctor.apps.wayne.edu/docs/reference/configuration.html#the-policy-file)
+## The policy file [#](https://proctor.apps.wayne.edu/docs/reference/configuration.html#the-policy-file)
 
 `--policy` takes a CREED-format policy file: schema_version 1, component versions with released, active_until and security_until dates, and rules (abandoned_packages, audit_severity_threshold, banned_constraints, eol_grace_days, override_max_days, override_self_approval). `override_self_approval` is `warn` or `fail` (`warn` when the key is absent) and sets the status of the `override-approver` findings; any other value is a tool error (exit 2).
 
@@ -43,7 +43,7 @@ PROCTOR carries a generated copy of the CREED reader under `src/Creed/` (namespa
 
 Weekly CREED copy refresh: a scheduled GitLab job (`creed-copy-refresh`, Mondays, an hour after CREED's policy robot) re-exports the copy from CREED main, rebuilds the docs, runs `composer creed-copy:check` and `composer ci`, and pushes to main only when both pass. A red run leaves main untouched.
 
-## extra.proctor in composer.json[#](https://proctor.apps.wayne.edu/docs/reference/configuration.html#extra-proctor-in-composer-json)
+## extra.proctor in composer.json [#](https://proctor.apps.wayne.edu/docs/reference/configuration.html#extra-proctor-in-composer-json)
 
 An app sets PROCTOR-specific switches under `extra.proctor` in its own composer.json. The two keys PROCTOR reads:
 
@@ -54,7 +54,7 @@ An app sets PROCTOR-specific switches under `extra.proctor` in its own composer.
 
 PROCTOR's own composer.json sets `wayneui.copies` to `fail`: the proctor fails the stack's own exam halls.
 
-## policy-overrides.json[#](https://proctor.apps.wayne.edu/docs/reference/configuration.html#policy-overrides-json)
+## policy-overrides.json [#](https://proctor.apps.wayne.edu/docs/reference/configuration.html#policy-overrides-json)
 
 An app can carry a `policy-overrides.json` file next to its composer.json:
 
@@ -82,7 +82,7 @@ PROCTOR rejects the file (exit 2) when an entry names a check that is not regist
 
 `approved_by` must name someone who did not write the entry; `proctor check` compares it with git blame (`override-approver`). Keep it on a line of its own and write it the way git knows the approver, ideally their WSU email. Details: [Overrides](https://proctor.apps.wayne.edu/docs/guides/overrides.html#someone-else-signs-the-note).
 
-## Related[#](https://proctor.apps.wayne.edu/docs/reference/configuration.html#related)
+## Related [#](https://proctor.apps.wayne.edu/docs/reference/configuration.html#related)
 
 - [Commands](https://proctor.apps.wayne.edu/docs/reference/commands.html)
 - [Exit codes](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html)

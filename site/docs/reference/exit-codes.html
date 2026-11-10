@@ -40,9 +40,9 @@
   <nav class="docs-nav docs-nav--sidebar" aria-label="Documentation"><ul class="docs-nav__list"><li class="docs-nav__group"><span class="docs-nav__label">Getting Started</span><ul><li><a href="../../docs/index.html">Overview</a></li><li><a href="../../docs/install.html">Install</a></li><li><a href="../../docs/guides/quick-start.html">Quick start</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Guides</span><ul><li><a href="../../docs/guides/checks-overview.html">Checks</a></li><li><a href="../../docs/guides/check-composer.html">Composer checks</a></li><li><a href="../../docs/guides/check-php.html">PHP checks</a></li><li><a href="../../docs/guides/check-ci.html">CI checks</a></li><li><a href="../../docs/guides/check-app.html">App checks</a></li><li><a href="../../docs/guides/check-wayneui.html">WayneUI checks</a></li><li><a href="../../docs/guides/overrides.html">Overrides</a></li><li><a href="../../docs/guides/deploy-gate.html">Deploy gate</a></li><li><a href="../../docs/guides/policy.html">Policy</a></li><li><a href="../../docs/guides/formats.html">Formats</a></li><li><a href="../../docs/guides/github-code-scanning.html">GitHub code scanning</a></li><li><a href="../../docs/guides/advisor.html">Coding agents (ADVISOR)</a></li></ul></li><li class="docs-nav__group"><span class="docs-nav__label">Reference</span><ul><li><a href="../../docs/reference/commands.html">Commands</a></li><li><a href="../../docs/reference/exit-codes.html" aria-current="page">Exit codes</a></li><li><a href="../../docs/reference/rule-ids.html">Rule ids</a></li><li><a href="../../docs/reference/configuration.html">Configuration</a></li><li><a href="../../docs/reference/proof.html">Proof</a></li></ul></li><li><a href="../../docs/troubleshooting.html">Troubleshooting</a></li><li><a href="../../docs/upgrading.html">Upgrading</a></li></ul></nav>
   <div class="docs-content">
     <main id="main">
-      <article class="docs-article"><h1 id="exit-codes">Exit codes<a class="docs-heading-link" aria-label="Link to this section" href="#exit-codes">#</a></h1>
+      <article class="docs-article"><h1 id="exit-codes">Exit <span class="docs-heading-tail"><span>codes</span><a class="docs-heading-link" aria-label="Link to this section" href="#exit-codes">#</a></span></h1>
 <p>This page lists the three exit codes <code>proctor check</code> and <code>proctor gate</code> end with and exactly when each one happens, so a pipeline can branch on the right one. The proctor hands back the mark sheet and leaves the hall; the code is the only word it says out loud. For what feeds the verdict, see <a href="rule-ids.html">Rule ids</a> and the <a href="../guides/checks-overview.html">checks overview</a>.</p>
-<h2 id="codes">Codes<a class="docs-heading-link" aria-label="Link to this section" href="#codes">#</a></h2>
+<h2 id="codes"><span class="docs-heading-tail"><span>Codes</span><a class="docs-heading-link" aria-label="Link to this section" href="#codes">#</a></span></h2>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
 <thead>
 <tr>
@@ -67,7 +67,7 @@
 </table></div>
 <p>A missing composer.json is not a tool error: the app gets a verdict, with php-floor failing.</p>
 <p>On a tool error every format still writes its report to stdout, next to the message on stderr: <code>text</code> prints the message as a FAIL line, <code>json</code> writes the report shape with <code>result</code> set to <code>error</code>, an <code>error</code> field carrying the message and empty findings, <code>codequality</code> lists the error as one blocker issue, and <code>sarif</code> writes a log whose single run reports an unsuccessful invocation. A pipeline can read the reason from the report instead of only from stderr.</p>
-<h2 id="proctor-gate">proctor gate<a class="docs-heading-link" aria-label="Link to this section" href="#proctor-gate">#</a></h2>
+<h2 id="proctor-gate">proctor <span class="docs-heading-tail"><span>gate</span><a class="docs-heading-link" aria-label="Link to this section" href="#proctor-gate">#</a></span></h2>
 <p>The deploy gate uses the same three numbers with deploy words (see <a href="../guides/deploy-gate.html">Deploy gate</a>):</p>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
 <thead>
@@ -92,7 +92,7 @@
 </tbody>
 </table></div>
 <p>On exit 2 the gate writes its verdict in the selected format: the JSON verdict with <code>verdict</code> set to <code>error</code>, or, for <code>text</code>, the verdict line, a FAIL line carrying the message, and a RESULT line.</p>
-<h2 id="how-a-run-ends">How a run ends<a class="docs-heading-link" aria-label="Link to this section" href="#how-a-run-ends">#</a></h2>
+<h2 id="how-a-run-ends">How a run <span class="docs-heading-tail"><span>ends</span><a class="docs-heading-link" aria-label="Link to this section" href="#how-a-run-ends">#</a></span></h2>
 <pre tabindex="0"><code class="language-mermaid">%%{init: {'theme':'base','themeVariables':{'fontFamily':'Helvetica, Arial, sans-serif','primaryColor':'#F4F1EA','primaryTextColor':'#1f2a33','primaryBorderColor':'#0C5449','lineColor':'#8A9A94'}}}%%
 flowchart LR
   run[&quot;proctor check&quot;] --&gt; ok{&quot;options and policy readable?&quot;}
@@ -107,10 +107,10 @@ flowchart LR
   class one fail
   class two trip
 </code></pre>
-<h2 id="watch-it-mark-a-paper">Watch it mark a paper<a class="docs-heading-link" aria-label="Link to this section" href="#watch-it-mark-a-paper">#</a></h2>
+<h2 id="watch-it-mark-a-paper">Watch it mark a <span class="docs-heading-tail"><span>paper</span><a class="docs-heading-link" aria-label="Link to this section" href="#watch-it-mark-a-paper">#</a></span></h2>
 <p>The answer sheet from the front page, handed over finished:</p>
 <p><img src="../readme/marking.jpg" alt="The front page's answer sheet: five steps from 'pencils up' to 'resit, pencils down', nine bubbles filled, question 3 circled in red pen with the fix in the margin, the fail struck through and a PASS stamp." /></p>
-<h2 id="related">Related<a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></h2>
+<h2 id="related"><span class="docs-heading-tail"><span>Related</span><a class="docs-heading-link" aria-label="Link to this section" href="#related">#</a></span></h2>
 <ul>
 <li><a href="commands.html">Commands</a></li>
 <li><a href="rule-ids.html">Rule ids</a></li>
