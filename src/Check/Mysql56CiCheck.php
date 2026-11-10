@@ -29,6 +29,11 @@ use Symfony\Component\Yaml\Yaml;
  * - a top-level job named mysql56-migrate (the component's default job name,
  *   or the app's own job that runs the migrations on 5.6).
  *
+ * When one of those holds, the check earns one info note, `held`, on the
+ * pipeline file: visible in the report, not counted, and never in the deploy
+ * gate, the way script-pair's squire-owned and single-os notes work. It lets
+ * Rollcall tell an app that has the job from one with nothing to migrate.
+ *
  * No finding when the app has no database/migrations/ directory (or it holds
  * no *.php file), when there is no .gitlab-ci.yml, or when the file does not
  * parse: ci-pipelines and preflight-gates report both. With nothing to warn
@@ -78,7 +83,15 @@ final class Mysql56CiCheck implements CheckInterface
         }
 
         if ($this->runsMigrationsAgainst56($data)) {
-            return [];
+            return [new Finding(
+                $this->id(),
+                Finding::STATUS_INFO,
+                'migrations in database/migrations/ run against MySQL 5.6 in CI (the mysql56-migrate job)',
+                self::GITLAB_CI,
+                1,
+                null,
+                'held',
+            )];
         }
 
         return [new Finding(

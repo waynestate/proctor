@@ -14,9 +14,9 @@ use Waynestate\Proctor\Creed\Policy;
 
 /**
  * Tests the Mysql56CiCheck on temp app dirs: an app with migrations must run
- * them against MySQL 5.6 in CI (CREED databases), and the check stays silent
- * for an app without migrations, without a pipeline, or with Preflight's
- * mysql56-migrate component wired in.
+ * them against MySQL 5.6 in CI (CREED databases). The check stays silent for
+ * an app without migrations or without a pipeline, warns when the pipeline
+ * never runs the migrations, and earns a held info note when it does.
  */
 final class Mysql56CiCheckTest extends TestCase
 {
@@ -81,7 +81,7 @@ final class Mysql56CiCheckTest extends TestCase
         );
     }
 
-    public function testAnIncludeOfTheMysql56MigrateComponentIsSilent(): void
+    public function testAnIncludeOfTheMysql56MigrateComponentEarnsAHeldNote(): void
     {
         $this->writeMigration();
         $this->writePipeline(<<<'YAML'
@@ -90,10 +90,10 @@ include:
   - component: $CI_SERVER_FQDN/enterprise-apps/preflight/mysql56-migrate@0.6.0
 YAML);
 
-        self::assertSame([], $this->runCheck());
+        $this->assertHeldNote($this->runCheck());
     }
 
-    public function testAJobNamedMysql56MigrateIsSilent(): void
+    public function testAJobNamedMysql56MigrateEarnsAHeldNote(): void
     {
         $this->writeMigration();
         $this->writePipeline(<<<'YAML'
@@ -103,7 +103,17 @@ mysql56-migrate:
     - php artisan migrate --force
 YAML);
 
-        self::assertSame([], $this->runCheck());
+        $findings = $this->runCheck();
+
+        $this->assertHeldNote($findings);
+
+        // The note is visible but not counted: no warning or fail rides with
+        // it, so the result and the exit code stay put.
+        $counted = array_values(array_filter(
+            $findings,
+            static fn(Finding $finding): bool => $finding->status !== Finding::STATUS_INFO,
+        ));
+        self::assertSame([], $counted, 'the held note must not be counted as a warning or fail');
     }
 
     public function testTheCheckIsRegisteredAndNotInTheDeployGate(): void
@@ -119,6 +129,26 @@ YAML);
     private function runCheck(): array
     {
         return (new Mysql56CiCheck())->run($this->context());
+    }
+
+    /**
+     * Asserts the single held info note the check earns when the pipeline
+     * runs the migrations against MySQL 5.6.
+     *
+     * @param list<Finding> $findings
+     */
+    private function assertHeldNote(array $findings): void
+    {
+        self::assertCount(1, $findings);
+        self::assertSame('mysql56-ci', $findings[0]->checkId);
+        self::assertSame(Finding::STATUS_INFO, $findings[0]->status);
+        self::assertSame('proctor/mysql56-ci/held', $findings[0]->ruleId);
+        self::assertSame('.gitlab-ci.yml', $findings[0]->path);
+        self::assertSame(1, $findings[0]->line);
+        self::assertSame(
+            'migrations in database/migrations/ run against MySQL 5.6 in CI (the mysql56-migrate job)',
+            $findings[0]->message,
+        );
     }
 
     /**

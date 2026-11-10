@@ -168,6 +168,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/preflight-gates/no-proctor-job',
         // mysql56-ci
         'proctor/mysql56-ci/no-job',
+        'proctor/mysql56-ci/held',
         // composer-audit
         'proctor/composer-audit/advisory',
         'proctor/composer-audit/abandoned',

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added: `mysql56-ci` adds an info note `proctor/mysql56-ci/held` when an app with migrations runs the `mysql56-migrate` job, so Rollcall can count held, missing and not-applicable apps (D-079). Info notes are not counted and never fail the gate.
+
 ## 0.15.0 (2026-11-10)
 
 - Added: `mysql56-ci` warns when an app has migrations but its pipeline never runs them against MySQL 5.6 (Preflight's `mysql56-migrate` component); `preflight-gates` treats `mysql56-migrate` as a gate (D-078).

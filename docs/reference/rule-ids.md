@@ -106,6 +106,7 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `preflight-gates` | `proctor/preflight-gates/allow-failure` |
 | `preflight-gates` | `proctor/preflight-gates/no-proctor-job` |
 | `mysql56-ci` | `proctor/mysql56-ci/no-job` |
+| `mysql56-ci` | `proctor/mysql56-ci/held` |
 | `composer-audit` | `proctor/composer-audit` |
 | `composer-audit` | `proctor/composer-audit/advisory` |
 | `composer-audit` | `proctor/composer-audit/abandoned` |
