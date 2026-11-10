@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Upgrading | PROCTOR docs</title>
 <meta name="description" content="How to upgrade PROCTOR to a newer release and note the changes that affect your runs.">
-<meta name="docs-version" content="0.12.0">
+<meta name="docs-version" content="0.13.0">
 <link rel="stylesheet" href="../assets/wayne-ui/wayne-ui.css">
 <link rel="stylesheet" href="../assets/docs.css">
 <link rel="stylesheet" href="../docs/theme/proctor.css">
@@ -20,7 +20,7 @@
     <a class="masthead__brand" href="../index.html">
       <img class="masthead__mark" src="../brand/proctor-avatar-256.png" width="34" height="34" alt="">
       <span class="masthead__name">PROCTOR</span>
-      <span class="masthead__form">Form 0.12.0</span>
+      <span class="masthead__form">Form 0.13.0</span>
     </a>
     <nav class="masthead__nav" aria-label="Site">
       <a href="../index.html#questions">Questions</a>
@@ -42,13 +42,50 @@
     <main id="main">
       <article class="docs-article"><h1 id="upgrading"><span class="docs-heading-tail"><span>Upgrading</span><a class="docs-heading-link" aria-label="Link to this section" href="#upgrading">#</a></span></h1>
 <p>PROCTOR is the invigilator, so upgrading it is a seat change, not a new exam: same hall, fresher pen. This page tells you how to move an app from one PROCTOR release to the next and which changes affect your runs. Start with the release that has a break, then work down to the additive ones.</p>
+<h2 id="0-13-0"><span class="docs-heading-tail"><span>0.13.0</span><a class="docs-heading-link" aria-label="Link to this section" href="#0-13-0">#</a></span></h2>
+<p>Released 2026-11-10. This is a pre-1.0 minor: consumers that pin <code>^0.12</code> stay on 0.12.x until they move their constraint to <code>^0.13</code>. Nothing breaks: <code>composer-cooldown</code> still only warns and is not in the deploy gate, so a run that passed on 0.12.0 still passes. The proctor now reads the cooldown from the rule book instead of reciting it from memory: the period and the exemptions come from the CREED policy, and an app that waits less than the policy asks gets a warning.</p>
+<h3 id="breaking"><span class="docs-heading-tail"><span>Breaking</span><a class="docs-heading-link" aria-label="Link to this section" href="#breaking">#</a></span></h3>
+<ul>
+<li>None. The new finding is a warning, and a warning never changes the exit code.</li>
+</ul>
+<h3 id="added"><span class="docs-heading-tail"><span>Added</span><a class="docs-heading-link" aria-label="Link to this section" href="#added">#</a></span></h3>
+<div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Rule ids</th>
+<th>What it warns on</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>composer-cooldown</code></td>
+<td><code>proctor/composer-cooldown/too-short</code></td>
+<td>composer.json sets a <code>config.policy.cooldown.period</code> shorter than the one the CREED policy names (<code>tools.composer.cooldown.period</code>, 3 days in the bundled policy), compared in hours; a period PROCTOR cannot read is not compared</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="changed"><span class="docs-heading-tail"><span>Changed</span><a class="docs-heading-link" aria-label="Link to this section" href="#changed">#</a></span></h3>
+<ul>
+<li><code>composer-cooldown</code>'s <code>missing</code> advice names the CREED policy's period and exemptions. With the bundled policy (3 days, <code>waynestate/*</code> exempt) the message is the same as in 0.12.0; a custom policy (<code>--policy</code>) with another period or ignore list changes the example it prints.</li>
+<li>The generated CREED reader in <code>src/Creed</code> is refreshed from CREED 0.1.10, which adds <code>Policy::toolCooldownPeriod()</code> and <code>Policy::toolCooldownIgnore()</code>.</li>
+</ul>
+<h3 id="deprecated"><span class="docs-heading-tail"><span>Deprecated</span><a class="docs-heading-link" aria-label="Link to this section" href="#deprecated">#</a></span></h3>
+<ul>
+<li>None recorded so far.</li>
+</ul>
+<h3 id="steps"><span class="docs-heading-tail"><span>Steps</span><a class="docs-heading-link" aria-label="Link to this section" href="#steps">#</a></span></h3>
+<ol>
+<li>Move the PROCTOR constraint in your composer.json from <code>^0.12</code> to <code>^0.13</code>, then apply it with <code>composer require waynestate/proctor --dev</code>.</li>
+<li>If <code>proctor check</code> now warns <code>too-short</code>, raise <code>config.policy.cooldown.period</code> in composer.json to at least the policy's period (<code>&quot;3 days&quot;</code> for the stack), then refresh the lock's content hash with <code>composer update --lock</code>.</li>
+</ol>
 <h2 id="0-12-0"><span class="docs-heading-tail"><span>0.12.0</span><a class="docs-heading-link" aria-label="Link to this section" href="#0-12-0">#</a></span></h2>
 <p>Released 2026-11-10. This is a pre-1.0 minor: consumers that pin <code>^0.11</code> stay on 0.11.x until they move their constraint to <code>^0.12</code>. Nothing breaks: the two new checks only warn and are not in the deploy gate, so a run that passed on 0.11.2 still passes and a deploy that went ahead still goes ahead. Expect new warnings when your composer.json sets no release cooldown, when git does not track your <code>composer.lock</code>, or when a CI component other than Preflight's is included at a moving ref. Two new rules for the hall: wait three days before trusting a fresh package, and hand in the lock you actually wrote.</p>
-<h3 id="breaking"><span class="docs-heading-tail"><span>Breaking</span><a class="docs-heading-link" aria-label="Link to this section" href="#breaking">#</a></span></h3>
+<h3 id="breaking-1"><span class="docs-heading-tail"><span>Breaking</span><a class="docs-heading-link" aria-label="Link to this section" href="#breaking-1">#</a></span></h3>
 <ul>
 <li>None. The new findings are warnings, and a warning never changes the exit code.</li>
 </ul>
-<h3 id="added"><span class="docs-heading-tail"><span>Added</span><a class="docs-heading-link" aria-label="Link to this section" href="#added">#</a></span></h3>
+<h3 id="added-1"><span class="docs-heading-tail"><span>Added</span><a class="docs-heading-link" aria-label="Link to this section" href="#added-1">#</a></span></h3>
 <p>The new checks only warn, never fail, and are not in the deploy gate:</p>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
 <thead>
@@ -72,16 +109,16 @@
 </tbody>
 </table></div>
 <p><code>lock-tracked</code> runs git, so ADVISOR's in-process <code>proctor_check</code> skips it; <code>composer-cooldown</code> runs there too.</p>
-<h3 id="changed"><span class="docs-heading-tail"><span>Changed</span><a class="docs-heading-link" aria-label="Link to this section" href="#changed">#</a></span></h3>
+<h3 id="changed-1"><span class="docs-heading-tail"><span>Changed</span><a class="docs-heading-link" aria-label="Link to this section" href="#changed-1">#</a></span></h3>
 <ul>
 <li><code>preflight-pinned</code> warns on any CI component included at a moving ref, not only Preflight's (CREED practice 23). The script-override warning stays Preflight's.</li>
 <li><code>composer-audit</code> runs the audit once more when the first run prints no JSON, and reports could-not-run only when the second run fails too, so a passing deploy gate is less often waived for missing advisory data.</li>
 </ul>
-<h3 id="deprecated"><span class="docs-heading-tail"><span>Deprecated</span><a class="docs-heading-link" aria-label="Link to this section" href="#deprecated">#</a></span></h3>
+<h3 id="deprecated-1"><span class="docs-heading-tail"><span>Deprecated</span><a class="docs-heading-link" aria-label="Link to this section" href="#deprecated-1">#</a></span></h3>
 <ul>
 <li>None recorded so far.</li>
 </ul>
-<h3 id="steps"><span class="docs-heading-tail"><span>Steps</span><a class="docs-heading-link" aria-label="Link to this section" href="#steps">#</a></span></h3>
+<h3 id="steps-1"><span class="docs-heading-tail"><span>Steps</span><a class="docs-heading-link" aria-label="Link to this section" href="#steps-1">#</a></span></h3>
 <ol>
 <li>
 <p>Move the PROCTOR constraint in your composer.json from <code>^0.11</code> to <code>^0.12</code>, then apply it with <code>composer require waynestate/proctor --dev</code>.</p>
@@ -103,11 +140,11 @@
 </ul>
 <h2 id="0-11-2"><span class="docs-heading-tail"><span>0.11.2</span><a class="docs-heading-link" aria-label="Link to this section" href="#0-11-2">#</a></span></h2>
 <p>Released 2026-11-09. A patch: <code>^0.11</code> picks it up with <code>composer update waynestate/proctor</code>. No check, option, verdict or exit code changes: this release carries the docs, the version mentions, PROCTOR's own CI on Composer 2.11.1 and Preflight 0.5.0, and the deploy kit on Squire 0.10.2. Same exam, freshly photocopied.</p>
-<h3 id="breaking-1"><span class="docs-heading-tail"><span>Breaking</span><a class="docs-heading-link" aria-label="Link to this section" href="#breaking-1">#</a></span></h3>
+<h3 id="breaking-2"><span class="docs-heading-tail"><span>Breaking</span><a class="docs-heading-link" aria-label="Link to this section" href="#breaking-2">#</a></span></h3>
 <ul>
 <li>None.</li>
 </ul>
-<h3 id="steps-1"><span class="docs-heading-tail"><span>Steps</span><a class="docs-heading-link" aria-label="Link to this section" href="#steps-1">#</a></span></h3>
+<h3 id="steps-2"><span class="docs-heading-tail"><span>Steps</span><a class="docs-heading-link" aria-label="Link to this section" href="#steps-2">#</a></span></h3>
 <ol>
 <li>Run <code>composer update waynestate/proctor</code>.</li>
 </ol>
@@ -117,23 +154,23 @@
 </ul>
 <h2 id="0-11-1"><span class="docs-heading-tail"><span>0.11.1</span><a class="docs-heading-link" aria-label="Link to this section" href="#0-11-1">#</a></span></h2>
 <p>Released 2026-11-09. A patch: <code>^0.11</code> picks it up with <code>composer update waynestate/proctor</code>. <code>proctor check</code> and <code>proctor gate</code> run exactly as on 0.11.0, so every verdict and exit code stays the same. The one change is inside ADVISOR: its in-process <code>proctor_check</code> no longer opens an env file git does not list. The proctor still walks the hall, but no longer reads a paper that was never handed in.</p>
-<h3 id="breaking-2"><span class="docs-heading-tail"><span>Breaking</span><a class="docs-heading-link" aria-label="Link to this section" href="#breaking-2">#</a></span></h3>
+<h3 id="breaking-3"><span class="docs-heading-tail"><span>Breaking</span><a class="docs-heading-link" aria-label="Link to this section" href="#breaking-3">#</a></span></h3>
 <ul>
 <li>None.</li>
 </ul>
-<h3 id="added-1"><span class="docs-heading-tail"><span>Added</span><a class="docs-heading-link" aria-label="Link to this section" href="#added-1">#</a></span></h3>
+<h3 id="added-2"><span class="docs-heading-tail"><span>Added</span><a class="docs-heading-link" aria-label="Link to this section" href="#added-2">#</a></span></h3>
 <ul>
 <li><code>proctor_check</code> answers carry <code>skipped_files</code>: each env file a check that ran did not open, with <code>id</code>, <code>file</code> and <code>reason</code> (<code>not tracked by git</code>, or <code>no git index to read</code>). See <a href="guides/advisor.html#what-is-skipped-and-why">Use PROCTOR from your coding agent</a>.</li>
 </ul>
-<h3 id="changed-1"><span class="docs-heading-tail"><span>Changed</span><a class="docs-heading-link" aria-label="Link to this section" href="#changed-1">#</a></span></h3>
+<h3 id="changed-2"><span class="docs-heading-tail"><span>Changed</span><a class="docs-heading-link" aria-label="Link to this section" href="#changed-2">#</a></span></h3>
 <ul>
 <li>In ADVISOR, <code>app-debug</code>, <code>csp-unsafe-inline</code>, <code>mysql-eol</code> and <code>mysql-minimum</code> grade an env file (<code>.env.production</code>, <code>.env.example</code>, <code>.env.squire.example</code>) only when git lists it, the rule <code>app-key</code> and <code>vite-secrets</code> follow in a full run. PROCTOR reads git's index in PHP for this, so the tool still starts no subprocess. An agent that saw an <code>app-debug</code> or <code>csp-unsafe-inline</code> warning on a local, uncommitted <code>.env.production</code> no longer sees it there; <code>vendor/bin/proctor check</code> still reports it.</li>
 </ul>
-<h3 id="deprecated-1"><span class="docs-heading-tail"><span>Deprecated</span><a class="docs-heading-link" aria-label="Link to this section" href="#deprecated-1">#</a></span></h3>
+<h3 id="deprecated-2"><span class="docs-heading-tail"><span>Deprecated</span><a class="docs-heading-link" aria-label="Link to this section" href="#deprecated-2">#</a></span></h3>
 <ul>
 <li>None.</li>
 </ul>
-<h3 id="steps-2"><span class="docs-heading-tail"><span>Steps</span><a class="docs-heading-link" aria-label="Link to this section" href="#steps-2">#</a></span></h3>
+<h3 id="steps-3"><span class="docs-heading-tail"><span>Steps</span><a class="docs-heading-link" aria-label="Link to this section" href="#steps-3">#</a></span></h3>
 <ol>
 <li>Run <code>composer update waynestate/proctor</code>.</li>
 <li>If your agent should grade an env file through ADVISOR, commit it (<code>git add</code>); an example file such as <code>.env.example</code> is meant to be committed anyway.</li>
@@ -144,11 +181,11 @@
 </ul>
 <h2 id="0-11-0"><span class="docs-heading-tail"><span>0.11.0</span><a class="docs-heading-link" aria-label="Link to this section" href="#0-11-0">#</a></span></h2>
 <p>Released 2026-11-09. This is a pre-1.0 minor: consumers that pin <code>^0.10</code> stay on 0.10.x until they move their constraint to <code>^0.11</code>. Nothing breaks: the one new check only warns and is not in the deploy gate, and the new <code>--record</code> option changes nothing until you pass it, so a run that passed on 0.10.0 still passes and a deploy that went ahead still goes ahead. Expect a new warning when <code>.gitattributes</code> does not pin your server files to LF.</p>
-<h3 id="breaking-3"><span class="docs-heading-tail"><span>Breaking</span><a class="docs-heading-link" aria-label="Link to this section" href="#breaking-3">#</a></span></h3>
+<h3 id="breaking-4"><span class="docs-heading-tail"><span>Breaking</span><a class="docs-heading-link" aria-label="Link to this section" href="#breaking-4">#</a></span></h3>
 <ul>
 <li>None. The new check's findings are warnings, and a warning never changes the exit code.</li>
 </ul>
-<h3 id="added-2"><span class="docs-heading-tail"><span>Added</span><a class="docs-heading-link" aria-label="Link to this section" href="#added-2">#</a></span></h3>
+<h3 id="added-3"><span class="docs-heading-tail"><span>Added</span><a class="docs-heading-link" aria-label="Link to this section" href="#added-3">#</a></span></h3>
 <p>The new check only warns, never fails, and is not in the deploy gate:</p>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
 <thead>
@@ -167,15 +204,15 @@
 </tbody>
 </table></div>
 <p><code>proctor check --record=&lt;file&gt;</code> also writes the JSON report (byte for byte what <code>--format=json</code> prints) to a file, whatever <code>--format</code> prints, so one CI run can feed both the merge request's Code Quality and Rollcall, which reads <code>proctor.json</code> from the <code>proctor</code> job's artifacts (see <a href="guides/check-ci.html">CI checks</a>). The exit code is the check's own; a record PROCTOR cannot write is a tool error (exit 2). <code>proctor gate --record</code> shares the same file writer but writes the gate's verdict (<code>command: gate</code>, <code>verdict</code>, <code>summary</code>, each finding's <code>gate</code> outcome), a different JSON from the check report; keep it for the next <code>--baseline</code>, and do not hand it to Rollcall.</p>
-<h3 id="changed-2"><span class="docs-heading-tail"><span>Changed</span><a class="docs-heading-link" aria-label="Link to this section" href="#changed-2">#</a></span></h3>
+<h3 id="changed-3"><span class="docs-heading-tail"><span>Changed</span><a class="docs-heading-link" aria-label="Link to this section" href="#changed-3">#</a></span></h3>
 <ul>
 <li>None that changes a run.</li>
 </ul>
-<h3 id="deprecated-2"><span class="docs-heading-tail"><span>Deprecated</span><a class="docs-heading-link" aria-label="Link to this section" href="#deprecated-2">#</a></span></h3>
+<h3 id="deprecated-3"><span class="docs-heading-tail"><span>Deprecated</span><a class="docs-heading-link" aria-label="Link to this section" href="#deprecated-3">#</a></span></h3>
 <ul>
 <li>None recorded so far.</li>
 </ul>
-<h3 id="steps-3"><span class="docs-heading-tail"><span>Steps</span><a class="docs-heading-link" aria-label="Link to this section" href="#steps-3">#</a></span></h3>
+<h3 id="steps-4"><span class="docs-heading-tail"><span>Steps</span><a class="docs-heading-link" aria-label="Link to this section" href="#steps-4">#</a></span></h3>
 <ol>
 <li>
 <p>Move the PROCTOR constraint in your composer.json from <code>^0.10</code> to <code>^0.11</code>, then apply it with <code>composer require waynestate/proctor --dev</code>.</p>
@@ -195,11 +232,11 @@
 </ul>
 <h2 id="0-10-0"><span class="docs-heading-tail"><span>0.10.0</span><a class="docs-heading-link" aria-label="Link to this section" href="#0-10-0">#</a></span></h2>
 <p>Released 2026-11-09. This is a pre-1.0 minor: consumers that pin <code>^0.9</code> stay on 0.9.x until they move their constraint to <code>^0.10</code>. Everything new only warns: nine new checks and two new rules on existing checks, none of them in the deploy gate, so a run that passed on 0.9.0 still passes and a deploy that went ahead still goes ahead. Expect new warnings in the report.</p>
-<h3 id="breaking-4"><span class="docs-heading-tail"><span>Breaking</span><a class="docs-heading-link" aria-label="Link to this section" href="#breaking-4">#</a></span></h3>
+<h3 id="breaking-5"><span class="docs-heading-tail"><span>Breaking</span><a class="docs-heading-link" aria-label="Link to this section" href="#breaking-5">#</a></span></h3>
 <ul>
 <li>None. Every new finding is a warning, and a warning never changes the exit code.</li>
 </ul>
-<h3 id="added-3"><span class="docs-heading-tail"><span>Added</span><a class="docs-heading-link" aria-label="Link to this section" href="#added-3">#</a></span></h3>
+<h3 id="added-4"><span class="docs-heading-tail"><span>Added</span><a class="docs-heading-link" aria-label="Link to this section" href="#added-4">#</a></span></h3>
 <p>Each of these checks only warns, never fails, and none is in the deploy gate:</p>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
 <thead>
@@ -258,16 +295,16 @@
 </tbody>
 </table></div>
 <p>Two existing checks gain a rule, and both only warn: <code>crlf-deploy-script</code> warns (<code>proctor/crlf-deploy-script/no-gitattributes</code>) when the app has a deploy script and .gitattributes does not pin <code>*.sh</code> to <code>eol=lf</code>, and <code>ci-pipelines</code> warns (<code>proctor/ci-pipelines/allow-overrides</code>) when a pipeline sets <code>PROCTOR_ALLOW_OVERRIDES</code> to 1.</p>
-<h3 id="changed-3"><span class="docs-heading-tail"><span>Changed</span><a class="docs-heading-link" aria-label="Link to this section" href="#changed-3">#</a></span></h3>
+<h3 id="changed-4"><span class="docs-heading-tail"><span>Changed</span><a class="docs-heading-link" aria-label="Link to this section" href="#changed-4">#</a></span></h3>
 <ul>
 <li><code>display-errors</code> reads an ini value without its inline comment, so <code>display_errors = On ; note</code> warns.</li>
 <li>The portability check's message says &quot;analyze&quot; (US spelling); a script that matched the old text needs the new one.</li>
 </ul>
-<h3 id="deprecated-3"><span class="docs-heading-tail"><span>Deprecated</span><a class="docs-heading-link" aria-label="Link to this section" href="#deprecated-3">#</a></span></h3>
+<h3 id="deprecated-4"><span class="docs-heading-tail"><span>Deprecated</span><a class="docs-heading-link" aria-label="Link to this section" href="#deprecated-4">#</a></span></h3>
 <ul>
 <li>None recorded so far.</li>
 </ul>
-<h3 id="steps-4"><span class="docs-heading-tail"><span>Steps</span><a class="docs-heading-link" aria-label="Link to this section" href="#steps-4">#</a></span></h3>
+<h3 id="steps-5"><span class="docs-heading-tail"><span>Steps</span><a class="docs-heading-link" aria-label="Link to this section" href="#steps-5">#</a></span></h3>
 <ol>
 <li>
 <p>Move the PROCTOR constraint in your composer.json from <code>^0.9</code> to <code>^0.10</code>, then apply it with <code>composer require waynestate/proctor --dev</code>.</p>
@@ -284,23 +321,23 @@
 </ul>
 <h2 id="0-9-0"><span class="docs-heading-tail"><span>0.9.0</span><a class="docs-heading-link" aria-label="Link to this section" href="#0-9-0">#</a></span></h2>
 <p>Released 2026-11-08. This is a pre-1.0 minor: consumers that pin <code>^0.8</code> stay on 0.8.x until they move their constraint to <code>^0.9</code>. Most of what is new reports without blocking (the <code>dev-only-packages</code>, <code>case-clash</code> and <code>override-approver</code> checks are not in the deploy gate, and the gate stages from CREED change nothing until CREED ships a stage), but two changes can turn a passing run into a failing one.</p>
-<h3 id="breaking-5"><span class="docs-heading-tail"><span>Breaking</span><a class="docs-heading-link" aria-label="Link to this section" href="#breaking-5">#</a></span></h3>
+<h3 id="breaking-6"><span class="docs-heading-tail"><span>Breaking</span><a class="docs-heading-link" aria-label="Link to this section" href="#breaking-6">#</a></span></h3>
 <ul>
 <li>An override may run at most 90 days past today (CREED <code>rules.override_max_days</code>). A longer one fails the overrides check (<code>proctor/overrides/too-long</code>) and is not applied, and the overrides check is in the deploy gate, so a deploy that leaned on a long override now stops. Shorten the <code>expires</code> date to 90 days or less and renew it when it runs out.</li>
 <li><code>proctor check</code> fails on three new findings: <code>dev-only-packages</code> when Laravel Boost or Debugbar sits in <code>require</code> (they install in production and expose the app's internals; move them to <code>require-dev</code>), <code>case-clash</code> when two paths differ only by letter case (they collide on macOS and Windows checkouts; rename one), and <code>override-approver</code> when CREED sets <code>rules.override_self_approval</code> to <code>fail</code> and an override's <code>approved_by</code> names someone who wrote it. None of the three is in the deploy gate.</li>
 </ul>
-<h3 id="changed-4"><span class="docs-heading-tail"><span>Changed</span><a class="docs-heading-link" aria-label="Link to this section" href="#changed-4">#</a></span></h3>
+<h3 id="changed-5"><span class="docs-heading-tail"><span>Changed</span><a class="docs-heading-link" aria-label="Link to this section" href="#changed-5">#</a></span></h3>
 <ul>
 <li><code>dev-only-packages</code> warns on Telescope and on test tools (PHPUnit, Pest, Mockery, Sail, Pail, Collision) in <code>require</code>.</li>
 <li><code>override-approver</code> warns by default (<code>rules.override_self_approval</code> absent), and reports <code>could-not-run</code>, never a pass, without git history; Preflight's proctor component clones the full history by default since its <code>git_depth</code> input.</li>
 <li>The deploy gate honors CREED's gate stages: a failure whose check the policy puts at <code>report</code> or <code>warn</code> is logged as <code>staged</code> and the deploy goes ahead. The JSON summary gains <code>staged</code> and each finding <code>stage</code>.</li>
 <li>The front page lists the supported versions from the bundled policy.</li>
 </ul>
-<h3 id="deprecated-4"><span class="docs-heading-tail"><span>Deprecated</span><a class="docs-heading-link" aria-label="Link to this section" href="#deprecated-4">#</a></span></h3>
+<h3 id="deprecated-5"><span class="docs-heading-tail"><span>Deprecated</span><a class="docs-heading-link" aria-label="Link to this section" href="#deprecated-5">#</a></span></h3>
 <ul>
 <li>None recorded so far.</li>
 </ul>
-<h3 id="steps-5"><span class="docs-heading-tail"><span>Steps</span><a class="docs-heading-link" aria-label="Link to this section" href="#steps-5">#</a></span></h3>
+<h3 id="steps-6"><span class="docs-heading-tail"><span>Steps</span><a class="docs-heading-link" aria-label="Link to this section" href="#steps-6">#</a></span></h3>
 <ol>
 <li>
 <p>Move the PROCTOR constraint in your composer.json from <code>^0.8</code> to <code>^0.9</code>, then apply it with <code>composer require waynestate/proctor --dev</code>.</p>
@@ -317,21 +354,21 @@
 </ul>
 <h2 id="0-8-0"><span class="docs-heading-tail"><span>0.8.0</span><a class="docs-heading-link" aria-label="Link to this section" href="#0-8-0">#</a></span></h2>
 <p>Released 2026-11-08. This is a pre-1.0 minor: consumers that pin <code>^0.7</code> stay on 0.7.x until they move their constraint to <code>^0.8</code>. Most of what is new is additive or a warning (the <code>mysql-eol</code> check, the <code>X-Sesame-Assertion</code> read in <code>raw-identity-header</code>, the ADVISOR module, release tags accepted by <code>preflight-pinned</code>), but one change can turn a passing run into a failing one.</p>
-<h3 id="breaking-6"><span class="docs-heading-tail"><span>Breaking</span><a class="docs-heading-link" aria-label="Link to this section" href="#breaking-6">#</a></span></h3>
+<h3 id="breaking-7"><span class="docs-heading-tail"><span>Breaking</span><a class="docs-heading-link" aria-label="Link to this section" href="#breaking-7">#</a></span></h3>
 <ul>
 <li><code>crlf-deploy-script</code> fails an app whose deploy script has Windows line endings (CRLF): the top-level <code>build.sh</code> and <code>release.sh</code>, and any <code>.sh</code> under <code>deployments/</code>, <code>deploy_scripts/</code>, <code>deploy/</code> or <code>scripts/</code>. Bash on Linux reads the carriage return as part of each command, so such a script was already broken on the host; PROCTOR now says so before the deploy does. Convert the file to LF and add <code>*.sh text eol=lf</code> to <code>.gitattributes</code>.</li>
 </ul>
-<h3 id="changed-5"><span class="docs-heading-tail"><span>Changed</span><a class="docs-heading-link" aria-label="Link to this section" href="#changed-5">#</a></span></h3>
+<h3 id="changed-6"><span class="docs-heading-tail"><span>Changed</span><a class="docs-heading-link" aria-label="Link to this section" href="#changed-6">#</a></span></h3>
 <ul>
 <li><code>mysql-eol</code> is new and warns, never fails, while Citadel's shared database server is MySQL 5.6. It grades the MySQL or MariaDB version named in a root compose file and in <code>SQUIRE_MYSQL_IMAGE</code> in <code>.env.example</code> or <code>.env.squire.example</code>: a security-only line warns with the days left, an end-of-life line warns as <code>eol_grace_expired</code> and says to move to MySQL 8.4 or later, and a floating major tag such as <code>mysql:8</code> warns until you pin a major.minor. It turns into a fail once Citadel offers a supported MySQL, so treat these warnings as the to-do list for that day.</li>
 <li><code>raw-identity-header</code> also warns on a direct read of <code>X-Sesame-Assertion</code>, the signed assertion Drawbridge sends. Only SESAME's gateway driver should read it; take the user from SESAME instead.</li>
 <li><code>preflight-pinned</code> accepts a Preflight component pinned to a full release tag such as <code>@0.3.0</code> as well as a commit SHA, so a tag pin no longer warns. A branch, <code>~latest</code> or a partial version such as <code>@0.3</code> still warns.</li>
 </ul>
-<h3 id="deprecated-5"><span class="docs-heading-tail"><span>Deprecated</span><a class="docs-heading-link" aria-label="Link to this section" href="#deprecated-5">#</a></span></h3>
+<h3 id="deprecated-6"><span class="docs-heading-tail"><span>Deprecated</span><a class="docs-heading-link" aria-label="Link to this section" href="#deprecated-6">#</a></span></h3>
 <ul>
 <li>None recorded so far.</li>
 </ul>
-<h3 id="steps-6"><span class="docs-heading-tail"><span>Steps</span><a class="docs-heading-link" aria-label="Link to this section" href="#steps-6">#</a></span></h3>
+<h3 id="steps-7"><span class="docs-heading-tail"><span>Steps</span><a class="docs-heading-link" aria-label="Link to this section" href="#steps-7">#</a></span></h3>
 <ol>
 <li>
 <p>Move the PROCTOR constraint in your composer.json from <code>^0.7</code> to <code>^0.8</code>, then apply it with <code>composer require waynestate/proctor --dev</code>.</p>
@@ -348,15 +385,15 @@
 </ul>
 <h2 id="0-7-0"><span class="docs-heading-tail"><span>0.7.0</span><a class="docs-heading-link" aria-label="Link to this section" href="#0-7-0">#</a></span></h2>
 <p>Released 2026-11-07. This is a pre-1.0 minor: consumers that pin <code>^0.6</code> stay on 0.6.x until they move their constraint to <code>^0.7</code>. Most of what is new is additive (<code>proctor gate</code>, the deploy gate, and the <code>raw-identity-header</code>, <code>env-outside-config</code>, <code>app-key</code>, <code>served-folder</code>, <code>laravel-php</code> and <code>laravel-eol</code> checks), but one change can turn a passing run into a failing one.</p>
-<h3 id="breaking-7"><span class="docs-heading-tail"><span>Breaking</span><a class="docs-heading-link" aria-label="Link to this section" href="#breaking-7">#</a></span></h3>
+<h3 id="breaking-8"><span class="docs-heading-tail"><span>Breaking</span><a class="docs-heading-link" aria-label="Link to this section" href="#breaking-8">#</a></span></h3>
 <ul>
 <li><code>node-eol</code> fails an app that pins an end-of-life Node line (Node 20 or older under the bundled policy, as of 2026-04-30). Node 20 is past the grace window, so it fails as <code>eol_grace_expired</code>, which no override softens: move to Node 22 or 24.</li>
 </ul>
-<h3 id="deprecated-6"><span class="docs-heading-tail"><span>Deprecated</span><a class="docs-heading-link" aria-label="Link to this section" href="#deprecated-6">#</a></span></h3>
+<h3 id="deprecated-7"><span class="docs-heading-tail"><span>Deprecated</span><a class="docs-heading-link" aria-label="Link to this section" href="#deprecated-7">#</a></span></h3>
 <ul>
 <li>None recorded so far.</li>
 </ul>
-<h3 id="steps-7"><span class="docs-heading-tail"><span>Steps</span><a class="docs-heading-link" aria-label="Link to this section" href="#steps-7">#</a></span></h3>
+<h3 id="steps-8"><span class="docs-heading-tail"><span>Steps</span><a class="docs-heading-link" aria-label="Link to this section" href="#steps-8">#</a></span></h3>
 <ol>
 <li>
 <p>Move the PROCTOR constraint in your composer.json from <code>^0.6</code> to <code>^0.7</code>, then apply it with <code>composer require waynestate/proctor --dev</code>.</p>
@@ -373,21 +410,21 @@
 </ul>
 <h2 id="0-6-0"><span class="docs-heading-tail"><span>0.6.0</span><a class="docs-heading-link" aria-label="Link to this section" href="#0-6-0">#</a></span></h2>
 <p>Released 2026-11-05. This is a pre-1.0 minor: consumers that pin <code>^0.5</code> stay on 0.5.x until they move their constraint to <code>^0.6</code>. Most of what is new is additive, but three changes can turn a passing run into a failing one.</p>
-<h3 id="breaking-8"><span class="docs-heading-tail"><span>Breaking</span><a class="docs-heading-link" aria-label="Link to this section" href="#breaking-8">#</a></span></h3>
+<h3 id="breaking-9"><span class="docs-heading-tail"><span>Breaking</span><a class="docs-heading-link" aria-label="Link to this section" href="#breaking-9">#</a></span></h3>
 <ul>
 <li><code>composer-audit</code> fails when the composer executable is not on PATH or the app has no composer.lock (rule id <code>proctor/composer-audit/skipped</code>, message starting with <code>not audited:</code>). An app whose audit could not run used to pass with an info line; it now exits non-zero until Composer is installed, the lock is committed, or an active <code>composer-audit</code> override with a reason and an expiry downgrades the fail to a warning.</li>
 <li><code>composer-audit</code> fails each ignore entry in composer.json that no active <code>composer-audit</code> override backs (rule id <code>proctor/composer-audit/unbacked-ignore</code>). An app that silences audit results in its own composer.json used to earn only a count warning; it now exits non-zero until every entry is backed by an active override whose <code>advisory</code> field names the entry's advisory id, whose <code>package</code> field matches the entry's package, or that carries no scope at all. Steps: record one such entry per unbacked ignore in policy-overrides.json with a reason and an expiry, keep the composer.json ignore until the override expires, then remove the ignore entry.</li>
 <li><strong>Refused <code>--policy</code> and <code>--today</code> in CI.</strong> In CI (any of <code>CI</code>, <code>GITLAB_CI</code> or <code>GITHUB_ACTIONS</code> set to a value other than <code>0</code> or <code>false</code>), <code>proctor check</code> now refuses <code>--policy</code> and <code>--today</code> with a tool error (exit 2) unless the job sets <code>PROCTOR_ALLOW_OVERRIDES=1</code>. In CI the policy and the date must come from the stack, not from the app being checked: a pipeline that could pass its own policy or date could grade itself. Pipelines that pass these options must either set <code>PROCTOR_ALLOW_OVERRIDES: &quot;1&quot;</code> as a variable of a trusted job (a protected or group-level CI variable, never the app's own <code>.gitlab-ci.yml</code>) or drop the option: name the policy with the <code>PROCTOR_POLICY</code> environment variable instead of <code>--policy</code> (it stays allowed in CI), and drop <code>--today</code> or let the trusted job allow it. Outside CI nothing changes.</li>
 </ul>
-<h3 id="changed-6"><span class="docs-heading-tail"><span>Changed</span><a class="docs-heading-link" aria-label="Link to this section" href="#changed-6">#</a></span></h3>
+<h3 id="changed-7"><span class="docs-heading-tail"><span>Changed</span><a class="docs-heading-link" aria-label="Link to this section" href="#changed-7">#</a></span></h3>
 <ul>
 <li>An app that failed only because of a dev-only advisory now warns instead. An advisory on a package that composer.lock lists only in <code>packages-dev</code> is a warning at any severity, with the message ending in <code> [dev dependency]</code>; a name in both lists counts as runtime and still fails at or above the threshold. No action is required unless you want the dev dependency updated, because dev tools run in CI.</li>
 </ul>
-<h3 id="deprecated-7"><span class="docs-heading-tail"><span>Deprecated</span><a class="docs-heading-link" aria-label="Link to this section" href="#deprecated-7">#</a></span></h3>
+<h3 id="deprecated-8"><span class="docs-heading-tail"><span>Deprecated</span><a class="docs-heading-link" aria-label="Link to this section" href="#deprecated-8">#</a></span></h3>
 <ul>
 <li>None recorded so far.</li>
 </ul>
-<h3 id="steps-8"><span class="docs-heading-tail"><span>Steps</span><a class="docs-heading-link" aria-label="Link to this section" href="#steps-8">#</a></span></h3>
+<h3 id="steps-9"><span class="docs-heading-tail"><span>Steps</span><a class="docs-heading-link" aria-label="Link to this section" href="#steps-9">#</a></span></h3>
 <ol>
 <li>
 <p>Move the PROCTOR constraint in your composer.json from <code>^0.5</code> to <code>^0.6</code>, then apply it with <code>composer require waynestate/proctor --dev</code>.</p>
@@ -412,16 +449,16 @@
 </ul>
 <h2 id="0-5-0"><span class="docs-heading-tail"><span>0.5.0</span><a class="docs-heading-link" aria-label="Link to this section" href="#0-5-0">#</a></span></h2>
 <p>Released 2026-11-03. This is a pre-1.0 minor: consumers that pin <code>^0.4</code> stay on 0.4.x until they move their constraint to <code>^0.5</code>. Most of what is new warns and never fails, but one check can now turn a passing run into a failing one.</p>
-<h3 id="breaking-9"><span class="docs-heading-tail"><span>Breaking</span><a class="docs-heading-link" aria-label="Link to this section" href="#breaking-9">#</a></span></h3>
+<h3 id="breaking-10"><span class="docs-heading-tail"><span>Breaking</span><a class="docs-heading-link" aria-label="Link to this section" href="#breaking-10">#</a></span></h3>
 <ul>
 <li><code>composer-audit</code> fails when <code>composer audit</code> runs but its output is not parseable JSON (rule id <code>proctor/composer-audit/could-not-run</code>, message starting <code>not audited:</code>). A run that audited nothing used to pass quietly; it now exits non-zero, so an app whose audit cannot run will go red until the audit is fixed.</li>
 <li>Consumers that pin <code>^0.4</code> stay on 0.4.x until they move their constraint to <code>^0.5</code>.</li>
 </ul>
-<h3 id="deprecated-8"><span class="docs-heading-tail"><span>Deprecated</span><a class="docs-heading-link" aria-label="Link to this section" href="#deprecated-8">#</a></span></h3>
+<h3 id="deprecated-9"><span class="docs-heading-tail"><span>Deprecated</span><a class="docs-heading-link" aria-label="Link to this section" href="#deprecated-9">#</a></span></h3>
 <ul>
 <li>None recorded for this release.</li>
 </ul>
-<h3 id="steps-9"><span class="docs-heading-tail"><span>Steps</span><a class="docs-heading-link" aria-label="Link to this section" href="#steps-9">#</a></span></h3>
+<h3 id="steps-10"><span class="docs-heading-tail"><span>Steps</span><a class="docs-heading-link" aria-label="Link to this section" href="#steps-10">#</a></span></h3>
 <ol>
 <li>
 <p>Move the PROCTOR constraint in your composer.json from <code>^0.4</code> to <code>^0.5</code>.</p>
@@ -450,15 +487,15 @@
 </ul>
 <h2 id="0-4-0"><span class="docs-heading-tail"><span>0.4.0</span><a class="docs-heading-link" aria-label="Link to this section" href="#0-4-0">#</a></span></h2>
 <p>Released 2026-11-03. This is a pre-1.0 minor: consumers that pin <code>^0.3</code> stay on 0.3.x until they move their constraint to <code>^0.4</code>. The new checks warn and never fail.</p>
-<h3 id="breaking-10"><span class="docs-heading-tail"><span>Breaking</span><a class="docs-heading-link" aria-label="Link to this section" href="#breaking-10">#</a></span></h3>
+<h3 id="breaking-11"><span class="docs-heading-tail"><span>Breaking</span><a class="docs-heading-link" aria-label="Link to this section" href="#breaking-11">#</a></span></h3>
 <ul>
 <li>Consumers that pin <code>^0.3</code> stay on 0.3.x until they move their constraint to <code>^0.4</code>. That constraint move is the only break in this release.</li>
 </ul>
-<h3 id="deprecated-9"><span class="docs-heading-tail"><span>Deprecated</span><a class="docs-heading-link" aria-label="Link to this section" href="#deprecated-9">#</a></span></h3>
+<h3 id="deprecated-10"><span class="docs-heading-tail"><span>Deprecated</span><a class="docs-heading-link" aria-label="Link to this section" href="#deprecated-10">#</a></span></h3>
 <ul>
 <li>None recorded for this release.</li>
 </ul>
-<h3 id="steps-10"><span class="docs-heading-tail"><span>Steps</span><a class="docs-heading-link" aria-label="Link to this section" href="#steps-10">#</a></span></h3>
+<h3 id="steps-11"><span class="docs-heading-tail"><span>Steps</span><a class="docs-heading-link" aria-label="Link to this section" href="#steps-11">#</a></span></h3>
 <ol>
 <li>
 <p>Move the PROCTOR constraint in your composer.json from <code>^0.3</code> to <code>^0.4</code>.</p>
@@ -503,10 +540,10 @@
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../docs/troubleshooting.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">Troubleshooting</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#0-12-0">0.12.0</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#added">Added</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#changed">Changed</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#deprecated">Deprecated</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify">How to verify</a></li><li class="docs-toc__item"><a href="#0-11-2">0.11.2</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking-1">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps-1">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify-1">How to verify</a></li><li class="docs-toc__item"><a href="#0-11-1">0.11.1</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking-2">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#added-1">Added</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#changed-1">Changed</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#deprecated-1">Deprecated</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps-2">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify-2">How to verify</a></li><li class="docs-toc__item"><a href="#0-11-0">0.11.0</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking-3">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#added-2">Added</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#changed-2">Changed</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#deprecated-2">Deprecated</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps-3">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify-3">How to verify</a></li><li class="docs-toc__item"><a href="#0-10-0">0.10.0</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking-4">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#added-3">Added</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#changed-3">Changed</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#deprecated-3">Deprecated</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps-4">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify-4">How to verify</a></li><li class="docs-toc__item"><a href="#0-9-0">0.9.0</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking-5">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#changed-4">Changed</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#deprecated-4">Deprecated</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps-5">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify-5">How to verify</a></li><li class="docs-toc__item"><a href="#0-8-0">0.8.0</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking-6">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#changed-5">Changed</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#deprecated-5">Deprecated</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps-6">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify-6">How to verify</a></li><li class="docs-toc__item"><a href="#0-7-0">0.7.0</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking-7">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#deprecated-6">Deprecated</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps-7">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify-7">How to verify</a></li><li class="docs-toc__item"><a href="#0-6-0">0.6.0</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking-8">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#changed-6">Changed</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#deprecated-7">Deprecated</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps-8">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify-8">How to verify</a></li><li class="docs-toc__item"><a href="#0-5-0">0.5.0</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking-9">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#deprecated-8">Deprecated</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps-9">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify-9">How to verify</a></li><li class="docs-toc__item"><a href="#0-4-0">0.4.0</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking-10">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#deprecated-9">Deprecated</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps-10">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify-10">How to verify</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#0-13-0">0.13.0</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#added">Added</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#changed">Changed</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#deprecated">Deprecated</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps">Steps</a></li><li class="docs-toc__item"><a href="#0-12-0">0.12.0</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking-1">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#added-1">Added</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#changed-1">Changed</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#deprecated-1">Deprecated</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps-1">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify">How to verify</a></li><li class="docs-toc__item"><a href="#0-11-2">0.11.2</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking-2">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps-2">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify-1">How to verify</a></li><li class="docs-toc__item"><a href="#0-11-1">0.11.1</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking-3">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#added-2">Added</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#changed-2">Changed</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#deprecated-2">Deprecated</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps-3">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify-2">How to verify</a></li><li class="docs-toc__item"><a href="#0-11-0">0.11.0</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking-4">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#added-3">Added</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#changed-3">Changed</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#deprecated-3">Deprecated</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps-4">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify-3">How to verify</a></li><li class="docs-toc__item"><a href="#0-10-0">0.10.0</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking-5">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#added-4">Added</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#changed-4">Changed</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#deprecated-4">Deprecated</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps-5">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify-4">How to verify</a></li><li class="docs-toc__item"><a href="#0-9-0">0.9.0</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking-6">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#changed-5">Changed</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#deprecated-5">Deprecated</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps-6">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify-5">How to verify</a></li><li class="docs-toc__item"><a href="#0-8-0">0.8.0</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking-7">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#changed-6">Changed</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#deprecated-6">Deprecated</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps-7">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify-6">How to verify</a></li><li class="docs-toc__item"><a href="#0-7-0">0.7.0</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking-8">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#deprecated-7">Deprecated</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps-8">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify-7">How to verify</a></li><li class="docs-toc__item"><a href="#0-6-0">0.6.0</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking-9">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#changed-7">Changed</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#deprecated-8">Deprecated</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps-9">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify-8">How to verify</a></li><li class="docs-toc__item"><a href="#0-5-0">0.5.0</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking-10">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#deprecated-9">Deprecated</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps-10">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify-9">How to verify</a></li><li class="docs-toc__item"><a href="#0-4-0">0.4.0</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#breaking-11">Breaking</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#deprecated-10">Deprecated</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#steps-11">Steps</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#how-to-verify-10">How to verify</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
-  <span>Documents PROCTOR <span data-docs-version>0.12.0</span></span>
+  <span>Documents PROCTOR <span data-docs-version>0.13.0</span></span>
   <span><a rel="noopener" href="https://github.com/waynestate/proctor">Source</a> <a href="upgrading.md">Markdown</a></span>
 </footer>
 </body>
