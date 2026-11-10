@@ -21,7 +21,7 @@ final class Policy
     /** @var array<string, array{versions: array<string, array<string, mixed>>}> */
     private array $components;
 
-    /** @var array<string, array<string, string>> */
+    /** @var array<string, array<string, mixed>> */
     private array $tools;
 
     /** @var array<string, mixed> */
@@ -498,6 +498,50 @@ final class Policy
     {
         $minimum = $this->tools[$tool]['minimum'] ?? null;
         return is_string($minimum) ? $minimum : null;
+    }
+
+    /**
+     * The release cooldown period of a developer tool (for example "3 days"),
+     * from tools.<tool>.cooldown.period.
+     *
+     * Null when the tool or its cooldown is not listed, or the period is not a string.
+     */
+    public function toolCooldownPeriod(string $tool): ?string
+    {
+        $cooldown = $this->tools[$tool]['cooldown'] ?? null;
+        if (!is_array($cooldown)) {
+            return null;
+        }
+        $period = $cooldown['period'] ?? null;
+        return is_string($period) ? $period : null;
+    }
+
+    /**
+     * The package patterns that skip a developer tool's release cooldown,
+     * from tools.<tool>.cooldown.ignore, in file order.
+     *
+     * Empty when the tool, its cooldown or the ignore list is not listed. Entries
+     * that are not non-empty strings are dropped.
+     *
+     * @return list<string>
+     */
+    public function toolCooldownIgnore(string $tool): array
+    {
+        $cooldown = $this->tools[$tool]['cooldown'] ?? null;
+        if (!is_array($cooldown)) {
+            return [];
+        }
+        $ignore = $cooldown['ignore'] ?? null;
+        if (!is_array($ignore)) {
+            return [];
+        }
+        $patterns = [];
+        foreach ($ignore as $pattern) {
+            if (is_string($pattern) && $pattern !== '') {
+                $patterns[] = $pattern;
+            }
+        }
+        return $patterns;
     }
 
     /**

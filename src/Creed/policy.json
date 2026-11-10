@@ -179,7 +179,13 @@
     },
     "tools": {
         "composer": {
-            "minimum": "2.8.0"
+            "minimum": "2.8.0",
+            "cooldown": {
+                "period": "3 days",
+                "ignore": [
+                    "waynestate/*"
+                ]
+            }
         }
     },
     "sessions": {
