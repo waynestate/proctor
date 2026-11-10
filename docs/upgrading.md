@@ -7,6 +7,23 @@ description: How to upgrade PROCTOR to a newer release and note the changes that
 
 PROCTOR is the invigilator, so upgrading it is a seat change, not a new exam: same hall, fresher pen. This page tells you how to move an app from one PROCTOR release to the next and which changes affect your runs. Start with the release that has a break, then work down to the additive ones.
 
+## 0.15.1
+
+Released 2026-11-10. A patch release. `^0.15` picks it up: run `composer update waynestate/proctor`.
+
+### Breaking
+
+- None. The new note is an info note: it is not counted and never fails a run or the deploy gate.
+
+### New
+
+- `mysql56-ci` adds an info note `proctor/mysql56-ci/held` on `.gitlab-ci.yml` when an app with migrations runs the `mysql56-migrate` job. Before, a held app and an app with nothing to migrate both had no finding. Rollcall reads the note to count apps as held, missing or not applicable (D-079).
+
+### What to do
+
+1. Run `composer update waynestate/proctor`. No constraint change.
+2. Nothing else. A report that already passed still passes.
+
 ## 0.15.0
 
 Released 2026-11-10. A minor release. Under 0.x, `^0.14` does not pick it up: change the constraint to `^0.15`, then run `composer update waynestate/proctor`.
