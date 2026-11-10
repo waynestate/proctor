@@ -2,9 +2,10 @@
 
 ## Unreleased
 
+- Added: `mysql56-ci` warns when an app has migrations but its pipeline never runs them against MySQL 5.6 (Preflight's `mysql56-migrate` component); `preflight-gates` treats `mysql56-migrate` as a gate (D-078).
+
 ## 0.14.2 (2026-11-10)
 
-- Added: `mysql56-ci` warns when an app has migrations but its pipeline never runs them against MySQL 5.6 (Preflight's `mysql56-migrate` component); `preflight-gates` treats `mysql56-migrate` as a gate (D-078).
 - Changed: `scripts/creed-copy-refresh.sh` and `scripts/wayneui-copies-scan.sh` carry the `# proctor-ignore script-pair:` marker: they run only in CI jobs, so `script-pair` reports them as info notes, not missing twins.
 
 ## 0.14.1 (2026-11-10)
