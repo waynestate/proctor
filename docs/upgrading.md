@@ -7,6 +7,32 @@ description: How to upgrade PROCTOR to a newer release and note the changes that
 
 PROCTOR is the invigilator, so upgrading it is a seat change, not a new exam: same hall, fresher pen. This page tells you how to move an app from one PROCTOR release to the next and which changes affect your runs. Start with the release that has a break, then work down to the additive ones.
 
+## 0.15.0
+
+Released 2026-11-10. A minor release. Under 0.x, `^0.14` does not pick it up: change the constraint to `^0.15`, then run `composer update waynestate/proctor`.
+
+### Breaking
+
+- None. The new check only warns, and warnings never fail a run or the deploy gate.
+
+### New
+
+- `mysql56-ci` warns when an app has migrations in `database/migrations/` but its `.gitlab-ci.yml` never runs them against MySQL 5.6 (rule ID `proctor/mysql56-ci/no-job`). CREED `databases.md` makes that a MUST: Citadel's shared server is MySQL 5.6.51, and a test suite on SQLite passes DDL that 5.6 rejects. `mysql56` scans the code; `mysql56-ci` checks the wiring.
+- `preflight-gates` treats `mysql56-migrate` as a gate, so a `mysql56-migrate` include with `allow_failure: true` warns like the other gates.
+- The check count is forty-five, eight of them in the deploy gate (unchanged).
+
+### What to do
+
+1. Change the constraint in `composer.json` to `"waynestate/proctor": "^0.15"` and run `composer update waynestate/proctor`.
+2. If `mysql56-ci` warns, include Preflight's `mysql56-migrate` component (Preflight 0.6.0 or later). The job runs `php artisan migrate` against a real MySQL 5.6.51 on an `amd64` runner:
+
+   ```yaml
+   include:
+     - component: $CI_SERVER_FQDN/enterprise-apps/preflight/mysql56-migrate@30dd7094089931015ec8754fb321e17659749f05 # 0.6.0
+   ```
+
+3. An app with no `database/migrations/` folder sees nothing new.
+
 ## 0.14.2
 
 Released 2026-11-10. A patch: `^0.14` picks it up with `composer update waynestate/proctor`. Nothing changes for apps: a run that passed on 0.14.1 passes the same way.

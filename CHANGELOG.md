@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.15.0 (2026-11-10)
+
 - Added: `mysql56-ci` warns when an app has migrations but its pipeline never runs them against MySQL 5.6 (Preflight's `mysql56-migrate` component); `preflight-gates` treats `mysql56-migrate` as a gate (D-078).
 
 ## 0.14.2 (2026-11-10)
