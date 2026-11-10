@@ -242,9 +242,11 @@ Why: without it, each install resolves fresh and can pick up a release nobody re
 
 Sources: [Composer basic usage: the lock file](https://getcomposer.org/doc/01-basic-usage.md).
 
-**How the stack holds it: Checked.** `lock-committed` fails when `composer.lock` is absent from the checked path. In CI
-the working tree is a clone, so presence means committed. On a developer machine the check cannot tell a lock that is
-git-ignored.
+**How the stack holds it: Checked.** `lock-committed` fails when `composer.lock` is absent from the checked path. A lock on
+disk is not proof that it is committed: the `proctor` CI component runs `composer install` first, and Composer writes a
+lock when none is committed. So `lock-tracked` asks git and warns (`proctor/lock-tracked`) when the lock is on disk but
+git does not track it, git-ignored included. It runs git, so ADVISOR's in-process `proctor_check` skips it, and
+outside a git repository it says nothing.
 
 ### 3.5 Require the lock to match `composer.json`
 A lock whose content hash no longer matches `composer.json` describes a different tree from the one declared.
