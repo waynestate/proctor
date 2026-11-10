@@ -4,6 +4,7 @@
 
 - Changed: the deploy kit is Squire 0.10.7 (was 0.10.6): it ships a `.gitattributes` that pins line endings, so the deploy layer clears PROCTOR's line-ending warnings.
 - Changed: `preflight-pinned` warns on any CI component included at a moving ref, not only Preflight's (CREED practice 23); the script-override warning stays Preflight-only. Its pass messages are now "CI components are pinned" and "no CI components included".
+- Changed: `composer-audit` runs the audit once more when the first run prints no JSON, and fails as could-not-run only if the second run fails too; the message carries the first error line that is not Composer's running-as-root notice.
 - Changed: the docs, agent-ready and deploy kits are Squire 0.10.6 (was 0.10.5): the docs builder and agent-ready generator see every file on Docker Desktop mounts.
 - Site: `assets/stack-env.js` knows Parity, so a pre-production page links Parity's pre-production site and a dev page links its local `site/` folder. Until now Parity, of all parts, was the one link that ignored its environment.
 - Site: Parity is out; the party list links its site.

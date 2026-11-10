@@ -824,6 +824,104 @@ final class ComposerAuditCheckTest extends TestCase
         );
     }
 
+    public function testAuditIsRetriedOnceWhenTheFirstRunPrintsNoJson(): void
+    {
+        // The first run prints no JSON, so the check runs the same audit
+        // once more and carries on with the second result as normal.
+        $runner = new class implements ProcessRunnerInterface {
+            public int $calls = 0;
+
+            public function run(array $command, string $cwd, int $timeout = 300, ?array $env = null): ProcessResult
+            {
+                $this->calls++;
+
+                if ($this->calls === 1) {
+                    return new ProcessResult(1, 'not json', 'boom');
+                }
+
+                return new ProcessResult(0, '{"advisories":[],"abandoned":[]}', '');
+            }
+        };
+
+        $this->putFakeComposerOnPath();
+        $findings = (new ComposerAuditCheck($runner))->run(new CheckContext(
+            $this->app('audit-app'),
+            Policy::fromFile(__DIR__ . '/fixtures/policy.json'),
+            new DateTimeImmutable('2026-10-27'),
+            OverrideFile::load($this->app('audit-app')),
+        ));
+
+        self::assertSame(2, $runner->calls);
+        foreach ($findings as $finding) {
+            self::assertNotSame('proctor/composer-audit/could-not-run', $finding->ruleId);
+        }
+        $passes = array_values(array_filter(
+            $findings,
+            static fn(Finding $finding): bool => $finding->status === Finding::STATUS_PASS,
+        ));
+        self::assertCount(1, $passes);
+        self::assertSame('no advisories found', $passes[0]->message);
+    }
+
+    public function testAuditRunsAtMostTwice(): void
+    {
+        // The audit never prints JSON, so the check retries exactly once
+        // and then fails as could-not-run; it never loops.
+        $runner = new class implements ProcessRunnerInterface {
+            public int $calls = 0;
+
+            public function run(array $command, string $cwd, int $timeout = 300, ?array $env = null): ProcessResult
+            {
+                $this->calls++;
+
+                return new ProcessResult(1, 'not json', 'boom');
+            }
+        };
+
+        $this->putFakeComposerOnPath();
+        $findings = (new ComposerAuditCheck($runner))->run(new CheckContext(
+            $this->app('audit-app'),
+            Policy::fromFile(__DIR__ . '/fixtures/policy.json'),
+            new DateTimeImmutable('2026-10-27'),
+            OverrideFile::load($this->app('audit-app')),
+        ));
+
+        self::assertSame(2, $runner->calls);
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_FAIL, $findings[0]->status);
+        self::assertSame('proctor/composer-audit/could-not-run', $findings[0]->ruleId);
+        self::assertStringStartsWith('not audited:', $findings[0]->message);
+        self::assertStringContainsString('boom', $findings[0]->message);
+    }
+
+    public function testTheRootNoticeIsSkippedInTheMessage(): void
+    {
+        // Composer's running-as-root notice is noise, so the message
+        // carries the first stderr line that is not one of its notices.
+        $stderr = "Plugins have been disabled automatically as you are running as root, this may be the cause of the following exception. See also https://getcomposer.org/root\n\n  [RuntimeException]\n  Failed to download advisories\n";
+        $runner = new class ($stderr) implements ProcessRunnerInterface {
+            public function __construct(private readonly string $stderr) {}
+
+            public function run(array $command, string $cwd, int $timeout = 300, ?array $env = null): ProcessResult
+            {
+                return new ProcessResult(1, 'not json', $this->stderr);
+            }
+        };
+
+        $this->putFakeComposerOnPath();
+        $findings = (new ComposerAuditCheck($runner))->run(new CheckContext(
+            $this->app('audit-app'),
+            Policy::fromFile(__DIR__ . '/fixtures/policy.json'),
+            new DateTimeImmutable('2026-10-27'),
+            OverrideFile::load($this->app('audit-app')),
+        ));
+
+        self::assertCount(1, $findings);
+        self::assertSame('proctor/composer-audit/could-not-run', $findings[0]->ruleId);
+        self::assertStringContainsString('[RuntimeException]', $findings[0]->message);
+        self::assertStringNotContainsString('running as root', $findings[0]->message);
+    }
+
     public function testDevOnlyAdvisoryIsAWarningWithTheDevDependencySuffix(): void
     {
         // laravel/framework is listed only in packages-dev, so every

@@ -39,9 +39,12 @@ use Waynestate\Proctor\ToolError;
  * message that starts with `not audited:` and names the fix, installing
  * Composer or committing the lock, or recording a dated override, because a
  * green run that audited nothing is worse than a red one. When the audit
- * runs but its stdout is not parseable JSON, the check fails (rule
- * `proctor/composer-audit/could-not-run`) with a message that starts with
- * `not audited:` and carries the first stderr line. Since Composer 2.10 the
+ * runs but its stdout is not parseable JSON, the audit is tried twice
+ * before it fails (rule `proctor/composer-audit/could-not-run`): the same
+ * command runs once more, and only when the second run's stdout is not
+ * parseable either does the check fail, with a message that starts with
+ * `not audited:` and carries the first stderr line that is not Composer's
+ * running-as-root notice. Since Composer 2.10 the
  * audit exits 1 when anything failed it (malware, a custom policy,
  * abandoned packages, missing packages), so a non-zero exit
  * with no advisory, ignored-advisory or abandoned finding in the JSON is
@@ -97,28 +100,33 @@ final class ComposerAuditCheck implements CheckInterface
         }
 
         $abandonedPolicy = $this->abandonedPolicy($context->policy);
-        $result = $this->process->run(
-            [
-                $composer,
-                'audit',
-                '--format=json',
-                '--locked',
-                '--no-plugins',
-                '--no-interaction',
-                '--abandoned=' . $abandonedPolicy,
-            ],
-            $context->appPath,
-            $context->timeout,
-            self::auditEnvironment(),
-        );
+        $command = [
+            $composer,
+            'audit',
+            '--format=json',
+            '--locked',
+            '--no-plugins',
+            '--no-interaction',
+            '--abandoned=' . $abandonedPolicy,
+        ];
+        $environment = self::auditEnvironment();
+        $result = $this->process->run($command, $context->appPath, $context->timeout, $environment);
 
         $decoded = json_decode($result->stdout, true);
         if (!is_array($decoded)) {
-            $firstLine = $result->firstStderrLine();
+            // A transient failure can leave the audit without parseable
+            // output, so the same command (same cwd, timeout and
+            // environment) runs once more before the check gives up; the
+            // second result stands for everything after.
+            $result = $this->process->run($command, $context->appPath, $context->timeout, $environment);
+            $decoded = json_decode($result->stdout, true);
+        }
+        if (!is_array($decoded)) {
+            $errorLine = $this->auditErrorLine($result);
             return [new Finding(
                 $this->id(),
                 Finding::STATUS_FAIL,
-                'not audited: composer audit could not run: ' . ($firstLine !== '' ? $firstLine : 'no error output'),
+                'not audited: composer audit could not run: ' . ($errorLine !== '' ? $errorLine : 'no error output'),
                 'composer.lock',
                 1,
                 null,
@@ -249,6 +257,33 @@ final class ComposerAuditCheck implements CheckInterface
         }
 
         return $findings;
+    }
+
+    /**
+     * The first stderr line the could-not-run message carries: stderr
+     * split into lines and trimmed, skipping empty lines and Composer's
+     * running-as-root notices (the plugins-disabled line and the
+     * do-not-run-Composer-as-root line). '' when nothing else remains, so
+     * the message falls back to "no error output".
+     */
+    private function auditErrorLine(ProcessResult $result): string
+    {
+        foreach (preg_split('/\R/', $result->stderr) ?: [] as $line) {
+            $line = trim($line);
+            if ($line === '') {
+                continue;
+            }
+            if (str_starts_with($line, 'Plugins have been disabled automatically as you are running as root')) {
+                continue;
+            }
+            if (str_starts_with($line, 'Do not run Composer as root')) {
+                continue;
+            }
+
+            return $line;
+        }
+
+        return '';
     }
 
     /**
