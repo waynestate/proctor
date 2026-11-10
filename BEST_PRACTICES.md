@@ -825,13 +825,15 @@ Sources: [OWASP CICD-SEC-4 Poisoned Pipeline Execution](https://owasp.org/www-pr
 [Composer CLI: `--no-plugins`, `--no-scripts`](https://getcomposer.org/doc/03-cli.md); the stack's deploy-gate decision.
 
 **How the stack holds it: Partially.** PROCTOR builds as a single-file PHAR: `scripts/build-phar.ps1` and
-`scripts/build-phar.sh` produce `build/proctor.phar`, and the README has a "Single-file download" section. The
+`scripts/build-phar.sh` produce `build/proctor.phar`, and the README's "Single-file download" section (and the
+install page) gives the download and checksum commands for Linux, macOS and Windows next to `composer require`. The
 pipeline's `release-phar` job (`.gitlab-ci.yml`) builds the PHAR on every tag, verifies it runs, writes
 `build/proctor.phar.sha256`, uploads both to the project's generic package registry and attaches them to the GitLab
 Release, refusing to overwrite a file the tag already published. Preflight's `proctor` component
-(`templates/proctor/template.yml`) runs `composer install --no-interaction --no-progress --no-plugins --no-scripts`
-on the app first, so the app's plugins and scripts no longer run in that job. What remains: the job still installs
-the app's dependencies, and the README still tells apps to `composer require waynestate/proctor --dev`.
+(`templates/proctor/template.yml`) runs `composer install --no-interaction --no-progress --no-plugins --no-scripts
+--ignore-platform-reqs` on the app first, so the app's plugins and scripts do not run in that job and an app on an old
+PHP still installs. What remains: that job still installs the app's dependencies and runs the app's own
+`vendor/bin/proctor`, not the PHAR; moving it to the PHAR is Preflight's change.
 
 ### 8.2 Start child processes without a shell
 Pass arguments as an array so a path or value cannot become a command.
@@ -924,7 +926,7 @@ Practices tagged `Not yet`, `Documented` or `Partially`, each one line naming wh
 A practice that is now `Checked` or `Enforced` leaves the list; CHANGELOG.md records when it closed.
 
 1. 1.2: Partly done: in CI `--policy` and `--today` are refused unless `PROCTOR_ALLOW_OVERRIDES` is exactly `1` (0.6.0); `preflight-gates` warns when Preflight's `proctor_command` input runs no PROCTOR or masks its exit code, but an app's `.gitlab-ci.yml` can still override other included job keys and the vendored policy; the `ci-pipelines` check warns (`proctor/ci-pipelines/allow-overrides`) when an app's pipeline sets `PROCTOR_ALLOW_OVERRIDES` to `1` (see 1.2).
-2. 8.1: Partly done: the PHAR build exists and the Preflight job installs the app with `--no-plugins --no-scripts`; the PHAR is built and attached to each GitLab Release by the `release-phar` job, the job still installs the app's dependencies, and the README still says `composer require` (see 8.1).
+2. 8.1: Partly done: the PHAR build exists and the Preflight job installs the app with `--no-plugins --no-scripts`; the PHAR is built and attached to each GitLab Release by the `release-phar` job and the README documents it, but the Preflight job still installs the app's dependencies and runs its `vendor/bin/proctor`, not the PHAR (Preflight's change; see 8.1).
 3. 2.6: Partly done: PROCTOR's own pipeline runs the Preflight `proctor` component on `deploy/`, and the job blocks the pipeline; raise PROCTOR's floor from `^8.3` to `^8.4` before PHP 8.3 reaches end of life on 2027-12-31 (see 2.6).
 4. 5.7: Partly done: the `override-approver` check flags an approver who wrote the entry (git blame; rule ids `proctor/override-approver/self-approved`, `proctor/override-approver/could-not-run`), warn or fail per CREED `rules.override_self_approval`; that the approver really approved still rests on the merge request, since GitLab Community Edition has no Code Owner approval (see 5.7).
 5. 4.7: Documented: Preflight's README carries the weekly "Run it on a schedule" steps, but nothing fails when an app has no schedule (see 4.7).

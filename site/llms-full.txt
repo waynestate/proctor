@@ -43,8 +43,9 @@ The command is then `vendor/bin/proctor`.
 
 ### Single-file download
 
-The single-file PHAR is how Preflight and apps without Composer access run
-PROCTOR as one file. Since 0.6.0, every tag runs the `release-phar` job in
+The single-file PHAR runs PROCTOR as one file, for a deploy host or an app
+without Composer access. (Preflight's `proctor` component does not use it: it
+installs the app with Composer and runs the app's own `vendor/bin/proctor`.) Since 0.6.0, every tag runs the `release-phar` job in
 `.gitlab-ci.yml`, which attaches `proctor.phar` and its `proctor.phar.sha256`
 checksum file to that tag's GitLab Release; the maintainer tags, and no tag
 means no release. The `composer require` install above stays the main method;
@@ -2957,7 +2958,7 @@ Where the code lives: the canonical repository is on git.wayne.edu, [enterprise-
 
 ### Single-file PHAR [#](https://proctor.apps.wayne.edu/docs/install.html#single-file-phar)
 
-The single-file PHAR is how Preflight and apps without Composer access run PROCTOR as one file. Since 0.6.0, every tag runs the `release-phar` job in `.gitlab-ci.yml`, which attaches `proctor.phar` and its `proctor.phar.sha256` checksum file to that tag's GitLab Release; the maintainer tags, and no tag means no release. The `composer require` install below stays the main method; the phar is the one-file alternative.
+The single-file PHAR runs PROCTOR as one file, for a deploy host or an app without Composer access. (Preflight's `proctor` component does not use it: it installs the app with Composer and runs the app's own `vendor/bin/proctor`.) Since 0.6.0, every tag runs the `release-phar` job in `.gitlab-ci.yml`, which attaches `proctor.phar` and its `proctor.phar.sha256` checksum file to that tag's GitLab Release; the maintainer tags, and no tag means no release. The `composer require` install below stays the main method; the phar is the one-file alternative.
 
 Download both files for the tag you want, verify the checksum, then run it. Replace `<release>` with the base URL of the release's asset links (the release page lists both files).
 

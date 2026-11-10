@@ -42,8 +42,9 @@ The command is then `vendor/bin/proctor`.
 
 ## Single-file download
 
-The single-file PHAR is how Preflight and apps without Composer access run
-PROCTOR as one file. Since 0.6.0, every tag runs the `release-phar` job in
+The single-file PHAR runs PROCTOR as one file, for a deploy host or an app
+without Composer access. (Preflight's `proctor` component does not use it: it
+installs the app with Composer and runs the app's own `vendor/bin/proctor`.) Since 0.6.0, every tag runs the `release-phar` job in
 `.gitlab-ci.yml`, which attaches `proctor.phar` and its `proctor.phar.sha256`
 checksum file to that tag's GitLab Release; the maintainer tags, and no tag
 means no release. The `composer require` install above stays the main method;

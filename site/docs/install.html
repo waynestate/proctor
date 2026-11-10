@@ -50,8 +50,9 @@
 </ul>
 <p>Where the code lives: the canonical repository is on git.wayne.edu, <a rel="noopener" href="https://git.wayne.edu/enterprise-apps/proctor">enterprise-apps/proctor</a>. GitHub (<a rel="noopener" href="https://github.com/waynestate/proctor">waynestate/proctor</a>) is a read-only mirror of it. Open issues and merge requests on git.wayne.edu, not on the mirror. Your proctor keeps one answer sheet, and this is it; the mirrors hold photocopies.</p>
 <h2 id="single-file-phar">Single-file <span class="docs-heading-tail"><span>PHAR</span><a class="docs-heading-link" aria-label="Link to this section" href="#single-file-phar">#</a></span></h2>
-<p>The single-file PHAR is how Preflight and apps without Composer access run
-PROCTOR as one file. Since 0.6.0, every tag runs the <code>release-phar</code> job in
+<p>The single-file PHAR runs PROCTOR as one file, for a deploy host or an app
+without Composer access. (Preflight's <code>proctor</code> component does not use it: it
+installs the app with Composer and runs the app's own <code>vendor/bin/proctor</code>.) Since 0.6.0, every tag runs the <code>release-phar</code> job in
 <code>.gitlab-ci.yml</code>, which attaches <code>proctor.phar</code> and its <code>proctor.phar.sha256</code>
 checksum file to that tag's GitLab Release; the maintainer tags, and no tag
 means no release. The <code>composer require</code> install below stays the main method;
