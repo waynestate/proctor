@@ -63,12 +63,12 @@ Fix a failing pipeline by adding a GitLab job whose `script` runs `composer ci`,
 
 ## preflight-pinned [#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#preflight-pinned)
 
-`preflight-pinned` warns, and never fails, when an app includes a Preflight component at a moving ref or re-declares what an included Preflight job runs. A Preflight include is an `include:` entry whose `component:` path contains `/preflight/`.
+`preflight-pinned` warns, and never fails, when an app includes any CI component at a moving ref (CREED practice 23), or re-declares what an included Preflight job runs. A component is an `include:` entry with a `component:` value; a Preflight include is one whose `component:` path contains `/preflight/`.
 
 - When the ref after the last `@` is neither a full release tag (`MAJOR.MINOR.PATCH` such as `0.3.0`, optional leading `v`) nor a 40-lowercase-hex commit SHA it warns (`proctor/preflight-pinned/unpinned`). A branch such as `main`, `~latest`, a partial version such as `0.3` or `1` (GitLab resolves it to the newest matching release), or no `@` at all all count as moving. Pin a release tag such as `@0.3.0` or a commit SHA; published stack tags are never moved or deleted, so a release tag is a pin.
 - When the app declares one of the Preflight job names (`proctor`, `php-test`, `composer-audit`, `sbom`, `pint`, `phpstan`, `eslint`, `renovate`, `package-publish`) with `script`, `before_script` or `after_script` while a Preflight component is included, it warns (`proctor/preflight-pinned/script-override`).
 
-With nothing to flag it passes: `Preflight includes are pinned`, or `no Preflight components included` when there is no pipeline, a parse error or no Preflight include.
+With nothing to flag it passes: `CI components are pinned`, or `no CI components included` when there is no pipeline, a parse error or no component include.
 
 | Check | Rule id |
 | --- | --- |

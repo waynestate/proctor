@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Added: `composer-cooldown` reads the period from the CREED policy (CREED 0.1.10's `tools.composer.cooldown`): its advice names the policy's period and exemptions, and it warns (`too-short`) when an app's period is shorter than the policy's. The generated CREED reader in `src/Creed` is refreshed from CREED 0.1.10.
+- Docs: the front page and checks overview name the checks new in 0.12.0 (composer-cooldown, lock-tracked) and the current check count.
 - Changed: the deploy layer requires PROCTOR ^0.12 (locked 0.12.0, was ^0.11.1): two new warning-only checks, nothing breaks.
 
 ## 0.12.0 (2026-11-10)
