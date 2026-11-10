@@ -69,6 +69,7 @@ final class CheckSet
             new DestructiveDeployCheck(),
             new CrlfDeployScriptCheck(),
             new GitattributesEolCheck(),
+            new ScriptPairCheck(),
             new EntrypointMigrateCheck(),
             new CaseClashCheck(),
             new CiPipelinesCheck(),

@@ -7,11 +7,11 @@ description: An overview of every check PROCTOR runs and how each reports pass, 
 
 This page lists every check PROCTOR runs in a single `vendor/bin/proctor check` run, and how each one reports. The proctor asks the same questions in the same order on every run; only the hall changes.
 
-Forty-three checks in all. Eight of them also run at the door, in `proctor gate`: `php-floor`, `unpatched`, `laravel-eol`, `laravel-php`, `lock-committed`, `composer-audit`, `overrides` and `policy-age` (see [Deploy gate](deploy-gate.md)). Two are new in 0.12.0: `composer-cooldown` and `lock-tracked`.
+Forty-four checks in all. Eight of them also run at the door, in `proctor gate`: `php-floor`, `unpatched`, `laravel-eol`, `laravel-php`, `lock-committed`, `composer-audit`, `overrides` and `policy-age` (see [Deploy gate](deploy-gate.md)). Two are new in 0.12.0: `composer-cooldown` and `lock-tracked`.
 
 ![Nine real lines from PROCTOR's text report, one per check shown: FAIL php-floor, WARN unpatched, FAIL unbounded-constraints, PASS lock-committed, WARN portability, WARN mysql56, WARN ci-pipelines, PASS composer-audit, FAIL overrides. Each line is written in words; color only repeats what the word says.](../readme/report.svg)
 
-*Nine of the forty-three checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
+*Nine of the forty-four checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
 
 ## How a check reports
 
@@ -57,6 +57,7 @@ Details and fixes: [CI checks](check-ci.md).
 - `destructive-deploy`: fails when a deploy script runs an artisan command that drops or rebuilds the database (`migrate:fresh`, `migrate:refresh`, `migrate:reset`, `db:wipe`), which erases production data on every deploy.
 - `crlf-deploy-script`: fails when a deploy script has Windows line endings (CRLF), which break it on Linux, and warns (`proctor/crlf-deploy-script/no-gitattributes`) when the app has a deploy script and `.gitattributes` does not pin `*.sh` to `eol=lf`.
 - `gitattributes-eol`: warns, never fails, when `.gitattributes` does not pin the app's `*.sh`, `*.conf` or Dockerfiles to `eol=lf` (read the way Git reads it, so `* text=auto eol=lf` counts and a later `-text` or `eol=crlf` undoes it), and when a `Dockerfile`, `*.Dockerfile` or `*.conf` under `deploy/` or `.squire/` has Windows line endings (CREED every-os).
+- `script-pair`: warns, never fails, when a developer script in the top-level `scripts/` directory has no twin: a `.sh` without its `.ps1` (`proctor/script-pair/missing-ps1`) or a `.ps1` without its `.sh` (`proctor/script-pair/missing-sh`); pairing is by the same path minus the extension, in the same folder (CREED every-os).
 - `case-clash`: fails when two paths differ only by letter case, which collide on macOS and Windows.
 - `instant-client-committed`: warns when Oracle Instant Client is committed to the repo: an archive, an unzipped install under an `instantclient` directory, or a loose client library.
 
