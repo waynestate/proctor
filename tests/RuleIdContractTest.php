@@ -38,6 +38,8 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/script-pair',
         'proctor/script-pair/missing-ps1',
         'proctor/script-pair/missing-sh',
+        'proctor/script-pair/squire-owned',
+        'proctor/script-pair/single-os',
         'proctor/entrypoint-migrate',
         'proctor/case-clash',
         'proctor/overrides',

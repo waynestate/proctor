@@ -178,6 +178,133 @@ final class ScriptPairCheckTest extends TestCase
         self::assertNotContains('script-pair', CheckSet::GATE);
     }
 
+    public function testASquireKitFileEarnsAnInfoNoteInsteadOfTheWarning(): void
+    {
+        $this->writeFile('.squire.json', json_encode(['files' => ['scripts/release.sh' => 'deploy/release.sh']]));
+        $this->writeFile('scripts/release.sh', "#!/bin/sh\ntrue\n");
+
+        $findings = $this->runCheck();
+
+        self::assertCount(2, $findings);
+        self::assertSame(Finding::STATUS_INFO, $findings[0]->status);
+        self::assertSame('proctor/script-pair/squire-owned', $findings[0]->ruleId);
+        self::assertSame('scripts/release.sh', $findings[0]->path);
+        self::assertSame(1, $findings[0]->line);
+        self::assertSame(
+            'scripts/release.sh is a Squire kit file (.squire.json) that runs on the deploy host, not a developer machine, so it needs no scripts/release.ps1 twin',
+            $findings[0]->message,
+        );
+        self::assertSame(Finding::STATUS_PASS, $findings[1]->status);
+        self::assertSame('proctor/script-pair', $findings[1]->ruleId);
+        self::assertSame(self::PASS, $findings[1]->message);
+    }
+
+    public function testAScriptNotListedBySquireStillWarns(): void
+    {
+        $this->writeFile('.squire.json', json_encode(['files' => ['scripts/release.sh' => 'deploy/release.sh']]));
+        $this->writeFile('scripts/release.sh', "#!/bin/sh\ntrue\n");
+        $this->writeFile('scripts/other.sh', "#!/bin/sh\ntrue\n");
+
+        $findings = $this->runCheck();
+
+        self::assertCount(2, $findings);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertSame('proctor/script-pair/missing-ps1', $findings[0]->ruleId);
+        self::assertSame('scripts/other.sh', $findings[0]->path);
+        self::assertSame(
+            'scripts/other.sh has no scripts/other.ps1 twin; a developer script ships as a .ps1 and .sh pair, or as one PHP command (CREED every-os)',
+            $findings[0]->message,
+        );
+        self::assertSame('proctor/script-pair/squire-owned', $findings[1]->ruleId);
+        self::assertSame('scripts/release.sh', $findings[1]->path);
+    }
+
+    public function testAnInvalidSquireManifestLeavesTheWarning(): void
+    {
+        $this->writeFile('.squire.json', '{not json');
+        $this->writeFile('scripts/release.sh', "#!/bin/sh\ntrue\n");
+
+        $findings = $this->runCheck();
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertSame('proctor/script-pair/missing-ps1', $findings[0]->ruleId);
+        self::assertSame('scripts/release.sh', $findings[0]->path);
+        self::assertSame(
+            'scripts/release.sh has no scripts/release.ps1 twin; a developer script ships as a .ps1 and .sh pair, or as one PHP command (CREED every-os)',
+            $findings[0]->message,
+        );
+    }
+
+    public function testAShMarkedSingleOsOnLineTwoEarnsAnInfoNote(): void
+    {
+        $this->writeFile('scripts/ci.sh', "#!/bin/sh\n# proctor-ignore script-pair: runs only in the CI container\ntrue\n");
+
+        $findings = $this->runCheck();
+
+        self::assertCount(2, $findings);
+        self::assertSame(Finding::STATUS_INFO, $findings[0]->status);
+        self::assertSame('proctor/script-pair/single-os', $findings[0]->ruleId);
+        self::assertSame('scripts/ci.sh', $findings[0]->path);
+        self::assertSame(2, $findings[0]->line);
+        self::assertSame(
+            'scripts/ci.sh is marked single-OS (runs only in the CI container), so it needs no scripts/ci.ps1 twin',
+            $findings[0]->message,
+        );
+        self::assertSame(Finding::STATUS_PASS, $findings[1]->status);
+        self::assertSame('proctor/script-pair', $findings[1]->ruleId);
+        self::assertSame(self::PASS, $findings[1]->message);
+    }
+
+    public function testAPs1MarkedSingleOsOnLineOneEarnsAnInfoNote(): void
+    {
+        $this->writeFile("scripts/win.ps1", "# proctor-ignore script-pair: runs only on Windows dev boxes\nWrite-Output 'win'\n");
+
+        $findings = $this->runCheck();
+
+        self::assertCount(2, $findings);
+        self::assertSame(Finding::STATUS_INFO, $findings[0]->status);
+        self::assertSame('proctor/script-pair/single-os', $findings[0]->ruleId);
+        self::assertSame('scripts/win.ps1', $findings[0]->path);
+        self::assertSame(1, $findings[0]->line);
+        self::assertSame(
+            "scripts/win.ps1 is marked single-OS (runs only on Windows dev boxes), so it needs no scripts/win.sh twin",
+            $findings[0]->message,
+        );
+        self::assertSame(Finding::STATUS_PASS, $findings[1]->status);
+        self::assertSame('proctor/script-pair', $findings[1]->ruleId);
+        self::assertSame(self::PASS, $findings[1]->message);
+    }
+
+    public function testAMarkerOnLineElevenIsNotHonoured(): void
+    {
+        $lines = [];
+        for ($i = 1; $i <= 10; $i++) {
+            $lines[] = '# line ' . $i;
+        }
+        $lines[] = '# proctor-ignore script-pair: too late';
+        $this->writeFile('scripts/late.sh', implode("\n", $lines) . "\n");
+
+        $findings = $this->runCheck();
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertSame('proctor/script-pair/missing-ps1', $findings[0]->ruleId);
+        self::assertSame('scripts/late.sh', $findings[0]->path);
+    }
+
+    public function testAMarkerWithNoReasonIsNotHonoured(): void
+    {
+        $this->writeFile('scripts/bare.sh', "#!/bin/sh\n# proctor-ignore script-pair:\ntrue\n");
+
+        $findings = $this->runCheck();
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertSame('proctor/script-pair/missing-ps1', $findings[0]->ruleId);
+        self::assertSame('scripts/bare.sh', $findings[0]->path);
+    }
+
     /**
      * Writes a file into the temp app dir (created on first use), making any
      * missing parent directory along the way.
