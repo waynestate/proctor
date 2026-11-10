@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.12.0 (2026-11-10)
+
 - Added: composer-cooldown warns when composer.json sets no Composer release cooldown (proctor/composer-cooldown/missing) or turns its blocking off (proctor/composer-cooldown/not-blocking); CREED practice 40. Never a failure, not in the gate.
 - Added: lock-tracked warns (proctor/lock-tracked) when composer.lock is on disk but git does not track it, so CI's own install no longer hides an uncommitted lock; outside a git repository it says nothing. ADVISOR skips it (it runs git); lock-committed stays in-process.
 - Docs: BEST_PRACTICES 3.4 no longer says a lock on disk in CI proves it is committed (the `proctor` component's install writes one); it names `lock-tracked`.
