@@ -61,6 +61,7 @@ final class CheckSet
             new UnboundedConstraintsCheck(),
             new DevOnlyPackagesCheck(),
             new ComposerConfigCheck(),
+            new ComposerCooldownCheck(),
             new LockCommittedCheck(),
             new LockTrackedCheck(),
             new PortabilityCheck(),

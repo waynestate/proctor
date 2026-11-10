@@ -41,6 +41,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/unbounded-constraints',
         'proctor/dev-only-packages',
         'proctor/composer-config',
+        'proctor/composer-cooldown',
         'proctor/portability',
         'proctor/mysql56',
         'proctor/ci-pipelines',
@@ -117,6 +118,9 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/composer-config/policy-malware-off',
         'proctor/composer-config/policy-advisories-off',
         'proctor/composer-config/platform-php-unset',
+        // composer-cooldown
+        'proctor/composer-cooldown/missing',
+        'proctor/composer-cooldown/not-blocking',
         // portability
         'proctor/portability/host-path',
         'proctor/portability/proxy-address',

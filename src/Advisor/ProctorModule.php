@@ -111,6 +111,7 @@ final class ProctorModule implements Module
         'unbounded-constraints' => 'check-composer',
         'dev-only-packages' => 'check-composer',
         'composer-config' => 'check-composer',
+        'composer-cooldown' => 'check-composer',
         'lock-committed' => 'check-composer',
         'lock-tracked' => 'check-composer',
         'composer-audit' => 'check-composer',
