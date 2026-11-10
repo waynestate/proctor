@@ -1,0 +1,3 @@
+refresh-deps:
+  script:
+    - composer update

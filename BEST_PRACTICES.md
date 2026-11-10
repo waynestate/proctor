@@ -289,8 +289,9 @@ Sources: [Packagist: an update on Composer and Packagist supply chain security, 
 
 **How the stack holds it: Partially.** The Preflight `proctor` component runs `composer install`, so it uses the lock.
 PROCTOR's `ci-pipelines` check warns (`proctor/ci-pipelines/composer-update`) when a command segment of a GitLab job
-script line or a GitHub step run starts with `composer update` or `composer require`. What remains: the finding is a
-warning, not a fail, and only `.gitlab-ci.yml` and `.github/workflows/ci.yml` are read.
+script line or a GitHub step run starts with `composer update` or `composer require`. It reads `.gitlab-ci.yml` with
+the local files it includes (Unreleased) and every workflow in `.github/workflows`. What remains: the finding is a
+warning, not a fail, and remote, project and component includes are not read.
 
 ### 3.8 Keep locked components on the latest patch
 A locked component that is behind the policy's `latest_patch` for its version line is a warning, not a failure: a
@@ -930,7 +931,7 @@ A practice that is now `Checked` or `Enforced` leaves the list; CHANGELOG.md rec
 Added in the second pass (2026-10-27):
 
 8. 4.8: Partly done: the `composer-version` check fails below the CVE-2024 floors and the policy's `tools.composer.minimum` (0.7.0), but that minimum is 2.8.0, below the 2026 Perforce fixes in 2.9.6 and 2.10.3 (see 4.8).
-9. 3.7: Partly done: the Preflight `proctor` component installs from the lock, and the `ci-pipelines` check warns (`proctor/ci-pipelines/composer-update`) when CI runs `composer update` or `composer require`; the finding is a warning, not a fail, and only `.gitlab-ci.yml` and `.github/workflows/ci.yml` are read (see 3.7).
+9. 3.7: Partly done: the Preflight `proctor` component installs from the lock, and the `ci-pipelines` check warns (`proctor/ci-pipelines/composer-update`) when CI runs `composer update` or `composer require`; the finding is a warning, not a fail; it reads `.gitlab-ci.yml` with its local includes and every GitHub workflow, but not remote, project or component includes (see 3.7).
 10. 4.12: Partly done: `composer-audit` (0.6.0) warns instead of failing for an advisory on a package that composer.lock lists only in packages-dev, marked ` [dev dependency]`, and a name in both lists still fails; the policy file carries no rule for it (see 4.12).
 11. 8.7: Documented: the floor is GitLab 18.7 (`spec:component`), named in the install page's requirements; patch status on 18.x is the owner's to check (see 8.7).
 

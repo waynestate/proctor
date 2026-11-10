@@ -1,0 +1,9 @@
+# The root file only includes: every job lives in the local files, the way
+# larger apps split their pipeline. Remote, component and variable paths are
+# not files in this repository and are skipped.
+include:
+  - local: /ci/test.yml
+  - '/ci/jobs/**.yml'
+  - remote: 'https://example.com/shared.yml'
+  - component: git.wayne.edu/enterprise-apps/preflight/proctor@0.5.0
+  - local: '/ci/$CI_ENVIRONMENT.yml'

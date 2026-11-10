@@ -35,6 +35,19 @@ The files are parsed as YAML, not grepped: a `composer ci` that only appears in 
 
 A private stack package that sets `extra.proctor.github-mirror` to `false` in composer.json must never be on GitHub: a missing `.github/workflows/ci.yml` then gives no finding, and a present one warns (`proctor/ci-pipelines/github-private`) along with the warning-only rules.
 
+### Split pipelines and other workflows [#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#split-pipelines-and-other-workflows)
+
+GitLab merges a pipeline's local includes in before it runs a job, so the check reads them too: every `include:` entry that is a path (`- ci/test.yml`) or a `local:` map, at any depth, with `*` matching inside one folder and `**` across folders. A job in an included file satisfies the `composer ci` contract, and the warnings below name the included file and its line. Remote, project, template and component includes are not files in the repository and are skipped, and so is a path that carries a variable or climbs out with `..`. A named local file that does not exist is reported (`proctor/ci-pipelines/gitlab-include-missing`, at the same level as a missing `.gitlab-ci.yml`), because GitLab rejects that pipeline; a wildcard that matches nothing is not.
+
+```yaml
+# .gitlab-ci.yml: every job lives in ci/, and ci-pipelines still sees composer ci
+include:
+  - local: ci/test.yml
+  - '/ci/jobs/**.yml'
+```
+
+On GitHub, the `composer-update`, `composer-audit-off` and `allow-overrides` warnings apply to every workflow in `.github/workflows` (`.yml` and `.yaml`), not only `ci.yml`: a nightly job that refreshes the lock bypasses the lock as surely as CI would. The `composer ci` contract and the `uses:` pin stay on `ci.yml`, and a workflow that does not parse is GitHub's to report.
+
 Four more rules warn, and never fail, for stack packages and other projects alike:
 
 - A GitHub `uses:` ref that is not a 40-hex commit SHA (`proctor/ci-pipelines/unpinned-uses`).
@@ -50,6 +63,7 @@ When nothing needs fixing the check passes with `both pipelines run composer ci`
 | `ci-pipelines` | `proctor/ci-pipelines/gitlab-missing` |
 | `ci-pipelines` | `proctor/ci-pipelines/gitlab-parse` |
 | `ci-pipelines` | `proctor/ci-pipelines/gitlab-no-ci` |
+| `ci-pipelines` | `proctor/ci-pipelines/gitlab-include-missing` |
 | `ci-pipelines` | `proctor/ci-pipelines/github-missing` |
 | `ci-pipelines` | `proctor/ci-pipelines/github-parse` |
 | `ci-pipelines` | `proctor/ci-pipelines/github-no-ci` |

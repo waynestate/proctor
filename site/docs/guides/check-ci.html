@@ -55,6 +55,14 @@
 <p><code>ci-pipelines</code> enforces the CI contract. For a stack package (a composer.json <code>name</code> starting with <code>waynestate/</code>), both <code>.gitlab-ci.yml</code> and <code>.github/workflows/ci.yml</code> must exist and run <code>composer ci</code>; a missing or incomplete file is a failure. For any other project, a missing or incomplete <code>.gitlab-ci.yml</code> is a warning and <code>.github/workflows/ci.yml</code> is optional.</p>
 <p>The files are parsed as YAML, not grepped: a <code>composer ci</code> that only appears in a comment is not a script line, and a GitLab job is a top-level map with a <code>script</code> key. A GitHub job counts when a step runs <code>composer ci</code> or calls a reusable workflow with <code>ci-command: composer ci</code>.</p>
 <p>A private stack package that sets <code>extra.proctor.github-mirror</code> to <code>false</code> in composer.json must never be on GitHub: a missing <code>.github/workflows/ci.yml</code> then gives no finding, and a present one warns (<code>proctor/ci-pipelines/github-private</code>) along with the warning-only rules.</p>
+<h3 id="split-pipelines-and-other-workflows">Split pipelines and other <span class="docs-heading-tail"><span>workflows</span><a class="docs-heading-link" aria-label="Link to this section" href="#split-pipelines-and-other-workflows">#</a></span></h3>
+<p>GitLab merges a pipeline's local includes in before it runs a job, so the check reads them too: every <code>include:</code> entry that is a path (<code>- ci/test.yml</code>) or a <code>local:</code> map, at any depth, with <code>*</code> matching inside one folder and <code>**</code> across folders. A job in an included file satisfies the <code>composer ci</code> contract, and the warnings below name the included file and its line. Remote, project, template and component includes are not files in the repository and are skipped, and so is a path that carries a variable or climbs out with <code>..</code>. A named local file that does not exist is reported (<code>proctor/ci-pipelines/gitlab-include-missing</code>, at the same level as a missing <code>.gitlab-ci.yml</code>), because GitLab rejects that pipeline; a wildcard that matches nothing is not.</p>
+<pre tabindex="0"><code class="language-yaml"># .gitlab-ci.yml: every job lives in ci/, and ci-pipelines still sees composer ci
+include:
+  - local: ci/test.yml
+  - '/ci/jobs/**.yml'
+</code></pre>
+<p>On GitHub, the <code>composer-update</code>, <code>composer-audit-off</code> and <code>allow-overrides</code> warnings apply to every workflow in <code>.github/workflows</code> (<code>.yml</code> and <code>.yaml</code>), not only <code>ci.yml</code>: a nightly job that refreshes the lock bypasses the lock as surely as CI would. The <code>composer ci</code> contract and the <code>uses:</code> pin stay on <code>ci.yml</code>, and a workflow that does not parse is GitHub's to report.</p>
 <p>Four more rules warn, and never fail, for stack packages and other projects alike:</p>
 <ul>
 <li>A GitHub <code>uses:</code> ref that is not a 40-hex commit SHA (<code>proctor/ci-pipelines/unpinned-uses</code>).</li>
@@ -86,6 +94,10 @@
 <tr>
 <td><code>ci-pipelines</code></td>
 <td><code>proctor/ci-pipelines/gitlab-no-ci</code></td>
+</tr>
+<tr>
+<td><code>ci-pipelines</code></td>
+<td><code>proctor/ci-pipelines/gitlab-include-missing</code></td>
 </tr>
 <tr>
 <td><code>ci-pipelines</code></td>
@@ -294,7 +306,7 @@
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../../docs/guides/check-php.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">PHP checks</span></a><a class="docs-pager__link docs-pager__link--next" href="../../docs/guides/check-app.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">App checks</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#run-proctor-in-gitlab-ci">Run PROCTOR in GitLab CI</a></li><li class="docs-toc__item"><a href="#ci-pipelines">ci-pipelines</a></li><li class="docs-toc__item"><a href="#preflight-pinned">preflight-pinned</a></li><li class="docs-toc__item"><a href="#preflight-gates">preflight-gates</a></li><li class="docs-toc__item"><a href="#mysql56-ci">mysql56-ci</a></li><li class="docs-toc__item"><a href="#portability">portability</a></li><li class="docs-toc__item"><a href="#destructive-deploy">destructive-deploy</a></li><li class="docs-toc__item"><a href="#instant-client-committed">instant-client-committed</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#run-proctor-in-gitlab-ci">Run PROCTOR in GitLab CI</a></li><li class="docs-toc__item"><a href="#ci-pipelines">ci-pipelines</a></li><li class="docs-toc__item docs-toc__item--sub"><a href="#split-pipelines-and-other-workflows">Split pipelines and other workflows</a></li><li class="docs-toc__item"><a href="#preflight-pinned">preflight-pinned</a></li><li class="docs-toc__item"><a href="#preflight-gates">preflight-gates</a></li><li class="docs-toc__item"><a href="#mysql56-ci">mysql56-ci</a></li><li class="docs-toc__item"><a href="#portability">portability</a></li><li class="docs-toc__item"><a href="#destructive-deploy">destructive-deploy</a></li><li class="docs-toc__item"><a href="#instant-client-committed">instant-client-committed</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.15.1</span></span>

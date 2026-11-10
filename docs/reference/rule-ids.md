@@ -92,6 +92,7 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `ci-pipelines` | `proctor/ci-pipelines/gitlab-missing` |
 | `ci-pipelines` | `proctor/ci-pipelines/gitlab-parse` |
 | `ci-pipelines` | `proctor/ci-pipelines/gitlab-no-ci` |
+| `ci-pipelines` | `proctor/ci-pipelines/gitlab-include-missing` |
 | `ci-pipelines` | `proctor/ci-pipelines/github-missing` |
 | `ci-pipelines` | `proctor/ci-pipelines/github-parse` |
 | `ci-pipelines` | `proctor/ci-pipelines/github-no-ci` |

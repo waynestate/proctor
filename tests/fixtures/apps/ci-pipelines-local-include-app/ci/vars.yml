@@ -1,0 +1,2 @@
+variables:
+  COMPOSER_NO_AUDIT: "1"

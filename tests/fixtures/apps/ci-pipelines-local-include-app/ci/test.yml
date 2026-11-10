@@ -1,0 +1,8 @@
+# Included from .gitlab-ci.yml; includes the shared variables in turn.
+include:
+  - local: ci/vars.yml
+composer-ci:
+  image: composer:2.11.1
+  script:
+    - composer install --no-interaction
+    - composer ci

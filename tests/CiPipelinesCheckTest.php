@@ -588,4 +588,144 @@ YAML;
         unlink($appPath . '/composer.json');
         rmdir($appPath);
     }
+
+    public function testLocalIncludesArePartOfThePipeline(): void
+    {
+        // The root file only includes. composer ci runs in ci/test.yml, which
+        // includes ci/vars.yml (COMPOSER_NO_AUDIT), and the ** pattern reaches
+        // ci/jobs/nested/refresh.yml (composer update). Remote, component and
+        // variable includes are skipped, and notes.txt is not YAML.
+        $findings = (new CiPipelinesCheck())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/ci-pipelines-local-include-app'),
+        );
+
+        self::assertSame(
+            [
+                ['ci-pipelines-composer-update', 'ci/jobs/nested/refresh.yml', 3],
+                ['ci-pipelines-composer-audit-off', 'ci/vars.yml', 2],
+            ],
+            $this->triples($findings),
+        );
+        self::assertSame('proctor/ci-pipelines/composer-update', $findings[0]->ruleId);
+        self::assertSame(
+            'ci-pipelines-composer-update: CI runs "composer update" in refresh-deps; install from the lock with "composer install" instead (rule 3.7).',
+            $findings[0]->message,
+        );
+        self::assertSame('proctor/ci-pipelines/composer-audit-off', $findings[1]->ruleId);
+    }
+
+    public function testAMissingLocalIncludeIsReportedAndAnEmptyPatternIsNot(): void
+    {
+        $findings = (new CiPipelinesCheck())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/ci-pipelines-local-include-missing-app'),
+        );
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertSame('proctor/ci-pipelines/gitlab-include-missing', $findings[0]->ruleId);
+        self::assertSame(
+            [['ci-pipelines-gitlab-include-missing', '.gitlab-ci.yml', 2]],
+            $this->triples($findings),
+        );
+        self::assertSame(
+            'ci-pipelines-gitlab-include-missing: .gitlab-ci.yml includes the local file ci/gone.yml, which does not exist; GitLab rejects the pipeline, so fix the path or drop the include',
+            $findings[0]->message,
+        );
+    }
+
+    public function testAStackPackageFailsOnAMissingLocalIncludeAndCountsComposerCiInAnInclude(): void
+    {
+        $appPath = sys_get_temp_dir() . '/proctor-ci-include-' . bin2hex(random_bytes(4));
+        mkdir($appPath . '/ci', 0777, true);
+        file_put_contents($appPath . '/composer.json', '{"name": "waynestate/example", "extra": {"proctor": {"github-mirror": false}}}');
+        file_put_contents($appPath . '/.gitlab-ci.yml', "include:\n  - local: ci/test.yml\n  - local: ci/gone.yml\n");
+        file_put_contents($appPath . '/ci/test.yml', "composer-ci:\n  script:\n    - composer ci\n");
+
+        try {
+            $findings = (new CiPipelinesCheck())->run($this->contextFor($appPath));
+        } finally {
+            unlink($appPath . '/ci/test.yml');
+            rmdir($appPath . '/ci');
+            unlink($appPath . '/.gitlab-ci.yml');
+            unlink($appPath . '/composer.json');
+            rmdir($appPath);
+        }
+
+        self::assertSame(
+            [['ci-pipelines-gitlab-include-missing', '.gitlab-ci.yml', 3]],
+            $this->triples($findings),
+        );
+        self::assertSame(Finding::STATUS_FAIL, $findings[0]->status);
+    }
+
+    public function testNoComposerCiAnywhereNamesTheIncludedFiles(): void
+    {
+        $appPath = sys_get_temp_dir() . '/proctor-ci-include-' . bin2hex(random_bytes(4));
+        mkdir($appPath, 0777, true);
+        file_put_contents($appPath . '/composer.json', '{"require": {"php": "^8.4"}}');
+        file_put_contents($appPath . '/.gitlab-ci.yml', "include: lint.yml\n");
+        file_put_contents($appPath . '/lint.yml', "lint:\n  script:\n    - composer lint\n");
+
+        try {
+            $findings = (new CiPipelinesCheck())->run($this->contextFor($appPath));
+        } finally {
+            unlink($appPath . '/lint.yml');
+            unlink($appPath . '/.gitlab-ci.yml');
+            unlink($appPath . '/composer.json');
+            rmdir($appPath);
+        }
+
+        self::assertCount(1, $findings);
+        self::assertSame(
+            'ci-pipelines-gitlab-no-ci: no job in .gitlab-ci.yml or the local files it includes runs composer ci; add a job whose script runs composer ci',
+            $findings[0]->message,
+        );
+    }
+
+    public function testAnIncludeLoopIsReadOnce(): void
+    {
+        $appPath = sys_get_temp_dir() . '/proctor-ci-include-' . bin2hex(random_bytes(4));
+        mkdir($appPath, 0777, true);
+        file_put_contents($appPath . '/composer.json', '{"require": {"php": "^8.4"}}');
+        file_put_contents($appPath . '/.gitlab-ci.yml', "include: /a.yml\n");
+        file_put_contents($appPath . '/a.yml', "include: [b.yml]\nupdate-a:\n  script: composer update\n");
+        file_put_contents($appPath . '/b.yml', "include:\n  local: a.yml\nci:\n  script: composer ci\n");
+
+        try {
+            $findings = (new CiPipelinesCheck())->run($this->contextFor($appPath));
+        } finally {
+            foreach (['a.yml', 'b.yml', '.gitlab-ci.yml', 'composer.json'] as $name) {
+                unlink($appPath . '/' . $name);
+            }
+            rmdir($appPath);
+        }
+
+        self::assertSame(
+            [['ci-pipelines-composer-update', 'a.yml', 3]],
+            $this->triples($findings),
+        );
+    }
+
+    public function testOtherGithubWorkflowsGetTheIntegrityWarnings(): void
+    {
+        // nightly.yaml sets COMPOSER_NO_BLOCKING and runs composer update;
+        // broken.yml does not parse (GitHub's to report) and README.md is
+        // not a workflow. The uses: pin and the composer ci contract stay
+        // on ci.yml, so actions/checkout@v4 here earns nothing.
+        $findings = (new CiPipelinesCheck())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/ci-pipelines-other-workflows-app'),
+        );
+
+        self::assertSame(
+            [
+                ['ci-pipelines-composer-audit-off', '.github/workflows/nightly.yaml', 7],
+                ['ci-pipelines-composer-update', '.github/workflows/nightly.yaml', 14],
+            ],
+            $this->triples($findings),
+        );
+        self::assertSame(
+            'ci-pipelines-composer-update: CI runs "composer update --no-interaction" in Refresh; install from the lock with "composer install" instead (rule 3.7).',
+            $findings[1]->message,
+        );
+    }
 }

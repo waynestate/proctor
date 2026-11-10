@@ -1,0 +1,14 @@
+# A nightly workflow that refreshes the lock: rule 3.7 applies here too.
+name: nightly
+on:
+  schedule:
+    - cron: '0 6 * * *'
+env:
+  COMPOSER_NO_BLOCKING: "1"
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refresh
+        run: composer update --no-interaction

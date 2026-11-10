@@ -1,0 +1,6 @@
+include:
+  - local: ci/gone.yml
+  - local: ci/none-*.yml
+composer-ci:
+  script:
+    - composer ci
