@@ -4,6 +4,7 @@
 
 ## 0.13.0 (2026-11-10)
 
+- Docs: the upgrading page has 0.13.0 notes (the `too-short` rule id and the policy-read advice), and BEST_PRACTICES 4.11 (the release cooldown) is `Checked` and leaves the backlog gaps list.
 - Added: `composer-cooldown` reads the period from the CREED policy (CREED 0.1.10's `tools.composer.cooldown`): its advice names the policy's period and exemptions, and it warns (`too-short`) when an app's period is shorter than the policy's. The generated CREED reader in `src/Creed` is refreshed from CREED 0.1.10.
 - Docs: the front page and checks overview name the checks new in 0.12.0 (composer-cooldown, lock-tracked) and the current check count.
 - Changed: the deploy layer requires PROCTOR ^0.12 (locked 0.12.0, was ^0.11.1): two new warning-only checks, nothing breaks.

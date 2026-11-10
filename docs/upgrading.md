@@ -7,6 +7,34 @@ description: How to upgrade PROCTOR to a newer release and note the changes that
 
 PROCTOR is the invigilator, so upgrading it is a seat change, not a new exam: same hall, fresher pen. This page tells you how to move an app from one PROCTOR release to the next and which changes affect your runs. Start with the release that has a break, then work down to the additive ones.
 
+## 0.13.0
+
+Released 2026-11-10. This is a pre-1.0 minor: consumers that pin `^0.12` stay on 0.12.x until they move their constraint to `^0.13`. Nothing breaks: `composer-cooldown` still only warns and is not in the deploy gate, so a run that passed on 0.12.0 still passes. The proctor now reads the cooldown from the rule book instead of reciting it from memory: the period and the exemptions come from the CREED policy, and an app that waits less than the policy asks gets a warning.
+
+### Breaking
+
+- None. The new finding is a warning, and a warning never changes the exit code.
+
+### Added
+
+| Check | Rule ids | What it warns on |
+| --- | --- | --- |
+| `composer-cooldown` | `proctor/composer-cooldown/too-short` | composer.json sets a `config.policy.cooldown.period` shorter than the one the CREED policy names (`tools.composer.cooldown.period`, 3 days in the bundled policy), compared in hours; a period PROCTOR cannot read is not compared |
+
+### Changed
+
+- `composer-cooldown`'s `missing` advice names the CREED policy's period and exemptions. With the bundled policy (3 days, `waynestate/*` exempt) the message is the same as in 0.12.0; a custom policy (`--policy`) with another period or ignore list changes the example it prints.
+- The generated CREED reader in `src/Creed` is refreshed from CREED 0.1.10, which adds `Policy::toolCooldownPeriod()` and `Policy::toolCooldownIgnore()`.
+
+### Deprecated
+
+- None recorded so far.
+
+### Steps
+
+1. Move the PROCTOR constraint in your composer.json from `^0.12` to `^0.13`, then apply it with `composer require waynestate/proctor --dev`.
+2. If `proctor check` now warns `too-short`, raise `config.policy.cooldown.period` in composer.json to at least the policy's period (`"3 days"` for the stack), then refresh the lock's content hash with `composer update --lock`.
+
 ## 0.12.0
 
 Released 2026-11-10. This is a pre-1.0 minor: consumers that pin `^0.11` stay on 0.11.x until they move their constraint to `^0.12`. Nothing breaks: the two new checks only warn and are not in the deploy gate, so a run that passed on 0.11.2 still passes and a deploy that went ahead still goes ahead. Expect new warnings when your composer.json sets no release cooldown, when git does not track your `composer.lock`, or when a CI component other than Preflight's is included at a moving ref. Two new rules for the hall: wait three days before trusting a fresh package, and hand in the lock you actually wrote.
