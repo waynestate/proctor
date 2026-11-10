@@ -90,6 +90,18 @@ No finding when there is no `.gitlab-ci.yml` or it does not parse; `ci-pipelines
 | `preflight-gates` | `proctor/preflight-gates/allow-failure` |
 | `preflight-gates` | `proctor/preflight-gates/no-proctor-job` |
 
+## mysql56-ci
+
+`mysql56-ci` warns, and never fails, when an app has migrations but its `.gitlab-ci.yml` never runs them against MySQL 5.6 (CREED `databases.md`): Citadel's shared server is 5.6.51, so a migration set that only ever met SQLite or a newer MySQL in CI can fail on the first deploy. The `mysql56` check scans the code for features 5.6 rejects; this one checks the wiring.
+
+- Migrations exist (a `database/migrations/` directory holding at least one `*.php` file) and the pipeline never runs them against 5.6 warns (`proctor/mysql56-ci/no-job`), once, on the pipeline file. The pipeline runs them when an `include:` entry carries a `component:` path containing `/preflight/mysql56-migrate@`, a top-level job is named `mysql56-migrate`, or an included `mysql56-migrate` component sets `inputs: job_name:` to some name.
+
+No finding when the app has no migrations, when there is no `.gitlab-ci.yml`, or when the file does not parse; `ci-pipelines` and `preflight-gates` report both. Fix by including Preflight's `mysql56-migrate` component, pinned to a release tag. It reports, and is not in the deploy gate. A warning on purpose: a repository adding the component may keep `allow_failure` for a while, with a comment saying why, until its first findings are fixed.
+
+| Check | Rule id |
+| --- | --- |
+| `mysql56-ci` | `proctor/mysql56-ci/no-job` |
+
 ## portability
 
 `portability` warns when code hard-codes a platform fact: an absolute host path, a hard-coded proxy address, a local-disk session store, or a `php_value`/`php_flag` line in `.htaccess`.

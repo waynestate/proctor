@@ -114,6 +114,7 @@ vendor/bin/proctor gate [--path=.] [--format=text|json] [--baseline=<report or d
 - `ci-pipelines`: for stack packages (composer.json `name` starting with `waynestate/`), fails when `.gitlab-ci.yml` or `.github/workflows/ci.yml` is missing or runs no `composer ci`; for any other project, a missing or incomplete `.gitlab-ci.yml` is a warning and `.github/workflows/ci.yml` is optional. A private stack package that sets `extra.proctor.github-mirror` to `false` in composer.json must never be on GitHub: a missing `.github/workflows/ci.yml` then gives no finding, and a present one warns (`proctor/ci-pipelines/github-private`) along with the warning-only rules. Warns when a GitHub `uses:` ref is not a 40-hex commit SHA. Warns (`proctor/ci-pipelines/composer-audit-off`) when the pipeline environment switches Composer's audit or blocking policy off: `COMPOSER_NO_AUDIT` or `COMPOSER_NO_BLOCKING` set to anything but an empty string, `0` or `false`, or `COMPOSER_AUDIT_ABANDONED` set to `ignore`, in the GitLab top-level or job `variables:` (a scalar or a map with a `value` key) or the GitHub top-level, job or step `env:`. Warns (`proctor/ci-pipelines/composer-update`) once per line when a command segment of a GitLab job script line (`script`, `before_script` or `after_script`) or a GitHub step run starts with `composer update` or `composer require`: CI must install from the lock (rule 3.7). Warns (`proctor/ci-pipelines/allow-overrides`) once per file when the pipeline environment sets `PROCTOR_ALLOW_OVERRIDES` to `1`, which lets the app pass `--policy` and `--today` in CI (BEST_PRACTICES 1.2) and grade itself against a policy or a date it picks; any other value leaves the guard on. A warning, never a fail, for stack packages and other projects alike. The proctor fails the stack's own exam halls, and only leaves a note for everyone else's.
 - `preflight-pinned`: warns, never fails, when an app includes any CI component at a moving ref (a component is an `include:` entry with a `component:` value), or when it re-declares what an included Preflight job runs (a Preflight include is one whose `component:` path contains `/preflight/`). When the ref after the last `@` is neither a full release tag (`MAJOR.MINOR.PATCH` such as `0.3.0`, optional leading `v`) nor a 40-lowercase-hex commit SHA it warns (`proctor/preflight-pinned/unpinned`), and a branch such as `main`, `~latest`, a partial version such as `0.3` or `1`, or no `@` at all all count as moving. Pin a release tag such as `@0.3.0` or a commit SHA; published stack tags are never moved or deleted, so a release tag is a pin. When the app declares one of the Preflight job names (`proctor`, `php-test`, `composer-audit`, `sbom`, `pint`, `phpstan`, `eslint`, `renovate`, `package-publish`) with `script`, `before_script` or `after_script` while a Preflight component is included, it warns (`proctor/preflight-pinned/script-override`). With nothing to flag it passes: `CI components are pinned`, or `no CI components included` when there is no pipeline, a parse error or no component include. The proctor checks the boarding pass against the manifest, so the app cannot board a different flight mid-run.
 - `preflight-gates`: warns, never fails, when `.gitlab-ci.yml` skips or weakens Preflight (Preflight practice 3.3). No include whose `component:` path contains `/preflight/` warns (`proctor/preflight-gates/no-include`). A gate component (every Preflight component but `renovate` and `package-publish`) included with the `allow_failure` input set to `true`, or a job the app re-declares under the gate's job name (its `job_name` input, or the component name) with `allow_failure` set to anything but `false`, warns once per place it is set (`proctor/preflight-gates/allow-failure`). No Preflight `proctor` include and no job whose `script` runs `proctor check` or `proctor gate` (`vendor/bin/proctor`, `proctor.phar` or a path to either) warns (`proctor/preflight-gates/no-proctor-job`). No finding when there is no `.gitlab-ci.yml` or it does not parse (`ci-pipelines` reports both); with nothing to flag it passes: `Preflight gates are included, none may fail softly, and PROCTOR runs`. It reports, and is not in the deploy gate. The proctor notices when the exam hall has no proctor, and when the doors were left open for anyone who fails.
+- `mysql56-ci`: warns, never fails, when an app has migrations (a `database/migrations/` directory holding at least one `*.php` file) but its `.gitlab-ci.yml` never runs them against MySQL 5.6 (CREED `databases.md`): Citadel's shared server is 5.6.51, so a migration set that only ever met SQLite or a newer MySQL in CI can fail on the first deploy. The `mysql56` check scans the code for features 5.6 rejects; this one checks the wiring. The pipeline runs them when an `include:` entry carries a `component:` path containing `/preflight/mysql56-migrate@`, a top-level job is named `mysql56-migrate`, or an included `mysql56-migrate` component sets `inputs: job_name:` to some name. No finding when the app has no migrations, when there is no `.gitlab-ci.yml`, or when the file does not parse (`ci-pipelines` and `preflight-gates` report both); otherwise one warning on the pipeline file (`proctor/mysql56-ci/no-job`). Fix by including Preflight's `mysql56-migrate` component, pinned to a release tag. It reports, and is not in the deploy gate. The proctor checks that the practice round ran on the same machine as the exam.
 - `composer-audit`: fails for advisories at or above the policy's `audit_severity_threshold`, warns for lower ones, and fails with a message that starts with `not audited:` when the composer executable is not on PATH or the app has no composer.lock (rule id `proctor/composer-audit/skipped`): install Composer, commit the lock, or record an active `composer-audit` override in policy-overrides.json with a reason and an expiry to downgrade the fail to a warning. An advisory on a package that composer.lock lists only in packages-dev is a warning at any severity (its message ends in ` [dev dependency]`), while a runtime advisory fails at or above the threshold. When the audit runs but its stdout is not parseable JSON, the check fails (rule id `proctor/composer-audit/could-not-run`) with a message that starts with `not audited:` and carries the first stderr line, because a green run that audited nothing is worse than a red one. Each finding names the package, the version locked in composer.lock, the advisory's CVE (or its advisory id when there is no CVE), its title and its severity. An advisory the app ignores in its own composer.json (`config.policy.advisories.ignore-id`, `config.policy.advisories.ignore`, or the legacy `config.audit.ignore`) is a warning, not a fail, and so is anything composer has already moved to its ignored section. Abandoned packages follow the policy's `abandoned_packages` rule, passed to the audit as `--abandoned` (rule id `proctor/composer-audit/abandoned`): `fail` (the bundled policy, and the default) fails each one, `report` warns, `ignore` stays quiet; the message names the suggested replacement or says there is none, and a package the app ignores in `config.policy.abandoned.ignore` (or the legacy `config.audit.ignore-abandoned`) is a warning instead. A package pattern in `config.policy.advisories.ignore` may use `*`, matched the way composer does, case-insensitively. Since Composer 2.10 the audit exits 1 when anything failed it, so a non-zero exit whose JSON lists nothing PROCTOR can read (a malware or policy block, or an error) is itself a fail (`proctor/composer-audit/exit-code`), and only a clean exit with a clean result passes. A warning (`proctor/composer-audit/ignore-entries`) reports the number of ignore entries in composer.json: `config.policy.advisories.ignore-id`, `config.policy.advisories.ignore`, `config.policy.advisories.ignore-severity`, `config.policy.abandoned.ignore`, or the legacy `config.audit.ignore`, `config.audit.ignore-severity` and `config.audit.ignore-abandoned` (the two legacy fallbacks count only while their matching `config.policy` block is absent), so they move to the dated override file. An ignore entry that no active `composer-audit` override in policy-overrides.json backs is a fail of its own (`proctor/composer-audit/unbacked-ignore`): an override backs the entry when its `advisory` field equals the entry's advisory id case-insensitively, its `package` field matches the entry's package the way composer matches patterns, or it carries no scope at all, and a backing override is not reported unused. The proctor checks the invigilator's mark against its own answer sheet, and refuses to sign a green for a red pen.
 - `composer-version`: fails when the Composer on PATH carries the command-injection holes CVE-2024-35241 and CVE-2024-35242 (2.2.x below 2.2.24, or any other 2.x below 2.7.7) or is Composer 1, which is end of life; when a policy sets `tools.composer.minimum` above the CVE floor for the version's line, it fails below that too, naming the policy in the message (the bundled policy sets 2.8.0); warns when composer cannot be run. The invigilator checks its own pen: [GHSA-47f6-5gq3-vx9c](https://github.com/advisories/GHSA-47f6-5gq3-vx9c) and [GHSA-v9qv-c7wm-wgmf](https://github.com/advisories/GHSA-v9qv-c7wm-wgmf).
 - `repo-url-credentials`: warns when a credential is written into a package source URL: a deploy token in the userinfo of a composer.json repository URL or a composer.lock source/dist URL (`https://gitlab+deploy-token-12:***@host/group/lib.git`), a bare token user of 20+ characters, a `private_token`, `access_token`, `token` or `password` query parameter, or a `.npmrc` line that sets `_authToken`, `_auth` or `_password` to a literal value (`${SOME_VAR}` is fine). The secret is masked as `***` in the message, so the report itself is safe to hand back. Warning, not failure. Fix by moving the token to `auth.json`, which is gitignored, or a CI variable, and using one registry URL without credentials. The proctor spots the answer key taped inside the desk before the student does.
@@ -321,6 +322,7 @@ The full set, grouped by check:
 | `preflight-gates` | `proctor/preflight-gates/no-include` |
 | `preflight-gates` | `proctor/preflight-gates/allow-failure` |
 | `preflight-gates` | `proctor/preflight-gates/no-proctor-job` |
+| `mysql56-ci` | `proctor/mysql56-ci/no-job` |
 | `composer-audit` | `proctor/composer-audit` |
 | `composer-audit` | `proctor/composer-audit/advisory` |
 | `composer-audit` | `proctor/composer-audit/abandoned` |
@@ -620,7 +622,7 @@ Run `vendor/bin/proctor check` in a PHP app and it checks the app against CREED'
 
 [Sit the exam](https://proctor.apps.wayne.edu/#start-title) [Watch it mark a paper](https://proctor.apps.wayne.edu/#sheet-title)
 
-- [**44** checks](https://proctor.apps.wayne.edu/#paper-title)
+- [**45** checks](https://proctor.apps.wayne.edu/#paper-title)
 - **8** at the gate
 - **4** formats
 - **3** exit codes
@@ -647,7 +649,7 @@ Part A
 
 ### The questions
 
-Nine of PROCTOR's forty-four checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures. [The whole paper](https://proctor.apps.wayne.edu/#paper-title) is further down.
+Nine of PROCTOR's forty-five checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures. [The whole paper](https://proctor.apps.wayne.edu/#paper-title) is further down.
 
 1. Q1 `php-floor`
    ### Is the lowest PHP your `composer.json` allows still supported?
@@ -707,7 +709,7 @@ Last term these were on the coming-soon list. They are built and released now, s
 
 The whole paper
 
-#### All forty-four questions
+#### All forty-five questions
 
 Every check `proctor check` asks, in the order it asks them. Each id opens its page in the docs.
 
@@ -738,28 +740,29 @@ Every check `proctor check` asks, in the order it asks them. Each id opens its p
 22. [`ci-pipelines`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#ci-pipelines): Do the pipelines run `composer ci`?
 23. [`preflight-pinned`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#preflight-pinned): Is every CI component pinned to a release?
 24. [`preflight-gates`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#preflight-gates): Do Preflight's gates run, and block?
-25. [`composer-audit`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-audit): Does the lock carry a known advisory? Gate
-26. [`composer-version`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-version): Is the Composer on PATH safe?
-27. [`repo-url-credentials`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#repo-url-credentials): Is a token written into a package URL?
-28. [`instant-client-committed`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#instant-client-committed): Is Oracle Instant Client committed?
-29. [`env-outside-config`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#env-outside-config): Is `env()` called outside config?
-30. [`raw-identity-header`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#raw-identity-header): Does code read identity headers itself?
-31. [`app-key`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-key): Is the APP_KEY given away?
-32. [`app-debug`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-debug): Does a production file turn APP_DEBUG on?
-33. [`display-errors`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#display-errors): Does a php.ini show errors to visitors?
-34. [`directory-listing`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#directory-listing): Does the server list a folder's files?
-35. [`csp-unsafe-inline`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#csp-unsafe-inline): Does the CSP let inline scripts run?
-36. [`robots-txt`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#robots-txt): Does `robots.txt` say who may crawl?
-37. [`vite-secrets`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#vite-secrets): Does a `VITE_` name carry a secret?
-38. [`served-folder`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#served-folder): Can a stranger download a dump from `public/`?
-39. [`world-writable`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#world-writable): Does anything `chmod 777`?
-40. [`wayneui-forked-views`](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html#wayneui-forked-views): Are forked WayneUI views committed?
-41. [`wayneui-outdated`](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html#wayneui-outdated): Is your WayneUI the latest of its line?
-42. [`overrides`](https://proctor.apps.wayne.edu/docs/guides/overrides.html#how-overrides-work): Has any note from home expired? Gate
-43. [`override-approver`](https://proctor.apps.wayne.edu/docs/guides/overrides.html#someone-else-signs-the-note): Did someone sign their own note?
-44. [`policy-age`](https://proctor.apps.wayne.edu/docs/guides/check-php.html#policy-age): Is the policy itself fresh? Gate
+25. [`mysql56-ci`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#mysql56-ci): Do the migrations meet MySQL 5.6 in CI?
+26. [`composer-audit`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-audit): Does the lock carry a known advisory? Gate
+27. [`composer-version`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-version): Is the Composer on PATH safe?
+28. [`repo-url-credentials`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#repo-url-credentials): Is a token written into a package URL?
+29. [`instant-client-committed`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#instant-client-committed): Is Oracle Instant Client committed?
+30. [`env-outside-config`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#env-outside-config): Is `env()` called outside config?
+31. [`raw-identity-header`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#raw-identity-header): Does code read identity headers itself?
+32. [`app-key`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-key): Is the APP_KEY given away?
+33. [`app-debug`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-debug): Does a production file turn APP_DEBUG on?
+34. [`display-errors`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#display-errors): Does a php.ini show errors to visitors?
+35. [`directory-listing`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#directory-listing): Does the server list a folder's files?
+36. [`csp-unsafe-inline`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#csp-unsafe-inline): Does the CSP let inline scripts run?
+37. [`robots-txt`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#robots-txt): Does `robots.txt` say who may crawl?
+38. [`vite-secrets`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#vite-secrets): Does a `VITE_` name carry a secret?
+39. [`served-folder`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#served-folder): Can a stranger download a dump from `public/`?
+40. [`world-writable`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#world-writable): Does anything `chmod 777`?
+41. [`wayneui-forked-views`](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html#wayneui-forked-views): Are forked WayneUI views committed?
+42. [`wayneui-outdated`](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html#wayneui-outdated): Is your WayneUI the latest of its line?
+43. [`overrides`](https://proctor.apps.wayne.edu/docs/guides/overrides.html#how-overrides-work): Has any note from home expired? Gate
+44. [`override-approver`](https://proctor.apps.wayne.edu/docs/guides/overrides.html#someone-else-signs-the-note): Did someone sign their own note?
+45. [`policy-age`](https://proctor.apps.wayne.edu/docs/guides/check-php.html#policy-age): Is the policy itself fresh? Gate
 
-44 questions, no multiple choice. The [Checks](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html) page has every rule, and [Rule ids](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html) has every id a finding can carry.
+45 questions, no multiple choice. The [Checks](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html) page has every rule, and [Rule ids](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html) has every id a finding can carry.
 
 #### Part C: next term Coming soon
 
@@ -1814,6 +1817,18 @@ No finding when there is no `.gitlab-ci.yml` or it does not parse; `ci-pipelines
 | `preflight-gates` | `proctor/preflight-gates/allow-failure` |
 | `preflight-gates` | `proctor/preflight-gates/no-proctor-job` |
 
+### mysql56-ci [#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#mysql56-ci)
+
+`mysql56-ci` warns, and never fails, when an app has migrations but its `.gitlab-ci.yml` never runs them against MySQL 5.6 (CREED `databases.md`): Citadel's shared server is 5.6.51, so a migration set that only ever met SQLite or a newer MySQL in CI can fail on the first deploy. The `mysql56` check scans the code for features 5.6 rejects; this one checks the wiring.
+
+- Migrations exist (a `database/migrations/` directory holding at least one `*.php` file) and the pipeline never runs them against 5.6 warns (`proctor/mysql56-ci/no-job`), once, on the pipeline file. The pipeline runs them when an `include:` entry carries a `component:` path containing `/preflight/mysql56-migrate@`, a top-level job is named `mysql56-migrate`, or an included `mysql56-migrate` component sets `inputs: job_name:` to some name.
+
+No finding when the app has no migrations, when there is no `.gitlab-ci.yml`, or when the file does not parse; `ci-pipelines` and `preflight-gates` report both. Fix by including Preflight's `mysql56-migrate` component, pinned to a release tag. It reports, and is not in the deploy gate. A warning on purpose: a repository adding the component may keep `allow_failure` for a while, with a comment saying why, until its first findings are fixed.
+
+| Check | Rule id |
+| --- | --- |
+| `mysql56-ci` | `proctor/mysql56-ci/no-job` |
+
 ### portability [#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#portability)
 
 `portability` warns when code hard-codes a platform fact: an absolute host path, a hard-coded proxy address, a local-disk session store, or a `php_value`/`php_flag` line in `.htaccess`.
@@ -2221,11 +2236,11 @@ Source: https://proctor.apps.wayne.edu/docs/guides/checks-overview.html
 
 This page lists every check PROCTOR runs in a single `vendor/bin/proctor check` run, and how each one reports. The proctor asks the same questions in the same order on every run; only the hall changes.
 
-Forty-four checks in all. Eight of them also run at the door, in `proctor gate`: `php-floor`, `unpatched`, `laravel-eol`, `laravel-php`, `lock-committed`, `composer-audit`, `overrides` and `policy-age` (see [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html)). Two are new in 0.12.0: `composer-cooldown` and `lock-tracked`.
+Forty-five checks in all. Eight of them also run at the door, in `proctor gate`: `php-floor`, `unpatched`, `laravel-eol`, `laravel-php`, `lock-committed`, `composer-audit`, `overrides` and `policy-age` (see [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html)). Two are new in 0.12.0: `composer-cooldown` and `lock-tracked`.
 
 ![Nine real lines from PROCTOR's text report, one per check shown: FAIL php-floor, WARN unpatched, FAIL unbounded-constraints, PASS lock-committed, WARN portability, WARN mysql56, WARN ci-pipelines, PASS composer-audit, FAIL overrides. Each line is written in words; color only repeats what the word says.](https://proctor.apps.wayne.edu/docs/readme/report.svg)
 
-*Nine of the forty-four checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
+*Nine of the forty-five checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
 
 ### How a check reports [#](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html#how-a-check-reports)
 
@@ -2881,7 +2896,7 @@ A clean hall exits 0 (warnings allowed), a resit exits 1, and a tripped proctor 
 
 ### Status [#](https://proctor.apps.wayne.edu/docs/#status)
 
-The header names the release these pages document; [Upgrading](https://proctor.apps.wayne.edu/docs/upgrading.html) lists what changed at each break. Forty-four checks, eight of them in the deploy gate, four report formats and three exit codes. License: MIT.
+The header names the release these pages document; [Upgrading](https://proctor.apps.wayne.edu/docs/upgrading.html) lists what changed at each break. Forty-five checks, eight of them in the deploy gate, four report formats and three exit codes. License: MIT.
 
 Part of WELD, the Wayne State application stack: [CREED](https://creed.apps.wayne.edu/) sets the policy PROCTOR marks against, [Preflight](https://preflight.apps.wayne.edu/) runs it in GitLab CI, and [Sourdough](https://sourdough.apps.wayne.edu/) and [WELD](https://weld.apps.wayne.edu/) apps come with it installed. The look is [WayneUI](https://wayneui.apps.wayne.edu/).
 
@@ -3362,6 +3377,7 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `preflight-gates` | `proctor/preflight-gates/no-include` |
 | `preflight-gates` | `proctor/preflight-gates/allow-failure` |
 | `preflight-gates` | `proctor/preflight-gates/no-proctor-job` |
+| `mysql56-ci` | `proctor/mysql56-ci/no-job` |
 | `composer-audit` | `proctor/composer-audit` |
 | `composer-audit` | `proctor/composer-audit/advisory` |
 | `composer-audit` | `proctor/composer-audit/abandoned` |

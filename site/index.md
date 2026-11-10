@@ -20,7 +20,7 @@ Run `vendor/bin/proctor check` in a PHP app and it checks the app against CREED'
 
 [Sit the exam](https://proctor.apps.wayne.edu/#start-title) [Watch it mark a paper](https://proctor.apps.wayne.edu/#sheet-title)
 
-- [**44** checks](https://proctor.apps.wayne.edu/#paper-title)
+- [**45** checks](https://proctor.apps.wayne.edu/#paper-title)
 - **8** at the gate
 - **4** formats
 - **3** exit codes
@@ -47,7 +47,7 @@ Part A
 
 ## The questions
 
-Nine of PROCTOR's forty-four checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures. [The whole paper](https://proctor.apps.wayne.edu/#paper-title) is further down.
+Nine of PROCTOR's forty-five checks, in the order they run. Each one shows a real line from PROCTOR's text report, taken from its test fixtures. [The whole paper](https://proctor.apps.wayne.edu/#paper-title) is further down.
 
 1. Q1 `php-floor`
    ### Is the lowest PHP your `composer.json` allows still supported?
@@ -107,7 +107,7 @@ Last term these were on the coming-soon list. They are built and released now, s
 
 The whole paper
 
-### All forty-four questions
+### All forty-five questions
 
 Every check `proctor check` asks, in the order it asks them. Each id opens its page in the docs.
 
@@ -138,28 +138,29 @@ Every check `proctor check` asks, in the order it asks them. Each id opens its p
 22. [`ci-pipelines`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#ci-pipelines): Do the pipelines run `composer ci`?
 23. [`preflight-pinned`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#preflight-pinned): Is every CI component pinned to a release?
 24. [`preflight-gates`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#preflight-gates): Do Preflight's gates run, and block?
-25. [`composer-audit`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-audit): Does the lock carry a known advisory? Gate
-26. [`composer-version`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-version): Is the Composer on PATH safe?
-27. [`repo-url-credentials`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#repo-url-credentials): Is a token written into a package URL?
-28. [`instant-client-committed`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#instant-client-committed): Is Oracle Instant Client committed?
-29. [`env-outside-config`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#env-outside-config): Is `env()` called outside config?
-30. [`raw-identity-header`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#raw-identity-header): Does code read identity headers itself?
-31. [`app-key`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-key): Is the APP_KEY given away?
-32. [`app-debug`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-debug): Does a production file turn APP_DEBUG on?
-33. [`display-errors`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#display-errors): Does a php.ini show errors to visitors?
-34. [`directory-listing`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#directory-listing): Does the server list a folder's files?
-35. [`csp-unsafe-inline`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#csp-unsafe-inline): Does the CSP let inline scripts run?
-36. [`robots-txt`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#robots-txt): Does `robots.txt` say who may crawl?
-37. [`vite-secrets`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#vite-secrets): Does a `VITE_` name carry a secret?
-38. [`served-folder`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#served-folder): Can a stranger download a dump from `public/`?
-39. [`world-writable`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#world-writable): Does anything `chmod 777`?
-40. [`wayneui-forked-views`](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html#wayneui-forked-views): Are forked WayneUI views committed?
-41. [`wayneui-outdated`](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html#wayneui-outdated): Is your WayneUI the latest of its line?
-42. [`overrides`](https://proctor.apps.wayne.edu/docs/guides/overrides.html#how-overrides-work): Has any note from home expired? Gate
-43. [`override-approver`](https://proctor.apps.wayne.edu/docs/guides/overrides.html#someone-else-signs-the-note): Did someone sign their own note?
-44. [`policy-age`](https://proctor.apps.wayne.edu/docs/guides/check-php.html#policy-age): Is the policy itself fresh? Gate
+25. [`mysql56-ci`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#mysql56-ci): Do the migrations meet MySQL 5.6 in CI?
+26. [`composer-audit`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-audit): Does the lock carry a known advisory? Gate
+27. [`composer-version`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-version): Is the Composer on PATH safe?
+28. [`repo-url-credentials`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#repo-url-credentials): Is a token written into a package URL?
+29. [`instant-client-committed`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#instant-client-committed): Is Oracle Instant Client committed?
+30. [`env-outside-config`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#env-outside-config): Is `env()` called outside config?
+31. [`raw-identity-header`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#raw-identity-header): Does code read identity headers itself?
+32. [`app-key`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-key): Is the APP_KEY given away?
+33. [`app-debug`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-debug): Does a production file turn APP_DEBUG on?
+34. [`display-errors`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#display-errors): Does a php.ini show errors to visitors?
+35. [`directory-listing`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#directory-listing): Does the server list a folder's files?
+36. [`csp-unsafe-inline`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#csp-unsafe-inline): Does the CSP let inline scripts run?
+37. [`robots-txt`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#robots-txt): Does `robots.txt` say who may crawl?
+38. [`vite-secrets`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#vite-secrets): Does a `VITE_` name carry a secret?
+39. [`served-folder`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#served-folder): Can a stranger download a dump from `public/`?
+40. [`world-writable`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#world-writable): Does anything `chmod 777`?
+41. [`wayneui-forked-views`](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html#wayneui-forked-views): Are forked WayneUI views committed?
+42. [`wayneui-outdated`](https://proctor.apps.wayne.edu/docs/guides/check-wayneui.html#wayneui-outdated): Is your WayneUI the latest of its line?
+43. [`overrides`](https://proctor.apps.wayne.edu/docs/guides/overrides.html#how-overrides-work): Has any note from home expired? Gate
+44. [`override-approver`](https://proctor.apps.wayne.edu/docs/guides/overrides.html#someone-else-signs-the-note): Did someone sign their own note?
+45. [`policy-age`](https://proctor.apps.wayne.edu/docs/guides/check-php.html#policy-age): Is the policy itself fresh? Gate
 
-44 questions, no multiple choice. The [Checks](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html) page has every rule, and [Rule ids](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html) has every id a finding can carry.
+45 questions, no multiple choice. The [Checks](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html) page has every rule, and [Rule ids](https://proctor.apps.wayne.edu/docs/reference/rule-ids.html) has every id a finding can carry.
 
 ### Part C: next term Coming soon
 

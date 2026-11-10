@@ -75,6 +75,7 @@ final class CheckSet
             new CiPipelinesCheck(),
             new PreflightPinnedCheck(),
             new PreflightGatesCheck(),
+            new Mysql56CiCheck(),
             new ComposerAuditCheck(),
             $composerVersion ?? new ComposerVersionCheck(policy: $resolved->policy),
             new RepoUrlCredentialsCheck(),

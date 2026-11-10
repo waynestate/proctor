@@ -162,6 +162,26 @@ YAML);
         );
     }
 
+    public function testTheMysql56MigrateComponentIsAGate(): void
+    {
+        $findings = $this->runCheck(<<<'YAML'
+include:
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.4.0
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/mysql56-migrate@0.6.0
+    inputs:
+      allow_failure: true
+YAML);
+
+        self::assertSame(
+            [['proctor/preflight-gates/allow-failure', Finding::STATUS_WARNING, '.gitlab-ci.yml', 5]],
+            $this->rows($findings),
+        );
+        self::assertSame(
+            'preflight-gates-allow-failure: the Preflight mysql56-migrate component is included with allow_failure: true, so the gate can fail and the pipeline still passes; remove the input once its findings are fixed',
+            $findings[0]->message,
+        );
+    }
+
     public function testAReDeclaredGateJobWithAllowFailureWarnsOnThatLine(): void
     {
         $findings = $this->runCheck(self::GOOD . <<<'YAML'

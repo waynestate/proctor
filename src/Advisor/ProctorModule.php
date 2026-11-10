@@ -120,6 +120,7 @@ final class ProctorModule implements Module
         'ci-pipelines' => 'check-ci',
         'preflight-pinned' => 'check-ci',
         'preflight-gates' => 'check-ci',
+        'mysql56-ci' => 'check-ci',
         'portability' => 'check-ci',
         'destructive-deploy' => 'check-ci',
         'instant-client-committed' => 'check-ci',

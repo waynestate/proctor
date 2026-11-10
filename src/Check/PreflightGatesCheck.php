@@ -50,6 +50,7 @@ final class PreflightGatesCheck implements CheckInterface
         'a11y',
         'composer-audit',
         'eslint',
+        'mysql56-migrate',
         'php-test',
         'phpstan',
         'pint',

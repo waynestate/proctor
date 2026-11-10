@@ -185,6 +185,26 @@
 </tr>
 </tbody>
 </table></div>
+<h2 id="mysql56-ci"><span class="docs-heading-tail"><span>mysql56-ci</span><a class="docs-heading-link" aria-label="Link to this section" href="#mysql56-ci">#</a></span></h2>
+<p><code>mysql56-ci</code> warns, and never fails, when an app has migrations but its <code>.gitlab-ci.yml</code> never runs them against MySQL 5.6 (CREED <code>databases.md</code>): Citadel's shared server is 5.6.51, so a migration set that only ever met SQLite or a newer MySQL in CI can fail on the first deploy. The <code>mysql56</code> check scans the code for features 5.6 rejects; this one checks the wiring.</p>
+<ul>
+<li>Migrations exist (a <code>database/migrations/</code> directory holding at least one <code>*.php</code> file) and the pipeline never runs them against 5.6 warns (<code>proctor/mysql56-ci/no-job</code>), once, on the pipeline file. The pipeline runs them when an <code>include:</code> entry carries a <code>component:</code> path containing <code>/preflight/mysql56-migrate@</code>, a top-level job is named <code>mysql56-migrate</code>, or an included <code>mysql56-migrate</code> component sets <code>inputs: job_name:</code> to some name.</li>
+</ul>
+<p>No finding when the app has no migrations, when there is no <code>.gitlab-ci.yml</code>, or when the file does not parse; <code>ci-pipelines</code> and <code>preflight-gates</code> report both. Fix by including Preflight's <code>mysql56-migrate</code> component, pinned to a release tag. It reports, and is not in the deploy gate. A warning on purpose: a repository adding the component may keep <code>allow_failure</code> for a while, with a comment saying why, until its first findings are fixed.</p>
+<div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Rule id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mysql56-ci</code></td>
+<td><code>proctor/mysql56-ci/no-job</code></td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="portability"><span class="docs-heading-tail"><span>portability</span><a class="docs-heading-link" aria-label="Link to this section" href="#portability">#</a></span></h2>
 <p><code>portability</code> warns when code hard-codes a platform fact: an absolute host path, a hard-coded proxy address, a local-disk session store, or a <code>php_value</code>/<code>php_flag</code> line in <code>.htaccess</code>.</p>
 <p>PHP files are matched on the syntax tree (nikic/php-parser with names resolved), not with regular expressions, so a comment or string that merely mentions a banned call is not flagged, and a call split over several lines, or hidden behind a <code>use function ... as ...</code> alias, is. A call through a variable (<code>$f()</code>) is reported as an info note, never as a pass.</p>
@@ -274,7 +294,7 @@
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../../docs/guides/check-php.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">PHP checks</span></a><a class="docs-pager__link docs-pager__link--next" href="../../docs/guides/check-app.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">App checks</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#run-proctor-in-gitlab-ci">Run PROCTOR in GitLab CI</a></li><li class="docs-toc__item"><a href="#ci-pipelines">ci-pipelines</a></li><li class="docs-toc__item"><a href="#preflight-pinned">preflight-pinned</a></li><li class="docs-toc__item"><a href="#preflight-gates">preflight-gates</a></li><li class="docs-toc__item"><a href="#portability">portability</a></li><li class="docs-toc__item"><a href="#destructive-deploy">destructive-deploy</a></li><li class="docs-toc__item"><a href="#instant-client-committed">instant-client-committed</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#run-proctor-in-gitlab-ci">Run PROCTOR in GitLab CI</a></li><li class="docs-toc__item"><a href="#ci-pipelines">ci-pipelines</a></li><li class="docs-toc__item"><a href="#preflight-pinned">preflight-pinned</a></li><li class="docs-toc__item"><a href="#preflight-gates">preflight-gates</a></li><li class="docs-toc__item"><a href="#mysql56-ci">mysql56-ci</a></li><li class="docs-toc__item"><a href="#portability">portability</a></li><li class="docs-toc__item"><a href="#destructive-deploy">destructive-deploy</a></li><li class="docs-toc__item"><a href="#instant-client-committed">instant-client-committed</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.14.2</span></span>
