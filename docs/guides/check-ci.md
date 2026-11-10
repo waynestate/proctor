@@ -34,7 +34,7 @@ A private stack package that sets `extra.proctor.github-mirror` to `false` in co
 
 ### Split pipelines and other workflows
 
-GitLab merges a pipeline's local includes in before it runs a job, so the check reads them too: every `include:` entry that is a path (`- ci/test.yml`) or a `local:` map, at any depth, with `*` matching inside one folder and `**` across folders. A job in an included file satisfies the `composer ci` contract, and the warnings below name the included file and its line. Remote, project, template and component includes are not files in the repository and are skipped, and so is a path that carries a variable or climbs out with `..`. A named local file that does not exist is reported (`proctor/ci-pipelines/gitlab-include-missing`, at the same level as a missing `.gitlab-ci.yml`), because GitLab rejects that pipeline; a wildcard that matches nothing is not.
+GitLab merges a pipeline's local includes in before it runs a job, so the check reads them too: every `include:` entry that is a path (`- ci/test.yml`) or a `local:` map, at any depth, with `*` matching inside one folder and `**` across folders. A job in an included file satisfies the `composer ci` contract, and the warnings below name the included file and its line. Remote, project, template and component includes are not files in the repository and are skipped, and so is a path that carries a variable or climbs out with `..`. A named local file that does not exist is reported (`proctor/ci-pipelines/gitlab-include-missing`, at the same level as a missing `.gitlab-ci.yml`), because GitLab rejects that pipeline; a wildcard that matches nothing is not. `preflight-pinned`, `preflight-gates` and `mysql56-ci` read the same files, so a Preflight include in `ci/preflight.yml` counts for all four checks.
 
 ```yaml
 # .gitlab-ci.yml: every job lives in ci/, and ci-pipelines still sees composer ci
@@ -79,7 +79,7 @@ Fix a failing pipeline by adding a GitLab job whose `script` runs `composer ci`,
 - When the ref after the last `@` is neither a full release tag (`MAJOR.MINOR.PATCH` such as `0.3.0`, optional leading `v`) nor a 40-lowercase-hex commit SHA it warns (`proctor/preflight-pinned/unpinned`). A branch such as `main`, `~latest`, a partial version such as `0.3` or `1` (GitLab resolves it to the newest matching release), or no `@` at all all count as moving. Pin a release tag such as `@0.3.0` or a commit SHA; published stack tags are never moved or deleted, so a release tag is a pin.
 - When the app declares one of the Preflight job names (`proctor`, `php-test`, `composer-audit`, `sbom`, `pint`, `phpstan`, `eslint`, `renovate`, `package-publish`) with `script`, `before_script` or `after_script` while a Preflight component is included, it warns (`proctor/preflight-pinned/script-override`).
 
-With nothing to flag it passes: `CI components are pinned`, or `no CI components included` when there is no pipeline, a parse error or no component include.
+It reads the pipeline whole: `.gitlab-ci.yml` and the local files it includes (see [Split pipelines](#split-pipelines-and-other-workflows)), and each finding names the file it is in. With nothing to flag it passes: `CI components are pinned`, or `no CI components included` when there is no pipeline, a parse error or no component include.
 
 | Check | Rule id |
 | --- | --- |
@@ -95,7 +95,7 @@ With nothing to flag it passes: `CI components are pinned`, or `no CI components
 - A gate that can fail while the pipeline passes warns (`proctor/preflight-gates/allow-failure`), once per place it is set: a gate component included with the `allow_failure` input set to `true`, or a job the app re-declares under the gate's job name (its `job_name` input, or the component name) with `allow_failure` set to anything but `false`, the exit-codes form included. Every Preflight component is a gate except `renovate` (a bot) and `package-publish` (a release step); php-test's advisory job may fail by design and is not one.
 - No job that runs PROCTOR warns (`proctor/preflight-gates/no-proctor-job`): the Preflight `proctor` component is not included and no job's `script` runs `proctor check` or `proctor gate` (`vendor/bin/proctor`, `proctor.phar` or a path to either).
 
-No finding when there is no `.gitlab-ci.yml` or it does not parse; `ci-pipelines` reports both. With nothing to flag it passes: `Preflight gates are included, none may fail softly, and PROCTOR runs`. It reports, and is not in the deploy gate. A warning on purpose: a repository fixing its first findings may keep `allow_failure` for a while, with a comment saying why, the way Sourdough's pipeline does on its deploy layer.
+A Preflight include, a gate job or a PROCTOR job in a local file the pipeline includes counts the same as one in `.gitlab-ci.yml`, and an `allow_failure` warning names the file it is in. No finding when there is no `.gitlab-ci.yml` or it does not parse; `ci-pipelines` reports both. With nothing to flag it passes: `Preflight gates are included, none may fail softly, and PROCTOR runs`. It reports, and is not in the deploy gate. A warning on purpose: a repository fixing its first findings may keep `allow_failure` for a while, with a comment saying why, the way Sourdough's pipeline does on its deploy layer.
 
 | Check | Rule id |
 | --- | --- |
@@ -108,7 +108,7 @@ No finding when there is no `.gitlab-ci.yml` or it does not parse; `ci-pipelines
 
 `mysql56-ci` warns, and never fails, when an app has migrations but its `.gitlab-ci.yml` never runs them against MySQL 5.6 (CREED `databases.md`): Citadel's shared server is 5.6.51, so a migration set that only ever met SQLite or a newer MySQL in CI can fail on the first deploy. The `mysql56` check scans the code for features 5.6 rejects; this one checks the wiring.
 
-- Migrations exist (a `database/migrations/` directory holding at least one `*.php` file) and the pipeline never runs them against 5.6 warns (`proctor/mysql56-ci/no-job`), once, on the pipeline file. The pipeline runs them when an `include:` entry carries a `component:` path containing `/preflight/mysql56-migrate@`, a top-level job is named `mysql56-migrate`, or an included `mysql56-migrate` component sets `inputs: job_name:` to some name.
+- Migrations exist (a `database/migrations/` directory holding at least one `*.php` file) and the pipeline never runs them against 5.6 warns (`proctor/mysql56-ci/no-job`), once, on the pipeline file. The pipeline runs them when an `include:` entry carries a `component:` path containing `/preflight/mysql56-migrate@`, a top-level job is named `mysql56-migrate`, or an included `mysql56-migrate` component sets `inputs: job_name:` to some name, in `.gitlab-ci.yml` or any local file it includes.
 
 No finding when the app has no migrations, when there is no `.gitlab-ci.yml`, or when the file does not parse; `ci-pipelines` and `preflight-gates` report both. Fix by including Preflight's `mysql56-migrate` component, pinned to a release tag. It reports, and is not in the deploy gate. A warning on purpose: a repository adding the component may keep `allow_failure` for a while, with a comment saying why, until its first findings are fixed.
 

@@ -1,0 +1,9 @@
+include:
+  - component: git.wayne.edu/enterprise-apps/preflight/proctor@0.5.0
+    inputs:
+      allow_failure: true
+  - component: git.wayne.edu/enterprise-apps/preflight/mysql56-migrate@0.7.0
+  - component: git.wayne.edu/enterprise-apps/preflight/php-test@main
+php-test:
+  script:
+    - vendor/bin/phpunit

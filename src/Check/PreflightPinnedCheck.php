@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Waynestate\Proctor\Check;
 
-use Symfony\Component\Yaml\Exception\ParseException;
-use Symfony\Component\Yaml\Yaml;
-
 /**
  * Warns when an app includes any CI component without pinning it to a
  * release tag or a commit SHA (CREED practice 23), or overrides what an
@@ -29,13 +26,11 @@ use Symfony\Component\Yaml\Yaml;
  * the newest matching release, which moves on every release.
  *
  * The file is parsed as YAML, not grepped: a job is a top-level map keyed by
- * its name, the way GitLab defines it.
+ * its name, the way GitLab defines it. The local files the pipeline includes
+ * are read with it (GitlabPipeline), and a finding names the file it is in.
  */
 final class PreflightPinnedCheck implements CheckInterface
 {
-    /** The GitLab pipeline file, relative to the app root. */
-    private const GITLAB_CI = '.gitlab-ci.yml';
-
     /** A commit SHA: exactly 40 lowercase hex characters. */
     private const SHA_PATTERN = '/^[0-9a-f]{40}$/';
 
@@ -66,16 +61,11 @@ final class PreflightPinnedCheck implements CheckInterface
     public function run(CheckContext $context): array
     {
         $appPath = rtrim($context->appPath, '/\\');
-        $absolutePath = $appPath . '/' . self::GITLAB_CI;
 
-        if (!is_file($absolutePath)) {
-            return [new Finding($this->id(), Finding::STATUS_PASS, 'no CI components included')];
-        }
-
-        [$data] = $this->parseYaml($absolutePath);
-        if ($data === null) {
-            // A broken pipeline is ci-pipelines' problem; here there is
-            // simply no component to pin, so pass quietly.
+        // A missing or broken pipeline is ci-pipelines' problem; here there
+        // is simply no component to pin, so pass quietly.
+        $pipeline = GitlabPipeline::read($appPath);
+        if ($pipeline === null) {
             return [new Finding($this->id(), Finding::STATUS_PASS, 'no CI components included')];
         }
 
@@ -83,46 +73,52 @@ final class PreflightPinnedCheck implements CheckInterface
         $hasComponent = false;
         $hasPreflightInclude = false;
 
-        foreach ($this->includeEntries($data['include'] ?? null) as $entry) {
-            if (!is_array($entry)) {
-                // A plain file include, not a component map.
-                continue;
-            }
-            $component = $entry['component'] ?? null;
-            if (!is_string($component)) {
-                continue;
-            }
-            $hasComponent = true;
-            if (str_contains($component, '/preflight/')) {
-                $hasPreflightInclude = true;
-            }
-            $unpinned = $this->unpinnedComponentFinding($component, $absolutePath);
-            if ($unpinned !== null) {
-                $findings[] = $unpinned;
+        // The root file and every local file it includes: a component
+        // included from ci/build.yml runs the same as one in the root.
+        foreach ($pipeline->files as $file) {
+            foreach ($this->includeEntries($file['data']['include'] ?? null) as $entry) {
+                if (!is_array($entry)) {
+                    // A plain file include, not a component map.
+                    continue;
+                }
+                $component = $entry['component'] ?? null;
+                if (!is_string($component)) {
+                    continue;
+                }
+                $hasComponent = true;
+                if (str_contains($component, '/preflight/')) {
+                    $hasPreflightInclude = true;
+                }
+                $unpinned = $this->unpinnedComponentFinding($component, $appPath . '/' . $file['path'], $file['path']);
+                if ($unpinned !== null) {
+                    $findings[] = $unpinned;
+                }
             }
         }
 
         if ($hasPreflightInclude) {
-            foreach ($data as $jobName => $body) {
-                if (!in_array($jobName, self::PREFLIGHT_JOBS, true)) {
-                    continue;
-                }
-                if (!is_array($body)) {
-                    continue;
-                }
-                if (isset($body['script']) || isset($body['before_script']) || isset($body['after_script'])) {
-                    $findings[] = new Finding(
-                        $this->id(),
-                        Finding::STATUS_WARNING,
-                        sprintf(
-                            'preflight-pinned-script-override: job %s overrides what the included Preflight component runs',
-                            $jobName,
-                        ),
-                        self::GITLAB_CI,
-                        $this->jobLine($jobName, $absolutePath),
-                        null,
-                        'script-override',
-                    );
+            foreach ($pipeline->files as $file) {
+                foreach ($file['data'] as $jobName => $body) {
+                    if (!in_array($jobName, self::PREFLIGHT_JOBS, true)) {
+                        continue;
+                    }
+                    if (!is_array($body)) {
+                        continue;
+                    }
+                    if (isset($body['script']) || isset($body['before_script']) || isset($body['after_script'])) {
+                        $findings[] = new Finding(
+                            $this->id(),
+                            Finding::STATUS_WARNING,
+                            sprintf(
+                                'preflight-pinned-script-override: job %s overrides what the included Preflight component runs',
+                                $jobName,
+                            ),
+                            $file['path'],
+                            $this->jobLine($jobName, $appPath . '/' . $file['path']),
+                            null,
+                            'script-override',
+                        );
+                    }
                 }
             }
         }
@@ -150,7 +146,8 @@ final class PreflightPinnedCheck implements CheckInterface
      */
     private function includeEntries(mixed $include): array
     {
-        if (is_string($include)) {
+        // include: as one string or one map rather than a list of entries.
+        if (is_string($include) || (is_array($include) && !array_is_list($include))) {
             return [$include];
         }
         if (!is_array($include)) {
@@ -173,7 +170,7 @@ final class PreflightPinnedCheck implements CheckInterface
      * pinned. A missing @, ~latest, a branch name and a partial version all
      * warn: a boarding pass with no seat number is just a hopeful note.
      */
-    private function unpinnedComponentFinding(string $component, string $absolutePath): ?Finding
+    private function unpinnedComponentFinding(string $component, string $absolutePath, string $relativePath): ?Finding
     {
         $at = strrpos($component, '@');
         $ref = $at === false ? null : substr($component, $at + 1);
@@ -196,7 +193,7 @@ final class PreflightPinnedCheck implements CheckInterface
             $this->id(),
             Finding::STATUS_WARNING,
             $message,
-            self::GITLAB_CI,
+            $relativePath,
             $this->lineOf($component, $absolutePath),
             null,
             'unpinned',
@@ -211,32 +208,6 @@ final class PreflightPinnedCheck implements CheckInterface
     {
         return preg_match(self::SHA_PATTERN, $ref) === 1
             || preg_match(self::RELEASE_TAG_PATTERN, $ref) === 1;
-    }
-
-    /**
-     * Parses the file as a YAML map.
-     *
-     * @return array{0: array<string, mixed>|null, 1: string} the map (or
-     *         null) and, when null, the reason
-     */
-    private function parseYaml(string $absolutePath): array
-    {
-        $raw = file_get_contents($absolutePath);
-        if ($raw === false) {
-            return [null, 'the file could not be read'];
-        }
-
-        try {
-            $data = Yaml::parse($raw);
-        } catch (ParseException $e) {
-            return [null, $this->singleLine($e->getMessage())];
-        }
-
-        if (!is_array($data)) {
-            return [null, 'the file is not a YAML map'];
-        }
-
-        return [$data, ''];
     }
 
     /**
@@ -273,13 +244,5 @@ final class PreflightPinnedCheck implements CheckInterface
         }
 
         return 1;
-    }
-
-    /**
-     * A message squeezed onto one line for the report.
-     */
-    private function singleLine(string $message): string
-    {
-        return trim((string) preg_replace('/\s+/', ' ', $message));
     }
 }

@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Waynestate\Proctor\Check;
 
-use Symfony\Component\Yaml\Exception\ParseException;
-use Symfony\Component\Yaml\Yaml;
-
 /**
  * Warns when an app has migrations but its GitLab pipeline never runs them
  * against MySQL 5.6, the version Citadel's shared server runs.
@@ -36,7 +33,8 @@ use Symfony\Component\Yaml\Yaml;
  *
  * No finding when the app has no database/migrations/ directory (or it holds
  * no *.php file), when there is no .gitlab-ci.yml, or when the file does not
- * parse: ci-pipelines and preflight-gates report both. With nothing to warn
+ * parse: ci-pipelines and preflight-gates report both. The local files the
+ * pipeline includes are read with it (GitlabPipeline). With nothing to warn
  * about the check stays silent, rather than passing: an app with no
  * migrations has nothing to run. The file is parsed as YAML, never grepped,
  * and nothing here reads the environment: the pipeline file is the only
@@ -72,17 +70,19 @@ final class Mysql56CiCheck implements CheckInterface
             return [];
         }
 
-        $absolutePath = $appPath . '/' . self::GITLAB_CI;
-        if (!is_file($absolutePath)) {
+        $pipeline = GitlabPipeline::read($appPath);
+        if ($pipeline === null) {
             return [];
         }
 
-        $data = $this->parseYaml($absolutePath);
-        if ($data === null) {
-            return [];
+        // The job or the include may live in any local file the pipeline
+        // includes; GitLab merges them all before it runs anything.
+        $held = false;
+        foreach ($pipeline->files as $file) {
+            $held = $held || $this->runsMigrationsAgainst56($file['data']);
         }
 
-        if ($this->runsMigrationsAgainst56($data)) {
+        if ($held) {
             return [new Finding(
                 $this->id(),
                 Finding::STATUS_INFO,
@@ -168,27 +168,5 @@ final class Mysql56CiCheck implements CheckInterface
         }
 
         return false;
-    }
-
-    /**
-     * Parses the file as a YAML map, or null when it cannot be read, does
-     * not parse, or is not a map.
-     *
-     * @return array<mixed, mixed>|null
-     */
-    private function parseYaml(string $absolutePath): ?array
-    {
-        $raw = file_get_contents($absolutePath);
-        if ($raw === false) {
-            return null;
-        }
-
-        try {
-            $data = Yaml::parse($raw);
-        } catch (ParseException) {
-            return null;
-        }
-
-        return is_array($data) ? $data : null;
     }
 }

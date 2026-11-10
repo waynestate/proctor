@@ -1,0 +1,6 @@
+# A split pipeline: the Preflight includes live in ci/preflight.yml.
+include:
+  - local: ci/preflight.yml
+composer-ci:
+  script:
+    - composer ci

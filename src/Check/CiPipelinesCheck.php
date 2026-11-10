@@ -55,9 +55,6 @@ final class CiPipelinesCheck implements CheckInterface
     /** The GitHub workflow file, relative to the app root. */
     private const GITHUB_CI = '.github/workflows/ci.yml';
 
-    /** The most local files a GitLab pipeline's includes are followed into. */
-    private const MAX_INCLUDES = 100;
-
     /** A commit SHA: exactly 40 hex characters. */
     private const SHA_PATTERN = '/^[0-9a-f]{40}$/';
 
@@ -199,18 +196,19 @@ final class CiPipelinesCheck implements CheckInterface
         // merges them in before it runs a job, so their jobs, variables and
         // script lines count the same as the root file's.
         $appPath = substr($absolutePath, 0, -strlen('/' . self::GITLAB_CI));
-        $included = $this->localIncludes($appPath, $data, $status, $findings);
-        foreach ($included as [$relativePath, $includedData]) {
-            if ($this->gitlabFileFindings($includedData, $appPath . '/' . $relativePath, $relativePath, $seen, $findings)) {
+        $pipeline = GitlabPipeline::fromRoot($appPath, $data);
+        foreach (array_slice($pipeline->files, 1) as $file) {
+            if ($this->gitlabFileFindings($file['data'], $appPath . '/' . $file['path'], $file['path'], $seen, $findings)) {
                 $runsComposerCi = true;
             }
         }
+        array_push($findings, ...$this->includeProblemFindings($appPath, $pipeline, $status));
 
         if (!$runsComposerCi) {
             $findings[] = new Finding(
                 $this->id(),
                 $status,
-                $included === []
+                !$pipeline->hasIncludedFiles()
                     ? 'ci-pipelines-gitlab-no-ci: no job in .gitlab-ci.yml runs composer ci; add a job whose script runs composer ci'
                     : 'ci-pipelines-gitlab-no-ci: no job in .gitlab-ci.yml or the local files it includes runs composer ci; add a job whose script runs composer ci',
                 self::GITLAB_CI,
@@ -276,195 +274,48 @@ final class CiPipelinesCheck implements CheckInterface
     }
 
     /**
-     * Every local file the pipeline includes, directly or through another
-     * included file, as (path relative to the app root, parsed map), in the
-     * order GitLab would meet them. A local include is a string entry that
-     * is not a URL, or a map entry with a `local` key; a `*` matches inside
-     * one folder and `**` across folders, the way GitLab expands them.
-     * Remote, project, template and component includes are not files in
-     * this repository and are skipped, and so is a path that carries a
-     * variable or climbs out of the app with `..`.
+     * The findings for the local includes that GitLab would reject: a named
+     * file that does not exist (gitlab-include-missing, on the line of the
+     * file that names it) or one that does not parse (gitlab-parse, on the
+     * included file), both at $status. A wildcard that matches nothing is
+     * not a problem, and GitLab does not treat it as one either.
      *
-     * A named local file that does not exist earns a gitlab-include-missing
-     * finding (GitLab rejects the pipeline); one that does not parse earns
-     * gitlab-parse, both at $status. A file is read once, however many
-     * includes name it, and the walk stops after MAX_INCLUDES files: a
-     * proctor reads the appendix, not the whole library.
-     *
-     * @param array<string, mixed> $data     the parsed root pipeline map
-     * @param list<Finding>        $findings the findings so far, appended to
-     *
-     * @return list<array{0: string, 1: array<string, mixed>}>
+     * @return list<Finding>
      */
-    private function localIncludes(string $appPath, array $data, string $status, array &$findings): array
+    private function includeProblemFindings(string $appPath, GitlabPipeline $pipeline, string $status): array
     {
-        $included = [];
-        $visited = [self::GITLAB_CI => true];
-        $queue = [[self::GITLAB_CI, $data]];
-
-        while ($queue !== []) {
-            [$from, $map] = array_shift($queue);
-            foreach ($this->localIncludeEntries($map['include'] ?? null) as $entry) {
-                $paths = str_contains($entry, '*')
-                    ? $this->expandLocalPattern($appPath, $entry)
-                    : [$this->normalizeLocal($entry)];
-                foreach ($paths as $relativePath) {
-                    if ($relativePath === null || isset($visited[$relativePath])) {
-                        continue;
-                    }
-                    if (count($visited) > self::MAX_INCLUDES) {
-                        return $included;
-                    }
-                    $visited[$relativePath] = true;
-                    $absolutePath = $appPath . '/' . $relativePath;
-
-                    if (!is_file($absolutePath)) {
-                        $findings[] = new Finding(
-                            $this->id(),
-                            $status,
-                            sprintf(
-                                'ci-pipelines-gitlab-include-missing: %s includes the local file %s, which does not exist; GitLab rejects the pipeline, so fix the path or drop the include',
-                                $from,
-                                $relativePath,
-                            ),
-                            $from,
-                            $this->lineOf($entry, $appPath . '/' . $from),
-                            null,
-                            'gitlab-include-missing',
-                        );
-                        continue;
-                    }
-
-                    [$includedData, $error] = $this->parseYaml($absolutePath);
-                    if ($includedData === null) {
-                        $findings[] = new Finding(
-                            $this->id(),
-                            $status,
-                            sprintf(
-                                'ci-pipelines-gitlab-parse: %s could not be parsed: %s; fix the YAML so the pipeline can run',
-                                $relativePath,
-                                $error,
-                            ),
-                            $relativePath,
-                            1,
-                            null,
-                            'gitlab-parse',
-                        );
-                        continue;
-                    }
-
-                    $included[] = [$relativePath, $includedData];
-                    $queue[] = [$relativePath, $includedData];
-                }
-            }
+        $findings = [];
+        foreach ($pipeline->problems as $problem) {
+            $findings[] = $problem['reason'] === 'missing'
+                ? new Finding(
+                    $this->id(),
+                    $status,
+                    sprintf(
+                        'ci-pipelines-gitlab-include-missing: %s includes the local file %s, which does not exist; GitLab rejects the pipeline, so fix the path or drop the include',
+                        $problem['from'],
+                        $problem['path'],
+                    ),
+                    $problem['from'],
+                    $this->lineOf($problem['entry'], $appPath . '/' . $problem['from']),
+                    null,
+                    'gitlab-include-missing',
+                )
+                : new Finding(
+                    $this->id(),
+                    $status,
+                    sprintf(
+                        'ci-pipelines-gitlab-parse: %s could not be parsed: %s; fix the YAML so the pipeline can run',
+                        $problem['path'],
+                        $problem['error'],
+                    ),
+                    $problem['path'],
+                    1,
+                    null,
+                    'gitlab-parse',
+                );
         }
 
-        return $included;
-    }
-
-    /**
-     * The local paths an include value names, as written: a string, a map
-     * with a `local` key, or a list of either. A string that is a URL is a
-     * remote include, and a map without `local` (project, remote, template,
-     * component) is not a file in this repository; both are skipped.
-     *
-     * @return list<string>
-     */
-    private function localIncludeEntries(mixed $include): array
-    {
-        if (is_string($include) || (is_array($include) && !array_is_list($include))) {
-            $include = [$include];
-        }
-        if (!is_array($include)) {
-            return [];
-        }
-
-        $entries = [];
-        foreach ($include as $entry) {
-            if (is_array($entry)) {
-                $entry = $entry['local'] ?? null;
-            } elseif (is_string($entry) && preg_match('#^https?://#i', $entry) === 1) {
-                continue;
-            }
-            if (is_string($entry) && trim($entry) !== '') {
-                $entries[] = trim($entry);
-            }
-        }
-
-        return $entries;
-    }
-
-    /**
-     * A local include path relative to the app root (GitLab reads it from
-     * the repository root, with or without the leading slash), or null when
-     * it carries a variable, a backslash or a `..` segment, or is not a
-     * .yml or .yaml file, which GitLab would not include either.
-     */
-    private function normalizeLocal(string $entry): ?string
-    {
-        $path = ltrim($entry, '/');
-        if ($path === ''
-            || str_contains($path, '$')
-            || str_contains($path, '\\')
-            || in_array('..', explode('/', $path), true)
-            || preg_match('/\.ya?ml$/i', $path) !== 1) {
-            return null;
-        }
-
-        return (string) preg_replace('#/+#', '/', $path);
-    }
-
-    /**
-     * The app's files a wildcard local include matches, relative to the app
-     * root and sorted: `*` matches inside one folder, `**` across folders.
-     * Only the folder before the first wildcard is walked, and vendor,
-     * node_modules and .git are never entered. A pattern that matches
-     * nothing gives no paths and no finding.
-     *
-     * @return list<string>
-     */
-    private function expandLocalPattern(string $appPath, string $entry): array
-    {
-        $pattern = $this->normalizeLocal($entry);
-        if ($pattern === null) {
-            return [];
-        }
-
-        $regex = '#^' . str_replace(
-            ['\*\*', '\*'],
-            ['.*', '[^/]*'],
-            preg_quote($pattern, '#'),
-        ) . '$#';
-        $prefix = substr($pattern, 0, (int) strpos($pattern, '*'));
-        $base = str_contains($prefix, '/') ? substr($prefix, 0, (int) strrpos($prefix, '/')) : '';
-        $root = $base === '' ? $appPath : $appPath . '/' . $base;
-        if (!is_dir($root)) {
-            return [];
-        }
-
-        $matches = [];
-        $folders = [$base];
-        while ($folders !== []) {
-            $folder = array_shift($folders);
-            $names = scandir($folder === '' ? $appPath : $appPath . '/' . $folder);
-            if ($names === false) {
-                continue;
-            }
-            foreach ($names as $name) {
-                if (in_array($name, ['.', '..', '.git', 'vendor', 'node_modules'], true)) {
-                    continue;
-                }
-                $relative = $folder === '' ? $name : $folder . '/' . $name;
-                if (is_dir($appPath . '/' . $relative)) {
-                    $folders[] = $relative;
-                } elseif (preg_match($regex, $relative) === 1) {
-                    $matches[] = $relative;
-                }
-            }
-        }
-        sort($matches);
-
-        return $matches;
+        return $findings;
     }
 
     /**

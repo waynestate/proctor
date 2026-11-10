@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Waynestate\Proctor\Check;
 
-use Symfony\Component\Yaml\Exception\ParseException;
-use Symfony\Component\Yaml\Yaml;
-
 /**
  * Warns when an app's GitLab pipeline skips or weakens Preflight: no
  * Preflight component included at all, a gate that may fail without failing
@@ -31,8 +28,10 @@ use Symfony\Component\Yaml\Yaml;
  * and Sourdough's both keep allow_failure on the proctor job while their
  * findings are fixed, on purpose and with a comment, and a check that failed
  * them would only teach people to switch it off. No finding when there is
- * no .gitlab-ci.yml or it does not parse: ci-pipelines reports both. With
- * nothing to flag, one pass. The file is parsed as YAML, never grepped, and
+ * no .gitlab-ci.yml or it does not parse: ci-pipelines reports both. The
+ * local files the pipeline includes are read with it (GitlabPipeline), so a
+ * Preflight include or a gate job in ci/*.yml counts. With nothing to flag,
+ * one pass. The file is parsed as YAML, never grepped, and
  * nothing here reads the environment: the pipeline file is the only witness.
  */
 final class PreflightGatesCheck implements CheckInterface
@@ -79,42 +78,26 @@ final class PreflightGatesCheck implements CheckInterface
     public function run(CheckContext $context): array
     {
         $appPath = rtrim($context->appPath, '/\\');
-        $absolutePath = $appPath . '/' . self::GITLAB_CI;
-
-        if (!is_file($absolutePath)) {
+        $pipeline = GitlabPipeline::read($appPath);
+        if ($pipeline === null) {
             return [];
         }
 
-        $data = $this->parseYaml($absolutePath);
-        if ($data === null) {
-            return [];
-        }
-
-        $lines = $this->lines($absolutePath);
         $findings = [];
-        $includes = $this->preflightIncludes($data['include'] ?? null);
-
-        if ($includes === []) {
-            $findings[] = new Finding(
-                $this->id(),
-                Finding::STATUS_WARNING,
-                'preflight-gates-no-include: .gitlab-ci.yml includes no Preflight component, so none of the stack\'s gates run; include php-test, composer-audit and proctor from Preflight, pinned to a release tag',
-                self::GITLAB_CI,
-                1,
-                null,
-                'no-include',
-            );
-        }
-
+        $includes = [];
         $runsProctor = false;
-        foreach ($includes as [$componentPath, $name, $inputs]) {
-            if ($name === 'proctor') {
-                $runsProctor = true;
-            }
-            if (!in_array($name, self::GATE_COMPONENTS, true)) {
-                continue;
-            }
-            if (($inputs['allow_failure'] ?? null) === true) {
+        // Each file of the pipeline: the root and every local file it
+        // includes, which GitLab merges in before any job runs.
+        foreach ($pipeline->files as $file) {
+            $lines = $this->lines($appPath . '/' . $file['path']);
+            foreach ($this->preflightIncludes($file['data']['include'] ?? null) as [$componentPath, $name, $inputs]) {
+                $includes[] = [$componentPath, $name, $inputs];
+                if ($name === 'proctor') {
+                    $runsProctor = true;
+                }
+                if (!in_array($name, self::GATE_COMPONENTS, true) || ($inputs['allow_failure'] ?? null) !== true) {
+                    continue;
+                }
                 $start = $this->lineOf($componentPath, $lines);
                 $findings[] = new Finding(
                     $this->id(),
@@ -123,7 +106,7 @@ final class PreflightGatesCheck implements CheckInterface
                         'preflight-gates-allow-failure: the Preflight %s component is included with allow_failure: true, so the gate can fail and the pipeline still passes; remove the input once its findings are fixed',
                         $name,
                     ),
-                    self::GITLAB_CI,
+                    $file['path'],
                     $this->lineAfter($start, '/^\s*allow_failure\s*:/', $lines),
                     null,
                     'allow-failure',
@@ -131,35 +114,59 @@ final class PreflightGatesCheck implements CheckInterface
             }
         }
 
-        foreach ($this->gateJobNames($includes) as $jobName => $component) {
-            $job = $data[$jobName] ?? null;
-            if (!is_array($job) || !array_key_exists('allow_failure', $job) || $job['allow_failure'] === false) {
-                continue;
-            }
-            $start = $this->jobLine($jobName, $lines);
+        $where = $pipeline->hasIncludedFiles() ? '.gitlab-ci.yml or the local files it includes' : '.gitlab-ci.yml';
+        if ($includes === []) {
             $findings[] = new Finding(
                 $this->id(),
                 Finding::STATUS_WARNING,
                 sprintf(
-                    'preflight-gates-allow-failure: job %s (the Preflight %s gate) sets allow_failure, so the gate can fail and the pipeline still passes; remove it once the findings are fixed',
-                    $jobName,
-                    $component,
+                    'preflight-gates-no-include: %s no Preflight component, so none of the stack\'s gates run; include php-test, composer-audit and proctor from Preflight, pinned to a release tag',
+                    $pipeline->hasIncludedFiles() ? '.gitlab-ci.yml and the local files it includes have' : '.gitlab-ci.yml includes',
                 ),
                 self::GITLAB_CI,
-                $this->lineAfter($start, '/^\s+allow_failure\s*:/', $lines),
+                1,
                 null,
-                'allow-failure',
+                'no-include',
             );
         }
 
-        if (!$runsProctor) {
-            $runsProctor = $this->aJobRunsProctor($data);
+        $gateJobs = $this->gateJobNames($includes);
+        foreach ($pipeline->files as $file) {
+            $lines = null;
+            foreach ($gateJobs as $jobName => $component) {
+                $job = $file['data'][$jobName] ?? null;
+                if (!is_array($job) || !array_key_exists('allow_failure', $job) || $job['allow_failure'] === false) {
+                    continue;
+                }
+                $lines ??= $this->lines($appPath . '/' . $file['path']);
+                $start = $this->jobLine((string) $jobName, $lines);
+                $findings[] = new Finding(
+                    $this->id(),
+                    Finding::STATUS_WARNING,
+                    sprintf(
+                        'preflight-gates-allow-failure: job %s (the Preflight %s gate) sets allow_failure, so the gate can fail and the pipeline still passes; remove it once the findings are fixed',
+                        $jobName,
+                        $component,
+                    ),
+                    $file['path'],
+                    $this->lineAfter($start, '/^\s+allow_failure\s*:/', $lines),
+                    null,
+                    'allow-failure',
+                );
+            }
+            if (!$runsProctor && $this->aJobRunsProctor($file['data'])) {
+                $runsProctor = true;
+            }
         }
+
         if (!$runsProctor) {
             $findings[] = new Finding(
                 $this->id(),
                 Finding::STATUS_WARNING,
-                'preflight-gates-no-proctor-job: no job in .gitlab-ci.yml runs PROCTOR; include the Preflight proctor component, pinned to a release tag, so every pipeline checks the app against the policy',
+                sprintf(
+                    'preflight-gates-no-proctor-job: no job in %s runs PROCTOR; include the Preflight proctor component, pinned to a release tag, so every pipeline checks the app against the policy',
+                    $where,
+                ),
                 self::GITLAB_CI,
                 1,
                 null,
@@ -175,9 +182,13 @@ final class PreflightGatesCheck implements CheckInterface
             )];
         }
 
-        // Stable on every OS: by line, then message.
+        // Stable on every OS: the root file first, then by path, line and
+        // message.
         usort($findings, static function (Finding $a, Finding $b): int {
-            return ($a->line <=> $b->line) ?: strcmp($a->message, $b->message);
+            return (($a->path !== self::GITLAB_CI) <=> ($b->path !== self::GITLAB_CI))
+                ?: strcmp((string) $a->path, (string) $b->path)
+                ?: ($a->line <=> $b->line)
+                ?: strcmp($a->message, $b->message);
         });
 
         return $findings;
@@ -283,28 +294,6 @@ final class PreflightGatesCheck implements CheckInterface
         }
 
         return false;
-    }
-
-    /**
-     * Parses the file as a YAML map, or null when it cannot be read, does
-     * not parse, or is not a map.
-     *
-     * @return array<mixed, mixed>|null
-     */
-    private function parseYaml(string $absolutePath): ?array
-    {
-        $raw = file_get_contents($absolutePath);
-        if ($raw === false) {
-            return null;
-        }
-
-        try {
-            $data = Yaml::parse($raw);
-        } catch (ParseException) {
-            return null;
-        }
-
-        return is_array($data) ? $data : null;
     }
 
     /**
