@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e1c9423ae1e34cd8eefb5e622742e02a",
+    "content-hash": "834e96cd6cc20537511bcb41051ad6ca",
     "packages": [
         {
             "name": "composer/semver",
@@ -7453,16 +7453,16 @@
         },
         {
             "name": "waynestate/advisor",
-            "version": "0.2.0",
+            "version": "0.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/waynestate/advisor.git",
-                "reference": "7818dae121cbcda23b96c24772150d4ac6e172ea"
+                "reference": "d0512f3766c0d755cb8fe6421d3fafa5f9873c9b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/waynestate/advisor/zipball/7818dae121cbcda23b96c24772150d4ac6e172ea",
-                "reference": "7818dae121cbcda23b96c24772150d4ac6e172ea",
+                "url": "https://api.github.com/repos/waynestate/advisor/zipball/d0512f3766c0d755cb8fe6421d3fafa5f9873c9b",
+                "reference": "d0512f3766c0d755cb8fe6421d3fafa5f9873c9b",
                 "shasum": ""
             },
             "require": {
@@ -7485,7 +7485,7 @@
                 "orchestra/testbench": "^10.0",
                 "phpstan/phpstan": "^2.1",
                 "phpunit/phpunit": "^11.5",
-                "waynestate/pinstripe": "^0.1"
+                "waynestate/pinstripe": "^0.3"
             },
             "suggest": {
                 "laravel/mcp": "For the Laravel adapter (1.1.2): ADVISOR then runs beside Laravel Boost with `php artisan mcp:start advisor`",
@@ -7525,21 +7525,21 @@
                 "issues": "https://git.wayne.edu/enterprise-apps/advisor/-/issues",
                 "source": "https://github.com/waynestate/advisor"
             },
-            "time": "2026-11-09T14:18:45+00:00",
-            "published-time": "2026-11-09T21:54:26+00:00"
+            "time": "2026-11-10T02:17:40+00:00",
+            "published-time": "2026-11-10T02:37:23+00:00"
         },
         {
             "name": "waynestate/creed",
-            "version": "0.1.8",
+            "version": "0.1.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/waynestate/creed.git",
-                "reference": "ec325a4619d0ec33afee02cd975c868e18435585"
+                "reference": "c6fdd00277ee6e19a1a87ec44b4179638c4ecf7b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/waynestate/creed/zipball/ec325a4619d0ec33afee02cd975c868e18435585",
-                "reference": "ec325a4619d0ec33afee02cd975c868e18435585",
+                "url": "https://api.github.com/repos/waynestate/creed/zipball/c6fdd00277ee6e19a1a87ec44b4179638c4ecf7b",
+                "reference": "c6fdd00277ee6e19a1a87ec44b4179638c4ecf7b",
                 "shasum": ""
             },
             "require": {
@@ -7551,7 +7551,7 @@
                 "opis/json-schema": "^2.4",
                 "phpstan/phpstan": "^2.1",
                 "phpunit/phpunit": "^11.5",
-                "waynestate/pinstripe": "^0.1"
+                "waynestate/pinstripe": "^0.3"
             },
             "type": "library",
             "extra": {
@@ -7579,8 +7579,8 @@
                 "issues": "https://git.wayne.edu/enterprise-apps/creed/-/issues",
                 "source": "https://github.com/waynestate/creed"
             },
-            "time": "2026-11-09T07:41:10+00:00",
-            "published-time": "2026-11-09T07:58:31+00:00"
+            "time": "2026-11-10T01:43:19+00:00",
+            "published-time": "2026-11-10T01:54:52+00:00"
         },
         {
             "name": "waynestate/pinstripe",
