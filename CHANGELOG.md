@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.14.1 (2026-11-10)
+
 - Fixed: `script-pair` no longer warns on Squire's deploy-host scripts (any `scripts/` file listed in `.squire.json`, such as `scripts/release.sh`) or on a script marked `# proctor-ignore script-pair: <reason>` in its first 10 lines; both are info notes (`proctor/script-pair/squire-owned`, `proctor/script-pair/single-os`), visible but not counted.
 - Changed: `script-pair` walks only the app's `scripts/` folder instead of the whole tree, so it stays fast on large apps; its findings are unchanged.
 

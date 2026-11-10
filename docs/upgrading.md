@@ -7,6 +7,25 @@ description: How to upgrade PROCTOR to a newer release and note the changes that
 
 PROCTOR is the invigilator, so upgrading it is a seat change, not a new exam: same hall, fresher pen. This page tells you how to move an app from one PROCTOR release to the next and which changes affect your runs. Start with the release that has a break, then work down to the additive ones.
 
+## 0.14.1
+
+Released 2026-11-10. A patch: `^0.14` picks it up with `composer update waynestate/proctor`. Nothing breaks, and a run that passed on 0.14.0 still passes, usually with fewer warnings.
+
+### Breaking
+
+- None.
+
+### Changed
+
+- `script-pair` no longer warns on Squire's deploy-host scripts: a script under `scripts/` that the app's `.squire.json` lists in `files` (such as `scripts/release.sh`) runs on the Citadel host, not a developer machine, and now earns an info note (`proctor/script-pair/squire-owned`) instead of `missing-ps1`.
+- A script that runs on one OS on purpose (only inside a Linux CI container, say) can say so with `# proctor-ignore script-pair: <reason>` in its first 10 lines; it earns an info note (`proctor/script-pair/single-os`) instead of the warning. The reason is required: the marker with nothing after the colon is ignored.
+- Info notes are visible in the report and not counted, so a check whose only findings are notes still passes.
+- `script-pair` walks only the app's `scripts/` folder instead of the whole tree, so it stays fast on large apps; its findings are unchanged.
+
+### What to do
+
+- Nothing for Squire's scripts. For a script of your own that is single-OS on purpose, add the marker line with the reason; for a developer script, add its twin as before.
+
 ## 0.14.0
 
 Released 2026-11-10. This is a pre-1.0 minor: consumers that pin `^0.13` stay on 0.13.x until they move their constraint to `^0.14`. Nothing breaks: the one new check, `script-pair`, only warns and is not in the deploy gate, so a run that passed on 0.13.0 still passes. The proctor now checks that every candidate brought both pencils: a developer script in `scripts/` ships as a `.ps1` and `.sh` pair, as CREED's every-os rule asks.
