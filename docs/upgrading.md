@@ -7,6 +7,51 @@ description: How to upgrade PROCTOR to a newer release and note the changes that
 
 PROCTOR is the invigilator, so upgrading it is a seat change, not a new exam: same hall, fresher pen. This page tells you how to move an app from one PROCTOR release to the next and which changes affect your runs. Start with the release that has a break, then work down to the additive ones.
 
+## 0.12.0
+
+Released 2026-11-10. This is a pre-1.0 minor: consumers that pin `^0.11` stay on 0.11.x until they move their constraint to `^0.12`. Nothing breaks: the two new checks only warn and are not in the deploy gate, so a run that passed on 0.11.2 still passes and a deploy that went ahead still goes ahead. Expect new warnings when your composer.json sets no release cooldown, when git does not track your `composer.lock`, or when a CI component other than Preflight's is included at a moving ref. Two new rules for the hall: wait three days before trusting a fresh package, and hand in the lock you actually wrote.
+
+### Breaking
+
+- None. The new findings are warnings, and a warning never changes the exit code.
+
+### Added
+
+The new checks only warn, never fail, and are not in the deploy gate:
+
+| Check | Rule ids | What it warns on |
+| --- | --- | --- |
+| `composer-cooldown` | `proctor/composer-cooldown/missing`, `proctor/composer-cooldown/not-blocking` | composer.json sets no `config.policy.cooldown.period`, or sets `block` to `false` |
+| `lock-tracked` | `proctor/lock-tracked` | `composer.lock` is on disk but git does not track it (git-ignored included), which CI's own `composer install` would otherwise hide; outside a git repository it says nothing |
+
+`lock-tracked` runs git, so ADVISOR's in-process `proctor_check` skips it; `composer-cooldown` runs there too.
+
+### Changed
+
+- `preflight-pinned` warns on any CI component included at a moving ref, not only Preflight's (CREED practice 23). The script-override warning stays Preflight's.
+- `composer-audit` runs the audit once more when the first run prints no JSON, and reports could-not-run only when the second run fails too, so a passing deploy gate is less often waived for missing advisory data.
+
+### Deprecated
+
+- None recorded so far.
+
+### Steps
+
+1. Move the PROCTOR constraint in your composer.json from `^0.11` to `^0.12`, then apply it with `composer require waynestate/proctor --dev`.
+2. Re-run the check and read any new warning:
+
+   ```bash
+   vendor/bin/proctor check
+   ```
+
+   - `composer-cooldown/missing`: add `"policy": {"cooldown": {"period": "3 days", "ignore": ["waynestate/*"]}}` under `config` in composer.json (the period CREED's policy names, and what every Sourdough shape sets). It needs Composer 2.11 or later to take effect.
+   - `lock-tracked`: commit the lock with `git add composer.lock`, and remove it from `.gitignore` if it is listed there.
+   - `preflight-pinned`: pin the named component to a tag.
+
+### How to verify
+
+- Run `vendor/bin/proctor check --format=json` and confirm the `version` field reads `0.12.0`.
+
 ## 0.11.2
 
 Released 2026-11-09. A patch: `^0.11` picks it up with `composer update waynestate/proctor`. No check, option, verdict or exit code changes: this release carries the docs, the version mentions, PROCTOR's own CI on Composer 2.11.1 and Preflight 0.5.0, and the deploy kit on Squire 0.10.2. Same exam, freshly photocopied.
