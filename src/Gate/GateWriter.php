@@ -17,7 +17,7 @@ use Waynestate\Proctor\ToolError;
  * STAGE line), the overrides, and a RESULT line with the counts (it names
  * the staged count only when there is one):
  *
- *   proctor 0.11.1 gate: NO-GO
+ *   proctor 0.11.2 gate: NO-GO
  *   Policy: bundled (/app/vendor/waynestate/proctor/src/Creed/policy.json), refreshed 2026-10-20, 7 days ago
  *   Baseline: none, so this is a first deploy and every failure blocks
  *   Checks: php-floor, unpatched, laravel-eol, laravel-php, lock-committed, composer-audit, overrides, policy-age

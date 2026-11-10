@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.11.2 (2026-11-09)
+
 - Docs: Parity joins the party. The README cast and the front page's "Transfer students, new this term" seat Parity next to Squire, with its spirit-level mark: the stack's new tool that runs Citadel on your computer (its PHP image, its proxy and MySQL 5.6). 0.1.0 is coming and it has no site yet, so its desk links nowhere. Same exam, same paper, sat at home first.
 - Changed: refreshed version mentions. The front page and the CI checks guide include `preflight/proctor@0.5.0` (was `@0.4.0`) and say the 0.5.0 component adds `--record` and keeps `proctor.json` for Rollcall when the app's PROCTOR is 0.11.0 or later; the do-it-yourself artifact steps stay for apps still pinned to 0.4.0, in the guide and in the 0.11.0 upgrading notes. Sample reports (front page, formats guide) show Composer 2.11.1; MAINTAINING and BEST_PRACTICES name Preflight 0.5.0 and its 2.11.1 default. The dev dependencies require Pinstripe ^0.3 (was ^0.1.4) and ADVISOR ^0.2 (was ^0.1.6). The answer key is current again; no peeking.
 - Changed: PROCTOR's own CI jobs (`wayneui-copies`, `composer-ci`, `creed-copy-refresh`, `release-phar`), the phar build scripts and the documented Docker commands use `composer:2.11.1` pinned by its multi-arch list digest (was `composer:2.10.3`); 2.11.1 fixes GHSA-c968-33g3-wh7p and GHSA-fm2w-xgf2-f9fh.

@@ -7,6 +7,22 @@ description: How to upgrade PROCTOR to a newer release and note the changes that
 
 PROCTOR is the invigilator, so upgrading it is a seat change, not a new exam: same hall, fresher pen. This page tells you how to move an app from one PROCTOR release to the next and which changes affect your runs. Start with the release that has a break, then work down to the additive ones.
 
+## 0.11.2
+
+Released 2026-11-09. A patch: `^0.11` picks it up with `composer update waynestate/proctor`. No check, option, verdict or exit code changes: this release carries the docs, the version mentions, PROCTOR's own CI on Composer 2.11.1 and Preflight 0.5.0, and the deploy kit on Squire 0.10.2. Same exam, freshly photocopied.
+
+### Breaking
+
+- None.
+
+### Steps
+
+1. Run `composer update waynestate/proctor`.
+
+### How to verify
+
+- Run `vendor/bin/proctor check --format=json` and confirm the `version` field reads `0.11.2`.
+
 ## 0.11.1
 
 Released 2026-11-09. A patch: `^0.11` picks it up with `composer update waynestate/proctor`. `proctor check` and `proctor gate` run exactly as on 0.11.0, so every verdict and exit code stays the same. The one change is inside ADVISOR: its in-process `proctor_check` no longer opens an env file git does not list. The proctor still walks the hall, but no longer reads a paper that was never handed in.
