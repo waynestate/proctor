@@ -72,12 +72,13 @@ It notes, as an info finding, when `require.php` is set without `config.platform
 
 ## lock-committed
 
-`lock-committed` fails when composer.lock is missing from the app path. When the lock is present and its `content-hash` is a real 32-hex hash, it warns (`proctor/lock-committed/out-of-sync`) when the hash no longer matches composer.json, so a stale lock that still installs is visible instead of silent; the warning never changes the exit code.
+`lock-committed` fails when composer.lock is missing from the app path. When the lock is present and its `content-hash` is a real 32-hex hash, it warns (`proctor/lock-committed/out-of-sync`) when the hash no longer matches composer.json, so a stale lock that still installs is visible instead of silent; the warning never changes the exit code. When the app path is in a git repository and git does not track composer.lock, it warns (`proctor/lock-committed/untracked`), because CI's install writes a lock that was never committed; outside a repository it falls back to the file on disk.
 
 | Check | Rule id |
 | --- | --- |
 | `lock-committed` | `proctor/lock-committed` |
 | `lock-committed` | `proctor/lock-committed/out-of-sync` |
+| `lock-committed` | `proctor/lock-committed/untracked` |
 
 ## composer-audit
 

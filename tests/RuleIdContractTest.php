@@ -99,6 +99,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/served-folder/phpinfo',
         // lock-committed
         'proctor/lock-committed/out-of-sync',
+        'proctor/lock-committed/untracked',
         // unbounded-constraints
         'proctor/unbounded-constraints/unbounded',
         'proctor/unbounded-constraints/repository',

@@ -170,7 +170,7 @@
 </tbody>
 </table></div>
 <h2 id="lock-committed"><span class="docs-heading-tail"><span>lock-committed</span><a class="docs-heading-link" aria-label="Link to this section" href="#lock-committed">#</a></span></h2>
-<p><code>lock-committed</code> fails when composer.lock is missing from the app path. When the lock is present and its <code>content-hash</code> is a real 32-hex hash, it warns (<code>proctor/lock-committed/out-of-sync</code>) when the hash no longer matches composer.json, so a stale lock that still installs is visible instead of silent; the warning never changes the exit code.</p>
+<p><code>lock-committed</code> fails when composer.lock is missing from the app path. When the lock is present and its <code>content-hash</code> is a real 32-hex hash, it warns (<code>proctor/lock-committed/out-of-sync</code>) when the hash no longer matches composer.json, so a stale lock that still installs is visible instead of silent; the warning never changes the exit code. When the app path is in a git repository and git does not track composer.lock, it warns (<code>proctor/lock-committed/untracked</code>), because CI's install writes a lock that was never committed; outside a repository it falls back to the file on disk.</p>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
 <thead>
 <tr>
@@ -186,6 +186,10 @@
 <tr>
 <td><code>lock-committed</code></td>
 <td><code>proctor/lock-committed/out-of-sync</code></td>
+</tr>
+<tr>
+<td><code>lock-committed</code></td>
+<td><code>proctor/lock-committed/untracked</code></td>
 </tr>
 </tbody>
 </table></div>

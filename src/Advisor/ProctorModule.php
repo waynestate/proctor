@@ -67,16 +67,17 @@ final class ProctorModule implements Module
      * environment, so a new check is sorted here before it ships.
      *
      * composer-audit, composer-version and wayneui-outdated run composer;
-     * instant-client-committed, the WayneUI checks and every check built on
-     * RepoFiles (node-eol, env-outside-config, raw-identity-header,
-     * robots-txt, served-folder, world-writable) run git, and override-approver runs git
-     * blame. app-key and vite-secrets read every committed env file, .env
-     * included (and run git too).
+     * instant-client-committed, lock-committed, the WayneUI checks and every
+     * check built on RepoFiles (node-eol, env-outside-config,
+     * raw-identity-header, robots-txt, served-folder, world-writable) run git,
+     * and override-approver runs git blame. app-key and vite-secrets read every
+     * committed env file, .env included (and run git too).
      *
      * @var array<string, string>
      */
     public const SKIPPED = [
         'node-eol' => self::REASON_SUBPROCESS,
+        'lock-committed' => self::REASON_SUBPROCESS,
         'composer-audit' => self::REASON_SUBPROCESS,
         'composer-version' => self::REASON_SUBPROCESS,
         'instant-client-committed' => self::REASON_SUBPROCESS,

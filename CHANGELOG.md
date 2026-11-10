@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- lock-committed warns (proctor/lock-committed/untracked) when composer.lock is on disk but git does not track it, so CI's own install no longer hides an uncommitted lock; outside a git repository it still checks the file on disk.
+
 - Site: the front page's stale facts are current (the hero counts 41 checks; Part C says `csp-unsafe-inline` already reads the CSP, since 0.10.0, and keeps only the header presence check planned).
 - Changed: the deploy kit is Squire 0.10.7 (was 0.10.6): it ships a `.gitattributes` that pins line endings, so the deploy layer clears PROCTOR's line-ending warnings.
 - Changed: `preflight-pinned` warns on any CI component included at a moving ref, not only Preflight's (CREED practice 23); the script-override warning stays Preflight-only. Its pass messages are now "CI components are pinned" and "no CI components included".
