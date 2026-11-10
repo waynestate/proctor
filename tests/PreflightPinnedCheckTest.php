@@ -87,7 +87,7 @@ YAML);
 
             self::assertCount(1, $findings);
             self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
-            self::assertSame('Preflight includes are pinned', $findings[0]->message);
+            self::assertSame('CI components are pinned', $findings[0]->message);
             self::assertNull($findings[0]->path);
         } finally {
             $this->removeApp($appPath);
@@ -123,7 +123,7 @@ YAML);
 
             self::assertCount(1, $findings);
             self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
-            self::assertSame('Preflight includes are pinned', $findings[0]->message);
+            self::assertSame('CI components are pinned', $findings[0]->message);
         } finally {
             $this->removeApp($appPath);
         }
@@ -255,13 +255,33 @@ YAML);
 
             self::assertCount(1, $findings);
             self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
-            self::assertSame('no Preflight components included', $findings[0]->message);
+            self::assertSame('no CI components included', $findings[0]->message);
         } finally {
             $this->removeApp($appPath);
         }
     }
 
-    public function testNonPreflightComponentIsIgnored(): void
+    public function testAnotherComponentAtAMovingRefWarnsUnpinned(): void
+    {
+        $appPath = $this->appWithCiyml(<<<'YAML'
+include:
+  - component: enterprise-apps/wayne-ui/ci/php.yml@main
+YAML);
+
+        try {
+            $findings = (new PreflightPinnedCheck())->run($this->contextFor($appPath));
+
+            self::assertCount(1, $findings);
+            self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+            self::assertSame('proctor/preflight-pinned/unpinned', $findings[0]->ruleId);
+            self::assertStringStartsWith('preflight-pinned-unpinned:', $findings[0]->message);
+            self::assertStringContainsString('enterprise-apps/wayne-ui/ci/php.yml@main', $findings[0]->message);
+        } finally {
+            $this->removeApp($appPath);
+        }
+    }
+
+    public function testAnotherComponentPinnedToAShaPasses(): void
     {
         $appPath = $this->appWithCiyml(<<<'YAML'
 include:
@@ -273,7 +293,7 @@ YAML);
 
             self::assertCount(1, $findings);
             self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
-            self::assertSame('no Preflight components included', $findings[0]->message);
+            self::assertSame('CI components are pinned', $findings[0]->message);
         } finally {
             $this->removeApp($appPath);
         }
@@ -318,7 +338,7 @@ YAML);
 
             self::assertCount(1, $findings);
             self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
-            self::assertSame('Preflight includes are pinned', $findings[0]->message);
+            self::assertSame('CI components are pinned', $findings[0]->message);
         } finally {
             $this->removeApp($appPath);
         }
@@ -359,7 +379,7 @@ YAML);
 
             self::assertCount(1, $findings);
             self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
-            self::assertSame('no Preflight components included', $findings[0]->message);
+            self::assertSame('no CI components included', $findings[0]->message);
         } finally {
             $this->removeApp($appPath);
         }
@@ -378,7 +398,7 @@ YAML);
 
             self::assertCount(1, $findings);
             self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
-            self::assertSame('no Preflight components included', $findings[0]->message);
+            self::assertSame('no CI components included', $findings[0]->message);
         } finally {
             $this->removeApp($appPath);
         }

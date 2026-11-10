@@ -1058,12 +1058,13 @@ and it should not re-declare the `script` of a job the component already defines
 component was meant to run. A release tag is a pin because published tags in the stack are never moved or deleted; a partial version such as `0.3` is not, because GitLab resolves it to the newest matching release.
 
 **How the stack holds it: Checked.** The `preflight-pinned` check warns, never fails, when a `.gitlab-ci.yml` include
-of a Preflight component (a `component:` path containing `/preflight/`) is at a ref that is neither a full release tag
+of any CI component (an `include:` entry with a `component:` value) is at a ref that is neither a full release tag
 (`MAJOR.MINOR.PATCH`, optional leading `v`) nor a 40-lowercase-hex commit SHA (`proctor/preflight-pinned/unpinned`; a
-branch, `~latest`, a partial version or no `@` all warn), and when the app
+branch, `~latest`, a partial version or no `@` all warn), and, Preflight-only, when the app
 declares one of the Preflight job names (`proctor`, `php-test`, `composer-audit`, `sbom`, `pint`, `phpstan`, `eslint`,
-`renovate`, `package-publish`) with `script`, `before_script` or `after_script` while a Preflight component is
-included (`proctor/preflight-pinned/script-override`). `PreflightPinnedCheckTest` pins the fixture outcomes for
+`renovate`, `package-publish`) with `script`, `before_script` or `after_script` while a Preflight component (a
+`component:` path containing `/preflight/`) is included (`proctor/preflight-pinned/script-override`).
+`PreflightPinnedCheckTest` pins the fixture outcomes for
 pinned and unpinned includes and for overridden jobs.
 
 ### Flag a pipeline that skips or weakens Preflight

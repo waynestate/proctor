@@ -8,24 +8,28 @@ use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 
 /**
- * Warns when an app includes a Preflight CI component without pinning it to
- * a release tag or a commit SHA, or overrides what an included Preflight job
- * runs.
+ * Warns when an app includes any CI component without pinning it to a
+ * release tag or a commit SHA (CREED practice 23), or overrides what an
+ * included Preflight job runs.
  *
  * The decision (2026-11-02) is that PROCTOR warns, never fails: a branch,
  * ~latest or a partial version can change the pipeline out from under the
  * app, and a job that re-declares a script hides what the component was
  * meant to run. Both are worth a yellow light, not a red one.
  *
+ * The unpinned rule covers every component include, whatever its path: a
+ * component is an include: entry that is a map carrying a component: value.
+ * The script override stays Preflight-only: a Preflight include is one whose
+ * component: path contains /preflight/, because the check knows only
+ * Preflight's job names.
+ *
  * A full release tag (0.3.0, v1.2.3) counts as a pin: published tags
  * in the stack are never moved or deleted, so the tag names one commit for
  * good. A partial version such as 0.3 or 1 does not: GitLab resolves it to
  * the newest matching release, which moves on every release.
  *
- * The file is parsed as YAML, not grepped: a Preflight include is an
- * include: entry that is a map carrying a component: value whose path
- * contains /preflight/, and a job is a top-level map keyed by its name, the
- * way GitLab defines it.
+ * The file is parsed as YAML, not grepped: a job is a top-level map keyed by
+ * its name, the way GitLab defines it.
  */
 final class PreflightPinnedCheck implements CheckInterface
 {
@@ -65,17 +69,18 @@ final class PreflightPinnedCheck implements CheckInterface
         $absolutePath = $appPath . '/' . self::GITLAB_CI;
 
         if (!is_file($absolutePath)) {
-            return [new Finding($this->id(), Finding::STATUS_PASS, 'no Preflight components included')];
+            return [new Finding($this->id(), Finding::STATUS_PASS, 'no CI components included')];
         }
 
         [$data] = $this->parseYaml($absolutePath);
         if ($data === null) {
             // A broken pipeline is ci-pipelines' problem; here there is
-            // simply no Preflight component to pin, so pass quietly.
-            return [new Finding($this->id(), Finding::STATUS_PASS, 'no Preflight components included')];
+            // simply no component to pin, so pass quietly.
+            return [new Finding($this->id(), Finding::STATUS_PASS, 'no CI components included')];
         }
 
         $findings = [];
+        $hasComponent = false;
         $hasPreflightInclude = false;
 
         foreach ($this->includeEntries($data['include'] ?? null) as $entry) {
@@ -84,10 +89,13 @@ final class PreflightPinnedCheck implements CheckInterface
                 continue;
             }
             $component = $entry['component'] ?? null;
-            if (!is_string($component) || !str_contains($component, '/preflight/')) {
+            if (!is_string($component)) {
                 continue;
             }
-            $hasPreflightInclude = true;
+            $hasComponent = true;
+            if (str_contains($component, '/preflight/')) {
+                $hasPreflightInclude = true;
+            }
             $unpinned = $this->unpinnedComponentFinding($component, $absolutePath);
             if ($unpinned !== null) {
                 $findings[] = $unpinned;
@@ -120,7 +128,7 @@ final class PreflightPinnedCheck implements CheckInterface
         }
 
         if ($findings === []) {
-            $message = $hasPreflightInclude ? 'Preflight includes are pinned' : 'no Preflight components included';
+            $message = $hasComponent ? 'CI components are pinned' : 'no CI components included';
 
             return [new Finding($this->id(), Finding::STATUS_PASS, $message)];
         }
