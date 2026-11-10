@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>App checks | PROCTOR docs</title>
-<meta name="description" content="The checks that read an app&#039;s own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a missing or open robots.txt, secret-looking VITE_ variables, debug files in public/, server files not pinned to LF line endings and chmod 777.">
+<meta name="description" content="The checks that read an app&#039;s own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a missing or open robots.txt, secret-looking VITE_ variables, debug files in public/, server files not pinned to LF line endings, a developer script missing its twin and chmod 777.">
 <meta name="docs-version" content="0.13.0">
 <link rel="stylesheet" href="../../assets/wayne-ui/wayne-ui.css">
 <link rel="stylesheet" href="../../assets/docs.css">
@@ -41,8 +41,8 @@
   <div class="docs-content">
     <main id="main">
       <article class="docs-article"><h1 id="app-checks">App <span class="docs-heading-tail"><span>checks</span><a class="docs-heading-link" aria-label="Link to this section" href="#app-checks">#</a></span></h1>
-<p>This page covers the eighteen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, <code>env()</code> calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a robots.txt that is missing or lets every crawler in, secret-looking <code>VITE_</code> variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from <code>public/</code>, deploy scripts with Windows line endings, shell scripts, server config and Dockerfiles that <code>.gitattributes</code> does not pin to LF, paths that differ only by letter case, and <code>chmod 777</code>. Each one holds a CREED practice. Run <code>vendor/bin/proctor check</code> against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.</p>
-<p><code>node-eol</code>, <code>crlf-deploy-script</code> and <code>case-clash</code> can fail a run. The other fifteen warn, never fail: <code>mysql-eol</code> warns until Citadel's shared database server offers a supported MySQL, and a new check must not turn a passing app into a failing one.</p>
+<p>This page covers the nineteen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, <code>env()</code> calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a robots.txt that is missing or lets every crawler in, secret-looking <code>VITE_</code> variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from <code>public/</code>, deploy scripts with Windows line endings, shell scripts, server config and Dockerfiles that <code>.gitattributes</code> does not pin to LF, developer scripts in <code>scripts/</code> missing their twin, paths that differ only by letter case, and <code>chmod 777</code>. Each one holds a CREED practice. Run <code>vendor/bin/proctor check</code> against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.</p>
+<p><code>node-eol</code>, <code>crlf-deploy-script</code> and <code>case-clash</code> can fail a run. The other sixteen warn, never fail: <code>mysql-eol</code> warns until Citadel's shared database server offers a supported MySQL, and a new check must not turn a passing app into a failing one.</p>
 <h2 id="node-eol"><span class="docs-heading-tail"><span>node-eol</span><a class="docs-heading-link" aria-label="Link to this section" href="#node-eol">#</a></span></h2>
 <p><code>node-eol</code> grades every Node version the repository pins against the policy's <code>node</code> lines as of <code>--today</code>. The sources:</p>
 <ul>
@@ -560,6 +560,37 @@ git commit -m &quot;Pin shell scripts, server config and Dockerfiles to LF&quot;
 </tr>
 </tbody>
 </table></div>
+<h2 id="script-pair"><span class="docs-heading-tail"><span>script-pair</span><a class="docs-heading-link" aria-label="Link to this section" href="#script-pair">#</a></span></h2>
+<p><code>script-pair</code> warns, never fails, when a developer script ships without its twin. CREED every-os asks every developer script to ship as a <code>.ps1</code> and <code>.sh</code> pair that do the same thing, or as one PHP command, so a script with no twin for the other operating system is visible instead of silent. It reports, and is not in the deploy gate.</p>
+<ul>
+<li><code>proctor/script-pair/missing-ps1</code>: a <code>.sh</code> under the top-level <code>scripts/</code> directory has no <code>.ps1</code> at the same path minus the extension. One warning per unpaired script, on line 1.</li>
+<li><code>proctor/script-pair/missing-sh</code>: a <code>.ps1</code> under the top-level <code>scripts/</code> directory has no <code>.sh</code> at the same path minus the extension. One warning per unpaired script, on line 1.</li>
+<li><code>proctor/script-pair</code> (pass): every developer script in <code>scripts/</code> has its twin, or the app has no <code>scripts/</code> directory.</li>
+</ul>
+<p>Scanned: files at any depth under the top-level <code>scripts/</code> directory only (not <code>deploy/</code>, <code>bin/</code> or anything else), whose name ends in <code>.sh</code> or <code>.ps1</code> (case-sensitive). Skipped at any depth: <code>vendor/</code>, <code>node_modules/</code> and <code>.git/</code>. Pairing is by the same path minus the extension, in the same folder: <code>scripts/a11y.sh</code> pairs with <code>scripts/a11y.ps1</code>, <code>scripts/tools/x.sh</code> with <code>scripts/tools/x.ps1</code>; a twin in another folder does not count.</p>
+<p>Fix by adding the missing twin with the same path minus the extension, doing the same thing, or by making the script one PHP command instead.</p>
+<div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Rule id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>script-pair</code></td>
+<td><code>proctor/script-pair</code></td>
+</tr>
+<tr>
+<td><code>script-pair</code></td>
+<td><code>proctor/script-pair/missing-ps1</code></td>
+</tr>
+<tr>
+<td><code>script-pair</code></td>
+<td><code>proctor/script-pair/missing-sh</code></td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="case-clash"><span class="docs-heading-tail"><span>case-clash</span><a class="docs-heading-link" aria-label="Link to this section" href="#case-clash">#</a></span></h2>
 <p><code>case-clash</code> fails when two paths differ only by letter case (<code>Docs/Guide.md</code> and <code>docs/guide.md</code>): macOS and Windows ignore case, so one checkout silently overwrites the other, and a Linux host then autoloads a different file than the developer edited.</p>
 <p>Scanned: every file and directory under the app path. Skipped at any depth: <code>vendor/</code>, <code>node_modules/</code> and <code>.git/</code>. One finding per topmost clash, naming every colliding path; a clash below a clashing directory is part of it, not its own finding.</p>
@@ -611,7 +642,7 @@ git commit -m &quot;Pin shell scripts, server config and Dockerfiles to LF&quot;
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../../docs/guides/check-ci.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">CI checks</span></a><a class="docs-pager__link docs-pager__link--next" href="../../docs/guides/check-wayneui.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">WayneUI checks</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#node-eol">node-eol</a></li><li class="docs-toc__item"><a href="#mysql-eol">mysql-eol</a></li><li class="docs-toc__item"><a href="#mysql-minimum">mysql-minimum</a></li><li class="docs-toc__item"><a href="#env-outside-config">env-outside-config</a></li><li class="docs-toc__item"><a href="#raw-identity-header">raw-identity-header</a></li><li class="docs-toc__item"><a href="#app-key">app-key</a></li><li class="docs-toc__item"><a href="#app-debug">app-debug</a></li><li class="docs-toc__item"><a href="#display-errors">display-errors</a></li><li class="docs-toc__item"><a href="#directory-listing">directory-listing</a></li><li class="docs-toc__item"><a href="#csp-unsafe-inline">csp-unsafe-inline</a></li><li class="docs-toc__item"><a href="#robots-txt">robots-txt</a></li><li class="docs-toc__item"><a href="#vite-secrets">vite-secrets</a></li><li class="docs-toc__item"><a href="#entrypoint-migrate">entrypoint-migrate</a></li><li class="docs-toc__item"><a href="#served-folder">served-folder</a></li><li class="docs-toc__item"><a href="#crlf-deploy-script">crlf-deploy-script</a></li><li class="docs-toc__item"><a href="#gitattributes-eol">gitattributes-eol</a></li><li class="docs-toc__item"><a href="#case-clash">case-clash</a></li><li class="docs-toc__item"><a href="#world-writable">world-writable</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#node-eol">node-eol</a></li><li class="docs-toc__item"><a href="#mysql-eol">mysql-eol</a></li><li class="docs-toc__item"><a href="#mysql-minimum">mysql-minimum</a></li><li class="docs-toc__item"><a href="#env-outside-config">env-outside-config</a></li><li class="docs-toc__item"><a href="#raw-identity-header">raw-identity-header</a></li><li class="docs-toc__item"><a href="#app-key">app-key</a></li><li class="docs-toc__item"><a href="#app-debug">app-debug</a></li><li class="docs-toc__item"><a href="#display-errors">display-errors</a></li><li class="docs-toc__item"><a href="#directory-listing">directory-listing</a></li><li class="docs-toc__item"><a href="#csp-unsafe-inline">csp-unsafe-inline</a></li><li class="docs-toc__item"><a href="#robots-txt">robots-txt</a></li><li class="docs-toc__item"><a href="#vite-secrets">vite-secrets</a></li><li class="docs-toc__item"><a href="#entrypoint-migrate">entrypoint-migrate</a></li><li class="docs-toc__item"><a href="#served-folder">served-folder</a></li><li class="docs-toc__item"><a href="#crlf-deploy-script">crlf-deploy-script</a></li><li class="docs-toc__item"><a href="#gitattributes-eol">gitattributes-eol</a></li><li class="docs-toc__item"><a href="#script-pair">script-pair</a></li><li class="docs-toc__item"><a href="#case-clash">case-clash</a></li><li class="docs-toc__item"><a href="#world-writable">world-writable</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.13.0</span></span>

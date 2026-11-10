@@ -1,6 +1,6 @@
 ---
 title: "App checks | PROCTOR docs"
-description: "The checks that read an app's own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a missing or open robots.txt, secret-looking VITE_ variables, debug files in public/, server files not pinned to LF line endings and chmod 777."
+description: "The checks that read an app's own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a missing or open robots.txt, secret-looking VITE_ variables, debug files in public/, server files not pinned to LF line endings, a developer script missing its twin and chmod 777."
 url: https://proctor.apps.wayne.edu/docs/guides/check-app.html
 llms: https://proctor.apps.wayne.edu/llms.txt
 generator: Squire agent-ready
@@ -8,9 +8,9 @@ generator: Squire agent-ready
 
 # App checks [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-checks)
 
-This page covers the eighteen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a robots.txt that is missing or lets every crawler in, secret-looking `VITE_` variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, shell scripts, server config and Dockerfiles that `.gitattributes` does not pin to LF, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
+This page covers the nineteen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a robots.txt that is missing or lets every crawler in, secret-looking `VITE_` variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, shell scripts, server config and Dockerfiles that `.gitattributes` does not pin to LF, developer scripts in `scripts/` missing their twin, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
 
-`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other fifteen warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL, and a new check must not turn a passing app into a failing one.
+`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other sixteen warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL, and a new check must not turn a passing app into a failing one.
 
 ## node-eol [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#node-eol)
 
@@ -331,6 +331,24 @@ git commit -m "Pin shell scripts, server config and Dockerfiles to LF"
 | `gitattributes-eol` | `proctor/gitattributes-eol` |
 | `gitattributes-eol` | `proctor/gitattributes-eol/not-pinned` |
 | `gitattributes-eol` | `proctor/gitattributes-eol/crlf` |
+
+## script-pair [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#script-pair)
+
+`script-pair` warns, never fails, when a developer script ships without its twin. CREED every-os asks every developer script to ship as a `.ps1` and `.sh` pair that do the same thing, or as one PHP command, so a script with no twin for the other operating system is visible instead of silent. It reports, and is not in the deploy gate.
+
+- `proctor/script-pair/missing-ps1`: a `.sh` under the top-level `scripts/` directory has no `.ps1` at the same path minus the extension. One warning per unpaired script, on line 1.
+- `proctor/script-pair/missing-sh`: a `.ps1` under the top-level `scripts/` directory has no `.sh` at the same path minus the extension. One warning per unpaired script, on line 1.
+- `proctor/script-pair` (pass): every developer script in `scripts/` has its twin, or the app has no `scripts/` directory.
+
+Scanned: files at any depth under the top-level `scripts/` directory only (not `deploy/`, `bin/` or anything else), whose name ends in `.sh` or `.ps1` (case-sensitive). Skipped at any depth: `vendor/`, `node_modules/` and `.git/`. Pairing is by the same path minus the extension, in the same folder: `scripts/a11y.sh` pairs with `scripts/a11y.ps1`, `scripts/tools/x.sh` with `scripts/tools/x.ps1`; a twin in another folder does not count.
+
+Fix by adding the missing twin with the same path minus the extension, doing the same thing, or by making the script one PHP command instead.
+
+| Check | Rule id |
+| --- | --- |
+| `script-pair` | `proctor/script-pair` |
+| `script-pair` | `proctor/script-pair/missing-ps1` |
+| `script-pair` | `proctor/script-pair/missing-sh` |
 
 ## case-clash [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#case-clash)
 

@@ -108,6 +108,7 @@ vendor/bin/proctor gate [--path=.] [--format=text|json] [--baseline=<report or d
 - `destructive-deploy`: fails when a deploy script runs an artisan command that drops or rebuilds the database (`migrate:fresh`, `migrate:refresh`, `migrate:reset`, `db:wipe`), which erases production data on every deploy. Scans `.sh` and `.php` files under a top-level `deployments/`, `deploy_scripts/`, `deploy/` or `scripts/` directory, the top-level `build.sh`, `release.sh` and `.gitlab-ci.yml`, and the `scripts` section of composer.json; shell comments are ignored. Fix by running plain `php artisan migrate --force` in the deploy.
 - `crlf-deploy-script`: fails when a deploy script has Windows line endings (CRLF): bash on Linux reads the carriage return as part of each command, so the script breaks on Citadel's Linux hosts. Scans the top-level `build.sh` and `release.sh`, and every `.sh` file under a `deployments/`, `deploy_scripts/`, `deploy/` or `scripts/` directory at any depth; `vendor/`, `node_modules/` and `.git/` are skipped at any depth. One finding per file, on the line of its first carriage return. Fix by converting the file to LF (`sed -i 's/\r$//' build.sh`) and adding `*.sh text eol=lf` to .gitattributes. Warns (`proctor/crlf-deploy-script/no-gitattributes`) when the app has a deploy script and `.gitattributes` has no `*.sh`, `**/*.sh` or `*` line with `eol=lf`.
 - `gitattributes-eol`: warns, never fails, when the files a Linux container reads line by line are not pinned to LF (CREED every-os). `proctor/gitattributes-eol/not-pinned`: for each kind the app has (a `*.sh` file, a `*.conf` file, a `Dockerfile` or `*.Dockerfile`), every file of that kind must come out of `.gitattributes` with `eol=lf` and `text` not unset, worked out the way Git does it: every `.gitattributes` from the app root down to the file's folder, lines in order, a later line or a deeper file winning. Accepted: one line per kind (`*.sh text eol=lf`, `*.conf text eol=lf`, `Dockerfile text eol=lf`, `*.Dockerfile text eol=lf`), a broader line such as `* text=auto eol=lf` or `* text eol=lf`, `eol=lf` on its own, the old `crlf=input`, folder and `**` patterns, and a `.gitattributes` in a subfolder; a later `-text`, `binary`, `eol=crlf` or `!eol` undoes the pin. One warning, on `.gitattributes`, naming the first unpinned file of each kind and the exact lines to add. `proctor/gitattributes-eol/crlf`: a `Dockerfile`, `*.Dockerfile` or `*.conf` at any depth under the top-level `deploy/` or `.squire/` has a carriage return on disk; one warning per file, on the line of its first carriage return (shell scripts there are `crlf-deploy-script`'s). `vendor/`, `node_modules/`, `.git/` and `tests/` are skipped at any depth. Fix by adding the lines the message names at the end of `.gitattributes`, converting any CRLF file to LF, then running `git add --renormalize .` and committing. It reports, and is not in the deploy gate. The proctor collects the papers face up.
+- `script-pair`: warns, never fails, when a developer script ships without its twin (CREED every-os). `proctor/script-pair/missing-ps1`: a `.sh` under the top-level `scripts/` directory has no `.ps1` at the same path minus the extension; `proctor/script-pair/missing-sh`: a `.ps1` has no `.sh` there. Pairing is by the same path minus the extension, in the same folder: `scripts/a11y.sh` pairs with `scripts/a11y.ps1`, `scripts/tools/x.sh` with `scripts/tools/x.ps1`; a twin in another folder does not count. Scanned: files at any depth under the top-level `scripts/` directory only (not `deploy/`, `bin/` or anything else), whose name ends in `.sh` or `.ps1` (case-sensitive); `vendor/`, `node_modules/` and `.git/` are skipped at any depth. One warning per unpaired script, on line 1. Fix by adding the missing twin, doing the same thing, or by making the script one PHP command instead. It reports, and is not in the deploy gate. The proctor seats every script next to its twin before the exam starts.
 - `entrypoint-migrate`: warns, never fails, when a container entrypoint runs migrations at start: with two replicas both would run `migrate` at the same moment, and a failed migration crash-loops the container, so migrations run once per release as a job (WELD W24). Scanned: every file whose name contains `entrypoint` (case-insensitive) at any depth; `vendor/`, `node_modules/` and `.git/` are skipped at any depth, and Dockerfiles themselves are not read. A line is flagged when it runs `artisan migrate` (a bare `migrate`; `migrate:status`, `migrate:fresh` and the other subcommands are not), after removing a trailing shell comment; a line whose first non-space character is `#` is ignored, and a line inside a `migrate)` case branch, to the branch's `;;` or `esac`, is not. One warning per file, on the line of its first flagged line. Fix by moving the migration out of the entrypoint and running it once per release as a job, the way Squire's entrypoint takes a `migrate` role. It reports, and is not in the deploy gate.
 - `case-clash`: fails when two paths differ only by letter case (`README.md` and `readme.md`): macOS and Windows checkouts ignore case, so one silently replaces the other, and a Linux host then loads a different file than the developer edited. Scanned: every file and directory under the app path; skipped at any depth: `vendor/`, `node_modules/` and `.git/`. One finding per topmost clash, naming every colliding path; a clash below a clashing directory is part of it, not its own finding. Fix by keeping one name and deleting or renaming the duplicate.
 - `ci-pipelines`: for stack packages (composer.json `name` starting with `waynestate/`), fails when `.gitlab-ci.yml` or `.github/workflows/ci.yml` is missing or runs no `composer ci`; for any other project, a missing or incomplete `.gitlab-ci.yml` is a warning and `.github/workflows/ci.yml` is optional. A private stack package that sets `extra.proctor.github-mirror` to `false` in composer.json must never be on GitHub: a missing `.github/workflows/ci.yml` then gives no finding, and a present one warns (`proctor/ci-pipelines/github-private`) along with the warning-only rules. Warns when a GitHub `uses:` ref is not a 40-hex commit SHA. Warns (`proctor/ci-pipelines/composer-audit-off`) when the pipeline environment switches Composer's audit or blocking policy off: `COMPOSER_NO_AUDIT` or `COMPOSER_NO_BLOCKING` set to anything but an empty string, `0` or `false`, or `COMPOSER_AUDIT_ABANDONED` set to `ignore`, in the GitLab top-level or job `variables:` (a scalar or a map with a `value` key) or the GitHub top-level, job or step `env:`. Warns (`proctor/ci-pipelines/composer-update`) once per line when a command segment of a GitLab job script line (`script`, `before_script` or `after_script`) or a GitHub step run starts with `composer update` or `composer require`: CI must install from the lock (rule 3.7). Warns (`proctor/ci-pipelines/allow-overrides`) once per file when the pipeline environment sets `PROCTOR_ALLOW_OVERRIDES` to `1`, which lets the app pass `--policy` and `--today` in CI (BEST_PRACTICES 1.2) and grade itself against a policy or a date it picks; any other value leaves the guard on. A warning, never a fail, for stack packages and other projects alike. The proctor fails the stack's own exam halls, and only leaves a note for everyone else's.
@@ -242,6 +243,9 @@ The full set, grouped by check:
 | `gitattributes-eol` | `proctor/gitattributes-eol` |
 | `gitattributes-eol` | `proctor/gitattributes-eol/not-pinned` |
 | `gitattributes-eol` | `proctor/gitattributes-eol/crlf` |
+| `script-pair` | `proctor/script-pair` |
+| `script-pair` | `proctor/script-pair/missing-ps1` |
+| `script-pair` | `proctor/script-pair/missing-sh` |
 | `entrypoint-migrate` | `proctor/entrypoint-migrate` |
 | `entrypoint-migrate` | `proctor/entrypoint-migrate/runs` |
 | `case-clash` | `proctor/case-clash` |
@@ -1336,9 +1340,9 @@ Source: https://proctor.apps.wayne.edu/docs/guides/check-app.html
 
 ## App checks [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-checks)
 
-This page covers the eighteen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a robots.txt that is missing or lets every crawler in, secret-looking `VITE_` variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, shell scripts, server config and Dockerfiles that `.gitattributes` does not pin to LF, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
+This page covers the nineteen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a robots.txt that is missing or lets every crawler in, secret-looking `VITE_` variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, shell scripts, server config and Dockerfiles that `.gitattributes` does not pin to LF, developer scripts in `scripts/` missing their twin, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
 
-`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other fifteen warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL, and a new check must not turn a passing app into a failing one.
+`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other sixteen warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL, and a new check must not turn a passing app into a failing one.
 
 ### node-eol [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#node-eol)
 
@@ -1659,6 +1663,24 @@ git commit -m "Pin shell scripts, server config and Dockerfiles to LF"
 | `gitattributes-eol` | `proctor/gitattributes-eol` |
 | `gitattributes-eol` | `proctor/gitattributes-eol/not-pinned` |
 | `gitattributes-eol` | `proctor/gitattributes-eol/crlf` |
+
+### script-pair [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#script-pair)
+
+`script-pair` warns, never fails, when a developer script ships without its twin. CREED every-os asks every developer script to ship as a `.ps1` and `.sh` pair that do the same thing, or as one PHP command, so a script with no twin for the other operating system is visible instead of silent. It reports, and is not in the deploy gate.
+
+- `proctor/script-pair/missing-ps1`: a `.sh` under the top-level `scripts/` directory has no `.ps1` at the same path minus the extension. One warning per unpaired script, on line 1.
+- `proctor/script-pair/missing-sh`: a `.ps1` under the top-level `scripts/` directory has no `.sh` at the same path minus the extension. One warning per unpaired script, on line 1.
+- `proctor/script-pair` (pass): every developer script in `scripts/` has its twin, or the app has no `scripts/` directory.
+
+Scanned: files at any depth under the top-level `scripts/` directory only (not `deploy/`, `bin/` or anything else), whose name ends in `.sh` or `.ps1` (case-sensitive). Skipped at any depth: `vendor/`, `node_modules/` and `.git/`. Pairing is by the same path minus the extension, in the same folder: `scripts/a11y.sh` pairs with `scripts/a11y.ps1`, `scripts/tools/x.sh` with `scripts/tools/x.ps1`; a twin in another folder does not count.
+
+Fix by adding the missing twin with the same path minus the extension, doing the same thing, or by making the script one PHP command instead.
+
+| Check | Rule id |
+| --- | --- |
+| `script-pair` | `proctor/script-pair` |
+| `script-pair` | `proctor/script-pair/missing-ps1` |
+| `script-pair` | `proctor/script-pair/missing-sh` |
 
 ### case-clash [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#case-clash)
 
@@ -2192,11 +2214,11 @@ Source: https://proctor.apps.wayne.edu/docs/guides/checks-overview.html
 
 This page lists every check PROCTOR runs in a single `vendor/bin/proctor check` run, and how each one reports. The proctor asks the same questions in the same order on every run; only the hall changes.
 
-Forty-three checks in all. Eight of them also run at the door, in `proctor gate`: `php-floor`, `unpatched`, `laravel-eol`, `laravel-php`, `lock-committed`, `composer-audit`, `overrides` and `policy-age` (see [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html)). Two are new in 0.12.0: `composer-cooldown` and `lock-tracked`.
+Forty-four checks in all. Eight of them also run at the door, in `proctor gate`: `php-floor`, `unpatched`, `laravel-eol`, `laravel-php`, `lock-committed`, `composer-audit`, `overrides` and `policy-age` (see [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html)). Two are new in 0.12.0: `composer-cooldown` and `lock-tracked`.
 
 ![Nine real lines from PROCTOR's text report, one per check shown: FAIL php-floor, WARN unpatched, FAIL unbounded-constraints, PASS lock-committed, WARN portability, WARN mysql56, WARN ci-pipelines, PASS composer-audit, FAIL overrides. Each line is written in words; color only repeats what the word says.](https://proctor.apps.wayne.edu/docs/readme/report.svg)
 
-*Nine of the forty-three checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
+*Nine of the forty-four checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
 
 ### How a check reports [#](https://proctor.apps.wayne.edu/docs/guides/checks-overview.html#how-a-check-reports)
 
@@ -2242,6 +2264,7 @@ Details and fixes: [CI checks](https://proctor.apps.wayne.edu/docs/guides/check-
 - `destructive-deploy`: fails when a deploy script runs an artisan command that drops or rebuilds the database (`migrate:fresh`, `migrate:refresh`, `migrate:reset`, `db:wipe`), which erases production data on every deploy.
 - `crlf-deploy-script`: fails when a deploy script has Windows line endings (CRLF), which break it on Linux, and warns (`proctor/crlf-deploy-script/no-gitattributes`) when the app has a deploy script and `.gitattributes` does not pin `*.sh` to `eol=lf`.
 - `gitattributes-eol`: warns, never fails, when `.gitattributes` does not pin the app's `*.sh`, `*.conf` or Dockerfiles to `eol=lf` (read the way Git reads it, so `* text=auto eol=lf` counts and a later `-text` or `eol=crlf` undoes it), and when a `Dockerfile`, `*.Dockerfile` or `*.conf` under `deploy/` or `.squire/` has Windows line endings (CREED every-os).
+- `script-pair`: warns, never fails, when a developer script in the top-level `scripts/` directory has no twin: a `.sh` without its `.ps1` (`proctor/script-pair/missing-ps1`) or a `.ps1` without its `.sh` (`proctor/script-pair/missing-sh`); pairing is by the same path minus the extension, in the same folder (CREED every-os).
 - `case-clash`: fails when two paths differ only by letter case, which collide on macOS and Windows.
 - `instant-client-committed`: warns when Oracle Instant Client is committed to the repo: an archive, an unzipped install under an `instantclient` directory, or a loose client library.
 
@@ -2851,7 +2874,7 @@ A clean hall exits 0 (warnings allowed), a resit exits 1, and a tripped proctor 
 
 ### Status [#](https://proctor.apps.wayne.edu/docs/#status)
 
-The header names the release these pages document; [Upgrading](https://proctor.apps.wayne.edu/docs/upgrading.html) lists what changed at each break. Forty-three checks, eight of them in the deploy gate, four report formats and three exit codes. License: MIT.
+The header names the release these pages document; [Upgrading](https://proctor.apps.wayne.edu/docs/upgrading.html) lists what changed at each break. Forty-four checks, eight of them in the deploy gate, four report formats and three exit codes. License: MIT.
 
 Part of WELD, the Wayne State application stack: [CREED](https://creed.apps.wayne.edu/) sets the policy PROCTOR marks against, [Preflight](https://preflight.apps.wayne.edu/) runs it in GitLab CI, and [Sourdough](https://sourdough.apps.wayne.edu/) and [WELD](https://weld.apps.wayne.edu/) apps come with it installed. The look is [WayneUI](https://wayneui.apps.wayne.edu/).
 
@@ -3254,6 +3277,9 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `gitattributes-eol` | `proctor/gitattributes-eol` |
 | `gitattributes-eol` | `proctor/gitattributes-eol/not-pinned` |
 | `gitattributes-eol` | `proctor/gitattributes-eol/crlf` |
+| `script-pair` | `proctor/script-pair` |
+| `script-pair` | `proctor/script-pair/missing-ps1` |
+| `script-pair` | `proctor/script-pair/missing-sh` |
 | `entrypoint-migrate` | `proctor/entrypoint-migrate` |
 | `entrypoint-migrate` | `proctor/entrypoint-migrate/runs` |
 | `case-clash` | `proctor/case-clash` |

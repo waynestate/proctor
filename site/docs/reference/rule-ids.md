@@ -30,6 +30,9 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `gitattributes-eol` | `proctor/gitattributes-eol` |
 | `gitattributes-eol` | `proctor/gitattributes-eol/not-pinned` |
 | `gitattributes-eol` | `proctor/gitattributes-eol/crlf` |
+| `script-pair` | `proctor/script-pair` |
+| `script-pair` | `proctor/script-pair/missing-ps1` |
+| `script-pair` | `proctor/script-pair/missing-sh` |
 | `entrypoint-migrate` | `proctor/entrypoint-migrate` |
 | `entrypoint-migrate` | `proctor/entrypoint-migrate/runs` |
 | `case-clash` | `proctor/case-clash` |
