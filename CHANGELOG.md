@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Fixed: `mysql56-newer-column` no longer flags an app's own method named `vector`, `instant` and the like when it is called on `$this`, `self`, `static` or `parent`; only a call on another receiver (a schema Blueprint) is a column.
 - Fixed: `entrypoint-migrate` no longer flags migrations run inside a shell function named for the migrate role (`run_migrate()`, `migrate()`, `migrations()`), the way it already skipped a `migrate)` case branch; a migrate in any other function, at top level or in a `web)` branch still warns.
 
 - Added: `preflight-gates` warns on three more ways a re-declared Preflight gate job is disarmed: `when: never`, or `rules:` that all say `when: never` (`proctor/preflight-gates/skipped`: the gate never runs); `when: manual` without `allow_failure: false` (`proctor/preflight-gates/manual`: GitLab makes a job-level manual job optional, so the pipeline passes without it); and a `rules:` entry with `allow_failure: true` (`proctor/preflight-gates/allow-failure`, as for the job-level key). All three only warn. BEST_PRACTICES 1.2 and "Flag a pipeline that skips or weakens Preflight" say so.
