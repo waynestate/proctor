@@ -14,8 +14,8 @@ namespace Waynestate\Proctor\Check;
  * use. That is a hygiene problem, not a broken install: the stale lock still
  * installs, so the mismatch is a warning, never a fail. The hash follows
  * Composer's own Locker::getContentHash: the relevant keys of the decoded
- * composer.json, plus config.platform when set, ksorted and md5-hashed as
- * JSON.
+ * composer.json, plus config.platform and config.policy when set, ksorted
+ * and md5-hashed as JSON.
  */
 final class LockCommittedCheck implements CheckInterface
 {
@@ -127,6 +127,11 @@ final class LockCommittedCheck implements CheckInterface
         }
         if (isset($data['config']['platform'])) {
             $content['config']['platform'] = $data['config']['platform'];
+        }
+        // Composer 2.11 folds config.policy into the hash too; miss it and
+        // every app carrying a release cooldown looks out of sync.
+        if (isset($data['config']['policy'])) {
+            $content['config']['policy'] = $data['config']['policy'];
         }
         ksort($content);
 
