@@ -135,6 +135,117 @@ final class Mysql56CheckTest extends TestCase
         );
     }
 
+    public function testOwnMethodAppGivesOneNewerColumnWarningInTheMigration(): void
+    {
+        // Embedder's own vector() and self::instant() are app methods, not
+        // columns: only the Blueprint call in the migration warns.
+        $findings = (new Mysql56Check())->run(
+            $this->contextFor(__DIR__ . '/fixtures/apps/mysql56-own-method-app'),
+        );
+
+        $newerColumn = array_filter(
+            $findings,
+            static fn(Finding $finding): bool => str_starts_with($finding->message, 'mysql56-newer-column:'),
+        );
+        foreach ($newerColumn as $finding) {
+            self::assertSame(Finding::STATUS_WARNING, $finding->status);
+        }
+        self::assertSame(
+            [
+                ['mysql56-newer-column', 'database/migrations/2026_03_01_000000_create_docs_table.php', 13],
+            ],
+            $this->triples(array_values($newerColumn)),
+        );
+    }
+
+    public function testAnAppMethodNamedVectorPasses(): void
+    {
+        // Only $this->vector() and self::instant() in an app class: no
+        // receiver is a Blueprint, so the newer-column rule sees nothing.
+        $appPath = sys_get_temp_dir() . '/proctor-mysql56-' . uniqid('', true);
+        self::assertTrue(
+            is_dir($appPath . '/app/Services') || mkdir($appPath . '/app/Services', 0777, true),
+        );
+        self::assertTrue(
+            is_dir($appPath . '/app/Providers') || mkdir($appPath . '/app/Providers', 0777, true),
+        );
+        self::assertTrue(
+            is_dir($appPath . '/database/migrations') || mkdir($appPath . '/database/migrations', 0777, true),
+        );
+        file_put_contents(
+            $appPath . '/app/Services/Embedder.php',
+            <<<'PHP'
+<?php
+
+namespace App\Services;
+
+class Embedder
+{
+    public function vector(array $a): array
+    {
+        return $a;
+    }
+
+    public static function instant(): string
+    {
+        return 'instant';
+    }
+
+    public function embed(array $a): array
+    {
+        return $this->vector($a);
+    }
+
+    public function stamp(): string
+    {
+        return self::instant();
+    }
+}
+PHP,
+        );
+        file_put_contents(
+            $appPath . '/app/Providers/AppServiceProvider.php',
+            <<<'PHP'
+<?php
+
+namespace App\Providers;
+
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\ServiceProvider;
+
+class AppServiceProvider extends ServiceProvider
+{
+    public function register(): void
+    {
+        //
+    }
+
+    public function boot(): void
+    {
+        Schema::defaultStringLength(191);
+    }
+}
+PHP,
+        );
+
+        try {
+            $findings = (new Mysql56Check())->run($this->contextFor($appPath));
+
+            self::assertCount(1, $findings);
+            self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+            self::assertSame('no MySQL 5.6 blockers found', $findings[0]->message);
+        } finally {
+            unlink($appPath . '/app/Services/Embedder.php');
+            rmdir($appPath . '/app/Services');
+            unlink($appPath . '/app/Providers/AppServiceProvider.php');
+            rmdir($appPath . '/app/Providers');
+            rmdir($appPath . '/app');
+            rmdir($appPath . '/database/migrations');
+            rmdir($appPath . '/database');
+            rmdir($appPath);
+        }
+    }
+
     public function testCleanAppGivesExactlyOnePassFinding(): void
     {
         $findings = (new Mysql56Check())->run(

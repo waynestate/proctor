@@ -10,6 +10,7 @@ use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\StaticCall;
+use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\Scalar\Int_;
@@ -261,7 +262,11 @@ final class Mysql56Check implements CheckInterface
             }
 
             // mysql56-newer-column: vector, invisible, instant, spatial.
-            if (in_array($lowerName, ['vector', 'vectorindex', 'invisible', 'instant', 'spatialindex'], true)) {
+            // The vector family is a schema Blueprint call; a method on
+            // $this (or self/static/parent) is the app's own, not a
+            // column, so it passes.
+            if (in_array($lowerName, ['vector', 'vectorindex', 'invisible', 'instant', 'spatialindex'], true)
+                && !$this->isOwnReceiver($call)) {
                 $findings[] = $this->warning(
                     'newer-column',
                     'needs a newer MySQL than 5.6',
@@ -401,6 +406,21 @@ final class Mysql56Check implements CheckInterface
     private function callName(MethodCall|StaticCall $call): ?string
     {
         return $call->name instanceof Identifier ? $call->name->name : null;
+    }
+
+    /**
+     * Whether the call is on the object's own class: $this->..., or a
+     * static call on self, static or parent. Only a call on another
+     * receiver (such as a Blueprint) defines a column.
+     */
+    private function isOwnReceiver(MethodCall|StaticCall $call): bool
+    {
+        if ($call instanceof MethodCall) {
+            return $call->var instanceof Variable && $call->var->name === 'this';
+        }
+
+        return $call->class instanceof Name
+            && in_array(strtolower($call->class->getLast()), ['self', 'static', 'parent'], true);
     }
 
     /**
