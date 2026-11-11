@@ -671,7 +671,7 @@ Nine of PROCTOR's forty-five checks, in the order they run. Each one shows a rea
    FAIL unbounded-constraints: vendor/any constraint "\*" is unbounded
 4. Q4 `lock-committed`
    ### Did you hand in your `composer.lock`?
-   Missing from the app path fails. In CI the working tree is a clone, so present means committed. A lock whose content-hash no longer matches `composer.json` warns: you changed the question after you answered it.
+   Missing from the app path fails. A lock that git does not track warns (`lock-tracked`), because a CI install writes a lock of its own and nobody tested that one. A lock whose content-hash no longer matches `composer.json` warns: you changed the question after you answered it.
    PASS lock-committed: composer.lock is present
 5. Q5 `portability`
    ### Would the app still run on another host?
@@ -720,7 +720,7 @@ The whole paper
 Every check `proctor check` asks, in the order it asks them. Each id opens its page in the docs.
 
 - Gate also asked by `proctor gate` before a deploy
-- New new in 0.14.0
+- New new in 0.15.0
 
 1. [`php-floor`](https://proctor.apps.wayne.edu/docs/guides/check-php.html#php-floor): Is the lowest PHP you allow still supported? Gate
 2. [`unpatched`](https://proctor.apps.wayne.edu/docs/guides/check-php.html#unpatched): Is each locked line on its latest patch? Gate
@@ -740,13 +740,13 @@ Every check `proctor check` asks, in the order it asks them. Each id opens its p
 16. [`destructive-deploy`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#destructive-deploy): Does a deploy ever wipe the database?
 17. [`crlf-deploy-script`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#crlf-deploy-script): Do the deploy scripts end lines in LF?
 18. [`gitattributes-eol`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#gitattributes-eol): Is every server file pinned to LF?
-19. [`script-pair`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#script-pair): Is every script a `.ps1` and `.sh` pair? New
+19. [`script-pair`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#script-pair): Is every script a `.ps1` and `.sh` pair?
 20. [`entrypoint-migrate`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#entrypoint-migrate): Does a container migrate as it starts?
 21. [`case-clash`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#case-clash): Do two paths differ only by case?
 22. [`ci-pipelines`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#ci-pipelines): Do the pipelines run `composer ci`?
 23. [`preflight-pinned`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#preflight-pinned): Is every CI component pinned to a release?
 24. [`preflight-gates`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#preflight-gates): Do Preflight's gates run, and block?
-25. [`mysql56-ci`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#mysql56-ci): Do the migrations meet MySQL 5.6 in CI?
+25. [`mysql56-ci`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#mysql56-ci): Do the migrations meet MySQL 5.6 in CI? New
 26. [`composer-audit`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-audit): Does the lock carry a known advisory? Gate
 27. [`composer-version`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-version): Is the Composer on PATH safe?
 28. [`repo-url-credentials`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#repo-url-credentials): Is a token written into a package URL?
@@ -1037,7 +1037,7 @@ Hall G GitLab, through Preflight
 
 ```
 include:
-  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.5.0
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.8.0
 ```
 
 The default command is `vendor/bin/proctor check --format=codequality`, so findings show on the merge request. It clones the full history, so `override-approver` can read git blame. With PROCTOR 0.11.0 or later it also adds `--record` and keeps `proctor.json`, the report Rollcall reads. We strongly recommend a git.wayne.edu instance runner.
@@ -1084,7 +1084,7 @@ Install PROCTOR and CREED's policy as dev dependencies, then run the check from 
 2. Sit the exam. The `composer:2` image brings PHP and Composer, so `composer-audit` runs too:
    `docker run --rm -v "${PWD}:/app" -w /app composer:2 vendor/bin/proctor check`
 
-Options: `--path=.` · `--format=text|json|codequality|sarif` · `--record=<file>` to keep the JSON report too, whatever the format · `--policy=<file>` (optional; without it PROCTOR tries the `PROCTOR_POLICY` variable, then vendor/waynestate/creed, then its bundled copy) · `--today=YYYY-MM-DD` to fix the date so runs repeat (both on your own machine only: CI refuses them) · `--php-runtime=X.Y.Z` for the `unpatched` check.
+Options: `--path=.` · `--format=text|json|codequality|sarif` · `--record=<file>` to keep the JSON report too, whatever the format · `--policy=<file>` (optional; without it PROCTOR tries the `PROCTOR_POLICY` variable, then vendor/waynestate/creed, then its bundled copy) · `--today=YYYY-MM-DD` to fix the date so runs repeat (both on your own machine only: CI refuses them) · `--php-runtime=X.Y.Z`, the PHP that will serve the app, for `php-floor` and `unpatched`.
 
 Open book
 

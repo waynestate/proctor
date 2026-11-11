@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Site: the front page's stale facts are current. Hall G includes `preflight/proctor@0.8.0` (was `@0.5.0`); the whole paper's New tag marks `mysql56-ci`, new in 0.15.0 (was `script-pair`, "new in 0.14.0"); Q4 says a lock git does not track warns (`lock-tracked`) instead of "in CI present means committed"; the options line says `--php-runtime` feeds `php-floor` as well as `unpatched`.
+
 - CI pins Preflight 0.8.0.
 
 - Docs: the README and the install page no longer say Preflight runs PROCTOR from the PHAR; its `proctor` component installs the app with Composer and runs the app's own `vendor/bin/proctor`. BEST_PRACTICES 8.1 and its gap line say what is left (moving that job to the PHAR is Preflight's change), and the README's PHAR section is no longer listed as missing.
