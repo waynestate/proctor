@@ -47,7 +47,7 @@ site checks fail on stale files.
 
 ## CI
 
-- **GitLab:** Preflight 0.5.0's `php-test` (PHP 8.3, 8.4, 8.5), `composer-audit`, `proctor` (on the `deploy/` layer;
+- **GitLab:** Preflight 0.8.0's `php-test` (PHP 8.3, 8.4, 8.5), `composer-audit`, `proctor` (on the `deploy/` layer;
   it blocks the pipeline) and `a11y` (every page under `site/`) components, plus the
   `composer-ci`, `wayneui-copies`, `creed-copy-refresh` (scheduled) and `release-phar` (tags) jobs.
 - **GitHub:** `.github/workflows/ci.yml` calls Preflight's reusable workflow with `composer ci`.

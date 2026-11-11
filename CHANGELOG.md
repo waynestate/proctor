@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- CI pins Preflight 0.8.0.
+
 - Docs: the README and the install page no longer say Preflight runs PROCTOR from the PHAR; its `proctor` component installs the app with Composer and runs the app's own `vendor/bin/proctor`. BEST_PRACTICES 8.1 and its gap line say what is left (moving that job to the PHAR is Preflight's change), and the README's PHAR section is no longer listed as missing.
 
 - Added: `preflight-gates` warns (`proctor/preflight-gates/proctor-command`) when the Preflight `proctor` include's `proctor_command` input disarms the job: it runs neither `proctor check` nor `proctor gate` (`"true"`), or pipes PROCTOR or follows it with `||`, so the shell reports another command's exit code and a failing check passes. The component runs the input as written, so it was the one free-text way around the gate (BEST_PRACTICES 1.2). Every stack repo's command passes.

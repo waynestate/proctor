@@ -454,7 +454,7 @@ line, and the `composer-version` check (see 4.6) fails when the Composer on PATH
 CVE-2024-35241 and CVE-2024-35242 or is Composer 1. Since 0.7.0, the same check also fails when the
 Composer on PATH is below the CREED policy's `tools.composer.minimum` (2.8.0 in the bundled policy), naming the
 policy in the message; the CVE floors stay as absolute floors underneath it. Preflight's `php-test` and `proctor` jobs
-install the Composer release named by their `composer_version` input (default `2.11.1` in Preflight 0.5.0, the pin
+install the Composer release named by their `composer_version` input (default `2.11.1` in Preflight 0.8.0, the pin
 PROCTOR's own pipeline uses; 0.4.0 installed 2.10.3), which carries the 2026 Perforce fixes, and since Preflight 0.4.0 that input refuses a
 release older than 2.9.6. What remains: the policy minimum (2.8.0) sits below those fixes in 2.9.6 and 2.10.3, so the
 check passes a Composer that lacks them, and an app on an older Preflight pin can still set `composer_version` lower.
@@ -526,9 +526,9 @@ Composer 2.11 is stable: 2.11.0 shipped on 2026-10-29 and 2.11.1 on 2026-10-30
 `cooldown` policy (`config.policy.cooldown.period`, default `null`, so off). The move to 2.11 is done in the tools
 (read 2026-11-09): Squire's kit pins `composer:2.11.1` by digest in its base fallback image since 0.10.1, and so do
 the deploy layers already regenerated from it (HELMET, SESAME); Squire's own CI jobs use `composer:2.11.1`;
-Preflight 0.5.0 installs 2.11.1 by default in its `php-test` and `proctor` components (`composer_version`; 0.4.0
+Preflight 0.8.0 installs 2.11.1 by default in its `php-test` and `proctor` components (`composer_version`; 0.4.0
 installed 2.10.3); and PROCTOR's own CI jobs, phar build scripts and deploy layer (Squire 0.10.7) pin
-`composer:2.11.1` by digest. Apps on an older Preflight pin still get the older default until they move to `@0.5.0`. Decision (the stack maintainer, 2026-11-03): when 2.11 is in the base images, Sourdough apps set a 3-day
+`composer:2.11.1` by digest. Apps on an older Preflight pin still get the older default until they move to `@0.8.0`. Decision (the stack maintainer, 2026-11-03): when 2.11 is in the base images, Sourdough apps set a 3-day
 cooldown and PROCTOR warns when an app has none. That condition was met on 2026-11-10, and all three parts are built.
 
 ### 4.12 Decide whether dev dependencies count (second pass)
