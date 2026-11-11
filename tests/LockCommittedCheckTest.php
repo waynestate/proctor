@@ -213,6 +213,78 @@ final class LockCommittedCheckTest extends TestCase
         self::assertSame('proctor/lock-committed/out-of-sync', $findings[1]->ruleId);
     }
 
+    public function testALockHashedWithConfigPolicyGivesOnlyThePassFinding(): void
+    {
+        $composerJson = [
+            'require' => ['php' => '^8.3'],
+            'config' => [
+                'platform' => ['php' => '8.3.0'],
+                'policy' => ['cooldown' => ['period' => '3 days']],
+            ],
+        ];
+        $appPath = $this->makeApp($composerJson, $this->contentHash($composerJson));
+
+        $findings = (new LockCommittedCheck())->run($this->contextFor($appPath));
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+        self::assertNull($findings[0]->rule);
+    }
+
+    public function testALockHashedWithoutConfigPolicyWarnsWhenPolicyIsSet(): void
+    {
+        $composerJson = [
+            'require' => ['php' => '^8.3'],
+            'config' => [
+                'platform' => ['php' => '8.3.0'],
+                'policy' => ['cooldown' => ['period' => '3 days']],
+            ],
+        ];
+        // The hash of the same composer.json without the policy block: it
+        // matches only if the check ignores config.policy, so a warning
+        // proves config.policy is part of the hash input.
+        $withoutPolicy = [
+            'require' => ['php' => '^8.3'],
+            'config' => ['platform' => ['php' => '8.3.0']],
+        ];
+        $appPath = $this->makeApp($composerJson, $this->contentHash($withoutPolicy));
+
+        $findings = (new LockCommittedCheck())->run($this->contextFor($appPath));
+
+        self::assertCount(2, $findings);
+        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+        self::assertSame(Finding::STATUS_WARNING, $findings[1]->status);
+        self::assertSame('out-of-sync', $findings[1]->rule);
+        self::assertSame('proctor/lock-committed/out-of-sync', $findings[1]->ruleId);
+    }
+
+    public function testAComposerJsonWithoutPolicyHashesAsBefore(): void
+    {
+        $composerJson = [
+            'require' => ['php' => '^8.3'],
+            'config' => ['platform' => ['php' => '8.3.0']],
+        ];
+        // The hash a pre-2.11 lock carries: the relevant keys plus
+        // config.platform only, built by hand rather than through the
+        // shared helper so the old result is pinned directly.
+        $content = [
+            'require' => $composerJson['require'],
+            'config' => ['platform' => $composerJson['config']['platform']],
+        ];
+        ksort($content);
+        $legacyHash = md5(json_encode($content));
+
+        self::assertSame($legacyHash, $this->contentHash($composerJson));
+
+        $appPath = $this->makeApp($composerJson, $legacyHash);
+
+        $findings = (new LockCommittedCheck())->run($this->contextFor($appPath));
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+        self::assertNull($findings[0]->rule);
+    }
+
     /**
      * Builds a temporary app directory with the given composer.json and a
      * composer.lock carrying the given content-hash, and returns its path.
@@ -257,8 +329,8 @@ final class LockCommittedCheckTest extends TestCase
 
     /**
      * The content-hash Composer computes for the given composer.json data:
-     * the relevant keys only, plus config.platform when set, ksorted and
-     * md5-hashed as JSON.
+     * the relevant keys only, plus config.platform and config.policy when
+     * set, ksorted and md5-hashed as JSON.
      *
      * @param array<string, mixed> $composerJson
      */
@@ -272,6 +344,9 @@ final class LockCommittedCheckTest extends TestCase
         }
         if (isset($composerJson['config']['platform'])) {
             $content['config']['platform'] = $composerJson['config']['platform'];
+        }
+        if (isset($composerJson['config']['policy'])) {
+            $content['config']['policy'] = $composerJson['config']['policy'];
         }
         ksort($content);
 
