@@ -167,7 +167,9 @@ include:
 <p><code>preflight-gates</code> warns, and never fails, when <code>.gitlab-ci.yml</code> skips or weakens Preflight, the flags Preflight's practice 3.3 asks for. An include at a moving ref is <code>preflight-pinned</code>'s finding; this check covers the rest.</p>
 <ul>
 <li>No <code>include:</code> entry whose <code>component:</code> path contains <code>/preflight/</code> warns (<code>proctor/preflight-gates/no-include</code>): none of the stack's gates run. Include <code>php-test</code>, <code>composer-audit</code> and <code>proctor</code> from Preflight, pinned to a release tag.</li>
-<li>A gate that can fail while the pipeline passes warns (<code>proctor/preflight-gates/allow-failure</code>), once per place it is set: a gate component included with the <code>allow_failure</code> input set to <code>true</code>, or a job the app re-declares under the gate's job name (its <code>job_name</code> input, or the component name) with <code>allow_failure</code> set to anything but <code>false</code>, the exit-codes form included. Every Preflight component is a gate except <code>renovate</code> (a bot) and <code>package-publish</code> (a release step); php-test's advisory job may fail by design and is not one.</li>
+<li>A gate that can fail while the pipeline passes warns (<code>proctor/preflight-gates/allow-failure</code>), once per place it is set: a gate component included with the <code>allow_failure</code> input set to <code>true</code>, or a job the app re-declares under the gate's job name (its <code>job_name</code> input, or the component name) with <code>allow_failure</code> set to anything but <code>false</code>, the exit-codes form included, and a <code>rules:</code> entry on that job with <code>allow_failure: true</code>. Every Preflight component is a gate except <code>renovate</code> (a bot) and <code>package-publish</code> (a release step); php-test's advisory job may fail by design and is not one.</li>
+<li>A re-declared gate job that never runs warns (<code>proctor/preflight-gates/skipped</code>): <code>when: never</code> on the job, or <code>rules:</code> whose every entry says <code>when: never</code>. A rule with no <code>when</code> (GitLab's default is <code>on_success</code>) can still run the gate and is fine.</li>
+<li>A re-declared gate job set to <code>when: manual</code> without <code>allow_failure: false</code> warns (<code>proctor/preflight-gates/manual</code>): GitLab treats a job-level manual job as allowed to fail, so it waits for a click and the pipeline passes without it. Add <code>allow_failure: false</code> and the pipeline waits for the gate instead; <code>when: manual</code> inside <code>rules:</code> already blocks by default and is not flagged.</li>
 <li>No job that runs PROCTOR warns (<code>proctor/preflight-gates/no-proctor-job</code>): the Preflight <code>proctor</code> component is not included and no job's <code>script</code> runs <code>proctor check</code> or <code>proctor gate</code> (<code>vendor/bin/proctor</code>, <code>proctor.phar</code> or a path to either).</li>
 <li>A <code>proctor_command</code> input on the Preflight <code>proctor</code> include that disarms the job warns (<code>proctor/preflight-gates/proctor-command</code>): the component hands the input to the shell as written, so a command with no segment that runs <code>proctor check</code> or <code>proctor gate</code> (<code>true</code>, <code>echo skipped</code>) passes without grading the app, and one that pipes PROCTOR (<code>| tee</code>) or follows it with <code>||</code> reports another command's exit code. A redirect such as <code>&gt; report.json</code> is fine. Leave the input at its default, or run <code>vendor/bin/proctor check</code> on its own.</li>
 </ul>
@@ -199,6 +201,14 @@ include:
 <tr>
 <td><code>preflight-gates</code></td>
 <td><code>proctor/preflight-gates/proctor-command</code></td>
+</tr>
+<tr>
+<td><code>preflight-gates</code></td>
+<td><code>proctor/preflight-gates/skipped</code></td>
+</tr>
+<tr>
+<td><code>preflight-gates</code></td>
+<td><code>proctor/preflight-gates/manual</code></td>
 </tr>
 </tbody>
 </table></div>

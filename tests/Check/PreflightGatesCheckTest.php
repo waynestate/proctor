@@ -296,6 +296,141 @@ YAML);
         self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
     }
 
+    public function testAGateJobSetToWhenNeverWarnsOnItsWhenLine(): void
+    {
+        $findings = $this->runCheck(self::GOOD . <<<'YAML'
+proctor:
+  when: never
+
+YAML);
+
+        self::assertSame(
+            [['proctor/preflight-gates/skipped', Finding::STATUS_WARNING, '.gitlab-ci.yml', 15]],
+            $this->rows($findings),
+        );
+        self::assertSame(
+            'preflight-gates-skipped: job proctor (the Preflight proctor gate) sets when: never, so the gate never runs and the pipeline passes without it; remove the override',
+            $findings[0]->message,
+        );
+    }
+
+    public function testRulesThatAllSayWhenNeverWarnOnTheRulesLine(): void
+    {
+        $findings = $this->runCheck(self::GOOD . <<<'YAML'
+php-test:
+  rules:
+    - if: '$CI_COMMIT_BRANCH'
+      when: never
+    - when: never
+
+YAML);
+
+        self::assertSame(
+            [['proctor/preflight-gates/skipped', Finding::STATUS_WARNING, '.gitlab-ci.yml', 15]],
+            $this->rows($findings),
+        );
+        self::assertSame(
+            'preflight-gates-skipped: job php-test (the Preflight php-test gate) has rules that all say when: never, so the gate never runs and the pipeline passes without it; remove the override',
+            $findings[0]->message,
+        );
+    }
+
+    public function testARuleThatCanStillRunTheGateIsNotASkip(): void
+    {
+        $findings = $this->runCheck(self::GOOD . <<<'YAML'
+php-test:
+  rules:
+    - if: '$CI_COMMIT_TAG'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+
+YAML);
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+    }
+
+    public function testAManualGateJobWarnsBecauseGitlabMakesItOptional(): void
+    {
+        $findings = $this->runCheck(self::GOOD . <<<'YAML'
+composer-audit:
+  when: manual
+
+YAML);
+
+        self::assertSame(
+            [['proctor/preflight-gates/manual', Finding::STATUS_WARNING, '.gitlab-ci.yml', 15]],
+            $this->rows($findings),
+        );
+        self::assertSame(
+            'preflight-gates-manual: job composer-audit (the Preflight composer-audit gate) sets when: manual without allow_failure: false, so GitLab treats it as optional and the pipeline passes without it; remove when: manual, or add allow_failure: false so the pipeline waits for it',
+            $findings[0]->message,
+        );
+    }
+
+    public function testAManualGateThatBlocksPassesAndOneThatMayFailWarnsOnce(): void
+    {
+        $blocking = $this->runCheck(self::GOOD . <<<'YAML'
+composer-audit:
+  when: manual
+  allow_failure: false
+
+YAML);
+
+        self::assertCount(1, $blocking);
+        self::assertSame(Finding::STATUS_PASS, $blocking[0]->status);
+
+        $this->tearDown();
+        $soft = $this->runCheck(self::GOOD . <<<'YAML'
+composer-audit:
+  when: manual
+  allow_failure: true
+
+YAML);
+
+        self::assertSame(
+            [['proctor/preflight-gates/allow-failure', Finding::STATUS_WARNING, '.gitlab-ci.yml', 16]],
+            $this->rows($soft),
+        );
+    }
+
+    public function testARulesEntryWithAllowFailureTrueWarnsOnThatLine(): void
+    {
+        $findings = $this->runCheck(self::GOOD . <<<'YAML'
+proctor:
+  rules:
+    - if: '$CI_COMMIT_BRANCH'
+      allow_failure: true
+
+YAML);
+
+        self::assertSame(
+            [['proctor/preflight-gates/allow-failure', Finding::STATUS_WARNING, '.gitlab-ci.yml', 17]],
+            $this->rows($findings),
+        );
+        self::assertSame(
+            'preflight-gates-allow-failure: job proctor (the Preflight proctor gate) has a rules: entry with allow_failure: true, so the gate can fail and the pipeline still passes; remove it once the findings are fixed',
+            $findings[0]->message,
+        );
+    }
+
+    public function testANonGateJobMayBeSkippedOrManual(): void
+    {
+        $findings = $this->runCheck(<<<'YAML'
+include:
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.4.0
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/renovate@0.4.0
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/package-publish@0.4.0
+renovate:
+  when: never
+package-publish:
+  when: manual
+YAML);
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+    }
+
     public function testEveryPlaceAGateIsSoftenedWarnsInLineOrder(): void
     {
         $findings = $this->runCheck(<<<'YAML'

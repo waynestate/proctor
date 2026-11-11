@@ -254,7 +254,7 @@
         <header class="partb__head" data-reveal>
           <p class="sec-head__part">Part B</p>
           <h3 class="partb__title">Added this term <span class="chip chip--new">Built</span></h3>
-          <p class="partb__lede">Last term these were on the coming-soon list. They are built and released now, so they get real answers too. Lock in sync joined Q4 above.</p>
+          <p class="partb__lede">Last term these were on the coming-soon list, or only half written. They are built now, so they get real answers too. Lock in sync joined Q4 above.</p>
         </header>
         <ol class="questions">
           <li class="q" data-reveal>
@@ -269,6 +269,13 @@
             <h4 class="q__ask">Is your WayneUI the latest of its line?</h4>
             <p class="q__rubric">Checks the Composer lock, the npm lock and any committed <code>wayne-ui.css</code> copy, each on its own. Behind is a warning; a project can opt in to failing on a stale pasted copy.</p>
             <p class="q__answer"><span class="mark mark--warn">WARN</span> wayneui-outdated: composer.lock locks WayneUI 2.0.5; the latest 2.x is 2.0.8. Update with: composer update waynestate/wayne-ui</p>
+            <svg class="q__tick" viewBox="0 0 40 30" aria-hidden="true"><path pathLength="1" d="M3 16 L14 26 L37 3"/></svg>
+          </li>
+          <li class="q" data-reveal>
+            <p class="q__no"><span>Q12</span><code>preflight-gates</code></p>
+            <h4 class="q__ask">Did anyone prop the hall doors open?</h4>
+            <p class="q__rubric">Reads <code>.gitlab-ci.yml</code> and the files it includes. A Preflight gate that may fail, never runs, or waits for a click nobody makes warns, and so does a <code>proctor_command</code> that runs no PROCTOR or hides its exit code. Warnings only: a repo clearing its first findings may keep a gate soft for a while, with a comment saying why.</p>
+            <p class="q__answer"><span class="mark mark--warn">WARN</span> preflight-gates: preflight-gates-skipped: job proctor (the Preflight proctor gate) sets when: never, so the gate never runs and the pipeline passes without it; remove the override</p>
             <svg class="q__tick" viewBox="0 0 40 30" aria-hidden="true"><path pathLength="1" d="M3 16 L14 26 L37 3"/></svg>
           </li>
           <li class="q q--final" data-reveal>

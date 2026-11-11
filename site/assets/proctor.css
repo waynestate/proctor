@@ -353,6 +353,18 @@ a:hover { color: var(--crimson); }
 .chip--new { background: var(--green); color: var(--white); }
 .q--final { border-top-color: var(--crimson); }
 .q--final .q__no span { background: var(--crimson); }
+/* On the three-column paper the final takes the whole last row, question on
+   the left and the answer beside it: the last page of the booklet, the one
+   everybody turns to first. */
+@media (min-width: 1180px) {
+  .partb .q--final {
+    grid-column: 1 / -1;
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 36px;
+    align-items: start;
+  }
+  .partb .q--final > .q__no, .partb .q--final > .q__ask, .partb .q--final > .q__rubric { grid-column: 1; }
+  .partb .q--final > .q__answer { grid-column: 2; grid-row: 1 / span 3; align-self: center; margin-top: 0; padding-right: 44px; }
+}
 
 /* Next term */
 .nextterm {

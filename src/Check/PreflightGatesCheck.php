@@ -19,7 +19,14 @@ namespace Waynestate\Proctor\Check;
  *   renovate bot and package-publish) is included with the allow_failure
  *   input set to true, or the app re-declares the gate's job (its job_name
  *   input, or the component name) with allow_failure set to anything but
- *   false. One warning per place it is set.
+ *   false, or with a rules: entry that sets allow_failure: true. One
+ *   warning per place it is set.
+ * - skipped: the app re-declares the gate's job with when: never, or with
+ *   rules: that all say when: never, so the gate never runs and the
+ *   pipeline passes without it.
+ * - manual: the app re-declares the gate's job with when: manual and no
+ *   allow_failure, which GitLab defaults to allow_failure: true, so the
+ *   pipeline passes until someone clicks the gate.
  * - no-proctor-job: the Preflight proctor component is not included and no
  *   job's script runs `proctor check` or `proctor gate` (vendor/bin/proctor,
  *   proctor.phar or a path to either).
@@ -139,24 +146,97 @@ final class PreflightGatesCheck implements CheckInterface
             $lines = null;
             foreach ($gateJobs as $jobName => $component) {
                 $job = $file['data'][$jobName] ?? null;
-                if (!is_array($job) || !array_key_exists('allow_failure', $job) || $job['allow_failure'] === false) {
+                if (!is_array($job)) {
                     continue;
                 }
                 $lines ??= $this->lines($appPath . '/' . $file['path']);
                 $start = $this->jobLine((string) $jobName, $lines);
-                $findings[] = new Finding(
-                    $this->id(),
-                    Finding::STATUS_WARNING,
-                    sprintf(
-                        'preflight-gates-allow-failure: job %s (the Preflight %s gate) sets allow_failure, so the gate can fail and the pipeline still passes; remove it once the findings are fixed',
-                        $jobName,
-                        $component,
-                    ),
-                    $file['path'],
-                    $this->lineAfter($start, '/^\s+allow_failure\s*:/', $lines),
-                    null,
-                    'allow-failure',
-                );
+                if (array_key_exists('allow_failure', $job) && $job['allow_failure'] !== false) {
+                    $findings[] = new Finding(
+                        $this->id(),
+                        Finding::STATUS_WARNING,
+                        sprintf(
+                            'preflight-gates-allow-failure: job %s (the Preflight %s gate) sets allow_failure, so the gate can fail and the pipeline still passes; remove it once the findings are fixed',
+                            $jobName,
+                            $component,
+                        ),
+                        $file['path'],
+                        $this->lineAfter($start, '/^\s+allow_failure\s*:/', $lines),
+                        null,
+                        'allow-failure',
+                    );
+                }
+                $when = $job['when'] ?? null;
+                if ($when === 'never') {
+                    $findings[] = new Finding(
+                        $this->id(),
+                        Finding::STATUS_WARNING,
+                        sprintf(
+                            'preflight-gates-skipped: job %s (the Preflight %s gate) sets when: never, so the gate never runs and the pipeline passes without it; remove the override',
+                            $jobName,
+                            $component,
+                        ),
+                        $file['path'],
+                        $this->lineAfter($start, '/^\s+when\s*:/', $lines),
+                        null,
+                        'skipped',
+                    );
+                } elseif ($when === 'manual' && !array_key_exists('allow_failure', $job)) {
+                    // GitLab makes a job-level manual job allow_failure: true
+                    // by default, so the pipeline passes without a click.
+                    $findings[] = new Finding(
+                        $this->id(),
+                        Finding::STATUS_WARNING,
+                        sprintf(
+                            'preflight-gates-manual: job %s (the Preflight %s gate) sets when: manual without allow_failure: false, so GitLab treats it as optional and the pipeline passes without it; remove when: manual, or add allow_failure: false so the pipeline waits for it',
+                            $jobName,
+                            $component,
+                        ),
+                        $file['path'],
+                        $this->lineAfter($start, '/^\s+when\s*:/', $lines),
+                        null,
+                        'manual',
+                    );
+                }
+                $rules = $job['rules'] ?? null;
+                if (is_array($rules) && $rules !== []) {
+                    $allNever = true;
+                    $mayFail = false;
+                    foreach ($rules as $rule) {
+                        $allNever = $allNever && is_array($rule) && ($rule['when'] ?? null) === 'never';
+                        $mayFail = $mayFail || (is_array($rule) && ($rule['allow_failure'] ?? null) === true);
+                    }
+                    if ($allNever) {
+                        $findings[] = new Finding(
+                            $this->id(),
+                            Finding::STATUS_WARNING,
+                            sprintf(
+                                'preflight-gates-skipped: job %s (the Preflight %s gate) has rules that all say when: never, so the gate never runs and the pipeline passes without it; remove the override',
+                                $jobName,
+                                $component,
+                            ),
+                            $file['path'],
+                            $this->lineAfter($start, '/^\s+rules\s*:/', $lines),
+                            null,
+                            'skipped',
+                        );
+                    }
+                    if ($mayFail) {
+                        $findings[] = new Finding(
+                            $this->id(),
+                            Finding::STATUS_WARNING,
+                            sprintf(
+                                'preflight-gates-allow-failure: job %s (the Preflight %s gate) has a rules: entry with allow_failure: true, so the gate can fail and the pipeline still passes; remove it once the findings are fixed',
+                                $jobName,
+                                $component,
+                            ),
+                            $file['path'],
+                            $this->lineAfter($start, '/^\s+(-\s+)?allow_failure\s*:/', $lines),
+                            null,
+                            'allow-failure',
+                        );
+                    }
+                }
             }
             if (!$runsProctor && $this->aJobRunsProctor($file['data'])) {
                 $runsProctor = true;

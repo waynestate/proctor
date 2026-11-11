@@ -7,6 +7,30 @@ description: How to upgrade PROCTOR to a newer release and note the changes that
 
 PROCTOR is the invigilator, so upgrading it is a seat change, not a new exam: same hall, fresher pen. This page tells you how to move an app from one PROCTOR release to the next and which changes affect your runs. Start with the release that has a break, then work down to the additive ones.
 
+## Unreleased (on main, after 0.15.1)
+
+Not tagged yet. These notes say what the next release changes for your runs, so you can get ahead of it; the release heading replaces this one when it is cut. Two new findings can fail a run, so read **Breaking** first.
+
+### Breaking
+
+- With `--php-runtime`, `php-floor` now grades the PHP that will serve the app. A runtime below `require.php` fails (`proctor/php-floor/runtime-mismatch`): Composer's platform check would stop that app on boot, so this was already broken, only silently. `proctor gate` asks it too, and Squire's release script passes `--php-runtime` by default, so a deploy image older than the app's constraint now gets a no-go. Without `--php-runtime` nothing changes.
+- `ci-pipelines` reads the local files `.gitlab-ci.yml` includes. A named local include that does not exist is `proctor/ci-pipelines/gitlab-include-missing`: a fail for a stack package (`waynestate/...`), a warning for any other app. GitLab rejects that pipeline anyway.
+
+### New
+
+- `php-floor` also warns on a runtime above the constraint's upper bound, or on a security-only, end-of-life or unlisted PHP line (`proctor/php-floor/runtime`).
+- `ci-pipelines`, `preflight-pinned`, `preflight-gates` and `mysql56-ci` read the whole GitLab pipeline: `.gitlab-ci.yml` plus every local file it includes (`include:` paths and `local:` entries, at any depth, with `*` and `**`). A Preflight include or a `composer ci` job in `ci/*.yml` now counts, so warnings such as `preflight-gates-no-include` or `gitlab-no-ci` that an app had already fixed in an included file go away. Findings in an included file name that file and line.
+- `ci-pipelines` reads every workflow in `.github/workflows` for its `composer-update`, `composer-audit-off` and `allow-overrides` warnings, not only the one that runs `composer ci`.
+- `preflight-gates` warns on four more ways to disarm a Preflight gate: a `proctor_command` input that runs no PROCTOR or masks its exit code (`proctor/preflight-gates/proctor-command`), a re-declared gate job set to `when: never` or whose `rules:` all say `when: never` (`proctor/preflight-gates/skipped`), one set to `when: manual` without `allow_failure: false`, which GitLab treats as optional (`proctor/preflight-gates/manual`), and a `rules:` entry with `allow_failure: true` (`proctor/preflight-gates/allow-failure`). All four only warn.
+- The check count stays forty-five, eight of them in the deploy gate.
+
+### What to do
+
+1. When the release is out, run `composer update waynestate/proctor` (a patch keeps your constraint; a minor needs the new `^0.x`).
+2. Before that, check the PHP your deploy image runs against `require.php` in `composer.json`. If the image is older, move the image up (Squire's `SQUIRE_PHP_RUNTIME` names it) or, if the app truly runs on the older PHP, widen `require.php` to match what you have tested.
+3. If `.gitlab-ci.yml` includes local files, make sure each named file exists.
+4. Clear any new `preflight-gates` warning by deleting the override on the gate job: the included component already runs it the way the stack expects.
+
 ## 0.15.1
 
 Released 2026-11-10. A patch release. `^0.15` picks it up: run `composer update waynestate/proctor`.

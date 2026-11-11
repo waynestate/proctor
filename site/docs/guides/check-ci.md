@@ -95,7 +95,9 @@ It reads the pipeline whole: `.gitlab-ci.yml` and the local files it includes (s
 `preflight-gates` warns, and never fails, when `.gitlab-ci.yml` skips or weakens Preflight, the flags Preflight's practice 3.3 asks for. An include at a moving ref is `preflight-pinned`'s finding; this check covers the rest.
 
 - No `include:` entry whose `component:` path contains `/preflight/` warns (`proctor/preflight-gates/no-include`): none of the stack's gates run. Include `php-test`, `composer-audit` and `proctor` from Preflight, pinned to a release tag.
-- A gate that can fail while the pipeline passes warns (`proctor/preflight-gates/allow-failure`), once per place it is set: a gate component included with the `allow_failure` input set to `true`, or a job the app re-declares under the gate's job name (its `job_name` input, or the component name) with `allow_failure` set to anything but `false`, the exit-codes form included. Every Preflight component is a gate except `renovate` (a bot) and `package-publish` (a release step); php-test's advisory job may fail by design and is not one.
+- A gate that can fail while the pipeline passes warns (`proctor/preflight-gates/allow-failure`), once per place it is set: a gate component included with the `allow_failure` input set to `true`, or a job the app re-declares under the gate's job name (its `job_name` input, or the component name) with `allow_failure` set to anything but `false`, the exit-codes form included, and a `rules:` entry on that job with `allow_failure: true`. Every Preflight component is a gate except `renovate` (a bot) and `package-publish` (a release step); php-test's advisory job may fail by design and is not one.
+- A re-declared gate job that never runs warns (`proctor/preflight-gates/skipped`): `when: never` on the job, or `rules:` whose every entry says `when: never`. A rule with no `when` (GitLab's default is `on_success`) can still run the gate and is fine.
+- A re-declared gate job set to `when: manual` without `allow_failure: false` warns (`proctor/preflight-gates/manual`): GitLab treats a job-level manual job as allowed to fail, so it waits for a click and the pipeline passes without it. Add `allow_failure: false` and the pipeline waits for the gate instead; `when: manual` inside `rules:` already blocks by default and is not flagged.
 - No job that runs PROCTOR warns (`proctor/preflight-gates/no-proctor-job`): the Preflight `proctor` component is not included and no job's `script` runs `proctor check` or `proctor gate` (`vendor/bin/proctor`, `proctor.phar` or a path to either).
 - A `proctor_command` input on the Preflight `proctor` include that disarms the job warns (`proctor/preflight-gates/proctor-command`): the component hands the input to the shell as written, so a command with no segment that runs `proctor check` or `proctor gate` (`true`, `echo skipped`) passes without grading the app, and one that pipes PROCTOR (`| tee`) or follows it with `||` reports another command's exit code. A redirect such as `> report.json` is fine. Leave the input at its default, or run `vendor/bin/proctor check` on its own.
 
@@ -108,6 +110,8 @@ A Preflight include, a gate job or a PROCTOR job in a local file the pipeline in
 | `preflight-gates` | `proctor/preflight-gates/allow-failure` |
 | `preflight-gates` | `proctor/preflight-gates/no-proctor-job` |
 | `preflight-gates` | `proctor/preflight-gates/proctor-command` |
+| `preflight-gates` | `proctor/preflight-gates/skipped` |
+| `preflight-gates` | `proctor/preflight-gates/manual` |
 
 ## mysql56-ci [#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#mysql56-ci)
 

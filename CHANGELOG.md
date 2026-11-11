@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added: `preflight-gates` warns on three more ways a re-declared Preflight gate job is disarmed: `when: never`, or `rules:` that all say `when: never` (`proctor/preflight-gates/skipped`: the gate never runs); `when: manual` without `allow_failure: false` (`proctor/preflight-gates/manual`: GitLab makes a job-level manual job optional, so the pipeline passes without it); and a `rules:` entry with `allow_failure: true` (`proctor/preflight-gates/allow-failure`, as for the job-level key). All three only warn. BEST_PRACTICES 1.2 and "Flag a pipeline that skips or weakens Preflight" say so.
+
+- Docs: Upgrading has an "Unreleased (on main, after 0.15.1)" section, so a run can get ahead of the next release: what now fails (`php-floor` with `--php-runtime` below the floor, a stack package's missing `ci-pipelines` include), what is new, and four steps to take. The Checks page names the newest checks (`script-pair` in 0.14.0, `mysql56-ci` in 0.15.0) instead of 0.12.0's.
+
+- Site: Part B of the front page adds Q12, `preflight-gates` ("Did anyone prop the hall doors open?"), and on wide screens the final, `proctor gate`, takes the whole last row with its answer beside the question.
+
 - Site: the front page's stale facts are current. Hall G includes `preflight/proctor@0.8.0` (was `@0.5.0`); the whole paper's New tag marks `mysql56-ci`, new in 0.15.0 (was `script-pair`, "new in 0.14.0"); Q4 says a lock git does not track warns (`lock-tracked`) instead of "in CI present means committed"; the options line says `--php-runtime` feeds `php-floor` as well as `unpatched`.
 
 - CI pins Preflight 0.8.0.

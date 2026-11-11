@@ -90,7 +90,7 @@ Part B
 
 ### Added this term Built
 
-Last term these were on the coming-soon list. They are built and released now, so they get real answers too. Lock in sync joined Q4 above.
+Last term these were on the coming-soon list, or only half written. They are built now, so they get real answers too. Lock in sync joined Q4 above.
 
 1. Q10 `node-eol`
    #### Is every Node version you pin still supported?
@@ -100,7 +100,11 @@ Last term these were on the coming-soon list. They are built and released now, s
    #### Is your WayneUI the latest of its line?
    Checks the Composer lock, the npm lock and any committed `wayne-ui.css` copy, each on its own. Behind is a warning; a project can opt in to failing on a stale pasted copy.
    WARN wayneui-outdated: composer.lock locks WayneUI 2.0.5; the latest 2.x is 2.0.8. Update with: composer update waynestate/wayne-ui
-3. Final `proctor gate`
+3. Q12 `preflight-gates`
+   #### Did anyone prop the hall doors open?
+   Reads `.gitlab-ci.yml` and the files it includes. A Preflight gate that may fail, never runs, or waits for a click nobody makes warns, and so does a `proctor_command` that runs no PROCTOR or hides its exit code. Warnings only: a repo clearing its first findings may keep a gate soft for a while, with a comment saying why.
+   WARN preflight-gates: preflight-gates-skipped: job proctor (the Preflight proctor gate) sets when: never, so the gate never runs and the pipeline passes without it; remove the override
+4. Final `proctor gate`
    #### Is this release safe to deploy?
    Runs the deploy-time checks and ratchets them against what is live now. A new failure blocks; one the live release already had is held, so old problems never stop a fix. Exit 0 is go, 1 is no-go. Squire's release script asks it before every deploy.
    BLOCK php-floor: php floor 7.4 is eol_grace_expired \[regression: this rule passed on the baseline\]
