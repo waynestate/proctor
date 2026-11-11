@@ -6,6 +6,8 @@
 
 - Docs: Upgrading has an "Unreleased (on main, after 0.15.1)" section, so a run can get ahead of the next release: what now fails (`php-floor` with `--php-runtime` below the floor, a stack package's missing `ci-pipelines` include), what is new, and four steps to take. The Checks page names the newest checks (`script-pair` in 0.14.0, `mysql56-ci` in 0.15.0) instead of 0.12.0's.
 
+- Tests: `FrontPagePaperTest` holds the front page's whole paper to the checks PROCTOR runs: the list is `CheckSet::all()` in order, the stagger index counts up from 0, the Gate tags are exactly `CheckSet::GATE`, every New check is named in the CHANGELOG section of the release the legend gives, and the count is right everywhere the page, the README and the docs spell it out. Three freshness sweeps had found the paper behind the code; now the proctor marks its own paper first.
+
 - Site: Part B of the front page adds Q12, `preflight-gates` ("Did anyone prop the hall doors open?"), and on wide screens the final, `proctor gate`, takes the whole last row with its answer beside the question.
 
 - Site: the front page's stale facts are current. Hall G includes `preflight/proctor@0.8.0` (was `@0.5.0`); the whole paper's New tag marks `mysql56-ci`, new in 0.15.0 (was `script-pair`, "new in 0.14.0"); Q4 says a lock git does not track warns (`lock-tracked`) instead of "in CI present means committed"; the options line says `--php-runtime` feeds `php-floor` as well as `unpatched`.
