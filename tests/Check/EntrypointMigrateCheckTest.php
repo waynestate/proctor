@@ -61,6 +61,124 @@ final class EntrypointMigrateCheckTest extends TestCase
         self::assertSame('no container entrypoint runs migrations at start', $findings[0]->message);
     }
 
+    public function testAMigrateRoleFunctionPasses(): void
+    {
+        $this->writeFile(
+            'docker/app-entrypoint.sh',
+            "#!/bin/sh\nset -e\n\nrun_migrate() {\n"
+            . '    if [ -n "${SQUIRE_MIGRATE_COMMAND+set}" ]; then\n'
+            . '        exec_command_from SQUIRE_MIGRATE_COMMAND 0 "$@"\n'
+            . "    fi\n"
+            . '    if ! is_laravel; then\n'
+            . '        say "migrate: $app has no artisan and SQUIRE_MIGRATE_COMMAND is not set; nothing to migrate"\n'
+            . '        exit 0\n'
+            . '    fi\n'
+            . '    say "migrate: php artisan migrate --force $*"\n'
+            . '    exec php artisan migrate --force "$@"\n'
+            . "}\n"
+            . 'case "$1" in\n'
+            . '  migrate)\n'
+            . '    run_migrate "$@"\n'
+            . '    ;;\n'
+            . '  *)\n'
+            . '    exec "$@"\n'
+            . '    ;;\n'
+            . "esac\n",
+        );
+
+        $findings = $this->runCheck();
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+        self::assertSame('proctor/entrypoint-migrate', $findings[0]->ruleId);
+        self::assertSame('no container entrypoint runs migrations at start', $findings[0]->message);
+    }
+
+    public function testAMigrateInsideAnotherFunctionStillWarns(): void
+    {
+        $this->writeFile('entrypoint.sh', "#!/bin/sh\nstart_web() {\nphp artisan migrate --force\n}\n");
+
+        $findings = $this->runCheck();
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertSame('proctor/entrypoint-migrate/runs', $findings[0]->ruleId);
+        self::assertSame('entrypoint.sh', $findings[0]->path);
+        self::assertSame(3, $findings[0]->line);
+        self::assertSame(
+            'entrypoint runs migrations at container start (entrypoint.sh:3); run them once per release as a job',
+            $findings[0]->message,
+        );
+    }
+
+    public function testAMigrateInTheWebBranchStillWarns(): void
+    {
+        $this->writeFile(
+            'entrypoint.sh',
+            "#!/bin/sh\ncase \"$1\" in\n  web)\n    php artisan migrate --force\n    ;;\nesac\n",
+        );
+
+        $findings = $this->runCheck();
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertSame('proctor/entrypoint-migrate/runs', $findings[0]->ruleId);
+        self::assertSame('entrypoint.sh', $findings[0]->path);
+        self::assertSame(4, $findings[0]->line);
+        self::assertSame(
+            'entrypoint runs migrations at container start (entrypoint.sh:4); run them once per release as a job',
+            $findings[0]->message,
+        );
+    }
+
+    public function testTheSquireEntrypointShapePasses(): void
+    {
+        $this->writeFile(
+            'squire-entrypoint.sh',
+            "#!/usr/bin/env bash\n"
+            . "# squire-entrypoint: one image, several process types, for the portable path.\n"
+            . "\n"
+            . "say() {\n"
+            . '    echo "[squire] $*"\n'
+            . "}\n"
+            . "\n"
+            . 'is_laravel() {\n'
+            . '    [ -f artisan ]\n'
+            . "}\n"
+            . "\n"
+            . "run_migrate() {\n"
+            . '    if [ -n "${SQUIRE_MIGRATE_COMMAND+set}" ]; then\n'
+            . '        exec_command_from SQUIRE_MIGRATE_COMMAND 0 "$@"\n'
+            . "    fi\n"
+            . '    if ! is_laravel; then\n'
+            . '        say "migrate: $app has no artisan and SQUIRE_MIGRATE_COMMAND is not set; nothing to migrate"\n'
+            . '        exit 0\n'
+            . '    fi\n'
+            . '    say "migrate: php artisan migrate --force $*"\n'
+            . '    exec php artisan migrate --force "$@"\n'
+            . "}\n"
+            . "\n"
+            . 'case "$1" in\n'
+            . '  web | worker | scheduler | migrate | health)\n'
+            . '    if [ "$1" = "migrate" ]; then\n'
+            . '        run_migrate "$@"\n'
+            . '    fi\n'
+            . '    exec "$@"\n'
+            . "    ;;\n"
+            . '  *)\n'
+            . '    exec "$@"\n'
+            . '    ;;\n'
+            . "esac\n",
+        );
+
+        $findings = $this->runCheck();
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+        self::assertSame('proctor/entrypoint-migrate', $findings[0]->ruleId);
+        self::assertSame('no container entrypoint runs migrations at start', $findings[0]->message);
+    }
+
     public function testMigrateSubcommandsPass(): void
     {
         $this->writeFile('entrypoint.sh', "#!/bin/sh\nphp artisan migrate:status\n");

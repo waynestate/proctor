@@ -17,7 +17,9 @@ use SplFileInfo;
  * container entrypoint: with two replicas both would run migrate at the same
  * moment, and a failed migration crash-loops the container. Squire's own
  * entrypoint takes a migrate role (php artisan migrate --force, run once as
- * a job), so a line inside a migrate) case branch is not flagged.
+ * a job), so a line inside a migrate) case branch is not flagged, and
+ * neither is a line inside a shell function named after the role
+ * (run_migrate(), migrate(), migrations(), ...).
  *
  * Emits proctor/entrypoint-migrate on pass and
  * proctor/entrypoint-migrate/runs on warning.
@@ -46,6 +48,20 @@ final class EntrypointMigrateCheck implements CheckInterface
      * migrate|...) with optional spaces before it.
      */
     private const BRANCH_LABEL_PATTERN = '/^migrate(\|[^)]*)?\)/';
+
+    /**
+     * A shell function opening line: name() {, name { or function name {,
+     * with optional spaces around the parens and before the brace. The body
+     * runs to the next line that is exactly }; every shell file in the stack
+     * is formatted that way, so no brace counting is needed.
+     */
+    private const FUNCTION_OPEN_PATTERN = '/^\s*(function\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*(\(\s*\))?\s*\{\s*$/';
+
+    /**
+     * A function name that is the migrate role: migrate, migration or
+     * migrations, with an optional run_ prefix and _job or _role suffix.
+     */
+    private const MIGRATE_ROLE_NAME_PATTERN = '/^(run_)?migrat(e|ions?)(_job|_role)?$/';
 
     public function id(): string
     {
@@ -116,14 +132,27 @@ final class EntrypointMigrateCheck implements CheckInterface
      * The 1-based line of the first line that runs the plain migrate
      * command, or null when no line does. A line whose first non-space
      * character is # is ignored, a trailing shell comment is removed first,
-     * and a line inside a migrate) case branch, to the branch's ;; or esac,
-     * is not flagged.
+     * a line inside a migrate) case branch, to the branch's ;; or esac, is
+     * not flagged, and a line inside a shell function whose name is a
+     * migrate role, to the function's closing } line, is not flagged either.
      */
     private function firstMigrateLine(string $raw): ?int
     {
         $inBranch = false;
+        $inFunction = false;
+        $functionExempt = false;
         foreach (explode("\n", $raw) as $index => $line) {
             $trimmed = trim(rtrim($line, "\r"));
+            if ($inFunction) {
+                if ($trimmed === '}') {
+                    $inFunction = false;
+                    $functionExempt = false;
+                    continue;
+                }
+                if ($functionExempt) {
+                    continue;
+                }
+            }
             if ($inBranch) {
                 if ($trimmed === 'esac' || str_ends_with($trimmed, ';;')) {
                     $inBranch = false;
@@ -135,6 +164,11 @@ final class EntrypointMigrateCheck implements CheckInterface
                 continue;
             }
             if (str_starts_with($trimmed, '#')) {
+                continue;
+            }
+            if (preg_match(self::FUNCTION_OPEN_PATTERN, $line, $matches) === 1) {
+                $inFunction = true;
+                $functionExempt = preg_match(self::MIGRATE_ROLE_NAME_PATTERN, $matches[2]) === 1;
                 continue;
             }
             $code = preg_replace('/\s#.*$/', '', $line);
