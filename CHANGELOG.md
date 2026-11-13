@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Removed: the GitHub Actions workflow; CI runs on git.wayne.edu only (the GitHub copy is a mirror).
 - Fixed: `mysql56-newer-column` no longer flags an app's own method named `vector`, `instant` and the like when it is called on `$this`, `self`, `static` or `parent`; only a call on another receiver (a schema Blueprint) is a column.
 - Fixed: `entrypoint-migrate` no longer flags migrations run inside a shell function named for the migrate role (`run_migrate()`, `migrate()`, `migrations()`), the way it already skipped a `migrate)` case branch; a migrate in any other function, at top level or in a `web)` branch still warns.
 

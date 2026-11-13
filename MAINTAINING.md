@@ -50,8 +50,7 @@ site checks fail on stale files.
 - **GitLab:** Preflight 0.8.0's `php-test` (PHP 8.3, 8.4, 8.5), `composer-audit`, `proctor` (on the `deploy/` layer;
   it blocks the pipeline) and `a11y` (every page under `site/`) components, plus the
   `composer-ci`, `wayneui-copies`, `creed-copy-refresh` (scheduled) and `release-phar` (tags) jobs.
-- **GitHub:** `.github/workflows/ci.yml` calls Preflight's reusable workflow with `composer ci`.
-- Green means `composer ci` passed on all three PHP versions on both.
+- Green means `composer ci` passed on all three PHP versions.
 
 ## The release-phar job
 
@@ -121,7 +120,7 @@ Use the hand steps above only when a refresh cannot wait for Monday.
 
 1. Move the lines under `## Unreleased` in `CHANGELOG.md` to a new `## X.Y.Z (YYYY-MM-DD)` heading, leaving an empty
    `## Unreleased`.
-2. `composer ci` green locally, then on both pipelines for that commit. Refresh the CREED copy first if CREED moved.
+2. `composer ci` green locally, then on the git.wayne.edu pipeline for that commit. Refresh the CREED copy first if CREED moved.
 3. Run a secrets scan of the history and check that nothing internal (server names, people, IDs) is in the tree.
 4. Tag `X.Y.Z` (no `v`) on git.wayne.edu, with an approver. The push mirror carries the tag to GitHub, and Packagist picks it up from there.
 5. Wait for the `release-phar` job: it builds the phar on the tag, uploads

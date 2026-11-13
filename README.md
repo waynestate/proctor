@@ -8,7 +8,6 @@
   <img src="docs/readme/badges/php.svg" alt="php ^8.3">
   <img src="docs/readme/badges/license.svg" alt="license MIT">
   <img src="docs/readme/badges/exit.svg" alt="exit codes: 0 pass, 1 fail, 2 tripped">
-  <a href="https://github.com/waynestate/proctor/actions/workflows/ci.yml"><img src="https://github.com/waynestate/proctor/actions/workflows/ci.yml/badge.svg" alt="GitHub CI"></a>
 </p>
 
 **Policy Rules Of Code, Tested On Release.** The invigilator your composer.lock didn't know it needed: no phones,
@@ -24,7 +23,7 @@ passed with `--policy`; PROCTOR itself holds no policy of its own.
 > [!NOTE]
 > **Not to be confused with:** code style is Pinstripe, CI is Preflight. PROCTOR grades an app against CREED's rules.
 
-Checks: `composer ci` (the same command runs on GitLab and GitHub). Front page: [`site/index.html`](site/index.html).
+Checks: `composer ci` (the same command CI runs on git.wayne.edu). Front page: [`site/index.html`](site/index.html).
 On Citadel it is served by the raw-PHP deploy layer in [`deploy/`](deploy/): a Squire kit whose front controller serves `site/` behind HELMET's security headers. For local development, keep serving `site/` directly.
 Documentation: [proctor.apps.wayne.edu/docs](https://proctor.apps.wayne.edu/docs/).
 
