@@ -7,9 +7,9 @@ description: How to upgrade PROCTOR to a newer release and note the changes that
 
 PROCTOR is the invigilator, so upgrading it is a seat change, not a new exam: same hall, fresher pen. This page tells you how to move an app from one PROCTOR release to the next and which changes affect your runs. Start with the release that has a break, then work down to the additive ones.
 
-## Unreleased (on main, after 0.15.1)
+## 0.16.0
 
-Not tagged yet. These notes say what the next release changes for your runs, so you can get ahead of it; the release heading replaces this one when it is cut. Two new findings can fail a run, so read **Breaking** first.
+Released 2026-11-13. A minor release. Under 0.x, `^0.15` does not pick it up: change the constraint to `^0.16`, then run `composer update waynestate/proctor`. Two new findings can fail a run, so read **Breaking** first.
 
 ### Breaking
 
@@ -26,8 +26,8 @@ Not tagged yet. These notes say what the next release changes for your runs, so 
 
 ### What to do
 
-1. When the release is out, run `composer update waynestate/proctor` (a patch keeps your constraint; a minor needs the new `^0.x`).
-2. Before that, check the PHP your deploy image runs against `require.php` in `composer.json`. If the image is older, move the image up (Squire's `SQUIRE_PHP_RUNTIME` names it) or, if the app truly runs on the older PHP, widen `require.php` to match what you have tested.
+1. Change the constraint in `composer.json` to `"waynestate/proctor": "^0.16"` and run `composer update waynestate/proctor`.
+2. Check the PHP your deploy image runs against `require.php` in `composer.json`. If the image is older, move the image up (Squire's `SQUIRE_PHP_RUNTIME` names it) or, if the app truly runs on the older PHP, widen `require.php` to match what you have tested.
 3. If `.gitlab-ci.yml` includes local files, make sure each named file exists.
 4. Clear any new `preflight-gates` warning by deleting the override on the gate job: the included component already runs it the way the stack expects.
 

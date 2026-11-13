@@ -67,7 +67,7 @@ A platform hook should fail open on 2, with an alert: a bug in the gate must nev
 The text verdict leads with the answer and lists only what is not a pass:
 
 ```
-proctor 0.15.1 gate: NO-GO
+proctor 0.16.0 gate: NO-GO
 Policy: vendor (vendor/waynestate/creed/policy/policy.json), refreshed 2026-10-20, 7 days ago
 Baseline: none, so this is a first deploy and every failure blocks
 Checks: php-floor, unpatched, laravel-eol, laravel-php, lock-committed, composer-audit, overrides, policy-age

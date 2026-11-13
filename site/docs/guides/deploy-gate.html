@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Deploy gate | PROCTOR docs</title>
 <meta name="description" content="How proctor gate decides go or no-go for a deploy: the deploy-time checks, the ratchet against a baseline, overrides, the record file and the exit codes.">
-<meta name="docs-version" content="0.15.1">
+<meta name="docs-version" content="0.16.0">
 <link rel="stylesheet" href="../../assets/wayne-ui/wayne-ui.css">
 <link rel="stylesheet" href="../../assets/docs.css">
 <link rel="stylesheet" href="../../docs/theme/proctor.css">
@@ -20,7 +20,7 @@
     <a class="masthead__brand" href="../../index.html">
       <img class="masthead__mark" src="../../brand/proctor-avatar-256.png" width="34" height="34" alt="">
       <span class="masthead__name">PROCTOR</span>
-      <span class="masthead__form">Form 0.15.1</span>
+      <span class="masthead__form">Form 0.16.0</span>
     </a>
     <nav class="masthead__nav" aria-label="Site">
       <a href="../../index.html#questions">Questions</a>
@@ -134,7 +134,7 @@
 <p>A platform hook should fail open on 2, with an alert: a bug in the gate must never take down deploys (the stack's deploy-gate decision). A release script may choose to stop on it instead.</p>
 <h2 id="the-verdict">The <span class="docs-heading-tail"><span>verdict</span><a class="docs-heading-link" aria-label="Link to this section" href="#the-verdict">#</a></span></h2>
 <p>The text verdict leads with the answer and lists only what is not a pass:</p>
-<pre tabindex="0"><code>proctor 0.15.1 gate: NO-GO
+<pre tabindex="0"><code>proctor 0.16.0 gate: NO-GO
 Policy: vendor (vendor/waynestate/creed/policy/policy.json), refreshed 2026-10-20, 7 days ago
 Baseline: none, so this is a first deploy and every failure blocks
 Checks: php-floor, unpatched, laravel-eol, laravel-php, lock-committed, composer-audit, overrides, policy-age
@@ -158,7 +158,7 @@ RESULT: no-go (1 blocked, 0 held, 0 waived, 0 warnings, 3 passed)
   <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#run-it">Run it</a></li><li class="docs-toc__item"><a href="#what-it-runs">What it runs</a></li><li class="docs-toc__item"><a href="#how-it-decides">How it decides</a></li><li class="docs-toc__item"><a href="#exit-codes">Exit codes</a></li><li class="docs-toc__item"><a href="#the-verdict">The verdict</a></li><li class="docs-toc__item"><a href="#in-a-release">In a release</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
-  <span>Documents PROCTOR <span data-docs-version>0.15.1</span></span>
+  <span>Documents PROCTOR <span data-docs-version>0.16.0</span></span>
   <span><a rel="noopener" href="https://github.com/waynestate/proctor">Source</a> <a href="deploy-gate.md">Markdown</a></span>
 </footer>
 </body>

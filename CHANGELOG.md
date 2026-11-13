@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## 0.16.0 (2026-11-13)
+
+- Upgrade: a minor release under 0.x, so `^0.15` does not pick it up; change the constraint to `^0.16` (see Upgrading).
 - Removed: the GitHub Actions workflow; CI runs on git.wayne.edu only (the GitHub copy is a mirror).
 - Changed: `ci-pipelines` no longer requires a GitHub workflow; one that exists is checked as warnings only (D-069).
 - Fixed: `mysql56-newer-column` no longer flags an app's own method named `vector`, `instant` and the like when it is called on `$this`, `self`, `static` or `parent`; only a call on another receiver (a schema Blueprint) is a column.
@@ -9,7 +12,7 @@
 
 - Added: `preflight-gates` warns on three more ways a re-declared Preflight gate job is disarmed: `when: never`, or `rules:` that all say `when: never` (`proctor/preflight-gates/skipped`: the gate never runs); `when: manual` without `allow_failure: false` (`proctor/preflight-gates/manual`: GitLab makes a job-level manual job optional, so the pipeline passes without it); and a `rules:` entry with `allow_failure: true` (`proctor/preflight-gates/allow-failure`, as for the job-level key). All three only warn. BEST_PRACTICES 1.2 and "Flag a pipeline that skips or weakens Preflight" say so.
 
-- Docs: Upgrading has an "Unreleased (on main, after 0.15.1)" section, so a run can get ahead of the next release: what now fails (`php-floor` with `--php-runtime` below the floor, a stack package's missing `ci-pipelines` include), what is new, and four steps to take. The Checks page names the newest checks (`script-pair` in 0.14.0, `mysql56-ci` in 0.15.0) instead of 0.12.0's.
+- Docs: Upgrading previewed this release before the tag, so a run could get ahead of it: what now fails (`php-floor` with `--php-runtime` below the floor, a stack package's missing `ci-pipelines` include), what is new, and four steps to take. The Checks page names the newest checks (`script-pair` in 0.14.0, `mysql56-ci` in 0.15.0) instead of 0.12.0's.
 
 - Tests: `FrontPagePaperTest` holds the front page's whole paper to the checks PROCTOR runs: the list is `CheckSet::all()` in order, the stagger index counts up from 0, the Gate tags are exactly `CheckSet::GATE`, every New check is named in the CHANGELOG section of the release the legend gives, and the count is right everywhere the page, the README and the docs spell it out. Three freshness sweeps had found the paper behind the code; now the proctor marks its own paper first.
 
