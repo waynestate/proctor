@@ -26,11 +26,11 @@ Still pinned to Preflight 0.4.0? That component keeps only the Code Quality repo
 
 ## ci-pipelines
 
-`ci-pipelines` enforces the CI contract. For a stack package (a composer.json `name` starting with `waynestate/`), both `.gitlab-ci.yml` and `.github/workflows/ci.yml` must exist and run `composer ci`; a missing or incomplete file is a failure. For any other project, a missing or incomplete `.gitlab-ci.yml` is a warning and `.github/workflows/ci.yml` is optional.
+`ci-pipelines` enforces the CI contract. CI runs on git.wayne.edu, and the GitHub copy of a stack package is a push mirror for Packagist and npm, so the hard part of the contract is the GitLab pipeline: for a stack package (a composer.json `name` starting with `waynestate/`), `.gitlab-ci.yml` must exist and run `composer ci`; a missing or incomplete file is a failure. For any other project, a missing or incomplete `.gitlab-ci.yml` is a warning. `.github/workflows/ci.yml` is optional for every project: a missing file gives no finding, and one that exists is checked as warnings only, never fails.
 
 The files are parsed as YAML, not grepped: a `composer ci` that only appears in a comment is not a script line, and a GitLab job is a top-level map with a `script` key. A GitHub job counts when a step runs `composer ci` or calls a reusable workflow with `ci-command: composer ci`.
 
-A private stack package that sets `extra.proctor.github-mirror` to `false` in composer.json must never be on GitHub: a missing `.github/workflows/ci.yml` then gives no finding, and a present one warns (`proctor/ci-pipelines/github-private`) along with the warning-only rules.
+A private stack package that sets `extra.proctor.github-mirror` to `false` in composer.json must never be on GitHub: a shipped `.github/workflows/ci.yml` then warns (`proctor/ci-pipelines/github-private`) along with the warning-only rules.
 
 ### Split pipelines and other workflows
 
@@ -61,7 +61,6 @@ When nothing needs fixing the check passes with `both pipelines run composer ci`
 | `ci-pipelines` | `proctor/ci-pipelines/gitlab-parse` |
 | `ci-pipelines` | `proctor/ci-pipelines/gitlab-no-ci` |
 | `ci-pipelines` | `proctor/ci-pipelines/gitlab-include-missing` |
-| `ci-pipelines` | `proctor/ci-pipelines/github-missing` |
 | `ci-pipelines` | `proctor/ci-pipelines/github-parse` |
 | `ci-pipelines` | `proctor/ci-pipelines/github-no-ci` |
 | `ci-pipelines` | `proctor/ci-pipelines/github-private` |
@@ -70,7 +69,7 @@ When nothing needs fixing the check passes with `both pipelines run composer ci`
 | `ci-pipelines` | `proctor/ci-pipelines/composer-update` |
 | `ci-pipelines` | `proctor/ci-pipelines/allow-overrides` |
 
-Fix a failing pipeline by adding a GitLab job whose `script` runs `composer ci`, adding a GitHub workflow that runs `composer ci` or calls a reusable workflow with `ci-command: composer ci`, pinning every `uses:` ref to a commit SHA, running `composer install` instead of `composer update` or `composer require`, and removing `PROCTOR_ALLOW_OVERRIDES` from the pipeline environment, which only PROCTOR's own pipeline needs.
+Fix a failing pipeline by adding a GitLab job whose `script` runs `composer ci`. The warning-only rules are fixed the same way: pin every `uses:` ref to a commit SHA, run `composer install` instead of `composer update` or `composer require`, and remove `PROCTOR_ALLOW_OVERRIDES` from the pipeline environment, which only PROCTOR's own pipeline needs. A shipped GitHub workflow keeps the report clean when a job runs `composer ci` or calls a reusable workflow with `ci-command: composer ci`.
 
 ## preflight-pinned
 
