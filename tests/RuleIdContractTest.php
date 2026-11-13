@@ -155,7 +155,6 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/ci-pipelines/gitlab-parse',
         'proctor/ci-pipelines/gitlab-no-ci',
         'proctor/ci-pipelines/gitlab-include-missing',
-        'proctor/ci-pipelines/github-missing',
         'proctor/ci-pipelines/github-parse',
         'proctor/ci-pipelines/github-no-ci',
         'proctor/ci-pipelines/github-private',

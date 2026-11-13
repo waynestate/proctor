@@ -200,23 +200,45 @@ YAML,
         self::assertNull($findings[0]->path);
     }
 
-    public function testStackPackageWithoutPipelinesFailsBothFiles(): void
+    public function testStackPackageWithoutPipelinesFailsOnTheMissingGitlabPipeline(): void
     {
+        // D-069: the GitHub workflow is optional for every project, so a
+        // stack package with no pipelines at all fails only on the missing
+        // .gitlab-ci.yml.
         $appPath = $this->stackAppPath();
 
         try {
             $findings = (new CiPipelinesCheck())->run($this->contextFor($appPath));
 
-            self::assertCount(2, $findings);
+            self::assertCount(1, $findings);
             self::assertSame(Finding::STATUS_FAIL, $findings[0]->status);
-            self::assertSame(Finding::STATUS_FAIL, $findings[1]->status);
             self::assertSame(
-                [
-                    ['ci-pipelines-github-missing', '.github/workflows/ci.yml', 1],
-                    ['ci-pipelines-gitlab-missing', '.gitlab-ci.yml', 1],
-                ],
+                [['ci-pipelines-gitlab-missing', '.gitlab-ci.yml', 1]],
                 $this->triples($findings),
             );
+        } finally {
+            $this->removeStackApp($appPath);
+        }
+    }
+
+    public function testStackPackageWithOnlyAGoodGitlabPipelinePasses(): void
+    {
+        // D-069: CI runs on git.wayne.edu; a stack package whose
+        // .gitlab-ci.yml runs composer ci and that ships no .github/ folder
+        // passes ci-pipelines with no findings.
+        $appPath = $this->stackAppPath();
+        file_put_contents(
+            $appPath . '/.gitlab-ci.yml',
+            "composer-ci:\n  script:\n    - composer ci\n",
+        );
+
+        try {
+            $findings = (new CiPipelinesCheck())->run($this->contextFor($appPath));
+
+            self::assertCount(1, $findings);
+            self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+            self::assertSame('gitlab pipeline runs composer ci', $findings[0]->message);
+            self::assertNull($findings[0]->path);
         } finally {
             $this->removeStackApp($appPath);
         }
@@ -233,14 +255,10 @@ YAML,
         try {
             $findings = (new CiPipelinesCheck())->run($this->contextFor($appPath));
 
-            self::assertCount(2, $findings);
+            self::assertCount(1, $findings);
             self::assertSame(Finding::STATUS_FAIL, $findings[0]->status);
-            self::assertSame(Finding::STATUS_FAIL, $findings[1]->status);
             self::assertSame(
-                [
-                    ['ci-pipelines-github-missing', '.github/workflows/ci.yml', 1],
-                    ['ci-pipelines-gitlab-no-ci', '.gitlab-ci.yml', 1],
-                ],
+                [['ci-pipelines-gitlab-no-ci', '.gitlab-ci.yml', 1]],
                 $this->triples($findings),
             );
         } finally {
@@ -294,23 +312,28 @@ YAML,
         }
     }
 
-    public function testStackPackageWithStringFalseGithubMirrorStillFailsWhenMissing(): void
+    public function testStackPackageWithStringFalseGithubMirrorIsNotPrivate(): void
     {
+        // The string "false" does not mark the package private: a shipped
+        // GitHub workflow earns no github-private warning, and the check
+        // passes on both pipelines.
         $appPath = $this->stackAppPath('false');
+        file_put_contents(
+            $appPath . '/.gitlab-ci.yml',
+            "composer-ci:\n  script:\n    - composer ci\n",
+        );
+        self::assertTrue(
+            is_dir($appPath . '/.github/workflows') || mkdir($appPath . '/.github/workflows', 0777, true),
+        );
+        file_put_contents($appPath . '/.github/workflows/ci.yml', $this->goodGithubWorkflow());
 
         try {
             $findings = (new CiPipelinesCheck())->run($this->contextFor($appPath));
 
-            self::assertCount(2, $findings);
-            self::assertSame(Finding::STATUS_FAIL, $findings[0]->status);
-            self::assertSame(Finding::STATUS_FAIL, $findings[1]->status);
-            self::assertSame(
-                [
-                    ['ci-pipelines-github-missing', '.github/workflows/ci.yml', 1],
-                    ['ci-pipelines-gitlab-missing', '.gitlab-ci.yml', 1],
-                ],
-                $this->triples($findings),
-            );
+            self::assertCount(1, $findings);
+            self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+            self::assertSame('both pipelines run composer ci', $findings[0]->message);
+            self::assertNull($findings[0]->path);
         } finally {
             $this->removeStackApp($appPath);
         }

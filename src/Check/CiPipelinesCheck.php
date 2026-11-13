@@ -8,16 +8,19 @@ use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 
 /**
- * Checks the project's CI contract. For stack packages (a composer.json
- * name starting with waynestate/) the contract is hard: .gitlab-ci.yml
- * and .github/workflows/ci.yml must both exist and run `composer ci`,
- * and a GitHub `uses:` ref must be a 40-hex commit SHA so a reusable
- * workflow cannot move out from under the pipeline. A stack package that
- * sets extra.proctor.github-mirror to exactly false in composer.json is
- * private and must never be on GitHub: the GitHub workflow is then not
- * required, and shipping one is a warning. For any other project the
- * GitLab pipeline is still expected, but a missing or incomplete one is
- * a warning, and the GitHub workflow is optional.
+ * Checks the project's CI contract. CI runs on git.wayne.edu, and the
+ * GitHub copy of a stack package is a push mirror for Packagist and npm,
+ * so the hard part of the contract is the GitLab pipeline: for
+ * stack packages (a composer.json name starting with waynestate/)
+ * .gitlab-ci.yml must exist and run `composer ci`. The GitHub workflow
+ * is optional for every project: a missing .github/workflows/ci.yml
+ * gives no finding, whatever the project kind, and one that exists is
+ * checked as warnings only, never fails. A stack package that sets
+ * extra.proctor.github-mirror to exactly false in composer.json is
+ * private and must never be on GitHub: shipping a GitHub workflow is a
+ * warning (proctor/ci-pipelines/github-private). For any other project
+ * the GitLab pipeline is still expected, but a missing or incomplete
+ * one is a warning.
  *
  * The files are parsed as YAML, not grepped: a `composer ci` that only
  * appears in a comment is not a script line, and a GitLab job is a
@@ -70,7 +73,7 @@ final class CiPipelinesCheck implements CheckInterface
         $private = $isStack && $this->isPrivateStackPackage($appPath);
         $findings = [
             ...$this->gitlabFindings($appPath . '/' . self::GITLAB_CI, $isStack),
-            ...$this->githubFindings($appPath . '/' . self::GITHUB_CI, $isStack, $private),
+            ...$this->githubFindings($appPath . '/' . self::GITHUB_CI, $private),
             ...$this->otherWorkflowFindings($appPath),
         ];
 
@@ -117,10 +120,10 @@ final class CiPipelinesCheck implements CheckInterface
     /**
      * Whether the app is a private stack package: its composer.json sets
      * extra.proctor.github-mirror to exactly false, the boolean. Such a
-     * package must never be on GitHub, so a missing
-     * .github/workflows/ci.yml gives no finding. Any other value (the key
-     * missing, true, or a string such as "false") keeps the ordinary
-     * stack-package rules.
+     * package must never be on GitHub, so a shipped
+     * .github/workflows/ci.yml earns the github-private warning. Any
+     * other value (the key missing, true, or a string such as "false")
+     * does not.
      */
     private function isPrivateStackPackage(string $appPath): bool
     {
@@ -319,37 +322,26 @@ final class CiPipelinesCheck implements CheckInterface
     }
 
     /**
-     * The findings for .github/workflows/ci.yml. For stack packages the
-     * file is required: a fail when it is missing, unparseable, or no job
-     * runs composer ci (directly, or through a reusable workflow with
-     * ci-command: composer ci). A private stack package (one whose
-     * composer.json sets extra.proctor.github-mirror to exactly false)
-     * must never be on GitHub: a missing file gives no finding, and a
-     * present one gets the warning-only rules plus a github-private
-     * warning. For other projects the file is optional: a missing file
-     * gives no finding, and the same rules apply as warnings. A uses:
-     * ref that is not a 40-hex commit SHA is a warning either way. The
-     * composer-audit-off and allow-overrides warnings for the environment
-     * it sets are added too.
+     * The findings for .github/workflows/ci.yml, which is optional for
+     * every project: CI runs on git.wayne.edu, and the GitHub
+     * copy of a stack package is a push mirror for Packagist and npm, so
+     * a missing file gives no finding, whatever the project kind. A
+     * present file is checked as warnings only, never fails: a warning
+     * when it does not parse or no job runs composer ci (directly, or
+     * through a reusable workflow with ci-command: composer ci), for
+     * stack packages and other projects alike. A private stack package
+     * (one whose composer.json sets extra.proctor.github-mirror to
+     * exactly false) must never be on GitHub, so a present file earns a
+     * github-private warning on top. A uses: ref that is not a 40-hex
+     * commit SHA is a warning either way, and the composer-audit-off and
+     * allow-overrides warnings for the environment it sets are added too.
      *
      * @return list<Finding>
      */
-    private function githubFindings(string $absolutePath, bool $isStack, bool $private): array
+    private function githubFindings(string $absolutePath, bool $private): array
     {
         if (!is_file($absolutePath)) {
-            if (!$isStack || $private) {
-                return [];
-            }
-
-            return [new Finding(
-                $this->id(),
-                Finding::STATUS_FAIL,
-                'ci-pipelines-github-missing: .github/workflows/ci.yml is missing; add a GitHub workflow that runs composer ci',
-                self::GITHUB_CI,
-                1,
-                null,
-                'github-missing',
-            )];
+            return [];
         }
 
         $findings = [];
@@ -365,13 +357,11 @@ final class CiPipelinesCheck implements CheckInterface
             );
         }
 
-        $status = $isStack && !$private ? Finding::STATUS_FAIL : Finding::STATUS_WARNING;
-
         [$data, $error] = $this->parseYaml($absolutePath);
         if ($data === null) {
             $findings[] = new Finding(
                 $this->id(),
-                $status,
+                Finding::STATUS_WARNING,
                 sprintf(
                     'ci-pipelines-github-parse: .github/workflows/ci.yml could not be parsed: %s; fix the YAML so the workflow can run',
                     $error,
@@ -462,7 +452,7 @@ final class CiPipelinesCheck implements CheckInterface
         if (!$runsComposerCi) {
             $findings[] = new Finding(
                 $this->id(),
-                $status,
+                Finding::STATUS_WARNING,
                 'ci-pipelines-github-no-ci: no job in .github/workflows/ci.yml runs composer ci or calls a reusable workflow with ci-command: composer ci; run composer ci in a job, or call a reusable workflow with ci-command: composer ci',
                 self::GITHUB_CI,
                 1,

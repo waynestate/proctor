@@ -49,7 +49,7 @@ An app sets PROCTOR-specific switches under `extra.proctor` in its own composer.
 
 | Key | Values | Effect |
 | --- | --- | --- |
-| `github-mirror` | `false` | Marks a private stack package that must never be on GitHub: a missing `.github/workflows/ci.yml` then gives no finding, and a present one warns (`proctor/ci-pipelines/github-private`) along with the warning-only rules. |
+| `github-mirror` | `false` | Marks a private stack package that must never be on GitHub: a shipped `.github/workflows/ci.yml` then warns (`proctor/ci-pipelines/github-private`) along with the warning-only rules. |
 | `wayneui.copies` | `warn` (default), `fail` | In `fail` mode a behind committed copy of WayneUI is a failure, with a sentence naming the setting appended to its message, while findings from composer.lock and package-lock.json stay warnings. Only committed copies are affected by the setting, and an offline run never fails in either mode, because an unknown latest is always just the info skipped finding. |
 
 PROCTOR's own composer.json sets `wayneui.copies` to `fail`: the proctor fails the stack's own exam halls.
