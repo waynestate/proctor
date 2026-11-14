@@ -248,6 +248,7 @@ The full set, grouped by check:
 | `gitattributes-eol` | `proctor/gitattributes-eol` |
 | `gitattributes-eol` | `proctor/gitattributes-eol/not-pinned` |
 | `gitattributes-eol` | `proctor/gitattributes-eol/crlf` |
+| `gitattributes-eol` | `proctor/gitattributes-eol/no-default` |
 | `script-pair` | `proctor/script-pair` |
 | `script-pair` | `proctor/script-pair/missing-ps1` |
 | `script-pair` | `proctor/script-pair/missing-sh` |
@@ -2333,7 +2334,7 @@ Details and fixes: [CI checks](https://proctor.apps.wayne.edu/docs/guides/check-
 - `portability`: warns when code hard-codes a platform fact: an absolute host path, a hard-coded proxy address, a local-disk session store, or a php_value/php_flag line in .htaccess.
 - `destructive-deploy`: fails when a deploy script runs an artisan command that drops or rebuilds the database (`migrate:fresh`, `migrate:refresh`, `migrate:reset`, `db:wipe`), which erases production data on every deploy.
 - `crlf-deploy-script`: fails when a deploy script has Windows line endings (CRLF), which break it on Linux, and warns (`proctor/crlf-deploy-script/no-gitattributes`) when the app has a deploy script and `.gitattributes` does not pin `*.sh` to `eol=lf`.
-- `gitattributes-eol`: warns, never fails, when `.gitattributes` does not pin the app's `*.sh`, `*.conf` or Dockerfiles to `eol=lf` (read the way Git reads it, so `* text=auto eol=lf` counts and a later `-text` or `eol=crlf` undoes it), and when a `Dockerfile`, `*.Dockerfile` or `*.conf` under `deploy/` or `.squire/` has Windows line endings (CREED every-os).
+- `gitattributes-eol`: warns, never fails, when `.gitattributes` does not pin the app's `*.sh`, `*.conf` or Dockerfiles to `eol=lf` (read the way Git reads it, so `* text=auto eol=lf` counts and a later `-text` or `eol=crlf` undoes it), when the root `.gitattributes` has no whole `* text=auto eol=lf` line to set the default for every file (`proctor/gitattributes-eol/no-default`), and when a `Dockerfile`, `*.Dockerfile` or `*.conf` under `deploy/` or `.squire/` has Windows line endings (CREED every-os).
 - `script-pair`: warns, never fails, when a developer script in the top-level `scripts/` directory has no twin: a `.sh` without its `.ps1` (`proctor/script-pair/missing-ps1`) or a `.ps1` without its `.sh` (`proctor/script-pair/missing-sh`); pairing is by the same path minus the extension, in the same folder (CREED every-os).
 - `case-clash`: fails when two paths differ only by letter case, which collide on macOS and Windows.
 - `instant-client-committed`: warns when Oracle Instant Client is committed to the repo: an archive, an unzipped install under an `instantclient` directory, or a loose client library.
@@ -3350,6 +3351,7 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `gitattributes-eol` | `proctor/gitattributes-eol` |
 | `gitattributes-eol` | `proctor/gitattributes-eol/not-pinned` |
 | `gitattributes-eol` | `proctor/gitattributes-eol/crlf` |
+| `gitattributes-eol` | `proctor/gitattributes-eol/no-default` |
 | `script-pair` | `proctor/script-pair` |
 | `script-pair` | `proctor/script-pair/missing-ps1` |
 | `script-pair` | `proctor/script-pair/missing-sh` |
