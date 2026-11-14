@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Changed: the deploy kit is Squire 0.11.1 (was 0.10.7): the release script, parity scripts, HAProxy pin and fallback base follow the new templates.
 - Changed: the dev dependency Pinstripe is `^0.4` (was `^0.3`, which does not allow 0.4.0); 0.4.0 adds two opt-in Rector presets and changes no rule this repo uses.
 
 ## 0.16.1 (2026-11-14)
