@@ -15,6 +15,7 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `php-floor` | `proctor/php-floor/runtime` |
 | `php-floor` | `proctor/php-floor/runtime-mismatch` |
 | `unpatched` | `proctor/unpatched` |
+| `unpatched` | `proctor/unpatched/below-minimum` |
 | `laravel-eol` | `proctor/laravel-eol` |
 | `laravel-php` | `proctor/laravel-php` |
 | `node-eol` | `proctor/node-eol` |

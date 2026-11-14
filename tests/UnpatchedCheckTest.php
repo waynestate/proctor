@@ -18,6 +18,14 @@ final class UnpatchedCheckTest extends ProctorTestCase
         return __DIR__ . '/fixtures/policy-unpatched.json';
     }
 
+    /**
+     * The path of the minimum-patch fixture policy.
+     */
+    private function minimumPatchPolicy(): string
+    {
+        return __DIR__ . '/fixtures/policy-minimum-patch.json';
+    }
+
     public function testLaravelBehindWarns(): void
     {
         $stdout = $this->runProctor($this->app('unpatched-laravel-behind-app'), 'text', $this->policy())['stdout'];
@@ -87,6 +95,70 @@ final class UnpatchedCheckTest extends ProctorTestCase
         $stdout = $this->runProctor($this->app('unpatched-no-latest-patch-app'), 'text', $this->policy())['stdout'];
 
         self::assertDoesNotMatchRegularExpression('/^(?:WARN|PASS|FAIL|INFO) unpatched: /m', $stdout);
+    }
+
+    public function testPhpBelowMinimumPatchWarnsInsteadOfBehind(): void
+    {
+        $stdout = $this->runProctor($this->app('unpatched-php-app'), 'text', $this->minimumPatchPolicy(), '8.3.10')['stdout'];
+
+        self::assertStringContainsString(
+            "WARN unpatched: php 8.3.10 is below the stack's minimum patch 8.3.31 for 8.3; update to at least 8.3.31.",
+            $stdout,
+        );
+        self::assertDoesNotMatchRegularExpression('/^(?:WARN|PASS|FAIL|INFO) unpatched: .*is behind/m', $stdout);
+    }
+
+    public function testPhpAtMinimumPatchStillWarnsBehind(): void
+    {
+        $stdout = $this->runProctor($this->app('unpatched-php-app'), 'text', $this->minimumPatchPolicy(), '8.3.31')['stdout'];
+
+        self::assertMatchesRegularExpression(
+            '/^WARN unpatched: php 8\.3\.31 is behind 8\.3\.32 \(checked 2026-10-28\); update to the latest patch\.$/m',
+            $stdout,
+        );
+        self::assertDoesNotMatchRegularExpression('/below the stack\'s minimum patch/m', $stdout);
+    }
+
+    public function testPhpCurrentPassesWithMinimumPatch(): void
+    {
+        $stdout = $this->runProctor($this->app('unpatched-php-app'), 'text', $this->minimumPatchPolicy(), '8.3.32')['stdout'];
+
+        self::assertMatchesRegularExpression(
+            '/^PASS unpatched: php 8\.3\.32 is up to date \(latest patch 8\.3\.32\)$/m',
+            $stdout,
+        );
+        self::assertDoesNotMatchRegularExpression('/^(?:WARN|FAIL) unpatched: /m', $stdout);
+    }
+
+    public function testPhpBelowMinimumPatchWarnsWithoutLatestPatch(): void
+    {
+        $stdout = $this->runProctor($this->app('unpatched-php-app'), 'text', $this->minimumPatchPolicy(), '8.4.5')['stdout'];
+
+        self::assertStringContainsString(
+            "WARN unpatched: php 8.4.5 is below the stack's minimum patch 8.4.21 for 8.4; update to at least 8.4.21.",
+            $stdout,
+        );
+    }
+
+    public function testPhpAboveMinimumPatchProducesNoFindingWithoutLatestPatch(): void
+    {
+        $stdout = $this->runProctor($this->app('unpatched-php-app'), 'text', $this->minimumPatchPolicy(), '8.4.30')['stdout'];
+
+        self::assertDoesNotMatchRegularExpression('/^(?:WARN|PASS|FAIL|INFO) unpatched: /m', $stdout);
+    }
+
+    public function testPhpBelowMinimumPatchCarriesTheRuleIdInJson(): void
+    {
+        $data = json_decode($this->runProctor($this->app('unpatched-php-app'), 'json', $this->minimumPatchPolicy(), '8.3.10')['stdout'], true);
+        self::assertIsArray($data);
+
+        $ruleIds = [];
+        foreach ($data['findings'] as $finding) {
+            if ($finding['check_id'] === 'unpatched') {
+                $ruleIds[] = $finding['rule_id'];
+            }
+        }
+        self::assertSame(['proctor/unpatched/below-minimum'], $ruleIds);
     }
 
     public function testInvalidPhpRuntimeExitsTwo(): void

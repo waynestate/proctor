@@ -13,8 +13,13 @@ namespace Waynestate\Proctor\Check;
  * package-lock.json, and php from --php-runtime. A stale patch is a note in
  * the margin, never a red pen: this check only warns or passes.
  *
- * A version line without a latest_patch, or a component or line the policy
- * does not know, produces no finding.
+ * A version below the line's minimum_patch warns (proctor/unpatched/below-minimum)
+ * instead of the behind warning: the proctor marks the floor before it checks
+ * the ceiling.
+ *
+ * A version line without a latest_patch produces no finding unless the
+ * version is below its minimum_patch; a component or line the policy does
+ * not know produces no finding.
  */
 final class UnpatchedCheck implements CheckInterface
 {
@@ -75,7 +80,10 @@ final class UnpatchedCheck implements CheckInterface
      * Compares one seen version with the policy's latest patch for its
      * major.minor line.
      *
-     * Returns null when the policy has no line or no latest_patch for it.
+     * A version below the line's minimum_patch warns (below-minimum) instead
+     * of the behind warning, even when the line has no latest_patch.
+     * Otherwise returns null when the policy has no line or no latest_patch
+     * for it.
      */
     private function compare(CheckContext $context, string $component, string $version): ?Finding
     {
@@ -87,6 +95,24 @@ final class UnpatchedCheck implements CheckInterface
         $latest = $context->policy->line($component, $line);
         if ($latest === null) {
             return null;
+        }
+
+        $minimum = $context->policy->minimumPatch($component, $line);
+        if ($minimum !== null && version_compare($version, $minimum) < 0) {
+            return new Finding(
+                $this->id(),
+                Finding::STATUS_WARNING,
+                sprintf(
+                    '%s %s is below the stack\'s minimum patch %s for %s; update to at least %s.',
+                    $component,
+                    $version,
+                    $minimum,
+                    $line,
+                    $minimum,
+                ),
+                $this->pathFor($component),
+                rule: 'below-minimum',
+            );
         }
 
         $latestPatch = $latest['latest_patch'];

@@ -73,6 +73,8 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/vite-secrets',
         'proctor/served-folder',
         'proctor/world-writable',
+        // unpatched
+        'proctor/unpatched/below-minimum',
         // node-eol
         'proctor/node-eol/engines',
         'proctor/node-eol/odd-major',
