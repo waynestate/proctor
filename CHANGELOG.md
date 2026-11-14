@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Changed: the dev dependency Pinstripe is `^0.4` (was `^0.3`, which does not allow 0.4.0); 0.4.0 adds two opt-in Rector presets and changes no rule this repo uses.
+
 ## 0.16.1 (2026-11-14)
 
 - Upgrade: a patch release, so `^0.16` picks it up; run `composer update waynestate/proctor` (see Upgrading). The two new rules warn and never fail a run or the deploy gate.
