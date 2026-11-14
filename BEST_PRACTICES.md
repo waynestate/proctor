@@ -530,7 +530,7 @@ Composer 2.11 is stable: 2.11.0 shipped on 2026-10-29 and 2.11.1 on 2026-10-30
 the deploy layers already regenerated from it (HELMET, SESAME); Squire's own CI jobs use `composer:2.11.1`;
 Preflight 0.9.0 installs 2.11.1 by default in its `php-test` and `proctor` components (`composer_version`; 0.4.0
 installed 2.10.3); and PROCTOR's own CI jobs, phar build scripts and deploy layer (Squire 0.10.7) pin
-`composer:2.11.1` by digest. Apps on an older Preflight pin still get the older default until they move to `@0.9.0`. Decision (the stack maintainer, 2026-11-03): when 2.11 is in the base images, Sourdough apps set a 3-day
+`composer:2.11.1` by digest. Apps on an older Preflight pin still get the older default until they move to `@0.8.0`. Decision (the stack maintainer, 2026-11-03): when 2.11 is in the base images, Sourdough apps set a 3-day
 cooldown and PROCTOR warns when an app has none. That condition was met on 2026-11-10, and all three parts are built.
 
 ### 4.12 Decide whether dev dependencies count (second pass)
