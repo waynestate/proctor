@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added: `gitattributes-eol` warns (`proctor/gitattributes-eol/no-default`) when the root `.gitattributes` lacks the whole `* text=auto eol=lf` line that CREED's every-os chapter requires (CREED gap 16).
 - Changed: `deploy/` requires PROCTOR `^0.16`, whose `ci-pipelines` check no longer asks for a GitHub workflow (D-069); `^0.12` failed the `wayneui-copies` job.
 - Changed: CI pins Preflight 0.9.0 (components and the a11y checker copy).
 - Docs: the CI guide's example pins Preflight 0.9.0, the release this repo's pipeline runs.
