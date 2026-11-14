@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Changed: `deploy/` requires PROCTOR `^0.16`, whose `ci-pipelines` check no longer asks for a GitHub workflow (D-069); `^0.12` failed the `wayneui-copies` job.
+
 ## 0.16.0 (2026-11-13)
 
 - Upgrade: a minor release under 0.x, so `^0.15` does not pick it up; change the constraint to `^0.16` (see Upgrading).
