@@ -7,6 +7,24 @@ description: How to upgrade PROCTOR to a newer release and note the changes that
 
 PROCTOR is the invigilator, so upgrading it is a seat change, not a new exam: same hall, fresher pen. This page tells you how to move an app from one PROCTOR release to the next and which changes affect your runs. Start with the release that has a break, then work down to the additive ones.
 
+## 0.16.1
+
+Released 2026-11-14. A patch release. `^0.16` picks it up: run `composer update waynestate/proctor`.
+
+### Breaking
+
+- None. Both new findings are warnings: they are counted as warnings but never fail a run or the deploy gate.
+
+### New
+
+- `unpatched` warns (`proctor/unpatched/below-minimum`) when a version is below its line's `minimum_patch` in CREED's policy, the oldest patch the stack accepts (for example php 8.3 below 8.3.31); it replaces the "is behind" warning for that component, so there is still one finding per component.
+- `gitattributes-eol` warns (`proctor/gitattributes-eol/no-default`) on `.gitattributes` when the root file is missing or has no whole `* text=auto eol=lf` line (CREED every-os); the fix is that line first, then `git add --renormalize .`.
+
+### What to do
+
+1. Run `composer update waynestate/proctor`. No constraint change.
+2. Add `* text=auto eol=lf` as the first line of `.gitattributes` if the new warning names it, and move a PHP image that is below its line's minimum patch. A report that already passed still passes.
+
 ## 0.16.0
 
 Released 2026-11-13. A minor release. Under 0.x, `^0.15` does not pick it up: change the constraint to `^0.16`, then run `composer update waynestate/proctor`. Two new findings can fail a run, so read **Breaking** first.

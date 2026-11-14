@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## 0.16.1 (2026-11-14)
+
+- Upgrade: a patch release, so `^0.16` picks it up; run `composer update waynestate/proctor` (see Upgrading). The two new rules warn and never fail a run or the deploy gate.
 - Added: `unpatched` warns (`proctor/unpatched/below-minimum`) when a version is below its line's `minimum_patch` in the policy, the oldest patch the stack accepts (CREED-8).
 - Added: `gitattributes-eol` warns (`proctor/gitattributes-eol/no-default`) when the root `.gitattributes` lacks the whole `* text=auto eol=lf` line that CREED's every-os chapter requires (CREED gap 16).
 - Changed: `deploy/` requires PROCTOR `^0.16`, whose `ci-pipelines` check no longer asks for a GitHub workflow (D-069); `^0.12` failed the `wayneui-copies` job.
