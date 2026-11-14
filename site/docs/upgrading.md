@@ -10,16 +10,34 @@ generator: Squire agent-ready
 
 PROCTOR is the invigilator, so upgrading it is a seat change, not a new exam: same hall, fresher pen. This page tells you how to move an app from one PROCTOR release to the next and which changes affect your runs. Start with the release that has a break, then work down to the additive ones.
 
+## 0.16.1 [#](https://proctor.apps.wayne.edu/docs/upgrading.html#0-16-1)
+
+Released 2026-11-14. A patch release. `^0.16` picks it up: run `composer update waynestate/proctor`.
+
+### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking)
+
+- None. Both new findings are warnings: they are counted as warnings but never fail a run or the deploy gate.
+
+### New [#](https://proctor.apps.wayne.edu/docs/upgrading.html#new)
+
+- `unpatched` warns (`proctor/unpatched/below-minimum`) when a version is below its line's `minimum_patch` in CREED's policy, the oldest patch the stack accepts (for example php 8.3 below 8.3.31); it replaces the "is behind" warning for that component, so there is still one finding per component.
+- `gitattributes-eol` warns (`proctor/gitattributes-eol/no-default`) on `.gitattributes` when the root file is missing or has no whole `* text=auto eol=lf` line (CREED every-os); the fix is that line first, then `git add --renormalize .`.
+
+### What to do [#](https://proctor.apps.wayne.edu/docs/upgrading.html#what-to-do)
+
+1. Run `composer update waynestate/proctor`. No constraint change.
+2. Add `* text=auto eol=lf` as the first line of `.gitattributes` if the new warning names it, and move a PHP image that is below its line's minimum patch. A report that already passed still passes.
+
 ## 0.16.0 [#](https://proctor.apps.wayne.edu/docs/upgrading.html#0-16-0)
 
 Released 2026-11-13. A minor release. Under 0.x, `^0.15` does not pick it up: change the constraint to `^0.16`, then run `composer update waynestate/proctor`. Two new findings can fail a run, so read **Breaking** first.
 
-### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking)
+### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-1)
 
 - With `--php-runtime`, `php-floor` now grades the PHP that will serve the app. A runtime below `require.php` fails (`proctor/php-floor/runtime-mismatch`): Composer's platform check would stop that app on boot, so this was already broken, only silently. `proctor gate` asks it too, and Squire's release script passes `--php-runtime` by default, so a deploy image older than the app's constraint now gets a no-go. Without `--php-runtime` nothing changes.
 - `ci-pipelines` reads the local files `.gitlab-ci.yml` includes. A named local include that does not exist is `proctor/ci-pipelines/gitlab-include-missing`: a fail for a stack package (`waynestate/...`), a warning for any other app. GitLab rejects that pipeline anyway.
 
-### New [#](https://proctor.apps.wayne.edu/docs/upgrading.html#new)
+### New [#](https://proctor.apps.wayne.edu/docs/upgrading.html#new-1)
 
 - `php-floor` also warns on a runtime above the constraint's upper bound, or on a security-only, end-of-life or unlisted PHP line (`proctor/php-floor/runtime`).
 - `ci-pipelines`, `preflight-pinned`, `preflight-gates` and `mysql56-ci` read the whole GitLab pipeline: `.gitlab-ci.yml` plus every local file it includes (`include:` paths and `local:` entries, at any depth, with `*` and `**`). A Preflight include or a `composer ci` job in `ci/*.yml` now counts, so warnings such as `preflight-gates-no-include` or `gitlab-no-ci` that an app had already fixed in an included file go away. Findings in an included file name that file and line.
@@ -27,7 +45,7 @@ Released 2026-11-13. A minor release. Under 0.x, `^0.15` does not pick it up: ch
 - `preflight-gates` warns on four more ways to disarm a Preflight gate: a `proctor_command` input that runs no PROCTOR or masks its exit code (`proctor/preflight-gates/proctor-command`), a re-declared gate job set to `when: never` or whose `rules:` all say `when: never` (`proctor/preflight-gates/skipped`), one set to `when: manual` without `allow_failure: false`, which GitLab treats as optional (`proctor/preflight-gates/manual`), and a `rules:` entry with `allow_failure: true` (`proctor/preflight-gates/allow-failure`). All four only warn.
 - The check count stays forty-five, eight of them in the deploy gate.
 
-### What to do [#](https://proctor.apps.wayne.edu/docs/upgrading.html#what-to-do)
+### What to do [#](https://proctor.apps.wayne.edu/docs/upgrading.html#what-to-do-1)
 
 1. Change the constraint in `composer.json` to `"waynestate/proctor": "^0.16"` and run `composer update waynestate/proctor`.
 2. Check the PHP your deploy image runs against `require.php` in `composer.json`. If the image is older, move the image up (Squire's `SQUIRE_PHP_RUNTIME` names it) or, if the app truly runs on the older PHP, widen `require.php` to match what you have tested.
@@ -38,15 +56,15 @@ Released 2026-11-13. A minor release. Under 0.x, `^0.15` does not pick it up: ch
 
 Released 2026-11-10. A patch release. `^0.15` picks it up: run `composer update waynestate/proctor`.
 
-### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-1)
+### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-2)
 
 - None. The new note is an info note: it is not counted and never fails a run or the deploy gate.
 
-### New [#](https://proctor.apps.wayne.edu/docs/upgrading.html#new-1)
+### New [#](https://proctor.apps.wayne.edu/docs/upgrading.html#new-2)
 
 - `mysql56-ci` adds an info note `proctor/mysql56-ci/held` on `.gitlab-ci.yml` when an app with migrations runs the `mysql56-migrate` job. Before, a held app and an app with nothing to migrate both had no finding. Rollcall reads the note to count apps as held, missing or not applicable (D-079).
 
-### What to do [#](https://proctor.apps.wayne.edu/docs/upgrading.html#what-to-do-1)
+### What to do [#](https://proctor.apps.wayne.edu/docs/upgrading.html#what-to-do-2)
 
 1. Run `composer update waynestate/proctor`. No constraint change.
 2. Nothing else. A report that already passed still passes.
@@ -55,17 +73,17 @@ Released 2026-11-10. A patch release. `^0.15` picks it up: run `composer update 
 
 Released 2026-11-10. A minor release. Under 0.x, `^0.14` does not pick it up: change the constraint to `^0.15`, then run `composer update waynestate/proctor`.
 
-### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-2)
+### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-3)
 
 - None. The new check only warns, and warnings never fail a run or the deploy gate.
 
-### New [#](https://proctor.apps.wayne.edu/docs/upgrading.html#new-2)
+### New [#](https://proctor.apps.wayne.edu/docs/upgrading.html#new-3)
 
 - `mysql56-ci` warns when an app has migrations in `database/migrations/` but its `.gitlab-ci.yml` never runs them against MySQL 5.6 (rule ID `proctor/mysql56-ci/no-job`). CREED `databases.md` makes that a MUST: Citadel's shared server is MySQL 5.6.51, and a test suite on SQLite passes DDL that 5.6 rejects. `mysql56` scans the code; `mysql56-ci` checks the wiring.
 - `preflight-gates` treats `mysql56-migrate` as a gate, so a `mysql56-migrate` include with `allow_failure: true` warns like the other gates.
 - The check count is forty-five, eight of them in the deploy gate (unchanged).
 
-### What to do [#](https://proctor.apps.wayne.edu/docs/upgrading.html#what-to-do-2)
+### What to do [#](https://proctor.apps.wayne.edu/docs/upgrading.html#what-to-do-3)
 
 1. Change the constraint in `composer.json` to `"waynestate/proctor": "^0.15"` and run `composer update waynestate/proctor`.
 2. If `mysql56-ci` warns, include Preflight's `mysql56-migrate` component (Preflight 0.6.0 or later). The job runs `php artisan migrate` against a real MySQL 5.6.51 on an `amd64` runner:
@@ -79,7 +97,7 @@ Released 2026-11-10. A minor release. Under 0.x, `^0.14` does not pick it up: ch
 
 Released 2026-11-10. A patch: `^0.14` picks it up with `composer update waynestate/proctor`. Nothing changes for apps: a run that passed on 0.14.1 passes the same way.
 
-### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-3)
+### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-4)
 
 - None.
 
@@ -87,7 +105,7 @@ Released 2026-11-10. A patch: `^0.14` picks it up with `composer update waynesta
 
 - Two of PROCTOR's own scripts that run only in CI (`scripts/creed-copy-refresh.sh` and `scripts/wayneui-copies-scan.sh`) carry the `# proctor-ignore script-pair:` marker, so PROCTOR's self-check shows them as info notes instead of missing twins.
 
-### What to do [#](https://proctor.apps.wayne.edu/docs/upgrading.html#what-to-do-3)
+### What to do [#](https://proctor.apps.wayne.edu/docs/upgrading.html#what-to-do-4)
 
 - Nothing.
 
@@ -95,7 +113,7 @@ Released 2026-11-10. A patch: `^0.14` picks it up with `composer update waynesta
 
 Released 2026-11-10. A patch: `^0.14` picks it up with `composer update waynestate/proctor`. Nothing breaks, and a run that passed on 0.14.0 still passes, usually with fewer warnings.
 
-### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-4)
+### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-5)
 
 - None.
 
@@ -106,7 +124,7 @@ Released 2026-11-10. A patch: `^0.14` picks it up with `composer update waynesta
 - Info notes are visible in the report and not counted, so a check whose only findings are notes still passes.
 - `script-pair` walks only the app's `scripts/` folder instead of the whole tree, so it stays fast on large apps; its findings are unchanged.
 
-### What to do [#](https://proctor.apps.wayne.edu/docs/upgrading.html#what-to-do-4)
+### What to do [#](https://proctor.apps.wayne.edu/docs/upgrading.html#what-to-do-5)
 
 - Nothing for Squire's scripts. For a script of your own that is single-OS on purpose, add the marker line with the reason; for a developer script, add its twin as before.
 
@@ -114,7 +132,7 @@ Released 2026-11-10. A patch: `^0.14` picks it up with `composer update waynesta
 
 Released 2026-11-10. This is a pre-1.0 minor: consumers that pin `^0.13` stay on 0.13.x until they move their constraint to `^0.14`. Nothing breaks: the one new check, `script-pair`, only warns and is not in the deploy gate, so a run that passed on 0.13.0 still passes. The proctor now checks that every candidate brought both pencils: a developer script in `scripts/` ships as a `.ps1` and `.sh` pair, as CREED's every-os rule asks.
 
-### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-5)
+### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-6)
 
 - None. The new findings are warnings, and a warning never changes the exit code.
 
@@ -141,7 +159,7 @@ Released 2026-11-10. This is a pre-1.0 minor: consumers that pin `^0.13` stay on
 
 Released 2026-11-10. This is a pre-1.0 minor: consumers that pin `^0.12` stay on 0.12.x until they move their constraint to `^0.13`. Nothing breaks: `composer-cooldown` still only warns and is not in the deploy gate, so a run that passed on 0.12.0 still passes. The proctor now reads the cooldown from the rule book instead of reciting it from memory: the period and the exemptions come from the CREED policy, and an app that waits less than the policy asks gets a warning.
 
-### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-6)
+### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-7)
 
 - None. The new finding is a warning, and a warning never changes the exit code.
 
@@ -169,7 +187,7 @@ Released 2026-11-10. This is a pre-1.0 minor: consumers that pin `^0.12` stay on
 
 Released 2026-11-10. This is a pre-1.0 minor: consumers that pin `^0.11` stay on 0.11.x until they move their constraint to `^0.12`. Nothing breaks: the two new checks only warn and are not in the deploy gate, so a run that passed on 0.11.2 still passes and a deploy that went ahead still goes ahead. Expect new warnings when your composer.json sets no release cooldown, when git does not track your `composer.lock`, or when a CI component other than Preflight's is included at a moving ref. Two new rules for the hall: wait three days before trusting a fresh package, and hand in the lock you actually wrote.
 
-### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-7)
+### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-8)
 
 - None. The new findings are warnings, and a warning never changes the exit code.
 
@@ -212,7 +230,7 @@ The new checks only warn, never fail, and are not in the deploy gate:
 
 Released 2026-11-09. A patch: `^0.11` picks it up with `composer update waynestate/proctor`. No check, option, verdict or exit code changes: this release carries the docs, the version mentions, PROCTOR's own CI on Composer 2.11.1 and Preflight 0.5.0, and the deploy kit on Squire 0.10.2. Same exam, freshly photocopied.
 
-### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-8)
+### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-9)
 
 - None.
 
@@ -228,7 +246,7 @@ Released 2026-11-09. A patch: `^0.11` picks it up with `composer update waynesta
 
 Released 2026-11-09. A patch: `^0.11` picks it up with `composer update waynestate/proctor`. `proctor check` and `proctor gate` run exactly as on 0.11.0, so every verdict and exit code stays the same. The one change is inside ADVISOR: its in-process `proctor_check` no longer opens an env file git does not list. The proctor still walks the hall, but no longer reads a paper that was never handed in.
 
-### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-9)
+### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-10)
 
 - None.
 
@@ -257,7 +275,7 @@ Released 2026-11-09. A patch: `^0.11` picks it up with `composer update waynesta
 
 Released 2026-11-09. This is a pre-1.0 minor: consumers that pin `^0.10` stay on 0.10.x until they move their constraint to `^0.11`. Nothing breaks: the one new check only warns and is not in the deploy gate, and the new `--record` option changes nothing until you pass it, so a run that passed on 0.10.0 still passes and a deploy that went ahead still goes ahead. Expect a new warning when `.gitattributes` does not pin your server files to LF.
 
-### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-10)
+### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-11)
 
 - None. The new check's findings are warnings, and a warning never changes the exit code.
 
@@ -296,7 +314,7 @@ The new check only warns, never fails, and is not in the deploy gate:
 
 Released 2026-11-09. This is a pre-1.0 minor: consumers that pin `^0.9` stay on 0.9.x until they move their constraint to `^0.10`. Everything new only warns: nine new checks and two new rules on existing checks, none of them in the deploy gate, so a run that passed on 0.9.0 still passes and a deploy that went ahead still goes ahead. Expect new warnings in the report.
 
-### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-11)
+### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-12)
 
 - None. Every new finding is a warning, and a warning never changes the exit code.
 
@@ -343,7 +361,7 @@ Two existing checks gain a rule, and both only warn: `crlf-deploy-script` warns 
 
 Released 2026-11-08. This is a pre-1.0 minor: consumers that pin `^0.8` stay on 0.8.x until they move their constraint to `^0.9`. Most of what is new reports without blocking (the `dev-only-packages`, `case-clash` and `override-approver` checks are not in the deploy gate, and the gate stages from CREED change nothing until CREED ships a stage), but two changes can turn a passing run into a failing one.
 
-### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-12)
+### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-13)
 
 - An override may run at most 90 days past today (CREED `rules.override_max_days`). A longer one fails the overrides check (`proctor/overrides/too-long`) and is not applied, and the overrides check is in the deploy gate, so a deploy that leaned on a long override now stops. Shorten the `expires` date to 90 days or less and renew it when it runs out.
 - `proctor check` fails on three new findings: `dev-only-packages` when Laravel Boost or Debugbar sits in `require` (they install in production and expose the app's internals; move them to `require-dev`), `case-clash` when two paths differ only by letter case (they collide on macOS and Windows checkouts; rename one), and `override-approver` when CREED sets `rules.override_self_approval` to `fail` and an override's `approved_by` names someone who wrote it. None of the three is in the deploy gate.
@@ -375,7 +393,7 @@ Released 2026-11-08. This is a pre-1.0 minor: consumers that pin `^0.8` stay on 
 
 Released 2026-11-08. This is a pre-1.0 minor: consumers that pin `^0.7` stay on 0.7.x until they move their constraint to `^0.8`. Most of what is new is additive or a warning (the `mysql-eol` check, the `X-Sesame-Assertion` read in `raw-identity-header`, the ADVISOR module, release tags accepted by `preflight-pinned`), but one change can turn a passing run into a failing one.
 
-### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-13)
+### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-14)
 
 - `crlf-deploy-script` fails an app whose deploy script has Windows line endings (CRLF): the top-level `build.sh` and `release.sh`, and any `.sh` under `deployments/`, `deploy_scripts/`, `deploy/` or `scripts/`. Bash on Linux reads the carriage return as part of each command, so such a script was already broken on the host; PROCTOR now says so before the deploy does. Convert the file to LF and add `*.sh text eol=lf` to `.gitattributes`.
 
@@ -405,7 +423,7 @@ Released 2026-11-08. This is a pre-1.0 minor: consumers that pin `^0.7` stay on 
 
 Released 2026-11-07. This is a pre-1.0 minor: consumers that pin `^0.6` stay on 0.6.x until they move their constraint to `^0.7`. Most of what is new is additive (`proctor gate`, the deploy gate, and the `raw-identity-header`, `env-outside-config`, `app-key`, `served-folder`, `laravel-php` and `laravel-eol` checks), but one change can turn a passing run into a failing one.
 
-### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-14)
+### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-15)
 
 - `node-eol` fails an app that pins an end-of-life Node line (Node 20 or older under the bundled policy, as of 2026-04-30). Node 20 is past the grace window, so it fails as `eol_grace_expired`, which no override softens: move to Node 22 or 24.
 
@@ -429,7 +447,7 @@ Released 2026-11-07. This is a pre-1.0 minor: consumers that pin `^0.6` stay on 
 
 Released 2026-11-05. This is a pre-1.0 minor: consumers that pin `^0.5` stay on 0.5.x until they move their constraint to `^0.6`. Most of what is new is additive, but three changes can turn a passing run into a failing one.
 
-### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-15)
+### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-16)
 
 - `composer-audit` fails when the composer executable is not on PATH or the app has no composer.lock (rule id `proctor/composer-audit/skipped`, message starting with `not audited:`). An app whose audit could not run used to pass with an info line; it now exits non-zero until Composer is installed, the lock is committed, or an active `composer-audit` override with a reason and an expiry downgrades the fail to a warning.
 - `composer-audit` fails each ignore entry in composer.json that no active `composer-audit` override backs (rule id `proctor/composer-audit/unbacked-ignore`). An app that silences audit results in its own composer.json used to earn only a count warning; it now exits non-zero until every entry is backed by an active override whose `advisory` field names the entry's advisory id, whose `package` field matches the entry's package, or that carries no scope at all. Steps: record one such entry per unbacked ignore in policy-overrides.json with a reason and an expiry, keep the composer.json ignore until the override expires, then remove the ignore entry.
@@ -463,7 +481,7 @@ Released 2026-11-05. This is a pre-1.0 minor: consumers that pin `^0.5` stay on 
 
 Released 2026-11-03. This is a pre-1.0 minor: consumers that pin `^0.4` stay on 0.4.x until they move their constraint to `^0.5`. Most of what is new warns and never fails, but one check can now turn a passing run into a failing one.
 
-### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-16)
+### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-17)
 
 - `composer-audit` fails when `composer audit` runs but its output is not parseable JSON (rule id `proctor/composer-audit/could-not-run`, message starting `not audited:`). A run that audited nothing used to pass quietly; it now exits non-zero, so an app whose audit cannot run will go red until the audit is fixed.
 - Consumers that pin `^0.4` stay on 0.4.x until they move their constraint to `^0.5`.
@@ -496,7 +514,7 @@ Released 2026-11-03. This is a pre-1.0 minor: consumers that pin `^0.4` stay on 
 
 Released 2026-11-03. This is a pre-1.0 minor: consumers that pin `^0.3` stay on 0.3.x until they move their constraint to `^0.4`. The new checks warn and never fail.
 
-### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-17)
+### Breaking [#](https://proctor.apps.wayne.edu/docs/upgrading.html#breaking-18)
 
 - Consumers that pin `^0.3` stay on 0.3.x until they move their constraint to `^0.4`. That constraint move is the only break in this release.
 
