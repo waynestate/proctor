@@ -20,8 +20,8 @@ use Waynestate\Proctor\Policy\PolicyResolver;
  */
 final class GitattributesEolCheckTest extends TestCase
 {
-    /** The four lines that pin every kind the check knows. */
-    private const COMPLETE = "*.sh text eol=lf\n*.conf text eol=lf\nDockerfile text eol=lf\n*.Dockerfile text eol=lf\n";
+    /** The whole-line default plus the four lines that pin every kind the check knows. */
+    private const COMPLETE = "* text=auto eol=lf\n*.sh text eol=lf\n*.conf text eol=lf\nDockerfile text eol=lf\n*.Dockerfile text eol=lf\n";
 
     private const PASS = 'Shell scripts, .conf files and Dockerfiles are pinned to LF line endings.';
 
@@ -45,7 +45,7 @@ final class GitattributesEolCheckTest extends TestCase
 
         $findings = $this->runCheck();
 
-        self::assertCount(1, $findings);
+        self::assertCount(2, $findings);
         self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
         self::assertSame('proctor/gitattributes-eol/not-pinned', $findings[0]->ruleId);
         self::assertSame('.gitattributes', $findings[0]->path);
@@ -54,6 +54,9 @@ final class GitattributesEolCheckTest extends TestCase
             'There is no .gitattributes to pin *.sh (scripts/release.sh), *.conf (docker/nginx.conf) and Dockerfile (Dockerfile) to LF, so a Windows checkout can write CRLF into files a Linux container reads; add "*.sh text eol=lf", "*.conf text eol=lf", "Dockerfile text eol=lf" and "*.Dockerfile text eol=lf" to a new .gitattributes, then run "git add --renormalize ." and commit',
             $findings[0]->message,
         );
+        self::assertSame('proctor/gitattributes-eol/no-default', $findings[1]->ruleId);
+        self::assertSame('.gitattributes', $findings[1]->path);
+        self::assertSame(1, $findings[1]->line);
     }
 
     public function testACompleteGitattributesPasses(): void
@@ -86,6 +89,87 @@ final class GitattributesEolCheckTest extends TestCase
         self::assertSame(self::PASS, $findings[0]->message);
     }
 
+    public function testAMissingGitattributesWarnsForTheMissingDefault(): void
+    {
+        $this->writeFile('public/index.php', "<?php\n");
+
+        $findings = $this->runCheck();
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertSame('proctor/gitattributes-eol/no-default', $findings[0]->ruleId);
+        self::assertSame('.gitattributes', $findings[0]->path);
+        self::assertSame(1, $findings[0]->line);
+        self::assertSame(
+            'Add `* text=auto eol=lf` as the first line of .gitattributes (CREED every-os), then run git add --renormalize .',
+            $findings[0]->message,
+        );
+    }
+
+    public function testAGitattributesWithoutTheDefaultLineWarns(): void
+    {
+        $this->writeFile('.gitattributes', "*.sh text eol=lf\n");
+        $this->writeFile('build.sh', "#!/bin/sh\n");
+
+        $findings = $this->runCheck();
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
+        self::assertSame('proctor/gitattributes-eol/no-default', $findings[0]->ruleId);
+        self::assertSame('.gitattributes', $findings[0]->path);
+        self::assertSame(1, $findings[0]->line);
+        self::assertSame(
+            'Add `* text=auto eol=lf` as the first line of .gitattributes (CREED every-os), then run git add --renormalize .',
+            $findings[0]->message,
+        );
+    }
+
+    public function testTheDefaultLineInEitherOrderDoesNotWarn(): void
+    {
+        $this->writeFile('.gitattributes', "* eol=lf text=auto\n");
+        $this->writeFile('build.sh', "#!/bin/sh\n");
+
+        $findings = $this->runCheck();
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+    }
+
+    public function testTheDefaultLineWithAnExtraAttributeDoesNotWarn(): void
+    {
+        $this->writeFile('.gitattributes', "* text=auto eol=lf export-ignore\n");
+        $this->writeFile('build.sh', "#!/bin/sh\n");
+
+        $findings = $this->runCheck();
+
+        self::assertCount(1, $findings);
+        self::assertSame(Finding::STATUS_PASS, $findings[0]->status);
+    }
+
+    public function testACommentedOutDefaultLineDoesNotCount(): void
+    {
+        $this->writeFile('.gitattributes', "# * text=auto eol=lf\n*.sh text eol=lf\n");
+        $this->writeFile('build.sh', "#!/bin/sh\n");
+
+        $findings = $this->runCheck();
+
+        self::assertCount(1, $findings);
+        self::assertSame('proctor/gitattributes-eol/no-default', $findings[0]->ruleId);
+    }
+
+    public function testANestedGitattributesWithTheDefaultLineDoesNotSatisfyTheRoot(): void
+    {
+        $this->writeFile('.gitattributes', "*.sh text eol=lf\n");
+        $this->writeFile('deploy/.gitattributes', "* text=auto eol=lf\n");
+        $this->writeFile('build.sh', "#!/bin/sh\n");
+        $this->writeFile('deploy/vhost.conf', "<VirtualHost *:80>\n");
+
+        $findings = $this->runCheck();
+
+        self::assertCount(1, $findings);
+        self::assertSame('proctor/gitattributes-eol/no-default', $findings[0]->ruleId);
+    }
+
     public function testAPartialGitattributesMissingConfWarnsWithTheOneLine(): void
     {
         $this->writeFile('.gitattributes', "*.sh text eol=lf\nDockerfile text eol=lf\n*.Dockerfile text eol=lf\n");
@@ -95,13 +179,16 @@ final class GitattributesEolCheckTest extends TestCase
 
         $findings = $this->runCheck();
 
-        self::assertCount(1, $findings);
+        self::assertCount(2, $findings);
         self::assertSame(Finding::STATUS_WARNING, $findings[0]->status);
         self::assertSame('proctor/gitattributes-eol/not-pinned', $findings[0]->ruleId);
         self::assertSame(
             '.gitattributes does not pin *.conf (deploy/vhost.conf) to LF, so a Windows checkout can write CRLF into files a Linux container reads; add "*.conf text eol=lf" at the end of .gitattributes, then run "git add --renormalize ." and commit',
             $findings[0]->message,
         );
+        self::assertSame('proctor/gitattributes-eol/no-default', $findings[1]->ruleId);
+        self::assertSame('.gitattributes', $findings[1]->path);
+        self::assertSame(1, $findings[1]->line);
     }
 
     public function testACrlfDockerfileUnderDeployWarnsOnItsFirstLine(): void
@@ -154,9 +241,10 @@ final class GitattributesEolCheckTest extends TestCase
 
         $findings = $this->runCheck();
 
-        self::assertCount(2, $findings);
+        self::assertCount(3, $findings);
         self::assertSame('proctor/gitattributes-eol/not-pinned', $findings[0]->ruleId);
         self::assertSame('proctor/gitattributes-eol/crlf', $findings[1]->ruleId);
+        self::assertSame('proctor/gitattributes-eol/no-default', $findings[2]->ruleId);
     }
 
     public function testACrlfShellScriptUnderDeployIsLeftToCrlfDeployScript(): void
@@ -237,7 +325,10 @@ final class GitattributesEolCheckTest extends TestCase
         $this->writeFile('.gitattributes', "*.sh eol=lf\n");
         $this->writeFile('build.sh', "#!/bin/sh\n");
 
-        self::assertSame(Finding::STATUS_PASS, $this->runCheck()[0]->status);
+        $findings = $this->runCheck();
+
+        self::assertCount(1, $findings);
+        self::assertSame('proctor/gitattributes-eol/no-default', $findings[0]->ruleId);
     }
 
     public function testTheOldCrlfInputAttributeIsPinned(): void
@@ -245,7 +336,10 @@ final class GitattributesEolCheckTest extends TestCase
         $this->writeFile('.gitattributes', "*.sh crlf=input\n");
         $this->writeFile('build.sh', "#!/bin/sh\n");
 
-        self::assertSame(Finding::STATUS_PASS, $this->runCheck()[0]->status);
+        $findings = $this->runCheck();
+
+        self::assertCount(1, $findings);
+        self::assertSame('proctor/gitattributes-eol/no-default', $findings[0]->ruleId);
     }
 
     public function testACommentedOutLineDoesNotPin(): void
@@ -264,8 +358,11 @@ final class GitattributesEolCheckTest extends TestCase
 
         $findings = $this->runCheck();
 
-        self::assertCount(1, $findings);
+        self::assertCount(2, $findings);
         self::assertStringStartsWith('.gitattributes does not pin *.conf (docker/nginx.conf) to LF', $findings[0]->message);
+        self::assertSame('proctor/gitattributes-eol/no-default', $findings[1]->ruleId);
+        self::assertSame('.gitattributes', $findings[1]->path);
+        self::assertSame(1, $findings[1]->line);
     }
 
     public function testASingleStarDoesNotCrossAFolder(): void
@@ -284,7 +381,10 @@ final class GitattributesEolCheckTest extends TestCase
         $this->writeFile('deploy/apache/sites/app.conf', "<VirtualHost *:80>\n");
         $this->writeFile('docker/app/Dockerfile', "FROM php:8.4\n");
 
-        self::assertSame(Finding::STATUS_PASS, $this->runCheck()[0]->status);
+        $findings = $this->runCheck();
+
+        self::assertCount(1, $findings);
+        self::assertSame('proctor/gitattributes-eol/no-default', $findings[0]->ruleId);
     }
 
     public function testACharacterClassAndAQuestionMarkMatch(): void
@@ -294,7 +394,10 @@ final class GitattributesEolCheckTest extends TestCase
         $this->writeFile('deploy/vhost.conf', "<VirtualHost *:80>\n");
         $this->writeFile('Dockerfile', "FROM php:8.4\n");
 
-        self::assertSame(Finding::STATUS_PASS, $this->runCheck()[0]->status);
+        $findings = $this->runCheck();
+
+        self::assertCount(1, $findings);
+        self::assertSame('proctor/gitattributes-eol/no-default', $findings[0]->ruleId);
     }
 
     public function testADeeperGitattributesPinsItsOwnFolder(): void
@@ -304,7 +407,10 @@ final class GitattributesEolCheckTest extends TestCase
         $this->writeFile('deploy/.gitattributes', "*.conf text eol=lf\n");
         $this->writeFile('deploy/vhost.conf', "<VirtualHost *:80>\n");
 
-        self::assertSame(Finding::STATUS_PASS, $this->runCheck()[0]->status);
+        $findings = $this->runCheck();
+
+        self::assertCount(1, $findings);
+        self::assertSame('proctor/gitattributes-eol/no-default', $findings[0]->ruleId);
     }
 
     public function testADeeperGitattributesOverridesTheRoot(): void
@@ -328,6 +434,7 @@ final class GitattributesEolCheckTest extends TestCase
 
     public function testVendorNodeModulesAndTestsAreSkipped(): void
     {
+        $this->writeFile('.gitattributes', "* text=auto eol=lf\n");
         $this->writeFile('vendor/x/Dockerfile', "FROM php:8.4\r\n");
         $this->writeFile('node_modules/x/build.sh', "#!/bin/sh\r\n");
         $this->writeFile('tests/fixtures/deploy/vhost.conf', "server {}\r\n");
@@ -342,6 +449,7 @@ final class GitattributesEolCheckTest extends TestCase
 
     public function testAnAppWithNothingToPinPasses(): void
     {
+        $this->writeFile('.gitattributes', "* text=auto eol=lf\n");
         $this->writeFile('public/index.php', "<?php\n");
         $this->writeFile('deploy/Dockerfile.dockerignore', "vendor\r\n");
 

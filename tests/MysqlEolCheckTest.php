@@ -198,6 +198,8 @@ final class MysqlEolCheckTest extends ProctorTestCase
         file_put_contents($dir . '/composer.json', "{\n    \"config\": {\n        \"platform\": {\n            \"php\": \"8.4.0\"\n        },\n        \"policy\": {\n            \"cooldown\": {\n                \"period\": \"3 days\",\n                \"ignore\": [\"waynestate/*\"]\n            }\n        }\n    },\n    \"require\": {\n        \"php\": \"^8.4\",\n        \"symfony/console\": \"^7.1\"\n    }\n}\n");
         file_put_contents($dir . '/composer.lock', "{\n    \"packages\": [],\n    \"packages-dev\": [],\n    \"content-hash\": \"fixture\"\n}\n");
         file_put_contents($dir . '/.gitlab-ci.yml', "# composer ci is the contract: the checks are defined there, and this pipeline only wraps them.\ninclude:\n  - component: \$CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.4.0\ncomposer-ci:\n  image: composer:2.10.3\n  script:\n    - composer install --no-interaction --no-progress --prefer-dist\n    - composer ci\n");
+        // The root default line keeps gitattributes-eol quiet.
+        file_put_contents($dir . '/.gitattributes', "* text=auto eol=lf\n");
 
         // A stub composer on PATH answers the audit with a clean result and
         // the version probe with a current version, so composer-audit and
@@ -220,7 +222,7 @@ final class MysqlEolCheckTest extends ProctorTestCase
 
         unlink($composer);
         rmdir($bin);
-        foreach (['docker-compose.yml', 'composer.json', 'composer.lock', '.gitlab-ci.yml'] as $file) {
+        foreach (['docker-compose.yml', 'composer.json', 'composer.lock', '.gitlab-ci.yml', '.gitattributes'] as $file) {
             unlink($dir . '/' . $file);
         }
         rmdir($dir);

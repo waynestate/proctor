@@ -35,6 +35,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/gitattributes-eol',
         'proctor/gitattributes-eol/not-pinned',
         'proctor/gitattributes-eol/crlf',
+        'proctor/gitattributes-eol/no-default',
         'proctor/script-pair',
         'proctor/script-pair/missing-ps1',
         'proctor/script-pair/missing-sh',

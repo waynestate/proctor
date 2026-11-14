@@ -31,6 +31,15 @@ use SplFileInfo;
  * on disk. One warning per file, on the line of its first carriage return.
  * Shell scripts there are crlf-deploy-script's job, and it fails on them.
  *
+ * proctor/gitattributes-eol/no-default: the app root has no .gitattributes,
+ * or its .gitattributes has no line whose pattern is exactly * with both
+ * text=auto and eol=lf, in either order (other attributes on the line are
+ * allowed; # comments and blank lines do not count). That whole line is the
+ * floor CREED's every-os chapter sets for every repo, and without it a
+ * Windows checkout rewrites whatever the specific pins miss. Only the root
+ * file counts; a nested .gitattributes never satisfies it. One warning, on
+ * .gitattributes.
+ *
  * Skipped at any depth: vendor/, node_modules/, .git/ and tests/.
  *
  * Every byte on its own line, and every line ending in the same place: the
@@ -66,6 +75,8 @@ final class GitattributesEolCheck implements CheckInterface
         $appPath = rtrim($context->appPath, '/\\');
         [$files, $attributeFiles] = $this->walk($appPath);
 
+        $hasDefault = $this->rootHasDefaultLine($appPath);
+
         $byKind = [];
         foreach ($files as $relativePath) {
             $kind = $this->kindOf(basename($relativePath));
@@ -74,6 +85,9 @@ final class GitattributesEolCheck implements CheckInterface
             }
         }
         if ([] === $byKind) {
+            if (!$hasDefault) {
+                return [$this->noDefault()];
+            }
             return [new Finding($this->id(), Finding::STATUS_PASS, 'No shell script, .conf file or Dockerfile to pin to LF.')];
         }
 
@@ -113,6 +127,10 @@ final class GitattributesEolCheck implements CheckInterface
             }
         }
 
+        if (!$hasDefault) {
+            $findings[] = $this->noDefault();
+        }
+
         if ([] === $findings) {
             $findings[] = new Finding($this->id(), Finding::STATUS_PASS, 'Shell scripts, .conf files and Dockerfiles are pinned to LF line endings.');
         }
@@ -148,6 +166,45 @@ final class GitattributesEolCheck implements CheckInterface
         ));
 
         return [$files, $attributeFiles];
+    }
+
+    /**
+     * Whether the app root's .gitattributes carries the whole-line default
+     * CREED's every-os chapter requires: a line whose pattern is exactly *
+     * and whose attributes include both text=auto and eol=lf, in either
+     * order. Other attributes on the line are allowed; # comments and blank
+     * lines do not count, and a nested .gitattributes never does.
+     */
+    private function rootHasDefaultLine(string $appPath): bool
+    {
+        $file = $appPath . '/.gitattributes';
+        if (!is_file($file)) {
+            return false;
+        }
+        $contents = file_get_contents($file);
+        if (false === $contents) {
+            return false;
+        }
+        if (str_starts_with($contents, "\xEF\xBB\xBF")) {
+            $contents = substr($contents, 3);
+        }
+
+        foreach (explode("\n", $contents) as $line) {
+            $line = ltrim(rtrim($line, "\r"), " \t");
+            if ('' === $line || str_starts_with($line, '#')) {
+                continue;
+            }
+            [$pattern, $rest] = $this->splitPattern($line);
+            if ('*' !== $pattern) {
+                continue;
+            }
+            $tokens = preg_split('/[ \t]+/', trim($rest), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+            if (in_array('text=auto', $tokens, true) && in_array('eol=lf', $tokens, true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -469,6 +526,24 @@ final class GitattributesEolCheck implements CheckInterface
             $line,
             null,
             'crlf',
+        );
+    }
+
+    /**
+     * A warning that the root .gitattributes lacks the whole-line default
+     * CREED's every-os chapter requires, naming the line to add and the
+     * command that rewrites the working tree to match.
+     */
+    private function noDefault(): Finding
+    {
+        return new Finding(
+            $this->id(),
+            Finding::STATUS_WARNING,
+            'Add `* text=auto eol=lf` as the first line of .gitattributes (CREED every-os), then run ' . self::RENORMALIZE,
+            '.gitattributes',
+            1,
+            null,
+            'no-default',
         );
     }
 

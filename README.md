@@ -259,6 +259,7 @@ The full set, grouped by check:
 | `gitattributes-eol` | `proctor/gitattributes-eol` |
 | `gitattributes-eol` | `proctor/gitattributes-eol/not-pinned` |
 | `gitattributes-eol` | `proctor/gitattributes-eol/crlf` |
+| `gitattributes-eol` | `proctor/gitattributes-eol/no-default` |
 | `script-pair` | `proctor/script-pair` |
 | `script-pair` | `proctor/script-pair/missing-ps1` |
 | `script-pair` | `proctor/script-pair/missing-sh` |
