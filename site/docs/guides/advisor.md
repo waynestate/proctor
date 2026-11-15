@@ -79,7 +79,7 @@ Some checks cannot run inside ADVISOR's sandbox, so `proctor_check` leaves them 
 | `lock-tracked` | `starts a subprocess` | git, to see whether composer.lock is committed |
 | `wayneui-forked-views` | `starts a subprocess` | `git ls-files` |
 | `wayneui-outdated` | `starts a subprocess` | `composer show` (which asks Packagist) and git |
-| `node-eol`, `env-outside-config`, `raw-identity-header`, `robots-txt`, `served-folder`, `world-writable` | `starts a subprocess` | `git ls-files`, to grade only committed files |
+| `node-eol`, `raw-oci`, `env-outside-config`, `raw-identity-header`, `robots-txt`, `served-folder`, `world-writable` | `starts a subprocess` | `git ls-files`, to grade only committed files |
 | `override-approver` | `starts a subprocess` | `git blame`, to see who wrote each override |
 | `app-key`, `vite-secrets` | `reads .env` | reads committed env files for an `APP_KEY`, or for `VITE_` variables that look like secrets |
 
