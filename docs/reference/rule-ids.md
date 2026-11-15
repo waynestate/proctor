@@ -127,6 +127,7 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `composer-version` | `proctor/composer-version/could-not-determine` |
 | `repo-url-credentials` | `proctor/repo-url-credentials` |
 | `instant-client-committed` | `proctor/instant-client-committed` |
+| `raw-oci` | `proctor/raw-oci` |
 | `env-outside-config` | `proctor/env-outside-config` |
 | `env-outside-config` | `proctor/env-outside-config/suppressed` |
 | `raw-identity-header` | `proctor/raw-identity-header` |
