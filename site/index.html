@@ -684,7 +684,7 @@ RESULT: fail (1 failures, 1 warnings)</code></pre>
         <article class="hall" data-reveal>
           <p class="hall__door"><span class="hall__room">Hall G</span> GitLab, through Preflight</p>
 <pre class="hall__pre"><code>include:
-  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.8.0</code></pre>
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.9.0</code></pre>
           <p class="hall__note">The default command is <code>vendor/bin/proctor check --format=codequality</code>, so findings show on the merge request. It clones the full history, so <code>override-approver</code> can read git blame. With PROCTOR 0.11.0 or later it also adds <code>--record</code> and keeps <code>proctor.json</code>, the report Rollcall reads. We strongly recommend a git.wayne.edu instance runner.</p>
         </article>
         <article class="hall" data-reveal>
