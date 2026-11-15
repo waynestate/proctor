@@ -1,13 +1,13 @@
 ---
 title: App checks
-description: The checks that read an app's own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a missing or open robots.txt, secret-looking VITE_ variables, debug files in public/, server files not pinned to LF line endings, a developer script missing its twin and chmod 777.
+description: The checks that read an app's own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, direct Oracle calls, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a missing or open robots.txt, secret-looking VITE_ variables, debug files in public/, server files not pinned to LF line endings, a developer script missing its twin and chmod 777.
 ---
 
 # App checks
 
-This page covers the nineteen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a robots.txt that is missing or lets every crawler in, secret-looking `VITE_` variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, shell scripts, server config and Dockerfiles that `.gitattributes` does not pin to LF, developer scripts in `scripts/` missing their twin, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
+This page covers the twenty PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, direct Oracle calls, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a robots.txt that is missing or lets every crawler in, secret-looking `VITE_` variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, shell scripts, server config and Dockerfiles that `.gitattributes` does not pin to LF, developer scripts in `scripts/` missing their twin, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
 
-`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other sixteen warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL, and a new check must not turn a passing app into a failing one.
+`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other seventeen warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL, and a new check must not turn a passing app into a failing one.
 
 ## node-eol
 
@@ -114,6 +114,22 @@ Fix by taking the user from SESAME (the gateway driver) and reading the claims i
 | Check | Rule id |
 | --- | --- |
 | `raw-identity-header` | `proctor/raw-identity-header` |
+
+## raw-oci
+
+`raw-oci` warns, never fails, when app code talks to Oracle directly instead of reading through TELLER's named queries. TELLER is the stack's read-only Oracle layer: named queries with bound values, a read-only transaction and row caps, so one ad-hoc query cannot read more than the app should ever see.
+
+It runs on every app and scans every `*.php` file except `vendor/`, `node_modules/`, `storage/`, `tests/` and `.git/` at any depth.
+
+PHP is read on the syntax tree with names resolved, so an `oci_parse` in a comment or a log string, and a method call named `oci_parse` (`$db->oci_parse()`), are not flagged. Flagged calls: `oci_connect`, `oci_pconnect`, `oci_new_connect`, `ocilogon`, `ociplogon`, `ocinlogon`, `oci_parse` and `ociparse`, matched case-insensitively after namespace fallback to the global function, and `new PDO(...)` / `new \PDO(...)` whose first argument is a string literal starting with `oci:`. A file that does not parse is skipped here; the portability check reports it.
+
+Blade templates (`*.blade.php`) are skipped: no Oracle calls belong in a template.
+
+Fix by moving the read into a TELLER named query.
+
+| Check | Rule id |
+| --- | --- |
+| `raw-oci` | `proctor/raw-oci` |
 
 ## app-key
 

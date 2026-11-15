@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>App checks | PROCTOR docs</title>
-<meta name="description" content="The checks that read an app&#039;s own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a missing or open robots.txt, secret-looking VITE_ variables, debug files in public/, server files not pinned to LF line endings, a developer script missing its twin and chmod 777.">
+<meta name="description" content="The checks that read an app&#039;s own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, direct Oracle calls, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a missing or open robots.txt, secret-looking VITE_ variables, debug files in public/, server files not pinned to LF line endings, a developer script missing its twin and chmod 777.">
 <meta name="docs-version" content="0.16.1">
 <link rel="stylesheet" href="../../assets/wayne-ui/wayne-ui.css">
 <link rel="stylesheet" href="../../assets/docs.css">
@@ -41,8 +41,8 @@
   <div class="docs-content">
     <main id="main">
       <article class="docs-article"><h1 id="app-checks">App <span class="docs-heading-tail"><span>checks</span><a class="docs-heading-link" aria-label="Link to this section" href="#app-checks">#</a></span></h1>
-<p>This page covers the nineteen PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, <code>env()</code> calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a robots.txt that is missing or lets every crawler in, secret-looking <code>VITE_</code> variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from <code>public/</code>, deploy scripts with Windows line endings, shell scripts, server config and Dockerfiles that <code>.gitattributes</code> does not pin to LF, developer scripts in <code>scripts/</code> missing their twin, paths that differ only by letter case, and <code>chmod 777</code>. Each one holds a CREED practice. Run <code>vendor/bin/proctor check</code> against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.</p>
-<p><code>node-eol</code>, <code>crlf-deploy-script</code> and <code>case-clash</code> can fail a run. The other sixteen warn, never fail: <code>mysql-eol</code> warns until Citadel's shared database server offers a supported MySQL, and a new check must not turn a passing app into a failing one.</p>
+<p>This page covers the twenty PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, direct Oracle calls, <code>env()</code> calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a robots.txt that is missing or lets every crawler in, secret-looking <code>VITE_</code> variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from <code>public/</code>, deploy scripts with Windows line endings, shell scripts, server config and Dockerfiles that <code>.gitattributes</code> does not pin to LF, developer scripts in <code>scripts/</code> missing their twin, paths that differ only by letter case, and <code>chmod 777</code>. Each one holds a CREED practice. Run <code>vendor/bin/proctor check</code> against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.</p>
+<p><code>node-eol</code>, <code>crlf-deploy-script</code> and <code>case-clash</code> can fail a run. The other seventeen warn, never fail: <code>mysql-eol</code> warns until Citadel's shared database server offers a supported MySQL, and a new check must not turn a passing app into a failing one.</p>
 <h2 id="node-eol"><span class="docs-heading-tail"><span>node-eol</span><a class="docs-heading-link" aria-label="Link to this section" href="#node-eol">#</a></span></h2>
 <p><code>node-eol</code> grades every Node version the repository pins against the policy's <code>node</code> lines as of <code>--today</code>. The sources:</p>
 <ul>
@@ -218,6 +218,26 @@
 <tr>
 <td><code>raw-identity-header</code></td>
 <td><code>proctor/raw-identity-header</code></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="raw-oci"><span class="docs-heading-tail"><span>raw-oci</span><a class="docs-heading-link" aria-label="Link to this section" href="#raw-oci">#</a></span></h2>
+<p><code>raw-oci</code> warns, never fails, when app code talks to Oracle directly instead of reading through TELLER's named queries. TELLER is the stack's read-only Oracle layer: named queries with bound values, a read-only transaction and row caps, so one ad-hoc query cannot read more than the app should ever see.</p>
+<p>It runs on every app and scans every <code>*.php</code> file except <code>vendor/</code>, <code>node_modules/</code>, <code>storage/</code>, <code>tests/</code> and <code>.git/</code> at any depth.</p>
+<p>PHP is read on the syntax tree with names resolved, so an <code>oci_parse</code> in a comment or a log string, and a method call named <code>oci_parse</code> (<code>$db-&gt;oci_parse()</code>), are not flagged. Flagged calls: <code>oci_connect</code>, <code>oci_pconnect</code>, <code>oci_new_connect</code>, <code>ocilogon</code>, <code>ociplogon</code>, <code>ocinlogon</code>, <code>oci_parse</code> and <code>ociparse</code>, matched case-insensitively after namespace fallback to the global function, and <code>new PDO(...)</code> / <code>new \PDO(...)</code> whose first argument is a string literal starting with <code>oci:</code>. A file that does not parse is skipped here; the portability check reports it.</p>
+<p>Blade templates (<code>*.blade.php</code>) are skipped: no Oracle calls belong in a template.</p>
+<p>Fix by moving the read into a TELLER named query.</p>
+<div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Rule id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>raw-oci</code></td>
+<td><code>proctor/raw-oci</code></td>
 </tr>
 </tbody>
 </table></div>
@@ -652,7 +672,7 @@ git commit -m &quot;Pin shell scripts, server config and Dockerfiles to LF&quot;
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../../docs/guides/check-ci.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">CI checks</span></a><a class="docs-pager__link docs-pager__link--next" href="../../docs/guides/check-wayneui.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">WayneUI checks</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#node-eol">node-eol</a></li><li class="docs-toc__item"><a href="#mysql-eol">mysql-eol</a></li><li class="docs-toc__item"><a href="#mysql-minimum">mysql-minimum</a></li><li class="docs-toc__item"><a href="#env-outside-config">env-outside-config</a></li><li class="docs-toc__item"><a href="#raw-identity-header">raw-identity-header</a></li><li class="docs-toc__item"><a href="#app-key">app-key</a></li><li class="docs-toc__item"><a href="#app-debug">app-debug</a></li><li class="docs-toc__item"><a href="#display-errors">display-errors</a></li><li class="docs-toc__item"><a href="#directory-listing">directory-listing</a></li><li class="docs-toc__item"><a href="#csp-unsafe-inline">csp-unsafe-inline</a></li><li class="docs-toc__item"><a href="#robots-txt">robots-txt</a></li><li class="docs-toc__item"><a href="#vite-secrets">vite-secrets</a></li><li class="docs-toc__item"><a href="#entrypoint-migrate">entrypoint-migrate</a></li><li class="docs-toc__item"><a href="#served-folder">served-folder</a></li><li class="docs-toc__item"><a href="#crlf-deploy-script">crlf-deploy-script</a></li><li class="docs-toc__item"><a href="#gitattributes-eol">gitattributes-eol</a></li><li class="docs-toc__item"><a href="#script-pair">script-pair</a></li><li class="docs-toc__item"><a href="#case-clash">case-clash</a></li><li class="docs-toc__item"><a href="#world-writable">world-writable</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#node-eol">node-eol</a></li><li class="docs-toc__item"><a href="#mysql-eol">mysql-eol</a></li><li class="docs-toc__item"><a href="#mysql-minimum">mysql-minimum</a></li><li class="docs-toc__item"><a href="#env-outside-config">env-outside-config</a></li><li class="docs-toc__item"><a href="#raw-identity-header">raw-identity-header</a></li><li class="docs-toc__item"><a href="#raw-oci">raw-oci</a></li><li class="docs-toc__item"><a href="#app-key">app-key</a></li><li class="docs-toc__item"><a href="#app-debug">app-debug</a></li><li class="docs-toc__item"><a href="#display-errors">display-errors</a></li><li class="docs-toc__item"><a href="#directory-listing">directory-listing</a></li><li class="docs-toc__item"><a href="#csp-unsafe-inline">csp-unsafe-inline</a></li><li class="docs-toc__item"><a href="#robots-txt">robots-txt</a></li><li class="docs-toc__item"><a href="#vite-secrets">vite-secrets</a></li><li class="docs-toc__item"><a href="#entrypoint-migrate">entrypoint-migrate</a></li><li class="docs-toc__item"><a href="#served-folder">served-folder</a></li><li class="docs-toc__item"><a href="#crlf-deploy-script">crlf-deploy-script</a></li><li class="docs-toc__item"><a href="#gitattributes-eol">gitattributes-eol</a></li><li class="docs-toc__item"><a href="#script-pair">script-pair</a></li><li class="docs-toc__item"><a href="#case-clash">case-clash</a></li><li class="docs-toc__item"><a href="#world-writable">world-writable</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.16.1</span></span>

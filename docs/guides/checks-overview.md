@@ -7,11 +7,11 @@ description: An overview of every check PROCTOR runs and how each reports pass, 
 
 This page lists every check PROCTOR runs in a single `vendor/bin/proctor check` run, and how each one reports. The proctor asks the same questions in the same order on every run; only the hall changes.
 
-Forty-five checks in all. Eight of them also run at the door, in `proctor gate`: `php-floor`, `unpatched`, `laravel-eol`, `laravel-php`, `lock-committed`, `composer-audit`, `overrides` and `policy-age` (see [Deploy gate](deploy-gate.md)). The newest are `script-pair` (0.14.0) and `mysql56-ci` (0.15.0).
+Forty-six checks in all. Eight of them also run at the door, in `proctor gate`: `php-floor`, `unpatched`, `laravel-eol`, `laravel-php`, `lock-committed`, `composer-audit`, `overrides` and `policy-age` (see [Deploy gate](deploy-gate.md)). The newest are `script-pair` (0.14.0) and `mysql56-ci` (0.15.0).
 
 ![Nine real lines from PROCTOR's text report, one per check shown: FAIL php-floor, WARN unpatched, FAIL unbounded-constraints, PASS lock-committed, WARN portability, WARN mysql56, WARN ci-pipelines, PASS composer-audit, FAIL overrides. Each line is written in words; color only repeats what the word says.](../readme/report.svg)
 
-*Nine of the forty-five checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
+*Nine of the forty-six checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
 
 ## How a check reports
 
@@ -63,12 +63,13 @@ Details and fixes: [CI checks](check-ci.md).
 
 ## App code and files
 
-The checks that read the app's own files: the Node line it builds on, the MySQL or MariaDB image it runs, `env()` outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a robots.txt that is missing or lets every crawler in, secret-looking `VITE_` variables, files in `public/`, a container entrypoint that runs migrations and `chmod 777`. Details and fixes: [App checks](check-app.md).
+The checks that read the app's own files: the Node line it builds on, the MySQL or MariaDB image it runs, direct Oracle calls, `env()` outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a robots.txt that is missing or lets every crawler in, secret-looking `VITE_` variables, files in `public/`, a container entrypoint that runs migrations and `chmod 777`. Details and fixes: [App checks](check-app.md).
 
 - `node-eol`: grades every Node version the repository pins (`.nvmrc`, `.node-version`, package.json `volta.node`, an official `node` image in `.gitlab-ci.yml` or a Dockerfile) with php-floor's table: active passes, security-only warns, eol fails, and past the grace window it fails as `eol_grace_expired`. `engines.node` warns at worst and an odd major always warns. Silent when the policy has no node component.
 - `mysql-eol`: grades every MySQL or MariaDB version the repository names (an official `mysql` or `mariadb` image in a root compose file, and `SQUIRE_MYSQL_IMAGE=mysql:<version>` in an env example) with php-floor's table, except an active version stays silent: security-only warns, and eol and `eol_grace_expired` warn until Citadel offers a supported MySQL. Silent when the policy has no mysql or mariadb component.
 - `mysql-minimum`: warns, never fails, when the app's MySQL or MariaDB image is below the minimum the policy records for its locked Laravel line (`proctor/mysql-minimum/below`).
 - `entrypoint-migrate`: warns, never fails, when a container entrypoint runs `artisan migrate` at start: with two replicas both migrate at once, and a failed migration crash-loops the container. Run migrations once per release as a job (WELD W24).
+- `raw-oci`: warns, never fails, when app code talks to Oracle directly: an OCI extension call (`oci_connect`, `oci_pconnect`, `oci_new_connect`, `ocilogon`, `ociplogon`, `ocinlogon`, `oci_parse` or `ociparse`) or `new PDO(...)` with a string-literal `oci:` DSN, instead of reading through TELLER's named queries (bound values, a read-only transaction, row caps).
 - `env-outside-config`: warns for every `env()` call in a Laravel app outside its config files, which returns null after `php artisan config:cache`; a call with Larastan's ignore marker for the same rule is an info note.
 - `raw-identity-header`: warns, never fails, when app code reads an identity header directly: a string key on `$_SERVER` or `$_ENV`, the quoted argument of `getenv()` or `apache_getenv()`, a quoted first argument of the request's `header()`, `server()`, `hasHeader()`, `getHeader()` or `getHeaderLine()` methods, or a key on the `getallheaders()` result. Only SESAME's gateway driver may read those headers: it verifies the signed assertion first (CREED auth-3).
 - `app-key`: warns on a committed real env file, a real APP_KEY committed in an env file or `config/app.php` (never printed), and the cookie session driver. A real env file is graded only when git lists it or the run is in CI.
