@@ -80,6 +80,7 @@ final class CheckSet
             $composerVersion ?? new ComposerVersionCheck(policy: $resolved->policy),
             new RepoUrlCredentialsCheck(),
             new InstantClientCommittedCheck(),
+            new RawOciCheck(),
             new EnvOutsideConfigCheck(),
             new RawIdentityHeaderCheck(),
             new AppKeyCheck(),
