@@ -81,6 +81,7 @@ final class CheckSet
             new RepoUrlCredentialsCheck(),
             new InstantClientCommittedCheck(),
             new RawOciCheck(),
+            new OracleSqlInterpolationCheck(),
             new EnvOutsideConfigCheck(),
             new RawIdentityHeaderCheck(),
             new AppKeyCheck(),
