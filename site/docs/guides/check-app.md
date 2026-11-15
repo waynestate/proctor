@@ -1,6 +1,6 @@
 ---
 title: "App checks | PROCTOR docs"
-description: "The checks that read an app's own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, direct Oracle calls, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a missing or open robots.txt, secret-looking VITE_ variables, debug files in public/, server files not pinned to LF line endings, a developer script missing its twin and chmod 777."
+description: "The checks that read an app's own files for an end-of-life Node line, an end-of-life MySQL or MariaDB image, direct Oracle calls, Oracle SQL built from PHP values, env() outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a missing or open robots.txt, secret-looking VITE_ variables, debug files in public/, server files not pinned to LF line endings, a developer script missing its twin and chmod 777."
 url: https://proctor.apps.wayne.edu/docs/guides/check-app.html
 llms: https://proctor.apps.wayne.edu/llms.txt
 generator: Squire agent-ready
@@ -8,9 +8,9 @@ generator: Squire agent-ready
 
 # App checks [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-checks)
 
-This page covers the twenty PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, direct Oracle calls, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a robots.txt that is missing or lets every crawler in, secret-looking `VITE_` variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, shell scripts, server config and Dockerfiles that `.gitattributes` does not pin to LF, developer scripts in `scripts/` missing their twin, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
+This page covers the twenty-one PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, direct Oracle calls, Oracle SQL built from PHP values, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a robots.txt that is missing or lets every crawler in, secret-looking `VITE_` variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, shell scripts, server config and Dockerfiles that `.gitattributes` does not pin to LF, developer scripts in `scripts/` missing their twin, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
 
-`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other seventeen warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL, and a new check must not turn a passing app into a failing one.
+`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other eighteen warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL, and a new check must not turn a passing app into a failing one.
 
 ## node-eol [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#node-eol)
 
@@ -133,6 +133,31 @@ Fix by moving the read into a TELLER named query.
 | Check | Rule id |
 | --- | --- |
 | `raw-oci` | `proctor/raw-oci` |
+
+## oracle-sql-interpolation [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#oracle-sql-interpolation)
+
+`oracle-sql-interpolation` warns, never fails, when SQL sent to Oracle is built from PHP values instead of bound values: an interpolated string (a double-quoted string or heredoc with a `$var` or `{$expr}` part) or a concatenation with at least one leaf that is not a plain string literal (`'a' . 'b'` is fine; `'a' . $id` is built). A value spliced into the query text is a place where crafted input can change what the query means.
+
+It runs on every app and scans every `*.php` file except `vendor/`, `node_modules/`, `storage/`, `tests/` and `.git/` at any depth.
+
+PHP is read on the syntax tree with names resolved, so an interpolated string in a comment or a log line is not flagged. Flagged calls: `oci_parse` and `ociparse`, matched case-insensitively after namespace fallback to the global function, whose second argument is built SQL, and, on apps whose composer.json requires `yajra/laravel-oci8` (what makes the DB facade talk to Oracle), `DB::select`, `DB::selectOne`, `DB::statement`, `DB::unprepared`, `DB::insert`, `DB::update` and `DB::delete` (the class as written `DB` or resolving to `Illuminate\Support\Facades\DB`) whose first argument is built SQL. A variable, a call result, `sprintf`, a nowdoc or a heredoc without interpolation is not flagged: the check cannot tell where the text came from. A file that does not parse is skipped here; the portability check reports it.
+
+Blade templates (`*.blade.php`) are skipped: no SQL belongs in a template.
+
+Fix by binding the values instead:
+
+```php
+$stmt = oci_parse($conn, 'SELECT NAME FROM PEOPLE_V WHERE ID = :id');
+oci_bind_by_name($stmt, ':id', $id);
+
+DB::select('SELECT NAME FROM PEOPLE_V WHERE TERM = :term', ['term' => $term]);
+```
+
+or move the read into a TELLER named query. One warning per call, each naming the call, the file and the line.
+
+| Check | Rule id |
+| --- | --- |
+| `oracle-sql-interpolation` | `proctor/oracle-sql-interpolation` |
 
 ## app-key [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-key)
 
