@@ -3,10 +3,11 @@
 # creed-copy-refresh.sh: the weekly creed-copy-refresh job in .gitlab-ci.yml runs this.
 #
 # It clones CREED main with the job token, re-exports the generated CREED reader
-# copy in src/Creed, rebuilds what the copy feeds (the docs site and the agent-ready
-# files), proves it with composer creed-copy:check and the full composer ci, and only
-# then commits and pushes to main with the job token. Any red step stops the script
-# before the commit, so a red run leaves main untouched.
+# copy in src/Creed, rebuilds what the copy feeds (the front page's
+# supported-versions table, the docs site and the agent-ready files), proves it
+# with composer creed-copy:check and the full composer ci, and only then commits
+# and pushes to main with the job token. Any red step stops the script before the
+# commit, so a red run leaves main untouched.
 #
 # It runs only inside GitLab CI (Linux, the composer image), never on a developer
 # machine. To refresh by hand, follow MAINTAINING.md. The proctor grades its own
@@ -64,8 +65,12 @@ if [ -z "$CHANGED" ]; then
     exit 0
 fi
 
-# 5. Rebuild what the copy feeds, with the commands composer ci checks for freshness
-# (composer docs and composer site:agent-ready).
+# 5. Rebuild what the copy feeds, with the commands composer ci checks for
+# freshness (composer site:versions, composer docs and composer site:agent-ready).
+# site:versions goes first: the agent-ready kit writes site/index.md from
+# site/index.html, so the front page's supported-versions table must be fresh
+# before it runs.
+php bin/supported-versions.php
 php bin/docs-site.php
 php bin/agent-ready.php
 
@@ -75,7 +80,7 @@ CREED_PATH="$TMP/creed" composer creed-copy:check
 CREED_PATH="$TMP/creed" composer ci
 
 # 7. Commit exactly what this job wrote, by name, never git add -A.
-git add -- src/Creed site/index.md site/llms.txt site/llms-full.txt site/robots.txt site/sitemap.xml site/docs docs/reference/commands.md docs/reference/configuration.md
+git add -- src/Creed site/index.html site/index.md site/llms.txt site/llms-full.txt site/robots.txt site/sitemap.xml site/docs docs/reference/commands.md docs/reference/configuration.md
 LEFTOVER="$(git diff --name-only; git ls-files --others --exclude-standard)"
 if [ -n "$LEFTOVER" ]; then
     echo "$LEFTOVER" >&2

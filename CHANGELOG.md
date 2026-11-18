@@ -7,6 +7,7 @@
 - Site: the front page pins Preflight 0.9.0 in the GitLab example (it still said 0.8.0), the tag CI uses.
 - Changed: the deploy kit is Squire 0.11.1 (was 0.10.7): the release script, parity scripts, HAProxy pin and fallback base follow the new templates.
 - Changed: the dev dependency Pinstripe is `^0.4` (was `^0.3`, which does not allow 0.4.0); 0.4.0 adds two opt-in Rector presets and changes no rule this repo uses.
+- Fixed: the weekly CREED copy refresh also rewrites the front page's supported-versions table, so a CREED patch bump no longer turns main red.
 
 ## 0.16.1 (2026-11-14)
 
