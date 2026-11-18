@@ -793,7 +793,7 @@ Set texts
 
 ### The versions PROCTOR marks against
 
-From the policy bundled with this release (refreshed 2026-11-08). PROCTOR fails a version past end of life and warns on one that only gets security fixes.
+From the policy bundled with this release (refreshed 2026-11-16). PROCTOR fails a version past end of life and warns on one that only gets security fixes.
 
 | Component | Version | Active support until | Security fixes until | Status |
 | --- | --- | --- | --- | --- |
