@@ -129,6 +129,7 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `instant-client-committed` | `proctor/instant-client-committed` |
 | `raw-oci` | `proctor/raw-oci` |
 | `oracle-sql-interpolation` | `proctor/oracle-sql-interpolation` |
+| `oracle-credentials-literal` | `proctor/oracle-credentials-literal` |
 | `env-outside-config` | `proctor/env-outside-config` |
 | `env-outside-config` | `proctor/env-outside-config/suppressed` |
 | `raw-identity-header` | `proctor/raw-identity-header` |

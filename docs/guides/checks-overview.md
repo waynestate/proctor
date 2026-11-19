@@ -7,11 +7,11 @@ description: An overview of every check PROCTOR runs and how each reports pass, 
 
 This page lists every check PROCTOR runs in a single `vendor/bin/proctor check` run, and how each one reports. The proctor asks the same questions in the same order on every run; only the hall changes.
 
-Forty-seven checks in all. Eight of them also run at the door, in `proctor gate`: `php-floor`, `unpatched`, `laravel-eol`, `laravel-php`, `lock-committed`, `composer-audit`, `overrides` and `policy-age` (see [Deploy gate](deploy-gate.md)). The newest are `script-pair` (0.14.0) and `mysql56-ci` (0.15.0).
+Forty-eight checks in all. Eight of them also run at the door, in `proctor gate`: `php-floor`, `unpatched`, `laravel-eol`, `laravel-php`, `lock-committed`, `composer-audit`, `overrides` and `policy-age` (see [Deploy gate](deploy-gate.md)). The newest are `script-pair` (0.14.0) and `mysql56-ci` (0.15.0).
 
 ![Nine real lines from PROCTOR's text report, one per check shown: FAIL php-floor, WARN unpatched, FAIL unbounded-constraints, PASS lock-committed, WARN portability, WARN mysql56, WARN ci-pipelines, PASS composer-audit, FAIL overrides. Each line is written in words; color only repeats what the word says.](../readme/report.svg)
 
-*Nine of the forty-seven checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
+*Nine of the forty-eight checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
 
 ## How a check reports
 
@@ -71,6 +71,7 @@ The checks that read the app's own files: the Node line it builds on, the MySQL 
 - `entrypoint-migrate`: warns, never fails, when a container entrypoint runs `artisan migrate` at start: with two replicas both migrate at once, and a failed migration crash-loops the container. Run migrations once per release as a job (WELD W24).
 - `raw-oci`: warns, never fails, when app code talks to Oracle directly: an OCI extension call (`oci_connect`, `oci_pconnect`, `oci_new_connect`, `ocilogon`, `ociplogon`, `ocinlogon`, `oci_parse` or `ociparse`) or `new PDO(...)` with a string-literal `oci:` DSN, instead of reading through TELLER's named queries (bound values, a read-only transaction, row caps).
 - `oracle-sql-interpolation`: warns, never fails, when SQL sent to Oracle is built from PHP values: an interpolated string or a concatenation with a non-literal leaf as the second argument of `oci_parse`/`ociparse`, or, on apps whose composer.json requires `yajra/laravel-oci8`, as the first argument of `DB::select`, `DB::selectOne`, `DB::statement`, `DB::unprepared`, `DB::insert`, `DB::update` or `DB::delete`, instead of bound values.
+- `oracle-credentials-literal`: warns, never fails, when an Oracle password is written into committed code or files: a wallet by name (`cwallet.sso`, `ewallet.p12` or `ewallet.pem`), a `tnsnames.ora` or `sqlnet.ora` with a `PASSWORD =` line, an `oci_connect`/`oci_pconnect`/`oci_new_connect` call whose second argument is a non-empty string literal, or a plain string literal in the user/password@host:port/service connect string form, instead of reading the credential from the environment through TELLER.
 - `env-outside-config`: warns for every `env()` call in a Laravel app outside its config files, which returns null after `php artisan config:cache`; a call with Larastan's ignore marker for the same rule is an info note.
 - `raw-identity-header`: warns, never fails, when app code reads an identity header directly: a string key on `$_SERVER` or `$_ENV`, the quoted argument of `getenv()` or `apache_getenv()`, a quoted first argument of the request's `header()`, `server()`, `hasHeader()`, `getHeader()` or `getHeaderLine()` methods, or a key on the `getallheaders()` result. Only SESAME's gateway driver may read those headers: it verifies the signed assertion first (CREED auth-3).
 - `app-key`: warns on a committed real env file, a real APP_KEY committed in an env file or `config/app.php` (never printed), and the cookie session driver. A real env file is graded only when git lists it or the run is in CI.
