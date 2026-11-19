@@ -69,8 +69,9 @@ final class ProctorModule implements Module
      * composer-audit, composer-version and wayneui-outdated run composer;
      * instant-client-committed, lock-tracked, the WayneUI checks and every
      * check built on RepoFiles (node-eol, raw-oci, oracle-sql-interpolation,
-     * env-outside-config, raw-identity-header, robots-txt, served-folder,
-     * world-writable) run git, and override-approver runs git blame. app-key
+     * oracle-credentials-literal, env-outside-config, raw-identity-header,
+     * robots-txt, served-folder, world-writable) run git, and override-approver
+     * runs git blame. app-key
      * and vite-secrets read every committed env file, .env included (and run
      * git too).
      *
@@ -84,6 +85,7 @@ final class ProctorModule implements Module
         'instant-client-committed' => self::REASON_SUBPROCESS,
         'raw-oci' => self::REASON_SUBPROCESS,
         'oracle-sql-interpolation' => self::REASON_SUBPROCESS,
+        'oracle-credentials-literal' => self::REASON_SUBPROCESS,
         'env-outside-config' => self::REASON_SUBPROCESS,
         'raw-identity-header' => self::REASON_SUBPROCESS,
         'app-key' => self::REASON_ENV,
