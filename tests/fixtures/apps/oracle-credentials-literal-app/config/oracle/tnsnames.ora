@@ -1,0 +1,6 @@
+REPORTS =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = db.example.invalid)(PORT = 1521))
+    (CONNECT_DATA = (SERVICE_NAME = REPORTS)))
+
+PASSWORD = not-a-real-password
