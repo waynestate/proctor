@@ -7,6 +7,26 @@ description: How to upgrade PROCTOR to a newer release and note the changes that
 
 PROCTOR is the invigilator, so upgrading it is a seat change, not a new exam: same hall, fresher pen. This page tells you how to move an app from one PROCTOR release to the next and which changes affect your runs. Start with the release that has a break, then work down to the additive ones.
 
+## 0.17.0
+
+Released 2026-11-19. A minor release. Under 0.x, `^0.16` does not pick it up: change the constraint to `^0.17`, then run `composer update waynestate/proctor`.
+
+### Breaking
+
+- None. The three new checks warn: their findings are counted as warnings but never fail a run or the deploy gate.
+
+### New
+
+- `raw-oci` warns (`proctor/raw-oci`) when app code talks to Oracle directly, through an OCI extension call that connects or parses or through `new PDO('oci:...')`; read through TELLER's named queries instead.
+- `oracle-sql-interpolation` warns (`proctor/oracle-sql-interpolation`) when SQL sent to Oracle is built from PHP values instead of bound values.
+- `oracle-credentials-literal` warns (`proctor/oracle-credentials-literal`) when an Oracle password is written into committed code or files: a wallet, a `PASSWORD =` line in `tnsnames.ora` or `sqlnet.ora`, a connect call whose password is a string literal, or a user/password@host:port/service connect string. The message names the file and line, never the password.
+- The check count is forty-eight, eight of them in the deploy gate.
+
+### What to do
+
+1. Change the constraint in `composer.json` to `"waynestate/proctor": "^0.17"` and run `composer update waynestate/proctor`.
+2. Read the new warnings. Move direct Oracle calls behind TELLER, bind the values in any SQL built from PHP, and take any Oracle password out of git, rotate it and read it from the environment. A report that already passed still passes.
+
 ## 0.16.1
 
 Released 2026-11-14. A patch release. `^0.16` picks it up: run `composer update waynestate/proctor`.
