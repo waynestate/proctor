@@ -82,6 +82,7 @@ final class CheckSet
             new InstantClientCommittedCheck(),
             new RawOciCheck(),
             new OracleSqlInterpolationCheck(),
+            new OracleCredentialsLiteralCheck(),
             new EnvOutsideConfigCheck(),
             new RawIdentityHeaderCheck(),
             new AppKeyCheck(),

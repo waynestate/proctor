@@ -156,6 +156,26 @@ or move the read into a TELLER named query. One warning per call, each naming th
 | --- | --- |
 | `oracle-sql-interpolation` | `proctor/oracle-sql-interpolation` |
 
+## oracle-credentials-literal
+
+`oracle-credentials-literal` warns, never fails, when an Oracle password is written into committed code or files. TELLER is the stack's read-only Oracle layer and reads its own credentials from the environment (`TELLER_PASSWORD` or `TELLER_PASSWORD_FILE`), so a password typed into the repository ships with it: anyone who can read the repository can read the database.
+
+It runs on every app and scans every committed file except `vendor/`, `node_modules/`, `storage/`, `tests/` and `.git/` at any depth.
+
+Flagged: a wallet by name (`cwallet.sso`, `ewallet.p12` or `ewallet.pem`), one warning per file; a `tnsnames.ora` or `sqlnet.ora` with a `PASSWORD =` line, one warning per file on that line; an `oci_connect`, `oci_pconnect` or `oci_new_connect` call (case-insensitive, after namespace fallback to the global function) whose second argument is a non-empty string literal; and any plain string literal in a `*.php` file in the user/password@host:port/service connect string form. A password from `env()` or `getenv()`, a variable, a constant or a method call, an empty string, a one-argument `oci_connect`, a method call named like the OCI function and a plain path such as `docs/readme.md` are not flagged. Blade templates (`*.blade.php`) are skipped, and a file that does not parse is skipped here; the portability check reports it.
+
+Fix by removing the credential from git, rotating it, and reading it from the environment through TELLER:
+
+```php
+$conn = oci_connect('report_ro', getenv('TELLER_PASSWORD'), $dsn);
+```
+
+One warning per finding, sorted by file and then line. The message names the file, the line and the call, never the password.
+
+| Check | Rule id |
+| --- | --- |
+| `oracle-credentials-literal` | `proctor/oracle-credentials-literal` |
+
 ## app-key
 
 `app-key` warns when the repository gives away the Laravel APP_KEY, or makes a leaked one worse. Whoever holds the key can forge encrypted payloads the app will unserialize, which can mean code execution.

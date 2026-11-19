@@ -267,6 +267,28 @@ DB::select('SELECT NAME FROM PEOPLE_V WHERE TERM = :term', ['term' =&gt; $term])
 </tr>
 </tbody>
 </table></div>
+<h2 id="oracle-credentials-literal"><span class="docs-heading-tail"><span>oracle-credentials-literal</span><a class="docs-heading-link" aria-label="Link to this section" href="#oracle-credentials-literal">#</a></span></h2>
+<p><code>oracle-credentials-literal</code> warns, never fails, when an Oracle password is written into committed code or files. TELLER is the stack's read-only Oracle layer and reads its own credentials from the environment (<code>TELLER_PASSWORD</code> or <code>TELLER_PASSWORD_FILE</code>), so a password typed into the repository ships with it: anyone who can read the repository can read the database.</p>
+<p>It runs on every app and scans every committed file except <code>vendor/</code>, <code>node_modules/</code>, <code>storage/</code>, <code>tests/</code> and <code>.git/</code> at any depth.</p>
+<p>Flagged: a wallet by name (<code>cwallet.sso</code>, <code>ewallet.p12</code> or <code>ewallet.pem</code>), one warning per file; a <code>tnsnames.ora</code> or <code>sqlnet.ora</code> with a <code>PASSWORD =</code> line, one warning per file on that line; an <code>oci_connect</code>, <code>oci_pconnect</code> or <code>oci_new_connect</code> call (case-insensitive, after namespace fallback to the global function) whose second argument is a non-empty string literal; and any plain string literal in a <code>*.php</code> file in the user/password@host:port/service connect string form. A password from <code>env()</code> or <code>getenv()</code>, a variable, a constant or a method call, an empty string, a one-argument <code>oci_connect</code>, a method call named like the OCI function and a plain path such as <code>docs/readme.md</code> are not flagged. Blade templates (<code>*.blade.php</code>) are skipped, and a file that does not parse is skipped here; the portability check reports it.</p>
+<p>Fix by removing the credential from git, rotating it, and reading it from the environment through TELLER:</p>
+<pre tabindex="0"><code class="language-php">$conn = oci_connect('report_ro', getenv('TELLER_PASSWORD'), $dsn);
+</code></pre>
+<p>One warning per finding, sorted by file and then line. The message names the file, the line and the call, never the password.</p>
+<div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Rule id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>oracle-credentials-literal</code></td>
+<td><code>proctor/oracle-credentials-literal</code></td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="app-key"><span class="docs-heading-tail"><span>app-key</span><a class="docs-heading-link" aria-label="Link to this section" href="#app-key">#</a></span></h2>
 <p><code>app-key</code> warns when the repository gives away the Laravel APP_KEY, or makes a leaked one worse. Whoever holds the key can forge encrypted payloads the app will unserialize, which can mean code execution.</p>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
@@ -698,7 +720,7 @@ git commit -m &quot;Pin shell scripts, server config and Dockerfiles to LF&quot;
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../../docs/guides/check-ci.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">CI checks</span></a><a class="docs-pager__link docs-pager__link--next" href="../../docs/guides/check-wayneui.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">WayneUI checks</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#node-eol">node-eol</a></li><li class="docs-toc__item"><a href="#mysql-eol">mysql-eol</a></li><li class="docs-toc__item"><a href="#mysql-minimum">mysql-minimum</a></li><li class="docs-toc__item"><a href="#env-outside-config">env-outside-config</a></li><li class="docs-toc__item"><a href="#raw-identity-header">raw-identity-header</a></li><li class="docs-toc__item"><a href="#raw-oci">raw-oci</a></li><li class="docs-toc__item"><a href="#oracle-sql-interpolation">oracle-sql-interpolation</a></li><li class="docs-toc__item"><a href="#app-key">app-key</a></li><li class="docs-toc__item"><a href="#app-debug">app-debug</a></li><li class="docs-toc__item"><a href="#display-errors">display-errors</a></li><li class="docs-toc__item"><a href="#directory-listing">directory-listing</a></li><li class="docs-toc__item"><a href="#csp-unsafe-inline">csp-unsafe-inline</a></li><li class="docs-toc__item"><a href="#robots-txt">robots-txt</a></li><li class="docs-toc__item"><a href="#vite-secrets">vite-secrets</a></li><li class="docs-toc__item"><a href="#entrypoint-migrate">entrypoint-migrate</a></li><li class="docs-toc__item"><a href="#served-folder">served-folder</a></li><li class="docs-toc__item"><a href="#crlf-deploy-script">crlf-deploy-script</a></li><li class="docs-toc__item"><a href="#gitattributes-eol">gitattributes-eol</a></li><li class="docs-toc__item"><a href="#script-pair">script-pair</a></li><li class="docs-toc__item"><a href="#case-clash">case-clash</a></li><li class="docs-toc__item"><a href="#world-writable">world-writable</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#node-eol">node-eol</a></li><li class="docs-toc__item"><a href="#mysql-eol">mysql-eol</a></li><li class="docs-toc__item"><a href="#mysql-minimum">mysql-minimum</a></li><li class="docs-toc__item"><a href="#env-outside-config">env-outside-config</a></li><li class="docs-toc__item"><a href="#raw-identity-header">raw-identity-header</a></li><li class="docs-toc__item"><a href="#raw-oci">raw-oci</a></li><li class="docs-toc__item"><a href="#oracle-sql-interpolation">oracle-sql-interpolation</a></li><li class="docs-toc__item"><a href="#oracle-credentials-literal">oracle-credentials-literal</a></li><li class="docs-toc__item"><a href="#app-key">app-key</a></li><li class="docs-toc__item"><a href="#app-debug">app-debug</a></li><li class="docs-toc__item"><a href="#display-errors">display-errors</a></li><li class="docs-toc__item"><a href="#directory-listing">directory-listing</a></li><li class="docs-toc__item"><a href="#csp-unsafe-inline">csp-unsafe-inline</a></li><li class="docs-toc__item"><a href="#robots-txt">robots-txt</a></li><li class="docs-toc__item"><a href="#vite-secrets">vite-secrets</a></li><li class="docs-toc__item"><a href="#entrypoint-migrate">entrypoint-migrate</a></li><li class="docs-toc__item"><a href="#served-folder">served-folder</a></li><li class="docs-toc__item"><a href="#crlf-deploy-script">crlf-deploy-script</a></li><li class="docs-toc__item"><a href="#gitattributes-eol">gitattributes-eol</a></li><li class="docs-toc__item"><a href="#script-pair">script-pair</a></li><li class="docs-toc__item"><a href="#case-clash">case-clash</a></li><li class="docs-toc__item"><a href="#world-writable">world-writable</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.16.1</span></span>

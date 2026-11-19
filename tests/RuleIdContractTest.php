@@ -59,6 +59,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/instant-client-committed',
         'proctor/raw-oci',
         'proctor/oracle-sql-interpolation',
+        'proctor/oracle-credentials-literal',
         'proctor/wayneui-forked-views',
         'proctor/wayneui-outdated',
         'proctor/policy-age',
