@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.17.0 (2026-11-19)
+
+- Upgrade: a minor release under 0.x, so `^0.16` does not pick it up; change the constraint to `^0.17` (see Upgrading). The three new checks warn and never fail a run or the deploy gate.
+- Site: the whole paper's New tag marks `raw-oci`, `oracle-sql-interpolation` and `oracle-credentials-literal`, new in 0.17.0 (was `mysql56-ci`, new in 0.15.0).
 - Added: `raw-oci` warns (`proctor/raw-oci`), never fails, when app code talks to Oracle directly: an OCI extension call that connects or parses (`oci_connect`, `oci_pconnect`, `oci_new_connect`, `ocilogon`, `ociplogon`, `ocinlogon`, `oci_parse`, `ociparse`) or `new PDO('oci:...')`, outside `vendor/`, `tests/` and the other skipped folders; read through TELLER's named queries instead. The second of the five rules TELLER asks PROCTOR to own, after `instant-client-committed`. Forty-six checks now.
 - Added: `oracle-sql-interpolation` warns (`proctor/oracle-sql-interpolation`), never fails, when SQL sent to Oracle is built from PHP values (an interpolated string or a concatenation with a non-literal part) instead of bound values: always for `oci_parse`, and for the `DB` facade on apps that require yajra/laravel-oci8. Bind the values, or read through TELLER's named queries. Forty-seven checks now.
 - Added: `oracle-credentials-literal` warns (`proctor/oracle-credentials-literal`), never fails, when an Oracle password is written into committed code or files: a wallet (`cwallet.sso`, `ewallet.p12`, `ewallet.pem`), a `PASSWORD =` line in `tnsnames.ora` or `sqlnet.ora`, an `oci_connect` family call whose password is a string literal, or a user/password@host:port/service connect string in PHP. Remove it from git, rotate it, and read it from the environment through TELLER; the message never repeats the password. Forty-eight checks now, and the front page lists it.

@@ -43,7 +43,7 @@
     <a class="masthead__brand" href="#main">
       <img class="masthead__mark" src="brand/proctor-avatar-256.png" width="34" height="34" alt="">
       <span class="masthead__name">PROCTOR</span>
-      <span class="masthead__form">Form <span data-docs-version>0.16.1</span></span>
+      <span class="masthead__form">Form <span data-docs-version>0.17.0</span></span>
     </a>
     <nav class="masthead__nav" aria-label="Sections">
       <a href="#questions">Questions</a>
@@ -303,7 +303,7 @@
           <p class="paper__lede">Every check <code>proctor check</code> asks, in the order it asks them. Each id opens its page in the docs.</p>
           <ul class="paper__legend">
             <li><span class="tag tag--gate">Gate</span> also asked by <code>proctor gate</code> before a deploy</li>
-            <li><span class="tag tag--new">New</span> new in 0.15.0</li>
+            <li><span class="tag tag--new">New</span> new in 0.17.0</li>
           </ul>
         </header>
         <ol class="paper__list">
@@ -331,14 +331,14 @@
           <li class="pq" style="--i:21"><a class="pq__id" href="docs/guides/check-ci.html#ci-pipelines"><code>ci-pipelines</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Do the pipelines run <code>composer ci</code>?</span></li>
           <li class="pq" style="--i:22"><a class="pq__id" href="docs/guides/check-ci.html#preflight-pinned"><code>preflight-pinned</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is every CI component pinned to a release?</span></li>
           <li class="pq" style="--i:23"><a class="pq__id" href="docs/guides/check-ci.html#preflight-gates"><code>preflight-gates</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Do Preflight's gates run, and block?</span></li>
-          <li class="pq" style="--i:24"><a class="pq__id" href="docs/guides/check-ci.html#mysql56-ci"><code>mysql56-ci</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Do the migrations meet MySQL&nbsp;5.6 in CI?</span> <span class="tag tag--new">New</span></li>
+          <li class="pq" style="--i:24"><a class="pq__id" href="docs/guides/check-ci.html#mysql56-ci"><code>mysql56-ci</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Do the migrations meet MySQL&nbsp;5.6 in CI?</span></li>
           <li class="pq" style="--i:25"><a class="pq__id" href="docs/guides/check-composer.html#composer-audit"><code>composer-audit</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does the lock carry a known advisory?</span> <span class="tag tag--gate">Gate</span></li>
           <li class="pq" style="--i:26"><a class="pq__id" href="docs/guides/check-composer.html#composer-version"><code>composer-version</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is the Composer on PATH safe?</span></li>
           <li class="pq" style="--i:27"><a class="pq__id" href="docs/guides/check-composer.html#repo-url-credentials"><code>repo-url-credentials</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is a token written into a package URL?</span></li>
           <li class="pq" style="--i:28"><a class="pq__id" href="docs/guides/check-ci.html#instant-client-committed"><code>instant-client-committed</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is Oracle Instant Client committed?</span></li>
-          <li class="pq" style="--i:29"><a class="pq__id" href="docs/guides/check-app.html#raw-oci"><code>raw-oci</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does code talk to Oracle directly?</span></li>
-          <li class="pq" style="--i:30"><a class="pq__id" href="docs/guides/check-app.html#oracle-sql-interpolation"><code>oracle-sql-interpolation</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is Oracle SQL built from PHP values?</span></li>
-          <li class="pq" style="--i:31"><a class="pq__id" href="docs/guides/check-app.html#oracle-credentials-literal"><code>oracle-credentials-literal</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is an Oracle password written into the repo?</span></li>
+          <li class="pq" style="--i:29"><a class="pq__id" href="docs/guides/check-app.html#raw-oci"><code>raw-oci</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does code talk to Oracle directly?</span> <span class="tag tag--new">New</span></li>
+          <li class="pq" style="--i:30"><a class="pq__id" href="docs/guides/check-app.html#oracle-sql-interpolation"><code>oracle-sql-interpolation</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is Oracle SQL built from PHP values?</span> <span class="tag tag--new">New</span></li>
+          <li class="pq" style="--i:31"><a class="pq__id" href="docs/guides/check-app.html#oracle-credentials-literal"><code>oracle-credentials-literal</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is an Oracle password written into the repo?</span> <span class="tag tag--new">New</span></li>
           <li class="pq" style="--i:32"><a class="pq__id" href="docs/guides/check-app.html#env-outside-config"><code>env-outside-config</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is <code>env()</code> called outside config?</span></li>
           <li class="pq" style="--i:33"><a class="pq__id" href="docs/guides/check-app.html#raw-identity-header"><code>raw-identity-header</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does code read identity headers itself?</span></li>
           <li class="pq" style="--i:34"><a class="pq__id" href="docs/guides/check-app.html#app-key"><code>app-key</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is the APP_KEY given away?</span></li>
