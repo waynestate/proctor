@@ -1,6 +1,6 @@
 {
     "schema_version": 1,
-    "refreshed_on": "2026-11-16",
+    "refreshed_on": "2026-11-20",
     "components": {
         "php": {
             "versions": {
@@ -12,16 +12,16 @@
                 "8.2": {
                     "active_until": "2024-12-31",
                     "security_until": "2026-12-31",
+                    "latest_patch": "8.2.36",
                     "minimum_patch": "8.2.13",
-                    "latest_patch": "8.2.35",
-                    "latest_patch_checked": "2026-10-28"
+                    "latest_patch_checked": "2026-11-20"
                 },
                 "8.3": {
                     "active_until": "2025-12-31",
                     "security_until": "2027-12-31",
+                    "latest_patch": "8.3.37",
                     "minimum_patch": "8.3.31",
-                    "latest_patch": "8.3.36",
-                    "latest_patch_checked": "2026-10-28",
+                    "latest_patch_checked": "2026-11-20",
                     "images": {
                         "docker": "php:8.3-cli-trixie"
                     }
@@ -29,9 +29,9 @@
                 "8.4": {
                     "active_until": "2026-12-31",
                     "security_until": "2028-12-31",
+                    "latest_patch": "8.4.28",
                     "minimum_patch": "8.4.21",
-                    "latest_patch": "8.4.27",
-                    "latest_patch_checked": "2026-10-28",
+                    "latest_patch_checked": "2026-11-20",
                     "images": {
                         "docker": "php:8.4-cli-trixie"
                     }
@@ -39,11 +39,20 @@
                 "8.5": {
                     "active_until": "2027-12-31",
                     "security_until": "2029-12-31",
+                    "latest_patch": "8.5.13",
                     "minimum_patch": "8.5.6",
-                    "latest_patch": "8.5.12",
-                    "latest_patch_checked": "2026-10-28",
+                    "latest_patch_checked": "2026-11-20",
                     "images": {
                         "docker": "php:8.5-cli-trixie"
+                    }
+                },
+                "8.6": {
+                    "active_until": "2028-12-31",
+                    "security_until": "2030-12-31",
+                    "latest_patch": "8.6.0",
+                    "latest_patch_checked": "2026-11-20",
+                    "images": {
+                        "docker": "php:8.6-cli-trixie"
                     }
                 }
             }
@@ -81,8 +90,8 @@
                 "12": {
                     "active_until": "2026-08-13",
                     "security_until": "2027-02-24",
-                    "latest_patch": "12.72.0",
-                    "latest_patch_checked": "2026-11-16",
+                    "latest_patch": "12.73.0",
+                    "latest_patch_checked": "2026-11-20",
                     "requires": {
                         "php": {
                             "min": "8.2",
@@ -95,8 +104,8 @@
                 "13": {
                     "active_until": "2027-09-30",
                     "security_until": "2028-03-17",
-                    "latest_patch": "13.42.0",
-                    "latest_patch_checked": "2026-11-16",
+                    "latest_patch": "13.43.0",
+                    "latest_patch_checked": "2026-11-20",
                     "requires": {
                         "php": {
                             "min": "8.3",
@@ -104,6 +113,48 @@
                         },
                         "mysql": "5.7",
                         "mariadb": "10.3"
+                    }
+                }
+            }
+        },
+        "cakephp": {
+            "versions": {
+                "4": {
+                    "active_until": "2025-09-09",
+                    "security_until": "2026-09-09",
+                    "latest_patch": "4.6.6",
+                    "latest_patch_checked": "2026-11-19",
+                    "requires": {
+                        "php": {
+                            "min": "7.4",
+                            "max": "8.5"
+                        }
+                    }
+                },
+                "5": {
+                    "current": true,
+                    "latest_patch": "5.4.4",
+                    "latest_patch_checked": "2026-11-19",
+                    "requires": {
+                        "php": {
+                            "min": "8.2",
+                            "max": "8.5"
+                        }
+                    }
+                }
+            }
+        },
+        "slim": {
+            "versions": {
+                "4": {
+                    "current": true,
+                    "latest_patch": "4.15.3",
+                    "latest_patch_checked": "2026-11-19",
+                    "requires": {
+                        "php": {
+                            "min": "7.4",
+                            "max": "8.5"
+                        }
                     }
                 }
             }

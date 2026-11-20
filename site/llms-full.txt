@@ -796,7 +796,7 @@ Set texts
 
 ### The versions PROCTOR marks against
 
-From the policy bundled with this release (refreshed 2026-11-16). PROCTOR fails a version past end of life and warns on one that only gets security fixes.
+From the policy bundled with this release (refreshed 2026-11-20). PROCTOR fails a version past end of life and warns on one that only gets security fixes.
 
 | Component | Version | Active support until | Security fixes until | Status |
 | --- | --- | --- | --- | --- |
@@ -805,6 +805,7 @@ From the policy bundled with this release (refreshed 2026-11-16). PROCTOR fails 
 | PHP | 8.3 | 2025-12-31 | 2027-12-31 | Security fixes only |
 | PHP | 8.4 | 2026-12-31 | 2028-12-31 | Supported |
 | PHP | 8.5 | 2027-12-31 | 2029-12-31 | Supported |
+| PHP | 8.6 | 2028-12-31 | 2030-12-31 | Supported |
 | Laravel | 10 | 2024-08-06 | 2025-02-04 | End of life |
 | Laravel | 11 | 2025-09-03 | 2026-03-12 | End of life |
 | Laravel | 12 | 2026-08-13 | 2027-02-24 | Security fixes only |
