@@ -83,6 +83,11 @@ printing PROCTOR's version.</p>
 <pre tabindex="0"><code>vendor/bin/proctor check
 </code></pre>
 <p>Expected: the text report. A header line with the tool and the versions of the external tools used (composer), a line naming the policy in use (origin, path, refresh date), one line per finding, one line per override, then a RESULT line. Exit codes: 0 for pass (warnings allowed), 1 for one or more failures, 2 for a tool error. A proctor that prints a mark sheet is a proctor that is on duty.</p>
+<h2 id="update-notice">Update <span class="docs-heading-tail"><span>notice</span><a class="docs-heading-link" aria-label="Link to this section" href="#update-notice">#</a></span></h2>
+<p>After any command finishes, PROCTOR prints one line on stderr when a newer stable release exists, with the command that updates this install: <code>git pull</code> for a source checkout, <code>composer global update waynestate/proctor</code> for a Composer global install, <code>composer update waynestate/proctor</code> for a project dependency (a <code>composer require</code> of the newest major.minor when the project's pin excludes it), and the single-file download above for the PHAR.</p>
+<pre tabindex="0"><code>proctor 0.17.0 is out of date: 0.18.0 is the newest release. Update: git pull
+</code></pre>
+<p>It asks Packagist at most once a day; the result sits in the user cache dir (<code>update-check.json</code> under <code>waynestate/proctor</code>). It stays silent offline and on any error, never touches stdout or the exit code, and is silent in CI and with <code>--quiet</code>. Set <code>WAYNE_NO_UPDATE_CHECK=1</code> to switch it off. A proctor that knows its own paper is stale says so in one line.</p>
 <h2 id="next-steps">Next <span class="docs-heading-tail"><span>steps</span><a class="docs-heading-link" aria-label="Link to this section" href="#next-steps">#</a></span></h2>
 <ul>
 <li><a href="guides/quick-start.html">Quick start</a>: run the first check and read the report.</li>
@@ -92,7 +97,7 @@ printing PROCTOR's version.</p>
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../docs/index.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">Overview</span></a><a class="docs-pager__link docs-pager__link--next" href="../docs/guides/quick-start.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">Quick start</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#requirements">Requirements</a></li><li class="docs-toc__item"><a href="#single-file-phar">Single-file PHAR</a></li><li class="docs-toc__item"><a href="#install-1">Install</a></li><li class="docs-toc__item"><a href="#verify">Verify</a></li><li class="docs-toc__item"><a href="#next-steps">Next steps</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#requirements">Requirements</a></li><li class="docs-toc__item"><a href="#single-file-phar">Single-file PHAR</a></li><li class="docs-toc__item"><a href="#install-1">Install</a></li><li class="docs-toc__item"><a href="#verify">Verify</a></li><li class="docs-toc__item"><a href="#update-notice">Update notice</a></li><li class="docs-toc__item"><a href="#next-steps">Next steps</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.17.0</span></span>

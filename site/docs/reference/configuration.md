@@ -15,6 +15,8 @@ This page lists every setting PROCTOR reads: the policy file and how it is found
 | PROCTOR_ALLOW_OVERRIDES | Set to exactly 1 by a trusted job (a protected or group-level CI variable, never the app's .gitlab-ci.yml) to allow --policy and --today in CI | none | src/Policy/CiGuard.php |
 | PROCTOR_POLICY | Path to a CREED-format policy file; tried before the app's vendor copy and the bundled copy when --policy is absent | none | src/Policy/PolicyResolver.php |
 
+The table is generated from the `PROCTOR_` variables the source reads, so one shared stack variable sits outside it: `WAYNE_NO_UPDATE_CHECK=1`, honoured by every stack client, switches off the update notice (the one stderr line a finished command prints when a newer stable release of the tool exists; `CI` and `--quiet` silence it the same way). See [Install](https://proctor.apps.wayne.edu/docs/install.html#update-notice).
+
 Warning
 
 None of the settings on this page take a secret. PROCTOR reads paths, dates and flags; it never asks for a token, password or key. The one nearby place credentials leak is a package source URL: a deploy token in the userinfo of a composer.json repository URL or a composer.lock source/dist URL, a `private_token`, `access_token`, `token` or `password` query parameter, or a `.npmrc` line that sets `_authToken`, `_auth` or `_password` to a literal value. The `repo-url-credentials` check warns when it sees one (the secret is masked as `***` in the message), and the fix is moving the token to `auth.json`, which is gitignored, or a CI variable, and using one registry URL without credentials.

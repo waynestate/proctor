@@ -69,6 +69,14 @@ host): `.\scripts\build-phar.ps1` on Windows, `scripts/build-phar.sh` on
 Linux / macOS. Each script writes `build/proctor.phar` and verifies it by
 printing PROCTOR's version.
 
+### Update notice
+
+After any command finishes, PROCTOR prints one line on stderr when a newer stable release exists, with the command that updates this install: `git pull` for a source checkout, `composer global update waynestate/proctor` for a Composer global install, `composer update waynestate/proctor` for a project dependency (a `composer require` of the newest major.minor when the project's pin excludes it), and the single-file download above for the PHAR.
+
+    proctor 0.17.0 is out of date: 0.18.0 is the newest release. Update: git pull
+
+It asks Packagist at most once a day; the result sits in the user cache dir (`update-check.json` under `waynestate/proctor`). It stays silent offline and on any error, never touches stdout or the exit code, and is silent in CI and with `--quiet`. Set `WAYNE_NO_UPDATE_CHECK=1` to switch it off.
+
 ### Usage
 
 ```
@@ -621,6 +629,8 @@ Strongly recommended: a git.wayne.edu instance runner.
 ### License
 
 MIT, Wayne State University, Enterprise Applications.
+
+Found a security problem? See [SECURITY.md](https://github.com/waynestate/proctor/blob/HEAD/SECURITY.md); please do not open a public issue.
 
 ---
 
@@ -3102,6 +3112,16 @@ vendor/bin/proctor check
 
 Expected: the text report. A header line with the tool and the versions of the external tools used (composer), a line naming the policy in use (origin, path, refresh date), one line per finding, one line per override, then a RESULT line. Exit codes: 0 for pass (warnings allowed), 1 for one or more failures, 2 for a tool error. A proctor that prints a mark sheet is a proctor that is on duty.
 
+### Update notice [#](https://proctor.apps.wayne.edu/docs/install.html#update-notice)
+
+After any command finishes, PROCTOR prints one line on stderr when a newer stable release exists, with the command that updates this install: `git pull` for a source checkout, `composer global update waynestate/proctor` for a Composer global install, `composer update waynestate/proctor` for a project dependency (a `composer require` of the newest major.minor when the project's pin excludes it), and the single-file download above for the PHAR.
+
+```
+proctor 0.17.0 is out of date: 0.18.0 is the newest release. Update: git pull
+```
+
+It asks Packagist at most once a day; the result sits in the user cache dir (`update-check.json` under `waynestate/proctor`). It stays silent offline and on any error, never touches stdout or the exit code, and is silent in CI and with `--quiet`. Set `WAYNE_NO_UPDATE_CHECK=1` to switch it off. A proctor that knows its own paper is stale says so in one line.
+
 ### Next steps [#](https://proctor.apps.wayne.edu/docs/install.html#next-steps)
 
 - [Quick start](https://proctor.apps.wayne.edu/docs/guides/quick-start.html): run the first check and read the report.
@@ -3215,6 +3235,8 @@ This page lists every setting PROCTOR reads: the policy file and how it is found
 | PROCTOR_ALLOW_OVERRIDES | Set to exactly 1 by a trusted job (a protected or group-level CI variable, never the app's .gitlab-ci.yml) to allow --policy and --today in CI | none | src/Policy/CiGuard.php |
 | PROCTOR_POLICY | Path to a CREED-format policy file; tried before the app's vendor copy and the bundled copy when --policy is absent | none | src/Policy/PolicyResolver.php |
 
+The table is generated from the `PROCTOR_` variables the source reads, so one shared stack variable sits outside it: `WAYNE_NO_UPDATE_CHECK=1`, honoured by every stack client, switches off the update notice (the one stderr line a finished command prints when a newer stable release of the tool exists; `CI` and `--quiet` silence it the same way). See [Install](https://proctor.apps.wayne.edu/docs/install.html#update-notice).
+
 Warning
 
 None of the settings on this page take a secret. PROCTOR reads paths, dates and flags; it never asks for a token, password or key. The one nearby place credentials leak is a package source URL: a deploy token in the userinfo of a composer.json repository URL or a composer.lock source/dist URL, a `private_token`, `access_token`, `token` or `password` query parameter, or a `.npmrc` line that sets `_authToken`, `_auth` or `_password` to a literal value. The `repo-url-credentials` check warns when it sees one (the secret is masked as `***` in the message), and the fix is moving the token to `auth.json`, which is gitignored, or a CI variable, and using one registry URL without credentials.
@@ -3310,6 +3332,8 @@ This page lists the three exit codes `proctor check` and `proctor gate` end with
 A missing composer.json is not a tool error: the app gets a verdict, with php-floor failing.
 
 On a tool error every format still writes its report to stdout, next to the message on stderr: `text` prints the message as a FAIL line, `json` writes the report shape with `result` set to `error`, an `error` field carrying the message and empty findings, `codequality` lists the error as one blocker issue, and `sarif` writes a log whose single run reports an unsuccessful invocation. A pipeline can read the reason from the report instead of only from stderr.
+
+The update notice (the one stderr line a finished command prints when a newer stable release exists) never changes an exit code: a run that passes with the notice still exits 0, and one that fails with it still exits 1.
 
 ### proctor gate [#](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html#proctor-gate)
 

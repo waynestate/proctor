@@ -22,6 +22,8 @@ A missing composer.json is not a tool error: the app gets a verdict, with php-fl
 
 On a tool error every format still writes its report to stdout, next to the message on stderr: `text` prints the message as a FAIL line, `json` writes the report shape with `result` set to `error`, an `error` field carrying the message and empty findings, `codequality` lists the error as one blocker issue, and `sarif` writes a log whose single run reports an unsuccessful invocation. A pipeline can read the reason from the report instead of only from stderr.
 
+The update notice (the one stderr line a finished command prints when a newer stable release exists) never changes an exit code: a run that passes with the notice still exits 0, and one that fails with it still exits 1.
+
 ## proctor gate [#](https://proctor.apps.wayne.edu/docs/reference/exit-codes.html#proctor-gate)
 
 The deploy gate uses the same three numbers with deploy words (see [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html)):

@@ -67,6 +67,7 @@
 </table></div>
 <p>A missing composer.json is not a tool error: the app gets a verdict, with php-floor failing.</p>
 <p>On a tool error every format still writes its report to stdout, next to the message on stderr: <code>text</code> prints the message as a FAIL line, <code>json</code> writes the report shape with <code>result</code> set to <code>error</code>, an <code>error</code> field carrying the message and empty findings, <code>codequality</code> lists the error as one blocker issue, and <code>sarif</code> writes a log whose single run reports an unsuccessful invocation. A pipeline can read the reason from the report instead of only from stderr.</p>
+<p>The update notice (the one stderr line a finished command prints when a newer stable release exists) never changes an exit code: a run that passes with the notice still exits 0, and one that fails with it still exits 1.</p>
 <h2 id="proctor-gate">proctor <span class="docs-heading-tail"><span>gate</span><a class="docs-heading-link" aria-label="Link to this section" href="#proctor-gate">#</a></span></h2>
 <p>The deploy gate uses the same three numbers with deploy words (see <a href="../guides/deploy-gate.html">Deploy gate</a>):</p>
 <div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
