@@ -61,6 +61,16 @@ vendor/bin/proctor check
 
 Expected: the text report. A header line with the tool and the versions of the external tools used (composer), a line naming the policy in use (origin, path, refresh date), one line per finding, one line per override, then a RESULT line. Exit codes: 0 for pass (warnings allowed), 1 for one or more failures, 2 for a tool error. A proctor that prints a mark sheet is a proctor that is on duty.
 
+## Update notice [#](https://proctor.apps.wayne.edu/docs/install.html#update-notice)
+
+After any command finishes, PROCTOR prints one line on stderr when a newer stable release exists, with the command that updates this install: `git pull` for a source checkout, `composer global update waynestate/proctor` for a Composer global install, `composer update waynestate/proctor` for a project dependency (a `composer require` of the newest major.minor when the project's pin excludes it), and the single-file download above for the PHAR.
+
+```
+proctor 0.17.0 is out of date: 0.18.0 is the newest release. Update: git pull
+```
+
+It asks Packagist at most once a day; the result sits in the user cache dir (`update-check.json` under `waynestate/proctor`). It stays silent offline and on any error, never touches stdout or the exit code, and is silent in CI and with `--quiet`. Set `WAYNE_NO_UPDATE_CHECK=1` to switch it off. A proctor that knows its own paper is stale says so in one line.
+
 ## Next steps [#](https://proctor.apps.wayne.edu/docs/install.html#next-steps)
 
 - [Quick start](https://proctor.apps.wayne.edu/docs/guides/quick-start.html): run the first check and read the report.

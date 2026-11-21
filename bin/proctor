@@ -22,6 +22,10 @@ use Waynestate\Proctor\Report\ReportWriter;
 use Waynestate\Proctor\Report\SarifWriter;
 use Waynestate\Proctor\Report\TextWriter;
 use Waynestate\Proctor\ToolError;
+use Waynestate\Proctor\Update\InstallKind;
+use Waynestate\Proctor\Update\PackagistFetcher;
+use Waynestate\Proctor\Update\UpdateCache;
+use Waynestate\Proctor\Update\UpdateNotice;
 
 // Installed as a dependency, Composer's bin proxy tells us where the host app's autoloader is.
 // Run from a checkout of PROCTOR itself, it is our own vendor/autoload.php. Either way, one roll call.
@@ -58,7 +62,9 @@ if (preg_match('/^(\d+)\s*([KMG])?B?$/i', trim($limit), $m) === 1) {
     }
 }
 
-$application = new class (Report::TOOL, Report::version()) extends Application {
+$version = Report::version();
+
+$application = new class (Report::TOOL, $version) extends Application {
     public function doRun(InputInterface $input, OutputInterface $output): int
     {
         $errorOutput = $output instanceof ConsoleOutput ? $output->getErrorOutput() : $output;
@@ -72,7 +78,7 @@ $application = new class (Report::TOOL, Report::version()) extends Application {
     }
 };
 
-$application->addCommand(new class () extends Command {
+$application->addCommand(new class extends Command {
     protected function configure(): void
     {
         $this
@@ -113,7 +119,7 @@ $application->addCommand(new class () extends Command {
             $this->recordToolError($record, $e->getMessage(), (string) $input->getOption('path'), $errorOutput);
             $output->writeln(
                 $this->toolErrorReport($format, $e->getMessage(), (string) $input->getOption('path')),
-                OutputInterface::OUTPUT_RAW
+                OutputInterface::OUTPUT_RAW,
             );
             return 2;
         }
@@ -135,7 +141,7 @@ $application->addCommand(new class () extends Command {
                 $checks,
                 $overrides,
                 $options->timeout,
-                $options->phpRuntime
+                $options->phpRuntime,
             );
             $findings = $runner->run();
         } catch (ToolError $e) {
@@ -143,7 +149,7 @@ $application->addCommand(new class () extends Command {
             $this->recordToolError($record, $e->getMessage(), $appPath, $errorOutput);
             $output->writeln(
                 $this->toolErrorReport($format, $e->getMessage(), $appPath),
-                OutputInterface::OUTPUT_RAW
+                OutputInterface::OUTPUT_RAW,
             );
             return 2;
         }
@@ -162,7 +168,7 @@ $application->addCommand(new class () extends Command {
             $overrides,
             $hasFail ? Report::EXIT_FAIL : Report::EXIT_PASS,
             $resolved,
-            ['composer' => $composerVersionCheck->composerVersion]
+            ['composer' => $composerVersionCheck->composerVersion],
         );
 
         // The record is written before stdout, so a run that could not keep
@@ -175,7 +181,7 @@ $application->addCommand(new class () extends Command {
             $this->recordToolError($record, $e->getMessage(), $report->path, $errorOutput);
             $output->writeln(
                 $this->toolErrorReport($format, $e->getMessage(), $report->path),
-                OutputInterface::OUTPUT_RAW
+                OutputInterface::OUTPUT_RAW,
             );
             return 2;
         }
@@ -186,7 +192,7 @@ $application->addCommand(new class () extends Command {
                 $errorOutput->writeln($e->getMessage(), OutputInterface::OUTPUT_RAW);
                 $output->writeln(
                     $this->toolErrorReport($format, $e->getMessage(), $report->path),
-                    OutputInterface::OUTPUT_RAW
+                    OutputInterface::OUTPUT_RAW,
                 );
                 return 2;
             }
@@ -247,4 +253,25 @@ $application->addCommand(new class () extends Command {
 // baseline, with a go or no-go a release script can branch on (ADR-0006).
 $application->addCommand(new GateCommand());
 
-exit($application->run());
+// After any command finishes, one line on stderr when a newer stable
+// release exists. The check never throws, never writes to stdout and
+// never changes the exit code; the running version is the one handed to
+// the Application constructor above. It runs after run() returns instead
+// of through a TERMINATE listener, because this stack's symfony/console
+// ships no event dispatcher to listen on, and attaching one would change
+// how signals end the process.
+$packageRoot = dirname(__DIR__);
+$notice = new UpdateNotice(
+    Report::TOOL,
+    $packageRoot,
+    InstallKind::detect($packageRoot, getenv() ?: []),
+    new UpdateCache(Report::TOOL),
+    new PackagistFetcher(),
+    static fn(): int => time(),
+);
+/** @var list<string> $argv */
+$argv = $GLOBALS['argv'] ?? [];
+$application->setAutoExit(false);
+$exitCode = $application->run();
+$notice->run(getenv() ?: [], $argv, $version, STDERR);
+exit($exitCode);

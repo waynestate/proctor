@@ -70,6 +70,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/raw-identity-header',
         'proctor/app-key',
         'proctor/app-debug',
+        'proctor/fake-driver',
         'proctor/display-errors',
         'proctor/directory-listing',
         'proctor/csp-unsafe-inline',
@@ -95,6 +96,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/app-key/cookie-sessions',
         // app-debug
         'proctor/app-debug/enabled',
+        'proctor/fake-driver/enabled',
         // display-errors
         'proctor/display-errors/on',
         'proctor/display-errors/log-off',
