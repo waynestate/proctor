@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Added: the update notice, one line on stderr after any command when a newer stable release of PROCTOR exists, with the command that updates this install (`git pull` for a checkout, `composer global update` or `composer update` for the Composer installs, the release-asset download for the PHAR). It checks Packagist at most once a day, stays silent offline, in CI and with `--quiet`, never touches stdout or an exit code, and `WAYNE_NO_UPDATE_CHECK=1` switches it off.
+- Docs: SECURITY.md says how to report a vulnerability privately.
 
 ## 0.17.0 (2026-11-19)
 

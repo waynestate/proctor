@@ -638,6 +638,8 @@ Strongly recommended: a git.wayne.edu instance runner.
 
 MIT, Wayne State University, Enterprise Applications.
 
+Found a security problem? See [SECURITY.md](SECURITY.md); please do not open a public issue.
+
 <details>
 <summary><b>The brand board</b>: the mark, lockups, palette and type</summary>
 <br>
