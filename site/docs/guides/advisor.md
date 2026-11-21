@@ -87,9 +87,9 @@ Four checks that do run read env files other than `.env`. Inside ADVISOR every o
 
 | Check | Files it reads, when git lists them | What it reads in them |
 | --- | --- | --- |
-| `mysql-eol`, `mysql-minimum` | `.env.squire.example`, `.env.example` | the `SQUIRE_MYSQL_IMAGE=` line |
-| `app-debug` | `.env.production`, `.env.squire.example` | the `APP_DEBUG` value |
-| `csp-unsafe-inline` | `.env.example`, `.env.production`, `.env.squire.example` | the `HELMET_CSP=` lines |
+| `mysql-eol`, `mysql-minimum` | `.env.example` | the `SQUIRE_MYSQL_IMAGE=` line |
+| `app-debug` | `.env.production` | the `APP_DEBUG` value |
+| `csp-unsafe-inline` | `.env.example`, `.env.production` | the `HELMET_CSP=` lines |
 
 To know what git lists without starting git, PROCTOR reads the repository's index file in PHP (the same list `git ls-files` prints), from the first `.git` folder or `.git` file at or above the app folder. A file on disk that the index does not list is not opened and comes back under `skipped_files`, with the reason `not tracked by git`, or `no git index to read` when there is no repository or its index is in a shape PROCTOR does not read (a split index). Add the file with `git add`, or run `vendor/bin/proctor check`, to have it graded.
 
