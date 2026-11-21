@@ -87,6 +87,7 @@ final class CheckSet
             new RawIdentityHeaderCheck(),
             new AppKeyCheck(),
             new AppDebugCheck(),
+            new FakeDriverCheck(),
             new DisplayErrorsCheck(),
             new DirectoryListingCheck(),
             new CspUnsafeInlineCheck(),

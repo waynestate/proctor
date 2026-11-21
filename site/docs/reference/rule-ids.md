@@ -142,6 +142,8 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `app-key` | `proctor/app-key/cookie-sessions` |
 | `app-debug` | `proctor/app-debug` |
 | `app-debug` | `proctor/app-debug/enabled` |
+| `fake-driver` | `proctor/fake-driver` |
+| `fake-driver` | `proctor/fake-driver/enabled` |
 | `display-errors` | `proctor/display-errors` |
 | `display-errors` | `proctor/display-errors/on` |
 | `display-errors` | `proctor/display-errors/log-off` |
