@@ -33,7 +33,7 @@ include:
   # Accessibility: Preflight's a11y component serves site/ and checks every page with axe-core 4.14.0, light and
   # dark, at 320 and 1280 px, plus WCAG 1.4.10 reflow, at WCAG 2.2 AA. Its Playwright image comes from
   # mcr.microsoft.com, which the Dependency Proxy does not front, so it takes no image_prefix.
-  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/a11y@0.9.0
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/a11y@0.12.0
     inputs:
       site_dir: site
       pages: ["**/*.html"]
