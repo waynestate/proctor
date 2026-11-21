@@ -13,7 +13,7 @@ The smallest pipeline change that satisfies `preflight-pinned` and `preflight-ga
 
 ```yaml
 include:
-  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.9.0
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.12.0
 ```
 
 The default command is `vendor/bin/proctor check --format=codequality`, so the findings show on the merge request as Code Quality. Do not add `--policy` or `--today` to `proctor_command`: in CI PROCTOR refuses both (exit 2) unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`, and without them it reads CREED's policy from the app's `vendor/waynestate/creed`. Since Preflight 0.4.0 the component clones the full history for this job (`git_depth: "0"`), so `override-approver` can read git blame. Strongly recommended: a git.wayne.edu instance runner. Preflight's own page lists every input: [preflight.apps.wayne.edu](https://preflight.apps.wayne.edu/).
