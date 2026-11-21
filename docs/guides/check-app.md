@@ -214,7 +214,7 @@ Fix by setting `APP_DEBUG=false` in the file the report names.
 
 `fake-driver` fails when a committed env, deploy or CI file allows SESAME's fake driver: `SESAME_DRIVER=fake` or `SESAME_FAKE_ALLOWED=true`, case-insensitive, with optional spaces around `=` or `:`. The fake driver signs anyone in without an identity provider, so it belongs in local and test environments only; a production config must use `cas` (or another real driver) and never set `SESAME_FAKE_ALLOWED`. It is not in the deploy gate.
 
-Scanned: `.env.production` and `.env.squire.example` at the root, every file under a top-level `deploy/` or `deployments/` directory at any depth, and the CI pipelines (`.gitlab-ci.yml` and every `.github/workflows/*.yml`). Skipped at any depth: `vendor/`, `node_modules/` and `.git/`. One failure per file, on the line of its first match; a file that cannot be read is skipped. It never reads `.env` (a committed `.env` is the app-key check's finding) or `.env.example`, the local-development template where the fake driver belongs.
+Scanned: `.env.production` at the root, every file under a top-level `deploy/` or `deployments/` directory at any depth, and the CI pipelines (`.gitlab-ci.yml` and every `.github/workflows/*.yml`). Skipped at any depth: `vendor/`, `node_modules/` and `.git/`. One failure per file, on the line of its first match; a file that cannot be read is skipped. It never reads `.env` (a committed `.env` is the app-key check's finding) or `.env.example`, the local-development template where the fake driver belongs.
 
 Fix by setting `SESAME_DRIVER=cas` (or another real driver) and removing `SESAME_FAKE_ALLOWED` from the file the report names.
 
