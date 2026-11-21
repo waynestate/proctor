@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Removed: Squire's local-running kit files (docker-compose.squire.yml, haproxy.cfg, parity scripts, env example; D-095). Parity runs the app locally: `parity up` in `deploy/`.
+
 ## 0.17.0 (2026-11-19)
 
 - Upgrade: a minor release under 0.x, so `^0.16` does not pick it up; change the constraint to `^0.17` (see Upgrading). The three new checks warn and never fail a run or the deploy gate.
