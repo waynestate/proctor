@@ -7,6 +7,33 @@ description: How to upgrade PROCTOR to a newer release and note the changes that
 
 PROCTOR is the invigilator, so upgrading it is a seat change, not a new exam: same hall, fresher pen. This page tells you how to move an app from one PROCTOR release to the next and which changes affect your runs. Start with the release that has a break, then work down to the additive ones.
 
+## 0.18.0
+
+Released 2026-11-22. A minor release. Under 0.x, `^0.17` does not pick it up: change the constraint to `^0.18`, then run `composer update waynestate/proctor`. Two new checks can report on apps that passed before: `app-env` warns and never fails, and `fake-driver` fails a committed production file that sets the fake driver.
+
+### Breaking
+
+- None. No existing rule changed its verdict. The `app-env` check warns and never fails; the `fake-driver` check fails only where a committed production env template, deploy file or CI pipeline sets `SESAME_DRIVER=fake` or `SESAME_FAKE_ALLOWED=true`.
+
+### Changed
+
+- `app-env` warns when a committed production env template, deploy file or CI pipeline sets `APP_ENV` to anything but production.
+- `fake-driver` fails when one of those files sets `SESAME_DRIVER=fake` or `SESAME_FAKE_ALLOWED=true`.
+- Squire's local-running kit files are no longer expected; Parity runs apps locally.
+
+### Deprecated
+
+- None recorded so far.
+
+### Steps
+
+1. Change the constraint in `composer.json` to `"waynestate/proctor": "^0.18"` and run `composer update waynestate/proctor`.
+2. Fix any new finding: set `APP_ENV=production` in the named file, remove the fake driver from production files, or write a note from home (an override) for a deliberate exception.
+
+### How to verify
+
+- Run `proctor --version` and confirm it prints `0.18.0`.
+
 ## 0.17.0
 
 Released 2026-11-19. A minor release. Under 0.x, `^0.16` does not pick it up: change the constraint to `^0.17`, then run `composer update waynestate/proctor`.
