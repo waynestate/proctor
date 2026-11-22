@@ -210,6 +210,19 @@ Fix by setting `APP_DEBUG=false` in the file the report names.
 | `app-debug` | `proctor/app-debug` |
 | `app-debug` | `proctor/app-debug/enabled` |
 
+## app-env
+
+`app-env` warns, never fails, when a committed env, deploy or CI file sets `APP_ENV` to a literal environment that is not `production` (case-insensitive, optional spaces around `=` or `:`). A deployed environment runs as production, so a template, deploy script or CI pipeline that pins `staging` or `local` ships the wrong border with the release (D-133). It reports, and is not in the deploy gate.
+
+Scanned: `.env.production` and `.env.squire.example` at the root, every file under a top-level `deploy/` or `deployments/` directory at any depth, and the CI pipelines (`.gitlab-ci.yml` and every `.github/workflows/*.yml`). Skipped at any depth: `vendor/`, `node_modules/` and `.git/`. One warning per file, on the line of its first flagged value; a file that cannot be read is skipped. A value that starts with `$` (a variable reference) is not flagged, and a line whose first non-space character is `#` is skipped. It never reads `.env` (a committed `.env` is the app-key check's finding) or `.env.example`, the local-development template where another environment is expected.
+
+Fix by setting `APP_ENV=production` in the file the report names.
+
+| Check | Rule id |
+| --- | --- |
+| `app-env` | `proctor/app-env` |
+| `app-env` | `proctor/app-env/not-production` |
+
 ## fake-driver
 
 `fake-driver` fails when a committed env, deploy or CI file allows SESAME's fake driver: `SESAME_DRIVER=fake` or `SESAME_FAKE_ALLOWED=true`, case-insensitive, with optional spaces around `=` or `:`. The fake driver signs anyone in without an identity provider, so it belongs in local and test environments only; a production config must use `cas` (or another real driver) and never set `SESAME_FAKE_ALLOWED`. It is not in the deploy gate.

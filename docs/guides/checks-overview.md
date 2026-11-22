@@ -7,11 +7,11 @@ description: An overview of every check PROCTOR runs and how each reports pass, 
 
 This page lists every check PROCTOR runs in a single `vendor/bin/proctor check` run, and how each one reports. The proctor asks the same questions in the same order on every run; only the hall changes.
 
-Forty-nine checks in all. Eight of them also run at the door, in `proctor gate`: `php-floor`, `unpatched`, `laravel-eol`, `laravel-php`, `lock-committed`, `composer-audit`, `overrides` and `policy-age` (see [Deploy gate](deploy-gate.md)). The newest are `script-pair` (0.14.0) and `mysql56-ci` (0.15.0).
+Fifty checks in all. Eight of them also run at the door, in `proctor gate`: `php-floor`, `unpatched`, `laravel-eol`, `laravel-php`, `lock-committed`, `composer-audit`, `overrides` and `policy-age` (see [Deploy gate](deploy-gate.md)). The newest are `script-pair` (0.14.0) and `mysql56-ci` (0.15.0).
 
 ![Nine real lines from PROCTOR's text report, one per check shown: FAIL php-floor, WARN unpatched, FAIL unbounded-constraints, PASS lock-committed, WARN portability, WARN mysql56, WARN ci-pipelines, PASS composer-audit, FAIL overrides. Each line is written in words; color only repeats what the word says.](../readme/report.svg)
 
-*Nine of the forty-nine checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
+*Nine of the fifty checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
 
 ## How a check reports
 
@@ -76,6 +76,7 @@ The checks that read the app's own files: the Node line it builds on, the MySQL 
 - `raw-identity-header`: warns, never fails, when app code reads an identity header directly: a string key on `$_SERVER` or `$_ENV`, the quoted argument of `getenv()` or `apache_getenv()`, a quoted first argument of the request's `header()`, `server()`, `hasHeader()`, `getHeader()` or `getHeaderLine()` methods, or a key on the `getallheaders()` result. Only SESAME's gateway driver may read those headers: it verifies the signed assertion first (CREED auth-3).
 - `app-key`: warns on a committed real env file, a real APP_KEY committed in an env file or `config/app.php` (never printed), and the cookie session driver. A real env file is graded only when git lists it or the run is in CI.
 - `app-debug`: warns, never fails, when a committed env, deploy or CI file sets `APP_DEBUG` to `true` or `1`; one warning per file, on the line of its first true value. It never reads `.env`.
+- `app-env`: warns, never fails, when a committed env, deploy or CI file sets `APP_ENV` to a literal environment that is not `production` (case-insensitive); a variable reference (`$APP_ENV`) is not flagged, and a line whose first non-space character is `#` is skipped. One warning per file, on the line of its first flagged value. It never reads `.env`.
 - `fake-driver`: fails when a committed env, deploy or CI file allows SESAME's fake driver (`SESAME_DRIVER=fake` or `SESAME_FAKE_ALLOWED=true`); one failure per file, on the line of its first match. It never reads `.env`.
 - `display-errors`: warns, never fails, when a committed php.ini, .user.ini or .htaccess turns `display_errors` on or `log_errors` off (CREED runtime-and-headers); one warning per file per rule, on the line of its first match.
 - `directory-listing`: warns, never fails, when a committed .htaccess or server config turns on directory listing (Apache Options Indexes or All, nginx autoindex on) (CREED production); one warning per file, on the line of its first match.
