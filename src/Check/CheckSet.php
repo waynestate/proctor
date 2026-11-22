@@ -87,6 +87,7 @@ final class CheckSet
             new RawIdentityHeaderCheck(),
             new AppKeyCheck(),
             new AppDebugCheck(),
+            new AppEnvCheck(),
             new FakeDriverCheck(),
             new DisplayErrorsCheck(),
             new DirectoryListingCheck(),

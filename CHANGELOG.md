@@ -7,6 +7,7 @@
 - Removed: Squire's local-running kit files (docker-compose.squire.yml, haproxy.cfg, parity scripts, env example; D-095). Parity runs the app locally: `parity up` in `deploy/`.
 - Added: the update notice, one line on stderr after any command when a newer stable release of PROCTOR exists, with the command that updates this install (`git pull` for a checkout, `composer global update` or `composer update` for the Composer installs, the release-asset download for the PHAR). It checks Packagist at most once a day, stays silent offline, in CI and with `--quiet`, never touches stdout or an exit code, and `WAYNE_NO_UPDATE_CHECK=1` switches it off.
 - Added: the fake-driver check fails when a committed production env template, deploy file or CI pipeline sets SESAME_DRIVER=fake or SESAME_FAKE_ALLOWED=true.
+- Added: the app-env check warns when a committed production env template, deploy file or CI pipeline sets APP_ENV to anything but production (D-133).
 - Docs: SECURITY.md says how to report a vulnerability privately.
 
 ## 0.17.0 (2026-11-19)

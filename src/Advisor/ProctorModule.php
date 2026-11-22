@@ -36,9 +36,9 @@ use Waynestate\Proctor\ToolError;
  * out and listed under `skipped`, so an agent knows exactly what it did not
  * see. No subprocess, no network, nothing written, and `.env` is never read.
  *
- * Five checks that do run read env files other than `.env`: mysql-eol and
- * mysql-minimum (`.env.squire.example`, `.env.example`), app-debug and
- * fake-driver (`.env.production`, `.env.squire.example`) and
+ * Six checks that do run read env files other than `.env`: mysql-eol and
+ * mysql-minimum (`.env.squire.example`, `.env.example`), app-debug, app-env
+ * and fake-driver (`.env.production`, `.env.squire.example`) and
  * csp-unsafe-inline (`.env.example`, `.env.production`, `.env.squire.example`).
  * Here every one of them grades an env file only when git lists it
  * (TrackedEnvFiles reads git's index in PHP, without starting git); a file on
@@ -133,6 +133,7 @@ final class ProctorModule implements Module
         'wayneui-forked-views' => 'check-wayneui',
         'wayneui-outdated' => 'check-wayneui',
         'app-debug' => 'check-app',
+        'app-env' => 'check-app',
         'fake-driver' => 'check-app',
         'display-errors' => 'check-app',
         'directory-listing' => 'check-app',
@@ -235,7 +236,7 @@ final class ProctorModule implements Module
         return new ToolDefinition(
             name: 'proctor_check',
             title: 'Run PROCTOR\'s file checks on an app folder',
-            description: 'Runs PROCTOR\'s checks on the app folder in-process with PROCTOR\'s own CheckRunner, the way proctor check runs them by default: the CREED policy PROCTOR bundles, today\'s date and the app\'s policy-overrides.json. Returns each finding (rule id, status, message, file, line), the counts per status and a pass or fail verdict. The checks that start a subprocess (composer audit, composer --version, the ones that ask git which files are committed) and the two that read committed .env files (app-key, vite-secrets) are left out and listed under skipped; run proctor check for the full set. Five checks that run read env files other than .env: mysql-eol and mysql-minimum (.env.squire.example, .env.example), app-debug and fake-driver (.env.production, .env.squire.example) and csp-unsafe-inline (.env.example, .env.production, .env.squire.example). All five grade an env file only when git lists it (git\'s index is read in PHP); one git does not list is not opened and is listed under skipped_files. No subprocess, no network, nothing written, and it never reads .env. The path must be inside the project. PROCTOR decides.',
+            description: 'Runs PROCTOR\'s checks on the app folder in-process with PROCTOR\'s own CheckRunner, the way proctor check runs them by default: the CREED policy PROCTOR bundles, today\'s date and the app\'s policy-overrides.json. Returns each finding (rule id, status, message, file, line), the counts per status and a pass or fail verdict. The checks that start a subprocess (composer audit, composer --version, the ones that ask git which files are committed) and the two that read committed .env files (app-key, vite-secrets) are left out and listed under skipped; run proctor check for the full set. Six checks that run read env files other than .env: mysql-eol and mysql-minimum (.env.squire.example, .env.example), app-debug, app-env and fake-driver (.env.production, .env.squire.example) and csp-unsafe-inline (.env.example, .env.production, .env.squire.example). All six grade an env file only when git lists it (git\'s index is read in PHP); one git does not list is not opened and is listed under skipped_files. No subprocess, no network, nothing written, and it never reads .env. The path must be inside the project. PROCTOR decides.',
             inputSchema: [
                 'type' => 'object',
                 'properties' => [
