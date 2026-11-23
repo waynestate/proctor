@@ -220,8 +220,9 @@ final class MysqlEolCheckTest extends ProctorTestCase
         );
         self::assertSame(['mysql-eol'], $this->nonPassCheckIds($result['stdout']));
 
-        unlink($composer);
-        rmdir($bin);
+        // runCommand() may already have removed the single-use stub dir (backstop for early-fail paths).
+        @unlink($composer);
+        @rmdir($bin);
         foreach (['docker-compose.yml', 'composer.json', 'composer.lock', '.gitlab-ci.yml', '.gitattributes'] as $file) {
             unlink($dir . '/' . $file);
         }
