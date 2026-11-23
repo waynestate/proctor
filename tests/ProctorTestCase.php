@@ -145,6 +145,17 @@ abstract class ProctorTestCase extends TestCase
             $env[(string) $key] = (string) $value;
         }
 
+        // A custom PATH must actually carry the stub executable the test
+        // asked for: a missing or non-executable stub used to surface only
+        // later, as a confusing check-message mismatch in the child output
+        // (the DRC-proctor-1 landing flake), so fail here, loudly.
+        if ($path !== null) {
+            $stub = $path . '/composer';
+            if (!is_file($stub) || !is_executable($stub)) {
+                self::fail("expected an executable composer stub at {$stub} (custom PATH {$path})");
+            }
+        }
+
         $process = proc_open($cmd, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, null, $env);
         if (!is_resource($process)) {
             self::fail('could not start bin/proctor');
@@ -156,6 +167,14 @@ abstract class ProctorTestCase extends TestCase
         fclose($pipes[2]);
         $exit = proc_close($process);
 
+        // Best-effort cleanup: a custom PATH directory is single-use (see
+        // fakeComposerPath()), so remove it once the child has exited. Only
+        // ever touch directories under the system temp dir.
+        if ($path !== null && str_starts_with($path, sys_get_temp_dir() . '/')) {
+            @unlink($path . '/composer');
+            @rmdir($path);
+        }
+
         return ['exit' => $exit, 'stdout' => (string) $stdout, 'stderr' => (string) $stderr];
     }
 
@@ -164,13 +183,17 @@ abstract class ProctorTestCase extends TestCase
      * must reach the audit step even though the CLI runs normally with a
      * PATH that finds no tools. The stub exits 0 with empty output, so
      * ComposerVersionCheck warns instead of failing.
+     *
+     * Each call gets its own uniquely named directory: a shared one let any
+     * external deletion or crash leave the stub missing mid-suite, which the
+     * child then reported as a plain "composer not found" failure (the
+     * DRC-proctor-1 landing flake). runCommand() removes the directory again
+     * once the child has exited.
      */
     protected function fakeComposerPath(): string
     {
-        $dir = sys_get_temp_dir() . '/proctor-fake-composer';
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
+        $dir = sys_get_temp_dir() . '/proctor-fake-composer-' . uniqid('', true);
+        mkdir($dir, 0755, true);
         $composer = $dir . '/composer';
         file_put_contents($composer, "#!/bin/sh\nexit 0\n");
         chmod($composer, 0755);
