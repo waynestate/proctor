@@ -749,7 +749,7 @@ The whole paper
 Every check `proctor check` asks, in the order it asks them. Each id opens its page in the docs.
 
 - Gate also asked by `proctor gate` before a deploy
-- New new in 0.17.0
+- New new in 0.18.0
 
 1. [`php-floor`](https://proctor.apps.wayne.edu/docs/guides/check-php.html#php-floor): Is the lowest PHP you allow still supported? Gate
 2. [`unpatched`](https://proctor.apps.wayne.edu/docs/guides/check-php.html#unpatched): Is each locked line on its latest patch? Gate
@@ -780,15 +780,15 @@ Every check `proctor check` asks, in the order it asks them. Each id opens its p
 27. [`composer-version`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-version): Is the Composer on PATH safe?
 28. [`repo-url-credentials`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#repo-url-credentials): Is a token written into a package URL?
 29. [`instant-client-committed`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#instant-client-committed): Is Oracle Instant Client committed?
-30. [`raw-oci`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#raw-oci): Does code talk to Oracle directly? New
-31. [`oracle-sql-interpolation`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#oracle-sql-interpolation): Is Oracle SQL built from PHP values? New
-32. [`oracle-credentials-literal`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#oracle-credentials-literal): Is an Oracle password written into the repo? New
+30. [`raw-oci`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#raw-oci): Does code talk to Oracle directly?
+31. [`oracle-sql-interpolation`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#oracle-sql-interpolation): Is Oracle SQL built from PHP values?
+32. [`oracle-credentials-literal`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#oracle-credentials-literal): Is an Oracle password written into the repo?
 33. [`env-outside-config`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#env-outside-config): Is `env()` called outside config?
 34. [`raw-identity-header`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#raw-identity-header): Does code read identity headers itself?
 35. [`app-key`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-key): Is the APP_KEY given away?
 36. [`app-debug`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-debug): Does a production file turn APP_DEBUG on?
-37. [`app-env`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-env): Does a committed file pin APP_ENV away from production?
-38. [`fake-driver`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#fake-driver): Does a committed config let the fake login driver in?
+37. [`app-env`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-env): Does a committed file pin APP_ENV away from production? New
+38. [`fake-driver`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#fake-driver): Does a committed config let the fake login driver in? New
 39. [`display-errors`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#display-errors): Does a php.ini show errors to visitors?
 40. [`directory-listing`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#directory-listing): Does the server list a folder's files?
 41. [`csp-unsafe-inline`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#csp-unsafe-inline): Does the CSP let inline scripts run?
@@ -1072,7 +1072,7 @@ Hall G GitLab, through Preflight
 
 ```
 include:
-  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.9.0
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.12.0
 ```
 
 The default command is `vendor/bin/proctor check --format=codequality`, so findings show on the merge request. It clones the full history, so `override-approver` can read git blame. With PROCTOR 0.11.0 or later it also adds `--record` and keeps `proctor.json`, the report Rollcall reads. We strongly recommend a git.wayne.edu instance runner.
@@ -1267,7 +1267,7 @@ Transfer students, new this term
   The deploy kit for Citadel. Its release script asks `proctor gate` for a go or no-go, and can be set to stop on a no-go.
 - ![Parity logo](https://proctor.apps.wayne.edu/assets/marks/parity.png)
   [Parity](https://parity.apps.wayne.edu/)
-  Runs Citadel on your computer: a practice exam on the real paper. Version 0.1.0 is out.
+  Runs Citadel on your computer: a practice exam on the real paper. Version 0.2.0 is out.
 - ![Drawbridge logo](https://proctor.apps.wayne.edu/assets/marks/drawbridge.png)
   [Drawbridge](https://drawbridge.apps.wayne.edu/)
   A gateway that signs people in through Entra ID before they reach a Citadel app.
@@ -1877,7 +1877,7 @@ To keep PROCTOR's full JSON report from the same run, add `--record`: `vendor/bi
 
 Preflight 0.9.0 does this on its own. When the app's PROCTOR lists `--record` in `proctor check --help` (PROCTOR 0.11.0 or later), the component adds `--record "$CI_PROJECT_DIR/proctor.json"` to a `proctor check` command and keeps `proctor.json` as an artifact under `when: always`, next to the Code Quality report. It never adds the option to a `proctor gate` command, whose record is a deploy verdict, not the report Rollcall reads, to a command that already passes it, or to one that is not a plain `proctor check` line (shell operators, quotes or `$`). With an older PROCTOR the job log says so and the run keeps no `proctor.json`: move the app to PROCTOR ^0.11.
 
-Still pinned to Preflight 0.4.0? That component keeps only the Code Quality report, so do both halves yourself: put the `--record` command above in the `proctor_command` input, and add `artifacts: paths: [proctor.json]` to a `proctor:` job in your own `.gitlab-ci.yml`, next to the include. GitLab merges that key into the component's job, which already keeps its artifacts `when: always`; it re-declares no `script`, so `preflight-pinned` has nothing to flag. Or move the pin to `@0.9.0` and drop both.
+Still pinned to Preflight 0.4.0? That component keeps only the Code Quality report, so do both halves yourself: put the `--record` command above in the `proctor_command` input, and add `artifacts: paths: [proctor.json]` to a `proctor:` job in your own `.gitlab-ci.yml`, next to the include. GitLab merges that key into the component's job, which already keeps its artifacts `when: always`; it re-declares no `script`, so `preflight-pinned` has nothing to flag. Or move the pin to `@0.12.0` and drop both.
 
 ### ci-pipelines [#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#ci-pipelines)
 
@@ -2400,7 +2400,7 @@ Source: https://proctor.apps.wayne.edu/docs/guides/checks-overview.html
 
 This page lists every check PROCTOR runs in a single `vendor/bin/proctor check` run, and how each one reports. The proctor asks the same questions in the same order on every run; only the hall changes.
 
-Fifty checks in all. Eight of them also run at the door, in `proctor gate`: `php-floor`, `unpatched`, `laravel-eol`, `laravel-php`, `lock-committed`, `composer-audit`, `overrides` and `policy-age` (see [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html)). The newest are `script-pair` (0.14.0) and `mysql56-ci` (0.15.0).
+Fifty checks in all. Eight of them also run at the door, in `proctor gate`: `php-floor`, `unpatched`, `laravel-eol`, `laravel-php`, `lock-committed`, `composer-audit`, `overrides` and `policy-age` (see [Deploy gate](https://proctor.apps.wayne.edu/docs/guides/deploy-gate.html)). The newest are `app-env` and `fake-driver` (0.18.0).
 
 ![Nine real lines from PROCTOR's text report, one per check shown: FAIL php-floor, WARN unpatched, FAIL unbounded-constraints, PASS lock-committed, WARN portability, WARN mysql56, WARN ci-pipelines, PASS composer-audit, FAIL overrides. Each line is written in words; color only repeats what the word says.](https://proctor.apps.wayne.edu/docs/readme/report.svg)
 

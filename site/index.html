@@ -303,7 +303,7 @@
           <p class="paper__lede">Every check <code>proctor check</code> asks, in the order it asks them. Each id opens its page in the docs.</p>
           <ul class="paper__legend">
             <li><span class="tag tag--gate">Gate</span> also asked by <code>proctor gate</code> before a deploy</li>
-            <li><span class="tag tag--new">New</span> new in 0.17.0</li>
+            <li><span class="tag tag--new">New</span> new in 0.18.0</li>
           </ul>
         </header>
         <ol class="paper__list">
@@ -336,15 +336,15 @@
           <li class="pq" style="--i:26"><a class="pq__id" href="docs/guides/check-composer.html#composer-version"><code>composer-version</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is the Composer on PATH safe?</span></li>
           <li class="pq" style="--i:27"><a class="pq__id" href="docs/guides/check-composer.html#repo-url-credentials"><code>repo-url-credentials</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is a token written into a package URL?</span></li>
           <li class="pq" style="--i:28"><a class="pq__id" href="docs/guides/check-ci.html#instant-client-committed"><code>instant-client-committed</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is Oracle Instant Client committed?</span></li>
-          <li class="pq" style="--i:29"><a class="pq__id" href="docs/guides/check-app.html#raw-oci"><code>raw-oci</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does code talk to Oracle directly?</span> <span class="tag tag--new">New</span></li>
-          <li class="pq" style="--i:30"><a class="pq__id" href="docs/guides/check-app.html#oracle-sql-interpolation"><code>oracle-sql-interpolation</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is Oracle SQL built from PHP values?</span> <span class="tag tag--new">New</span></li>
-          <li class="pq" style="--i:31"><a class="pq__id" href="docs/guides/check-app.html#oracle-credentials-literal"><code>oracle-credentials-literal</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is an Oracle password written into the repo?</span> <span class="tag tag--new">New</span></li>
+          <li class="pq" style="--i:29"><a class="pq__id" href="docs/guides/check-app.html#raw-oci"><code>raw-oci</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does code talk to Oracle directly?</span></li>
+          <li class="pq" style="--i:30"><a class="pq__id" href="docs/guides/check-app.html#oracle-sql-interpolation"><code>oracle-sql-interpolation</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is Oracle SQL built from PHP values?</span></li>
+          <li class="pq" style="--i:31"><a class="pq__id" href="docs/guides/check-app.html#oracle-credentials-literal"><code>oracle-credentials-literal</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is an Oracle password written into the repo?</span></li>
           <li class="pq" style="--i:32"><a class="pq__id" href="docs/guides/check-app.html#env-outside-config"><code>env-outside-config</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is <code>env()</code> called outside config?</span></li>
           <li class="pq" style="--i:33"><a class="pq__id" href="docs/guides/check-app.html#raw-identity-header"><code>raw-identity-header</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does code read identity headers itself?</span></li>
           <li class="pq" style="--i:34"><a class="pq__id" href="docs/guides/check-app.html#app-key"><code>app-key</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Is the APP_KEY given away?</span></li>
           <li class="pq" style="--i:35"><a class="pq__id" href="docs/guides/check-app.html#app-debug"><code>app-debug</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a production file turn APP_DEBUG on?</span></li>
-          <li class="pq" style="--i:36"><a class="pq__id" href="docs/guides/check-app.html#app-env"><code>app-env</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a committed file pin APP_ENV away from production?</span></li>
-<li class="pq" style="--i:37"><a class="pq__id" href="docs/guides/check-app.html#fake-driver"><code>fake-driver</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a committed config let the fake login driver in?</span></li>
+          <li class="pq" style="--i:36"><a class="pq__id" href="docs/guides/check-app.html#app-env"><code>app-env</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a committed file pin APP_ENV away from production?</span> <span class="tag tag--new">New</span></li>
+<li class="pq" style="--i:37"><a class="pq__id" href="docs/guides/check-app.html#fake-driver"><code>fake-driver</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a committed config let the fake login driver in?</span> <span class="tag tag--new">New</span></li>
           <li class="pq" style="--i:38"><a class="pq__id" href="docs/guides/check-app.html#display-errors"><code>display-errors</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does a php.ini show errors to visitors?</span></li>
           <li class="pq" style="--i:39"><a class="pq__id" href="docs/guides/check-app.html#directory-listing"><code>directory-listing</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does the server list a folder's files?</span></li>
           <li class="pq" style="--i:40"><a class="pq__id" href="docs/guides/check-app.html#csp-unsafe-inline"><code>csp-unsafe-inline</code></a><span class="wsu-sr-only">: </span><span class="pq__ask">Does the CSP let inline scripts run?</span></li>
@@ -690,7 +690,7 @@ RESULT: fail (1 failures, 1 warnings)</code></pre>
         <article class="hall" data-reveal>
           <p class="hall__door"><span class="hall__room">Hall G</span> GitLab, through Preflight</p>
 <pre class="hall__pre"><code>include:
-  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.9.0</code></pre>
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.12.0</code></pre>
           <p class="hall__note">The default command is <code>vendor/bin/proctor check --format=codequality</code>, so findings show on the merge request. It clones the full history, so <code>override-approver</code> can read git blame. With PROCTOR 0.11.0 or later it also adds <code>--record</code> and keeps <code>proctor.json</code>, the report Rollcall reads. We strongly recommend a git.wayne.edu instance runner.</p>
         </article>
         <article class="hall" data-reveal>
@@ -899,7 +899,7 @@ Output: the workflow file, then what code scanning will show, then your question
           <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/booster.png" width="56" height="56" alt="Booster logo"><div><p class="desk__name"><a class="part-link" href="https://booster.apps.wayne.edu/">Booster</a></p><p class="desk__role">Upgrades PHP and Laravel one version at a time, until the PHP floor passes.</p></div></li>
           <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/rollcall.png" width="56" height="56" alt="Rollcall logo"><div><p class="desk__name"><a class="part-link" href="https://rollcall.apps.wayne.edu/">Rollcall</a></p><p class="desk__role">Scans the apps and reports each one's PHP, Laravel and sign-in versions.</p></div></li>
           <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/squire.png" width="56" height="56" alt="Squire logo"><div><p class="desk__name"><a class="part-link" href="https://squire.apps.wayne.edu/">Squire</a></p><p class="desk__role">The deploy kit for Citadel. Its release script asks <code>proctor gate</code> for a go or no-go, and can be set to stop on a no-go.</p></div></li>
-          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/parity.png" width="56" height="56" alt="Parity logo"><div><p class="desk__name"><a class="part-link" href="https://parity.apps.wayne.edu/">Parity</a></p><p class="desk__role">Runs Citadel on your computer: a practice exam on the real paper. Version 0.1.0 is out.</p></div></li>
+          <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/parity.png" width="56" height="56" alt="Parity logo"><div><p class="desk__name"><a class="part-link" href="https://parity.apps.wayne.edu/">Parity</a></p><p class="desk__role">Runs Citadel on your computer: a practice exam on the real paper. Version 0.2.0 is out.</p></div></li>
           <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/drawbridge.png" width="56" height="56" alt="Drawbridge logo"><div><p class="desk__name"><a class="part-link" href="https://drawbridge.apps.wayne.edu/">Drawbridge</a></p><p class="desk__role">A gateway that signs people in through Entra ID before they reach a Citadel app.</p></div></li>
           <li class="desk" data-reveal><img class="desk__mark" src="assets/marks/advisor.png" width="56" height="56" alt="ADVISOR logo"><div><p class="desk__name"><a class="part-link" href="https://advisor.apps.wayne.edu/">ADVISOR</a></p><p class="desk__role">An MCP server. Its <code>run_proctor_check</code> tool runs your app's PROCTOR for your agent.</p></div></li>
         </ul>
