@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Changed: `deploy/`, the layer that serves the front page, requires PROCTOR `^0.18` (was `^0.16`, which does not allow 0.18), so the site's own deploy gate runs the current checks.
+- Tests: the suite's fake-composer stub gets its own directory per test and fails loudly when the stub is missing, so an intermittent red in `CheckCommandTest` names its cause next time.
+
 ## 0.18.0 (2026-11-22)
 
 - Added: the update notice, one line on stderr after any command when a newer stable release of PROCTOR exists, with the command that updates this install (`git pull` for a checkout, `composer global update` or `composer update` for the Composer installs, the release-asset download for the PHAR). It checks Packagist at most once a day, stays silent offline, in CI and with `--quiet`, never touches stdout or an exit code, and `WAYNE_NO_UPDATE_CHECK=1` switches it off.
