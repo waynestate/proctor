@@ -111,7 +111,7 @@ A Preflight include, a gate job or a PROCTOR job in a local file the pipeline in
 
 ## mysql56-ci
 
-`mysql56-ci` warns, and never fails, when an app has migrations but its `.gitlab-ci.yml` never runs them against MySQL 5.6 (CREED `databases.md`): Citadel's shared server is 5.6.51, so a migration set that only ever met SQLite or a newer MySQL in CI can fail on the first deploy. The `mysql56` check scans the code for features 5.6 rejects; this one checks the wiring.
+`mysql56-ci` warns, and never fails, when an app has migrations but its `.gitlab-ci.yml` never runs them against MySQL 5.6 (CREED `databases.md`): Citadel's shared server is on MySQL 5.6, so a migration set that only ever met SQLite or a newer MySQL in CI can fail on the first deploy. The `mysql56` check scans the code for features 5.6 rejects; this one checks the wiring.
 
 - Migrations exist (a `database/migrations/` directory holding at least one `*.php` file) and the pipeline never runs them against 5.6 warns (`proctor/mysql56-ci/no-job`), once, on the pipeline file. The pipeline runs them when an `include:` entry carries a `component:` path containing `/preflight/mysql56-migrate@`, a top-level job is named `mysql56-migrate`, or an included `mysql56-migrate` component sets `inputs: job_name:` to some name, in `.gitlab-ci.yml` or any local file it includes.
 
