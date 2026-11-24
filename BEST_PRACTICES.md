@@ -253,7 +253,9 @@ Sources: [Composer basic usage: the lock file](https://getcomposer.org/doc/01-ba
 disk is not proof that it is committed: the `proctor` CI component runs `composer install` first, and Composer writes a
 lock when none is committed. So `lock-tracked` asks git and warns (`proctor/lock-tracked`) when the lock is on disk but
 git does not track it, git-ignored included. It runs git, so ADVISOR's in-process `proctor_check` skips it, and
-outside a git repository it says nothing.
+outside a git repository it says nothing. The same habit holds for the front end: `npm-lock-committed` warns
+(`proctor/npm-lock-committed`) when `package.json` declares dependencies but `package-lock.json` is missing or is not
+valid JSON, because `npm ci` installs from the lock and stops without one.
 
 ### 3.5 Require the lock to match `composer.json`
 A lock whose content hash no longer matches `composer.json` describes a different tree from the one declared.

@@ -7,11 +7,11 @@ description: An overview of every check PROCTOR runs and how each reports pass, 
 
 This page lists every check PROCTOR runs in a single `vendor/bin/proctor check` run, and how each one reports. The proctor asks the same questions in the same order on every run; only the hall changes.
 
-Fifty checks in all. Eight of them also run at the door, in `proctor gate`: `php-floor`, `unpatched`, `laravel-eol`, `laravel-php`, `lock-committed`, `composer-audit`, `overrides` and `policy-age` (see [Deploy gate](deploy-gate.md)). The newest are `app-env` and `fake-driver` (0.18.0).
+Fifty-one checks in all. Eight of them also run at the door, in `proctor gate`: `php-floor`, `unpatched`, `laravel-eol`, `laravel-php`, `lock-committed`, `composer-audit`, `overrides` and `policy-age` (see [Deploy gate](deploy-gate.md)). The newest are `app-env` and `fake-driver` (0.18.0).
 
 ![Nine real lines from PROCTOR's text report, one per check shown: FAIL php-floor, WARN unpatched, FAIL unbounded-constraints, PASS lock-committed, WARN portability, WARN mysql56, WARN ci-pipelines, PASS composer-audit, FAIL overrides. Each line is written in words; color only repeats what the word says.](../readme/report.svg)
 
-*Nine of the fifty checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
+*Nine of the fifty-one checks shown, asked in this order on every run; `policy-age` stays silent while the policy is fresh. The lines are real output from the test fixtures.*
 
 ## How a check reports
 
@@ -21,7 +21,7 @@ Every finding also carries a stable, namespaced rule id: `proctor/<check-id>` fo
 
 ## Composer
 
-The eight checks that read composer.json and composer.lock. Details and fixes: [Composer checks](check-composer.md).
+The ten checks that read composer.json and composer.lock. Details and fixes: [Composer checks](check-composer.md).
 
 - `unbounded-constraints`: fails for every runtime constraint that is `*`, names a `dev-` branch, carries `@dev`, has a lower bound with no upper bound, or matches the policy's `banned_constraints`; warns on `path` and `vcs` repositories, on a `minimum-stability` below stable, and on a repository URL that is plain http. `require-dev`, `php`, `ext-*` and `lib-*` are not checked.
 - `dev-only-packages`: fails when Laravel Boost or Debugbar is in `require`, because they install in production and expose app internals; warns when Telescope is in `require` (keep it there only if the app registers it for local use) and when a test tool (phpunit, Pest, Mockery, Sail, Pail, Collision) is in `require`. It reads only `require`, never `require-dev`.
@@ -29,6 +29,7 @@ The eight checks that read composer.json and composer.lock. Details and fixes: [
 - `composer-cooldown`: warns when composer.json sets no Composer release cooldown (`config.policy.cooldown.period`), so Composer installs a newly published version the moment it is released, before any bug report or rollback has had time to land (CREED practice 40); also warns when a period is set but `block` is false, which turns the cooldown off again. Warning only, never a fail.
 - `lock-committed`: fails when composer.lock is missing from the app path. When the lock is present and its `content-hash` is a real 32-hex hash, it warns (`proctor/lock-committed/out-of-sync`) when the hash no longer matches composer.json, so a stale lock that still installs is visible instead of silent; the warning never changes the exit code.
 - `lock-tracked`: asks git whether composer.lock is tracked and warns (`proctor/lock-tracked`) when the lock is on disk but untracked, because CI's own install writes a lock that was never committed; passes when git lists the lock, and says nothing when the lock is missing, when the app path is not inside a git repository, or when git cannot be run.
+- `npm-lock-committed`: warns, never fails, when package.json declares dependencies but package-lock.json is missing or is not valid JSON (`proctor/npm-lock-committed`), because `npm ci` installs from the lock and stops without one; passes when the lock is present and parses. It says nothing when package.json is absent or unparseable, or declares no dependencies.
 - `composer-audit`: fails for advisories at or above the policy's `audit_severity_threshold` and warns for lower ones (an advisory on a dev-only package always warns). When composer or the lock file is absent it fails with a message that starts `not audited:` (`proctor/composer-audit/skipped`), which an active `composer-audit` override downgrades to a warning. It also fails (`proctor/composer-audit/could-not-run`) when the audit runs but its stdout is not parseable JSON, because a green run that audited nothing is worse than a red one. Abandoned packages follow the policy's `abandoned_packages` rule: a fail under `fail` (the default), a warning under `report`, nothing under `ignore` (`proctor/composer-audit/abandoned`).
 - `composer-version`: fails when the Composer on PATH is Composer 1 (end of life) or carries the command-injection holes CVE-2024-35241 and CVE-2024-35242 (2.2.x below 2.2.24, or any other 2.x below 2.7.7), and below the policy's `tools.composer.minimum` when that is higher (the bundled policy sets 2.8.0); warns when composer cannot be run.
 - `repo-url-credentials`: warns when a credential is written into a package source URL: a deploy token in the userinfo of a composer.json repository URL or a composer.lock source/dist URL, a bare token user of 20+ characters, a `private_token`, `access_token`, `token` or `password` query parameter, or a `.npmrc` line that sets `_authToken`, `_auth` or `_password` to a literal value. The secret is masked as `***` in the message, so the report itself is safe to hand back.

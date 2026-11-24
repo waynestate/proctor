@@ -64,6 +64,7 @@ final class CheckSet
             new ComposerCooldownCheck(policy: $resolved->policy),
             new LockCommittedCheck(),
             new LockTrackedCheck(),
+            new NpmLockCommittedCheck(),
             new PortabilityCheck(),
             new Mysql56Check(),
             new DestructiveDeployCheck(),

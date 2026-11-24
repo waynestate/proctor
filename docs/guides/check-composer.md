@@ -5,7 +5,7 @@ description: The checks that read composer.json and composer.lock, from unbounde
 
 # Composer checks
 
-This page covers the eight PROCTOR checks that read composer.json and composer.lock: unbounded constraints, development-only packages in require, unsafe composer settings, the release cooldown, the committed lock, audit results, the Composer version on PATH, and credentials in repository URLs. Run `vendor/bin/proctor check` against the app path, then fix the finding the report names. The proctor checks the pens before it checks the answers.
+This page covers the ten PROCTOR checks that read composer.json and composer.lock: unbounded constraints, development-only packages in require, unsafe composer settings, the release cooldown, the committed lock, the tracked lock, the committed npm lock, audit results, the Composer version on PATH, and credentials in repository URLs. Run `vendor/bin/proctor check` against the app path, then fix the finding the report names. The proctor checks the pens before it checks the answers.
 
 ## unbounded-constraints
 
@@ -114,6 +114,14 @@ Warning only, never a fail, so an app that passes today keeps passing. Fix by ad
 | Check | Rule id |
 | --- | --- |
 | `lock-tracked` | `proctor/lock-tracked` |
+
+## npm-lock-committed
+
+`npm-lock-committed` warns, never fails, when package.json declares dependencies but package-lock.json is missing, or the lock is present but not valid JSON (`proctor/npm-lock-committed`), because `npm ci` installs from the lock and stops without one; it passes when the lock is present and parses. It says nothing when package.json is absent or unparseable, or declares no dependencies, because other checks own those verdicts.
+
+| Check | Rule id |
+| --- | --- |
+| `npm-lock-committed` | `proctor/npm-lock-committed` |
 
 ## composer-audit
 
