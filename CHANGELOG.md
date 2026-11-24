@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Docs: public text no longer states the exact patch version of Citadel's shared MySQL server.
 - Changed: `deploy/`, the layer that serves the front page, requires PROCTOR `^0.18` (was `^0.16`, which does not allow 0.18), so the site's own deploy gate runs the current checks.
 - Tests: the suite's fake-composer stub gets its own directory per test and fails loudly when the stub is missing, so an intermittent red in `CheckCommandTest` names its cause next time.
 - Playwright pinned to 1.65.0 to match the image.

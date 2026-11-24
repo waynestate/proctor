@@ -123,7 +123,7 @@ Released 2026-11-10. A minor release. Under 0.x, `^0.14` does not pick it up: ch
 
 ### New
 
-- `mysql56-ci` warns when an app has migrations in `database/migrations/` but its `.gitlab-ci.yml` never runs them against MySQL 5.6 (rule ID `proctor/mysql56-ci/no-job`). CREED `databases.md` makes that a MUST: Citadel's shared server is MySQL 5.6.51, and a test suite on SQLite passes DDL that 5.6 rejects. `mysql56` scans the code; `mysql56-ci` checks the wiring.
+- `mysql56-ci` warns when an app has migrations in `database/migrations/` but its `.gitlab-ci.yml` never runs them against MySQL 5.6 (rule ID `proctor/mysql56-ci/no-job`). CREED `databases.md` makes that a MUST: Citadel's shared server is on MySQL 5.6, and a test suite on SQLite passes DDL that 5.6 rejects. `mysql56` scans the code; `mysql56-ci` checks the wiring.
 - `preflight-gates` treats `mysql56-migrate` as a gate, so a `mysql56-migrate` include with `allow_failure: true` warns like the other gates.
 - The check count is forty-five, eight of them in the deploy gate (unchanged).
 
