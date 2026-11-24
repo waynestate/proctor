@@ -2,5 +2,11 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "local>enterprise-apps/preflight//renovate/default"
+  ],
+  "packageRules": [
+    {
+      "matchPackageNames": ["playwright", "@playwright/test", "mcr.microsoft.com/playwright"],
+      "groupName": "playwright"
+    }
   ]
 }
