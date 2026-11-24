@@ -20,7 +20,7 @@ Run `vendor/bin/proctor check` in a PHP app and it checks the app against CREED'
 
 [Sit the exam](https://proctor.apps.wayne.edu/#start-title) [Watch it mark a paper](https://proctor.apps.wayne.edu/#sheet-title)
 
-- [**50** checks](https://proctor.apps.wayne.edu/#paper-title)
+- [**51** checks](https://proctor.apps.wayne.edu/#paper-title)
 - **8** at the gate
 - **4** formats
 - **3** exit codes
