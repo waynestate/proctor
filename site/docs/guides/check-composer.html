@@ -41,7 +41,7 @@
   <div class="docs-content">
     <main id="main">
       <article class="docs-article"><h1 id="composer-checks">Composer <span class="docs-heading-tail"><span>checks</span><a class="docs-heading-link" aria-label="Link to this section" href="#composer-checks">#</a></span></h1>
-<p>This page covers the eight PROCTOR checks that read composer.json and composer.lock: unbounded constraints, development-only packages in require, unsafe composer settings, the release cooldown, the committed lock, audit results, the Composer version on PATH, and credentials in repository URLs. Run <code>vendor/bin/proctor check</code> against the app path, then fix the finding the report names. The proctor checks the pens before it checks the answers.</p>
+<p>This page covers the ten PROCTOR checks that read composer.json and composer.lock: unbounded constraints, development-only packages in require, unsafe composer settings, the release cooldown, the committed lock, the tracked lock, the committed npm lock, audit results, the Composer version on PATH, and credentials in repository URLs. Run <code>vendor/bin/proctor check</code> against the app path, then fix the finding the report names. The proctor checks the pens before it checks the answers.</p>
 <h2 id="unbounded-constraints"><span class="docs-heading-tail"><span>unbounded-constraints</span><a class="docs-heading-link" aria-label="Link to this section" href="#unbounded-constraints">#</a></span></h2>
 <p><code>unbounded-constraints</code> fails for every runtime constraint that is <code>*</code>, names a <code>dev-</code> branch, carries <code>@dev</code>, has a lower bound with no upper bound, or matches the policy's <code>banned_constraints</code>. Each unbounded constraint is its own failure (<code>proctor/unbounded-constraints/unbounded</code>), naming the package and the offending constraint.</p>
 <p>Three more rules warn, and never fail:</p>
@@ -248,6 +248,22 @@
 </tr>
 </tbody>
 </table></div>
+<h2 id="npm-lock-committed"><span class="docs-heading-tail"><span>npm-lock-committed</span><a class="docs-heading-link" aria-label="Link to this section" href="#npm-lock-committed">#</a></span></h2>
+<p><code>npm-lock-committed</code> warns, never fails, when package.json declares dependencies but package-lock.json is missing, or the lock is present but not valid JSON (<code>proctor/npm-lock-committed</code>), because <code>npm ci</code> installs from the lock and stops without one; it passes when the lock is present and parses. It says nothing when package.json is absent or unparseable, or declares no dependencies, because other checks own those verdicts.</p>
+<div class="docs-table" role="region" aria-label="Table" tabindex="0"><table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Rule id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>npm-lock-committed</code></td>
+<td><code>proctor/npm-lock-committed</code></td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="composer-audit"><span class="docs-heading-tail"><span>composer-audit</span><a class="docs-heading-link" aria-label="Link to this section" href="#composer-audit">#</a></span></h2>
 <p><code>composer-audit</code> runs <code>composer audit --format=json --locked --no-plugins --no-interaction --abandoned=&lt;policy&gt;</code> against the app path and grades the result:</p>
 <ul>
@@ -359,7 +375,7 @@
     </main>
     <nav class="docs-pager" aria-label="Pages"><a class="docs-pager__link" href="../../docs/guides/checks-overview.html"><span class="docs-pager__dir">Previous</span><span class="docs-pager__title">Checks</span></a><a class="docs-pager__link docs-pager__link--next" href="../../docs/guides/check-php.html"><span class="docs-pager__dir">Next</span><span class="docs-pager__title">PHP checks</span></a></nav>
   </div>
-  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#unbounded-constraints">unbounded-constraints</a></li><li class="docs-toc__item"><a href="#dev-only-packages">dev-only-packages</a></li><li class="docs-toc__item"><a href="#composer-config">composer-config</a></li><li class="docs-toc__item"><a href="#composer-cooldown">composer-cooldown</a></li><li class="docs-toc__item"><a href="#lock-committed">lock-committed</a></li><li class="docs-toc__item"><a href="#lock-tracked">lock-tracked</a></li><li class="docs-toc__item"><a href="#composer-audit">composer-audit</a></li><li class="docs-toc__item"><a href="#composer-version">composer-version</a></li><li class="docs-toc__item"><a href="#repo-url-credentials">repo-url-credentials</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
+  <nav class="docs-toc" aria-label="On this page"><h2 class="docs-toc__title">On this page</h2><ul class="docs-toc__list"><li class="docs-toc__item"><a href="#unbounded-constraints">unbounded-constraints</a></li><li class="docs-toc__item"><a href="#dev-only-packages">dev-only-packages</a></li><li class="docs-toc__item"><a href="#composer-config">composer-config</a></li><li class="docs-toc__item"><a href="#composer-cooldown">composer-cooldown</a></li><li class="docs-toc__item"><a href="#lock-committed">lock-committed</a></li><li class="docs-toc__item"><a href="#lock-tracked">lock-tracked</a></li><li class="docs-toc__item"><a href="#npm-lock-committed">npm-lock-committed</a></li><li class="docs-toc__item"><a href="#composer-audit">composer-audit</a></li><li class="docs-toc__item"><a href="#composer-version">composer-version</a></li><li class="docs-toc__item"><a href="#repo-url-credentials">repo-url-credentials</a></li><li class="docs-toc__item"><a href="#related">Related</a></li></ul></nav>
 </div>
 <footer class="docs-footer">
   <span>Documents PROCTOR <span data-docs-version>0.18.0</span></span>

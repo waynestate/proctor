@@ -29,6 +29,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/laravel-php',
         'proctor/lock-committed',
         'proctor/lock-tracked',
+        'proctor/npm-lock-committed',
         'proctor/destructive-deploy',
         'proctor/crlf-deploy-script',
         'proctor/crlf-deploy-script/no-gitattributes',

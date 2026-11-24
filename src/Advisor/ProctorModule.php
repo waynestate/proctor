@@ -120,6 +120,7 @@ final class ProctorModule implements Module
         'composer-cooldown' => 'check-composer',
         'lock-committed' => 'check-composer',
         'lock-tracked' => 'check-composer',
+        'npm-lock-committed' => 'check-composer',
         'composer-audit' => 'check-composer',
         'composer-version' => 'check-composer',
         'repo-url-credentials' => 'check-composer',
