@@ -116,7 +116,7 @@ The whole paper
 Every check `proctor check` asks, in the order it asks them. Each id opens its page in the docs.
 
 - Gate also asked by `proctor gate` before a deploy
-- New new in 0.17.0
+- New new in 0.18.0
 
 1. [`php-floor`](https://proctor.apps.wayne.edu/docs/guides/check-php.html#php-floor): Is the lowest PHP you allow still supported? Gate
 2. [`unpatched`](https://proctor.apps.wayne.edu/docs/guides/check-php.html#unpatched): Is each locked line on its latest patch? Gate
@@ -147,15 +147,15 @@ Every check `proctor check` asks, in the order it asks them. Each id opens its p
 27. [`composer-version`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#composer-version): Is the Composer on PATH safe?
 28. [`repo-url-credentials`](https://proctor.apps.wayne.edu/docs/guides/check-composer.html#repo-url-credentials): Is a token written into a package URL?
 29. [`instant-client-committed`](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#instant-client-committed): Is Oracle Instant Client committed?
-30. [`raw-oci`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#raw-oci): Does code talk to Oracle directly? New
-31. [`oracle-sql-interpolation`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#oracle-sql-interpolation): Is Oracle SQL built from PHP values? New
-32. [`oracle-credentials-literal`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#oracle-credentials-literal): Is an Oracle password written into the repo? New
+30. [`raw-oci`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#raw-oci): Does code talk to Oracle directly?
+31. [`oracle-sql-interpolation`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#oracle-sql-interpolation): Is Oracle SQL built from PHP values?
+32. [`oracle-credentials-literal`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#oracle-credentials-literal): Is an Oracle password written into the repo?
 33. [`env-outside-config`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#env-outside-config): Is `env()` called outside config?
 34. [`raw-identity-header`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#raw-identity-header): Does code read identity headers itself?
 35. [`app-key`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-key): Is the APP_KEY given away?
 36. [`app-debug`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-debug): Does a production file turn APP_DEBUG on?
-37. [`app-env`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-env): Does a committed file pin APP_ENV away from production?
-38. [`fake-driver`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#fake-driver): Does a committed config let the fake login driver in?
+37. [`app-env`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-env): Does a committed file pin APP_ENV away from production? New
+38. [`fake-driver`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#fake-driver): Does a committed config let the fake login driver in? New
 39. [`display-errors`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#display-errors): Does a php.ini show errors to visitors?
 40. [`directory-listing`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#directory-listing): Does the server list a folder's files?
 41. [`csp-unsafe-inline`](https://proctor.apps.wayne.edu/docs/guides/check-app.html#csp-unsafe-inline): Does the CSP let inline scripts run?
@@ -439,7 +439,7 @@ Hall G GitLab, through Preflight
 
 ```
 include:
-  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.9.0
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.12.0
 ```
 
 The default command is `vendor/bin/proctor check --format=codequality`, so findings show on the merge request. It clones the full history, so `override-approver` can read git blame. With PROCTOR 0.11.0 or later it also adds `--record` and keeps `proctor.json`, the report Rollcall reads. We strongly recommend a git.wayne.edu instance runner.
@@ -634,7 +634,7 @@ Transfer students, new this term
   The deploy kit for Citadel. Its release script asks `proctor gate` for a go or no-go, and can be set to stop on a no-go.
 - ![Parity logo](https://proctor.apps.wayne.edu/assets/marks/parity.png)
   [Parity](https://parity.apps.wayne.edu/)
-  Runs Citadel on your computer: a practice exam on the real paper. Version 0.1.0 is out.
+  Runs Citadel on your computer: a practice exam on the real paper. Version 0.2.0 is out.
 - ![Drawbridge logo](https://proctor.apps.wayne.edu/assets/marks/drawbridge.png)
   [Drawbridge](https://drawbridge.apps.wayne.edu/)
   A gateway that signs people in through Entra ID before they reach a Citadel app.
