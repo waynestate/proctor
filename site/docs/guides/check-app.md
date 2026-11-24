@@ -8,9 +8,9 @@ generator: Squire agent-ready
 
 # App checks [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#app-checks)
 
-This page covers the twenty-one PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, direct Oracle calls, Oracle SQL built from PHP values, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a robots.txt that is missing or lets every crawler in, secret-looking `VITE_` variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, shell scripts, server config and Dockerfiles that `.gitattributes` does not pin to LF, developer scripts in `scripts/` missing their twin, paths that differ only by letter case, and `chmod 777`. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
+This page covers the twenty-two PROCTOR checks that read the app's own files rather than its Composer metadata: the Node line it builds on, the MySQL or MariaDB image it runs, the database version its Laravel line needs, direct Oracle calls, Oracle SQL built from PHP values, `env()` calls outside config, identity headers read directly, a committed APP_KEY, a committed APP_DEBUG, a php.ini or .htaccess that turns display errors on, a .htaccess or server config that turns on directory listing, a Content-Security-Policy that lets scripts run inline, a robots.txt that is missing or lets every crawler in, secret-looking `VITE_` variables that Vite would ship to the browser, migrations run by a container entrypoint, files a stranger can download from `public/`, deploy scripts with Windows line endings, shell scripts, server config and Dockerfiles that `.gitattributes` does not pin to LF, developer scripts in `scripts/` missing their twin, paths that differ only by letter case, `chmod 777`, and the PHP the deploy image tag names. Each one holds a CREED practice. Run `vendor/bin/proctor check` against the app path and fix what the report names. The proctor walks the aisles as well as reading the papers.
 
-`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other eighteen warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL, and a new check must not turn a passing app into a failing one.
+`node-eol`, `crlf-deploy-script` and `case-clash` can fail a run. The other nineteen warn, never fail: `mysql-eol` warns until Citadel's shared database server offers a supported MySQL, and a new check must not turn a passing app into a failing one.
 
 ## node-eol [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#node-eol)
 
@@ -350,6 +350,16 @@ Fix by moving the migration out of the entrypoint and running it once per releas
 | --- | --- |
 | `entrypoint-migrate` | `proctor/entrypoint-migrate` |
 | `entrypoint-migrate` | `proctor/entrypoint-migrate/runs` |
+
+## image-php [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#image-php)
+
+`image-php` reads the deploy image named in parity.json and grades the PHP version its tag names against the policy as of `--today`. The tag must end in `php-apache:<X.Y>r<n>` (for example `citadel/php-apache:8.5r3`), with `php-apache` at the start of the value or right after a `/`, so a registry-prefixed image such as `registry.example/x/php-apache:8.5r3` is read the same way; any other image, or a tag without a version, says nothing here. Active passes, security-only warns, eol and eol_grace_expired warn, and a line the policy does not list warns that its support cannot be graded (`proctor/image-php`). A stale image serves an unsupported PHP even when composer.json is fine, which is why the check exists; it warns and never fails, and is not in the deploy gate. It says nothing when parity.json is missing, unreadable, not valid JSON, or has no string `image`, because other checks own those verdicts.
+
+Fix by moving the image to a newer php-apache tag.
+
+| Check | Rule id |
+| --- | --- |
+| `image-php` | `proctor/image-php` |
 
 ## served-folder [#](https://proctor.apps.wayne.edu/docs/guides/check-app.html#served-folder)
 
