@@ -7,6 +7,33 @@ description: How to upgrade PROCTOR to a newer release and note the changes that
 
 PROCTOR is the invigilator, so upgrading it is a seat change, not a new exam: same hall, fresher pen. This page tells you how to move an app from one PROCTOR release to the next and which changes affect your runs. Start with the release that has a break, then work down to the additive ones.
 
+## 1.0.0
+
+Released 2026-11-24. The first stable release, and a major version: under 0.x, `^0.18` does not pick it up, so change the constraint to `^1.0`, then run `composer update waynestate/proctor`. From here on `^1.0` picks up every 1.x release. An install on 0.x says so in its update notice, which links to this page because the major changed. Two new checks can report on apps that passed before; both warn and never fail.
+
+### Breaking
+
+- None. No existing rule changed its verdict. `image-php` and `npm-lock-committed` warn and never fail a run, and neither is in the deploy gate.
+
+### Changed
+
+- `image-php` warns when the PHP line named by the deploy image tag in parity.json (`citadel/php-apache:<X.Y>r<n>`) is security-only, end of life, or not listed in the policy.
+- `npm-lock-committed` warns when package.json declares dependencies and package-lock.json is missing or not valid JSON.
+- The questions only an outside owner can answer are listed in OPEN_QUESTIONS.md, each with the default PROCTOR ships.
+
+### Deprecated
+
+- None recorded so far.
+
+### Steps
+
+1. Change the constraint in `composer.json` to `"waynestate/proctor": "^1.0"` and run `composer update waynestate/proctor`.
+2. Fix any new finding: move parity.json's `image` to a supported PHP line, commit package-lock.json, or write a note from home (an override) for a deliberate exception.
+
+### How to verify
+
+- Run `proctor --version` and confirm it prints `1.0.0`.
+
 ## 0.18.0
 
 Released 2026-11-22. A minor release. Under 0.x, `^0.17` does not pick it up: change the constraint to `^0.18`, then run `composer update waynestate/proctor`. Two new checks can report on apps that passed before: `app-env` warns and never fails, and `fake-driver` fails a committed production file that sets the fake driver.

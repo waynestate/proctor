@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## 1.0.0 (2026-11-24)
+
+- 1.0.0: the first stable release. The questions only an outside owner can answer are in OPEN_QUESTIONS.md under "Known open at 1.0", each with the default PROCTOR ships; none gates 1.0.
 - Docs: public text no longer states the exact patch version of Citadel's shared MySQL server.
 - Added: `image-php` reports the PHP version named by the deploy image in parity.json (`citadel/php-apache:<X.Y>r<n>`) against the policy; it warns and never fails (`proctor/image-php`).
 - Added: `npm-lock-committed` warns (`proctor/npm-lock-committed`) when package.json declares dependencies and package-lock.json is missing or not valid JSON.

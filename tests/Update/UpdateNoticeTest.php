@@ -322,12 +322,12 @@ final class UpdateNoticeTest extends ProctorTestCase
         copy(dirname(__DIR__, 2) . '/bin/proctor', $bin . '/proctor');
         file_put_contents($home . '/vendor/autoload.php', "<?php require '" . dirname(__DIR__, 2) . "/vendor/autoload.php';\n");
 
-        // 0.19.0 stays on the same major as the running 0.18.0, so the line
+        // 1.1.0 stays on the same major as the running 1.0.0, so the line
         // carries no upgrading link.
         $cacheDir = $home . '/cache';
         $file = $cacheDir . '/waynestate/proctor/update-check.json';
         mkdir(dirname($file), 0777, true);
-        file_put_contents($file, json_encode(['checked_at' => time(), 'latest' => '0.19.0']) . "\n");
+        file_put_contents($file, json_encode(['checked_at' => time(), 'latest' => '1.1.0']) . "\n");
 
         $args = [
             'check',
@@ -348,7 +348,7 @@ final class UpdateNoticeTest extends ProctorTestCase
         $lines = array_values(array_filter(explode("\n", $on['stderr']), static fn(string $line): bool => $line !== ''));
         self::assertNotEmpty($lines, "stderr: {$on['stderr']}");
         self::assertSame(
-            'proctor 0.18.0 is out of date: 0.19.0 is the newest release. Update: composer update waynestate/proctor',
+            'proctor 1.0.0 is out of date: 1.1.0 is the newest release. Update: composer update waynestate/proctor',
             $lines[count($lines) - 1],
         );
     }

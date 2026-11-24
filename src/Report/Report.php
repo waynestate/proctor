@@ -27,7 +27,7 @@ final class Report
      * Composer package: a dev checkout of this repository, or a copy without
      * one. An installed copy reports its real release version instead.
      */
-    public const VERSION = '0.18.0';
+    public const VERSION = '1.0.0';
 
     /** The package name PROCTOR publishes under. */
     private const PACKAGE = 'waynestate/proctor';
