@@ -143,6 +143,7 @@ final class ProctorModule implements Module
         'vite-secrets' => 'check-app',
         'mysql-minimum' => 'check-app',
         'entrypoint-migrate' => 'check-app',
+        'image-php' => 'check-app',
     ];
 
     /** The bundled CREED policy, the copy PolicyResolver falls back to. */

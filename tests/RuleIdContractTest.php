@@ -30,6 +30,7 @@ final class RuleIdContractTest extends ProctorTestCase
         'proctor/lock-committed',
         'proctor/lock-tracked',
         'proctor/npm-lock-committed',
+        'proctor/image-php',
         'proctor/destructive-deploy',
         'proctor/crlf-deploy-script',
         'proctor/crlf-deploy-script/no-gitattributes',

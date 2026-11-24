@@ -25,6 +25,7 @@ Every finding carries a stable, namespaced rule id: `proctor/<check-id>` for a c
 | `lock-committed` | `proctor/lock-committed/out-of-sync` |
 | `lock-tracked` | `proctor/lock-tracked` |
 | `npm-lock-committed` | `proctor/npm-lock-committed` |
+| `image-php` | `proctor/image-php` |
 | `destructive-deploy` | `proctor/destructive-deploy` |
 | `crlf-deploy-script` | `proctor/crlf-deploy-script` |
 | `crlf-deploy-script` | `proctor/crlf-deploy-script/no-gitattributes` |

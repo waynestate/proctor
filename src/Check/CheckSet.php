@@ -65,6 +65,7 @@ final class CheckSet
             new LockCommittedCheck(),
             new LockTrackedCheck(),
             new NpmLockCommittedCheck(),
+            new ImagePhpCheck(),
             new PortabilityCheck(),
             new Mysql56Check(),
             new DestructiveDeployCheck(),
