@@ -146,7 +146,7 @@
 </ul>
 <h3 id="new-4"><span class="docs-heading-tail"><span>New</span><a class="docs-heading-link" aria-label="Link to this section" href="#new-4">#</a></span></h3>
 <ul>
-<li><code>mysql56-ci</code> warns when an app has migrations in <code>database/migrations/</code> but its <code>.gitlab-ci.yml</code> never runs them against MySQL 5.6 (rule ID <code>proctor/mysql56-ci/no-job</code>). CREED <code>databases.md</code> makes that a MUST: Citadel's shared server is MySQL 5.6.51, and a test suite on SQLite passes DDL that 5.6 rejects. <code>mysql56</code> scans the code; <code>mysql56-ci</code> checks the wiring.</li>
+<li><code>mysql56-ci</code> warns when an app has migrations in <code>database/migrations/</code> but its <code>.gitlab-ci.yml</code> never runs them against MySQL 5.6 (rule ID <code>proctor/mysql56-ci/no-job</code>). CREED <code>databases.md</code> makes that a MUST: Citadel's shared server is on MySQL 5.6, and a test suite on SQLite passes DDL that 5.6 rejects. <code>mysql56</code> scans the code; <code>mysql56-ci</code> checks the wiring.</li>
 <li><code>preflight-gates</code> treats <code>mysql56-migrate</code> as a gate, so a <code>mysql56-migrate</code> include with <code>allow_failure: true</code> warns like the other gates.</li>
 <li>The check count is forty-five, eight of them in the deploy gate (unchanged).</li>
 </ul>

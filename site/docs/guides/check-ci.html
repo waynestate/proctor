@@ -209,7 +209,7 @@ include:
 </tbody>
 </table></div>
 <h2 id="mysql56-ci"><span class="docs-heading-tail"><span>mysql56-ci</span><a class="docs-heading-link" aria-label="Link to this section" href="#mysql56-ci">#</a></span></h2>
-<p><code>mysql56-ci</code> warns, and never fails, when an app has migrations but its <code>.gitlab-ci.yml</code> never runs them against MySQL 5.6 (CREED <code>databases.md</code>): Citadel's shared server is 5.6.51, so a migration set that only ever met SQLite or a newer MySQL in CI can fail on the first deploy. The <code>mysql56</code> check scans the code for features 5.6 rejects; this one checks the wiring.</p>
+<p><code>mysql56-ci</code> warns, and never fails, when an app has migrations but its <code>.gitlab-ci.yml</code> never runs them against MySQL 5.6 (CREED <code>databases.md</code>): Citadel's shared server is on MySQL 5.6, so a migration set that only ever met SQLite or a newer MySQL in CI can fail on the first deploy. The <code>mysql56</code> check scans the code for features 5.6 rejects; this one checks the wiring.</p>
 <ul>
 <li>Migrations exist (a <code>database/migrations/</code> directory holding at least one <code>*.php</code> file) and the pipeline never runs them against 5.6 warns (<code>proctor/mysql56-ci/no-job</code>), once, on the pipeline file. The pipeline runs them when an <code>include:</code> entry carries a <code>component:</code> path containing <code>/preflight/mysql56-migrate@</code>, a top-level job is named <code>mysql56-migrate</code>, or an included <code>mysql56-migrate</code> component sets <code>inputs: job_name:</code> to some name, in <code>.gitlab-ci.yml</code> or any local file it includes.</li>
 </ul>
