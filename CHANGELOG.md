@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Docs: public text no longer states the exact patch version of Citadel's shared MySQL server.
+- Added: `image-php` reports the PHP version named by the deploy image in parity.json (`citadel/php-apache:<X.Y>r<n>`) against the policy; it warns and never fails (`proctor/image-php`).
 - Added: `npm-lock-committed` warns (`proctor/npm-lock-committed`) when package.json declares dependencies and package-lock.json is missing or not valid JSON.
 - Changed: `deploy/`, the layer that serves the front page, requires PROCTOR `^0.18` (was `^0.16`, which does not allow 0.18), so the site's own deploy gate runs the current checks.
 - Tests: the suite's fake-composer stub gets its own directory per test and fails loudly when the stub is missing, so an intermittent red in `CheckCommandTest` names its cause next time.
