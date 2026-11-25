@@ -1,28 +1,48 @@
 # composer ci is the contract: the checks are defined there, and this pipeline only wraps them.
 # PROCTOR's pipeline, built from the PREFLIGHT components on this GitLab.
-# Pinned to PREFLIGHT 0.12.0. Never use ~latest.
+# Pinned to PREFLIGHT 0.13.0. Never use ~latest.
 # PROCTOR requires PHP ^8.3, so the test matrix starts at 8.3.
 # Docker Hub images go through the GitLab Dependency Proxy to avoid the anonymous pull limit.
 # This is the repo's own trusted pipeline: PROCTOR refuses --policy and --today in CI unless
 # PROCTOR_ALLOW_OVERRIDES is exactly 1, and the proctor job below passes --policy=. An app must
 # not do this in its own .gitlab-ci.yml; there the variable belongs to a protected or group-level
 # CI variable of a trusted job.
+# D-176 pipeline shape: branch pipelines only, a new commit cancels the old pipeline,
+# pushes run the fast tier, nightly schedules, tags and manual runs the full tier.
+workflow:
+  auto_cancel:
+    on_new_commit: interruptible
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never
+    - if: $CI_COMMIT_TAG
+      variables: { PREFLIGHT_TIER: full }
+    - if: $CI_PIPELINE_SOURCE == "schedule" && $PREFLIGHT_TIER == "full"
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      variables: { PREFLIGHT_TIER: fast }
+    - if: $CI_PIPELINE_SOURCE == "web"
+      variables: { PREFLIGHT_TIER: full }
+    - if: $CI_COMMIT_BRANCH
+      variables: { PREFLIGHT_TIER: fast }
+default:
+  interruptible: true
 variables:
   PROCTOR_ALLOW_OVERRIDES: "1"
   COMPOSER_CACHE_DIR: "$CI_PROJECT_DIR/.cache/composer"
 
 include:
-  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/php-test@0.12.0
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/php-test@0.13.0
     inputs:
+      tier: full
       php_versions: ["8.3", "8.4", "8.5"]
       image: "php:${PHP_VERSION}-cli-trixie"
-  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/composer-audit@0.12.0
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/composer-audit@0.13.0
   # Committed secrets fail the pipeline before they ride along in a release; this repo mirrors to public GitHub.
-  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/secret-detection@0.12.0
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/secret-detection@0.13.0
     inputs:
       image: "zricethezav/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f"
   # The front page deploy layer (ADR-0017): PROCTOR checks deploy/ against CREED's policy.
-  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.12.0
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.13.0
     inputs:
       working_dir: deploy
       proctor_command: vendor/bin/proctor check --policy=vendor/waynestate/creed/policy/policy.json --format=codequality
@@ -30,11 +50,12 @@ include:
       # and a shallow clone would credit old lines to its oldest commit and report could-not-run.
       git_depth: "0"
       image: "php:8.5-cli-trixie@sha256:9236fd373d3bcda0659cf94838a744bd79791419292958963f8c6b34a0071554"
-  # Accessibility: Preflight's a11y component serves site/ and checks every page with axe-core 4.14.0, light and
+  # Accessibility: Preflight's a11y component serves site/ and checks every page with axe-core 4.14.1, light and
   # dark, at 320 and 1280 px, plus WCAG 1.4.10 reflow, at WCAG 2.2 AA. Its Playwright image comes from
   # mcr.microsoft.com, which the Dependency Proxy does not front, so it takes no image_prefix.
-  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/a11y@0.12.0
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/a11y@0.13.0
     inputs:
+      tier: full
       site_dir: site
       pages: ["**/*.html"]
       wcag_tags: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]
@@ -96,6 +117,7 @@ creed-copy-refresh:
 release-phar:
   extends: .composer-cache
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/composer:2.11.1@sha256:8de2184c6de224f4689e8f80ed5f5edaf0030b6b8b7839a22a2bcb6722ac87d0
+  interruptible: false
   rules:
     - if: $CI_COMMIT_TAG
   script:
