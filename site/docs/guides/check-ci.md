@@ -16,7 +16,7 @@ The smallest pipeline change that satisfies `preflight-pinned` and `preflight-ga
 
 ```yaml
 include:
-  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.12.0
+  - component: $CI_SERVER_FQDN/enterprise-apps/preflight/proctor@0.13.0
 ```
 
 The default command is `vendor/bin/proctor check --format=codequality`, so the findings show on the merge request as Code Quality. Do not add `--policy` or `--today` to `proctor_command`: in CI PROCTOR refuses both (exit 2) unless a trusted job sets `PROCTOR_ALLOW_OVERRIDES=1`, and without them it reads CREED's policy from the app's `vendor/waynestate/creed`. Since Preflight 0.4.0 the component clones the full history for this job (`git_depth: "0"`), so `override-approver` can read git blame. Strongly recommended: a git.wayne.edu instance runner. Preflight's own page lists every input: [preflight.apps.wayne.edu](https://preflight.apps.wayne.edu/).
@@ -25,7 +25,7 @@ To keep PROCTOR's full JSON report from the same run, add `--record`: `vendor/bi
 
 Preflight 0.9.0 does this on its own. When the app's PROCTOR lists `--record` in `proctor check --help` (PROCTOR 0.11.0 or later), the component adds `--record "$CI_PROJECT_DIR/proctor.json"` to a `proctor check` command and keeps `proctor.json` as an artifact under `when: always`, next to the Code Quality report. It never adds the option to a `proctor gate` command, whose record is a deploy verdict, not the report Rollcall reads, to a command that already passes it, or to one that is not a plain `proctor check` line (shell operators, quotes or `$`). With an older PROCTOR the job log says so and the run keeps no `proctor.json`: move the app to PROCTOR ^0.11.
 
-Still pinned to Preflight 0.4.0? That component keeps only the Code Quality report, so do both halves yourself: put the `--record` command above in the `proctor_command` input, and add `artifacts: paths: [proctor.json]` to a `proctor:` job in your own `.gitlab-ci.yml`, next to the include. GitLab merges that key into the component's job, which already keeps its artifacts `when: always`; it re-declares no `script`, so `preflight-pinned` has nothing to flag. Or move the pin to `@0.12.0` and drop both.
+Still pinned to Preflight 0.4.0? That component keeps only the Code Quality report, so do both halves yourself: put the `--record` command above in the `proctor_command` input, and add `artifacts: paths: [proctor.json]` to a `proctor:` job in your own `.gitlab-ci.yml`, next to the include. GitLab merges that key into the component's job, which already keeps its artifacts `when: always`; it re-declares no `script`, so `preflight-pinned` has nothing to flag. Or move the pin to `@0.13.0` and drop both.
 
 ## ci-pipelines [#](https://proctor.apps.wayne.edu/docs/guides/check-ci.html#ci-pipelines)
 
